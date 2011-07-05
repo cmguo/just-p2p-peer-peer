@@ -1,0 +1,145 @@
+//------------------------------------------------------------------------------------------
+//     Copyright (c)2005-2010 PPLive Corporation.  All rights reserved.
+//------------------------------------------------------------------------------------------
+
+// SubPieceRequestManager.h
+
+#ifndef _P2SP_P2P_SUB_PIECE_REQUEST_MANAGER_H_
+#define _P2SP_P2P_SUB_PIECE_REQUEST_MANAGER_H_
+
+#ifdef BOOST_WINDOWS_API
+#pragma once
+#endif
+
+#include "p2sp/p2p/PeerConnection.h"
+#include "p2sp/p2p/P2PDownloader.h"
+
+namespace p2sp
+{
+    class SubPieceRequestTask
+        : public boost::noncopyable
+        , public boost::enable_shared_from_this<SubPieceRequestTask>
+#ifdef DUMP_OBJECT
+        , public count_object_allocate<SubPieceRequestTask>
+#endif
+    {
+    public:
+        typedef boost::shared_ptr<SubPieceRequestTask> p;
+        static p create(uint32_t timeout, p2sp::PeerConnection::p peer_connection) {return p(new SubPieceRequestTask(timeout, peer_connection));}
+    public:
+        bool IsTimeOut() {return request_time_elapse_ > timeout_;}
+        framework::timer::TickCounter::count_value_type GetTimeElapsed() const { return request_time_elapse_; }
+
+    public:
+        uint32_t request_time_elapse_;
+        uint32_t timeout_;
+        bool dead_;
+        PeerConnection::p peer_connection_;
+    private:
+        SubPieceRequestTask(uint32_t timeout, PeerConnection::p peer_connection)
+            : request_time_elapse_(0)
+            , timeout_(timeout)
+            , dead_(false)
+            , peer_connection_(peer_connection)
+            {
+
+            }
+    };
+
+    class P2PDownloader;
+    typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
+
+    class SubPieceRequestManager
+        : public boost::noncopyable
+        , public boost::enable_shared_from_this<SubPieceRequestManager>
+    {
+    public:
+        typedef boost::shared_ptr<SubPieceRequestManager> p;
+        static p create(P2PDownloader__p p2p_downloader) { return p(new SubPieceRequestManager(p2p_downloader)); }
+    public:
+        // 启停
+        void Start();
+        void Stop();
+        // 操作
+        void Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout, PeerConnection::p peer_connection);
+        void CheckExternalTimeout();
+        // 消息
+        void OnSubPiece(protocol::SubPiecePacket const & packet);
+        void OnError(protocol::ErrorPacket const & packet);
+        void OnP2PTimer(uint32_t times);
+        // 属性
+        inline bool IsRequesting(const protocol::SubPieceInfo& subpiece_info) const;
+        inline bool IsRequestingTimeout(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed, boost::uint8_t percent = 9) const;
+        uint32_t GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const;
+    protected:
+        // void Remove(const protocol::SubPieceInfo& subpiece_info);
+    private:
+        // 模块
+        P2PDownloader__p p2p_downloader_;
+        // 变量
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p> request_tasks_;
+        // 状态
+        volatile bool is_running_;
+
+        boost::uint32_t block_size_;
+
+    private:
+        // 构造
+        SubPieceRequestManager(P2PDownloader__p p2p_downloader) : p2p_downloader_(p2p_downloader), is_running_(false) {}
+    };
+
+    inline bool SubPieceRequestManager::IsRequesting(const protocol::SubPieceInfo& subpiece_info) const
+    {
+        if (is_running_ == false) return false;
+
+        // 找到返回true, 找不到返回flase
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::const_iterator iter;
+        iter = request_tasks_.find(subpiece_info);
+        while (iter != request_tasks_.end() && iter->first == subpiece_info)
+        {
+            SubPieceRequestTask::p task = iter->second;
+            if (false == task->dead_) {
+                return true;
+            }
+            ++iter;
+        }
+        return false;
+    }
+
+    // True：正在请求，且时间超过time_elapsed; 或者没有被请求;
+    inline bool SubPieceRequestManager::IsRequestingTimeout(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed, boost::uint8_t percent) const
+    {
+        if (false == is_running_) return false;
+
+        // 所有task超时才算超时
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::const_iterator it;
+        for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)
+        {
+            SubPieceRequestTask::p task = it->second;
+            PeerConnection::p peer_conn = task->peer_connection_;
+            if (peer_conn->GetConnectedTime() >= 3 * 1000 && peer_conn->GetSentCount() >= 5 && peer_conn->GetReceivedCount() == 0)
+            {
+//                 LOG(__DEBUG, "timeout", "WeakPeer! P2PDownloader = " << p2p_downloader_
+//                     << ", Endpoint = " << peer_conn->GetCandidatePeerInfo());
+                continue;
+            }
+
+            if (true == peer_conn->IsRunning())
+            {
+                boost::uint32_t elapsed = task->GetTimeElapsed();
+                if (elapsed < task->timeout_ * percent / 10 && elapsed < time_elapsed)
+                    return false;
+            }
+            else
+            {
+                boost::uint32_t elapsed = task->GetTimeElapsed();
+                if (elapsed < task->timeout_ * percent / 10 * 8 / 10 && elapsed < time_elapsed)
+                    return false;
+            }
+        }
+        return true;
+    }
+
+}
+
+#endif  // _P2SP_P2P_SUB_PIECE_REQUEST_MANAGER_H_

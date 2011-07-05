@@ -1,0 +1,6 @@
+LIBRARY    "peer"
+DESCRIPTION  'PPLive P2SP VIDEO CORE'
+
+EXPORTS
+    ; Explicit exports can go here
+    TS_XXXX
