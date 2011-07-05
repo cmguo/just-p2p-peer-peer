@@ -79,7 +79,7 @@ namespace p2sp
         LoadHistoricalMaxUploadSpeed();
 
         network_quality_monitor_ = boost::shared_ptr<NetworkQualityMonitor>(new NetworkQualityMonitor(global_io_svc()));
-        network_quality_monitor_->Start();
+        //network_quality_monitor_->Start();
     }
 
     void UploadManager::Stop()
