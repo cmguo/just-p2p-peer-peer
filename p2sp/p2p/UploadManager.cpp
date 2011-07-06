@@ -1021,7 +1021,7 @@ namespace p2sp
         UPLOAD_DEBUG("UploadManager::OnConnectPacket endpoint: " << packet.end_point);
 
         // 正在看直播或者是连接已经满了，则回错误报文
-        if ((true == is_watching_live_)
+        if ((true == p2sp::ProxyModule::Inst()->IsWatchingLive())
             || (IsConnectionFull(packet.ip_pool_size_)
             && accept_connecting_peers_.find(packet.end_point) == accept_connecting_peers_.end()))
         {
@@ -1441,13 +1441,11 @@ namespace p2sp
             uint32_t idle_time_in_seconds = storage::Performance::Inst()->GetIdleInSeconds();
             uint32_t upload_bandwidth = GetMaxUploadSpeedForControl();
             boost::uint32_t revised_up_speedlimit = (std::max)((boost::int32_t)upload_bandwidth - 262144, boost::int32_t(0));     // 超过256KBps的上传带宽
-
-            if (false == is_watching_live_ && p2sp::ProxyModule::Inst()->IsWatchingLive() == true)
+            bool is_watching_live_by_peer = p2sp::ProxyModule::Inst()->IsWatchingLive();
+            if (true == is_watching_live_by_peer)
             {
                 KickVodUploadConnections();
             }
-
-            is_watching_live_ = p2sp::ProxyModule::Inst()->IsWatchingLive();
 
             desktop_type_ = storage::Performance::Inst()->GetCurrDesktopType();
             if (false == is_locking_)
@@ -1483,11 +1481,15 @@ namespace p2sp
                 UpdateSpeedLimit(-1);
             }
             // live
-            else if (true == is_watching_live_)
+            else if (true == is_watching_live)
             {
                 UPLOAD_DEBUG("User Watching Live Video");
-                boost::int32_t speed_limit = revised_up_speedlimit > 0 ? revised_up_speedlimit : upload_bandwidth * 9 / 10;
-                UpdateSpeedLimit(speed_limit);
+                UpdateSpeedLimit(0);
+            }
+            else if (true == is_watching_live_by_peer)
+            {
+                UPLOAD_DEBUG("User Watching Live Video by peer");
+                UpdateSpeedLimit(-1);
             }
             // slow down mode
             else if (is_download_with_slowmode)

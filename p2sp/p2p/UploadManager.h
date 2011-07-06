@@ -395,8 +395,6 @@ namespace p2sp
 
         bool is_disable_upload_;
 
-        bool is_watching_live_;
-
         boost::shared_ptr<NetworkQualityMonitor> network_quality_monitor_;
 
     private:
@@ -407,7 +405,6 @@ namespace p2sp
             , recent_play_series_(0)
             , upload_limiter_()
             , is_disable_upload_(false)
-            , is_watching_live_(false)
         {}
     };
 
