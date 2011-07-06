@@ -171,7 +171,7 @@ namespace statistic
     {
         std::ostringstream stream;
 
-        stream<<"/P2PAnalyzerServer/GetConfiguration.jsp";
+        stream<<"/GetConfiguration.jsp";
 
         protocol::VERSION_INFO ver = p2sp::AppModule::GetKernelVersionInfo();
         stream<<"?peer_version="<<static_cast<int>(ver.Major)<<'.'<<static_cast<int>(ver.Minor)<<'.'<<static_cast<int>(ver.Micro)<<'.'<<static_cast<int>(ver.Extra);

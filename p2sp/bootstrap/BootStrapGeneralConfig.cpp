@@ -16,7 +16,6 @@ namespace p2sp
     static const string DEFAULT_CONFIG_STRING(
         "[config]\r\n \
         hl=220.165.14.10@119.167.233.56\r\n \
-        dc_servers=192.168.21.210:8080\r\n \
         usepush=false\r\n \
         uploadpolicy=1");
 

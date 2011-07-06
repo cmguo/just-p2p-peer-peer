@@ -12,6 +12,7 @@
 #include "network/UrlCodec.h"
 #include "storage/Storage.h"
 #include "storage/Instance.h"
+#include <framework/string/Convert.h>
 
 namespace statistic
 {
@@ -53,7 +54,7 @@ namespace statistic
     {
         std::ostringstream stream;
 
-        stream << "/P2PAnalyzerServer/ReportStatistics.jsp";
+        stream << "/ReportStatistics.jsp";
 
         string statistics_id = condition_->GetConditionId();
         stream << "?statistics_id=" << network::UrlCodec::Encode(statistics_id);
@@ -70,7 +71,13 @@ namespace statistic
         string resource_name = "<unknown resource>";
         if (instance)
         {
-            resource_name = instance->GetFileName();
+            string ascii_resource_name = instance->GetFileName();
+
+            framework::string::Convert convert("utf8", "acp");
+            string utf8_resource_name;
+            boost::system::error_code convert_error = convert.convert(ascii_resource_name, utf8_resource_name);
+
+            resource_name = convert_error ? ascii_resource_name : utf8_resource_name;
         }
 
         stream << "&resourceName=" << network::UrlCodec::Encode(resource_name);
