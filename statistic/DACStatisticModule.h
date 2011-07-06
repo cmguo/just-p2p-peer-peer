@@ -65,6 +65,7 @@ namespace statistic
         boost::uint32_t       RestPlayTime;                        // 剩余时间
         boost::uint32_t       ConnectedPeers;                      // 连接上的节点数
         boost::uint32_t       QueryedPeers;                        // 查询到的节点数
+        RID                   ChannelID;                           // 频道ID
 
         void Clear()
         {
@@ -100,6 +101,7 @@ namespace statistic
         void SubmitP2PDownloadTime(uint32_t p2p_download_time);
         void SubmitHttpDownloadTime(uint32_t http_download_time);
         void SubmitRestPlayTime(uint32_t rest_play_time);
+        void SubmitChannelID(const RID& channel_id);
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -251,6 +253,11 @@ namespace statistic
     inline void DACStatisticModule::SubmitRestPlayTime(uint32_t rest_play_time)
     {
         live_dac_statistic_info_.RestPlayTime = rest_play_time;
+    }
+
+    inline void DACStatisticModule::SubmitChannelID(const RID& channel_id)
+    {
+        live_dac_statistic_info_.ChannelID = channel_id;
     }
 }
 

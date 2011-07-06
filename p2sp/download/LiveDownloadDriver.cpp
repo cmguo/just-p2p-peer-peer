@@ -59,6 +59,8 @@ namespace p2sp
 
         bwtype_ = bwtype;
 
+        channel_id_ = channel_id;
+
         timer_->start();
 
         rest_time_tracker_.Start(start_position, live_interval);
@@ -285,6 +287,7 @@ namespace p2sp
             statistic::DACStatisticModule::Inst()->SubmitPlayingPosition(playing_position_.GetBlockId());
             statistic::DACStatisticModule::Inst()->SubmitLivePosition(live_instance_->GetCurrentLivePoint().GetBlockId());
             statistic::DACStatisticModule::Inst()->SubmitRestPlayTime(GetRestPlayableTime());
+            statistic::DACStatisticModule::Inst()->SubmitChannelID(channel_id_);
             if (live_p2p_downloader_)
             {
                 statistic::DACStatisticModule::Inst()->SubmitConnectedPeers(live_p2p_downloader_->GetConnectedPeersCount());
@@ -572,6 +575,7 @@ namespace p2sp
         // P: 跳跃次数
         // Q: 校验失败次数
         // R: SourceType
+        // S: 频道ID
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -603,6 +607,7 @@ namespace p2sp
         info.NumOfCheckSumFailedPieces = checksum_failed_times_ + live_instance_->GetChecksumFailedTimes();
 
         info.SourceType = source_type_;
+        info.ChannelID = channel_id_;
 
         std::ostringstream log_stream;
 
@@ -642,6 +647,7 @@ namespace p2sp
         log_stream << "&P=" << info.JumpTimes;
         log_stream << "&Q=" << info.NumOfCheckSumFailedPieces;
         log_stream << "&R=" << info.SourceType;
+        log_stream << "&S=" << info.ChannelID;
 
         string log = log_stream.str();
 

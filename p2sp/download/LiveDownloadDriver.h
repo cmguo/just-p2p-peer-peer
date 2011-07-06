@@ -59,7 +59,8 @@ namespace p2sp
         boost::uint32_t         StartPosition;          // 开始播放点
         boost::uint32_t         JumpTimes;              // 跳跃次数
         boost::uint32_t         NumOfCheckSumFailedPieces;// 校验失败的piece个数
-        boost::uint32_t         SourceType;
+        boost::uint32_t         SourceType;             //
+        RID                     ChannelID;              // 频道ID
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -300,6 +301,7 @@ namespace p2sp
 
         boost::uint32_t source_type_;
         JumpBWType bwtype_;
+        RID channel_id_;
 
 #if ((defined _DEBUG || defined DEBUG) && (defined CHECK_DOWNLOADED_FILE))
         FILE *fp_;

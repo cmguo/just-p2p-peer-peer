@@ -281,6 +281,7 @@ namespace statistic
         // P: 剩余时间
         // Q: 连接上的节点数
         // R: 查询到的节点数
+        // S: 频道ID
 
         live_dac_statistic_info_.PeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
         live_dac_statistic_info_.PeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
@@ -313,6 +314,7 @@ namespace statistic
         log_stream << "&P=" << live_dac_statistic_info_.RestPlayTime;
         log_stream << "&Q=" << live_dac_statistic_info_.ConnectedPeers;
         log_stream << "&R=" << live_dac_statistic_info_.QueryedPeers;
+        log_stream << "&S=" << live_dac_statistic_info_.ChannelID;
         string log = log_stream.str();
 
         DebugLog("%s", log.c_str());
