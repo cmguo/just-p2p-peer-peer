@@ -199,7 +199,7 @@ namespace p2sp
         // 获得当前数据推送点
         storage::LivePosition & GetPlayingPosition();
         
-        const & RID GetChannelId()
+        const RID & GetChannelId()
         {
             return channel_id_;
         }
