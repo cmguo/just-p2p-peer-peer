@@ -132,6 +132,7 @@ namespace p2sp
         static string ParseOpenServiceFileName(const network::Uri & uri);
 
         bool IsWatchingLive();
+        void OnLivePause(const RID & channel_id, bool pause);
     private:
         boost::asio::io_service & io_svc_;
 

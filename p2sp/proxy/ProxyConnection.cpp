@@ -1107,6 +1107,16 @@ namespace p2sp
                         OnLiveRequest(play_info);
                     }
                 }
+                else if (PlayInfo::IsSetLiveUrl(url_info_.url_))
+                {
+                    // 直播参数修改请求(目前仅仅用于暂停)
+                    // 直播的请求
+                    PlayInfo::p play_info = PlayInfo::Parse(url_info_.url_);
+                    if (play_info)
+                    {
+                        OnLivePause(play_info->GetChannelID(), play_info->GetLivePause());
+                    }
+                }
                 else if (PlayInfo::IsGreenWayUri(uri_))
                 {
                     PlayInfo::p play_info = PlayInfo::Parse(url_info_.url_);
@@ -1998,6 +2008,11 @@ namespace p2sp
         live_download_driver_->Start(play_info->GetUrlInfo(), play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
             play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType());
+    }
+
+    void ProxyConnection::OnLivePause(const RID & rid, bool pause)
+    {
+        ProxyModule::Inst()->OnLivePause(rid, pause);
     }
 
     // 直播收到数据

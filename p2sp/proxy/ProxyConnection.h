@@ -217,6 +217,11 @@ namespace p2sp
             return is_live_connection_;
         }
 
+        LiveDownloadDriver__p GetLiveDownloadDriver()
+        {
+            return live_download_driver_;
+        }
+
     protected:
         virtual void initialize();
         virtual void clear();
@@ -224,6 +229,7 @@ namespace p2sp
     private:
         // 直播请求的处理函数
         void OnLiveRequest(PlayInfo::p play_info);
+        void OnLivePause(const RID & rid, bool pause);
         void OnUrlInfoRequest(const protocol::UrlInfo& url_info, const protocol::RidInfo& rid_info, network::HttpRequest::p http_request);
         void OnOpenServiceRequest(PlayInfo::p play_info);
         void OnPlayByRidRequest(PlayInfo::p play_info);

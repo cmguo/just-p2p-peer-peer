@@ -14,6 +14,8 @@
 #include "p2sp/p2p/P2PDownloader.h"
 #include "p2sp/stun/StunClient.h"
 
+#include "p2sp/download/LiveDownloadDriver.h"
+
 #include "statistic/StatisticModule.h"
 
 #include "network/UrlCodec.h"
@@ -1676,4 +1678,16 @@ namespace p2sp
         return false;
     }
 
+    void ProxyModule::OnLivePause(const RID & channel_id, bool pause)
+    {
+        for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            if ((*iter)->IsLiveConnection() &&
+                (*iter)->GetLiveDownloadDriver()->GetChannelId() == channel_id)
+            {
+                (*iter)->GetLiveDownloadDriver()->SetPause(pause);
+            }
+        }
+    }
 }

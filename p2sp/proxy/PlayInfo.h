@@ -51,6 +51,9 @@ namespace p2sp
         // 判断是否为直播请求串
         static bool IsLiveUrl(const string& url);
 
+        // 判断是否为直播参数修改
+        static bool IsSetLiveUrl(const string & url);
+
         static bool IsGreenWayUri(const network::Uri& uri);
 
         static bool IsGreenWayUrl(const string& url);
@@ -119,6 +122,8 @@ namespace p2sp
             return channel_id_;
         }
 
+        bool GetLivePause() const { return live_pause_; }
+
     public:
 
         static bool IsLocalHost(const string& host, boost::uint16_t port = 0);
@@ -161,6 +166,8 @@ namespace p2sp
         static void ParseLiveReplay(const network::Uri& uri, bool & live_replay);
         // Channel ID
         static void ParseChannelID(const network::Uri& uri, RID & channel_id);
+        // 直播是否暂停
+        static void ParseLivePause(const network::Uri & uri, bool & live_replay);
 
     private:
 
@@ -177,6 +184,7 @@ namespace p2sp
             , bwtype_(0)
             , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
             , live_replay_(false)
+            , live_pause_(false)
         {
         }
 
@@ -208,7 +216,8 @@ namespace p2sp
         uint32_t live_start_;                 // 请求的播放点
         uint32_t live_interval_;              // 直播文件名的间隔
         bool live_replay_;                    // 是否回拖
-        RID channel_id_;                 // 频道ID
+        RID channel_id_;                      // 频道ID
+        bool live_pause_;                     // 是否暂停
     };
 }
 

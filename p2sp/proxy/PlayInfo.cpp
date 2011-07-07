@@ -15,6 +15,7 @@
 #include <boost/algorithm/string/classification.hpp>
 
 #define LIVE_REQUEST_FLAG "/playlive.flv"
+#define LIVE_SET_FLAG "/setlive.flv"
 
 namespace p2sp
 {
@@ -114,7 +115,8 @@ namespace p2sp
             boost::algorithm::iequals(request_path, "/ppvaplaybyurl") ||
             boost::algorithm::iequals(request_path, "/ppvaplaybyopen") ||
             boost::algorithm::istarts_with(request_path, "/ppvadownloadbyurl") ||
-            boost::algorithm::istarts_with(request_path, LIVE_REQUEST_FLAG)
+            boost::algorithm::istarts_with(request_path, LIVE_REQUEST_FLAG) || 
+            boost::algorithm::istarts_with(request_path, LIVE_SET_FLAG)
        );
     }
 
@@ -577,6 +579,13 @@ namespace p2sp
             // SourceType
             ParseSourceType(uri, play_info->source_type_);
         }
+        else if (boost::algorithm::istarts_with(uri.getpath(), LIVE_SET_FLAG))
+        {
+            ParseChannelID(uri, play_info->channel_id_);
+            ParseLivePause(uri, play_info->live_pause_);
+
+            return play_info;
+        }
 
         // sendspeedlimit
         if (false == ParseSendSpeedLimit(uri, play_info->send_speed_limit_))
@@ -647,6 +656,18 @@ namespace p2sp
         network::Uri uri(url);
         string request_path = uri.getpath();
         if (boost::algorithm::iequals(request_path, LIVE_REQUEST_FLAG))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    // 判断是否为直播参数修改
+    bool PlayInfo::IsSetLiveUrl(const string & url)
+    {
+        network::Uri uri(url);
+        string request_path = uri.getpath();
+        if (boost::algorithm::iequals(request_path, LIVE_SET_FLAG))
         {
             return true;
         }
@@ -763,6 +784,23 @@ namespace p2sp
         assert(false);
     }
 
+    // 直播是否暂停
+    void PlayInfo::ParseLivePause(const network::Uri& uri, bool & live_pause)
+    {
+        string str_pause = uri.getparameter("pause");
+        int pause = 0;
+        if (str_pause.length() > 0)
+        {
+            boost::system::error_code ec = framework::string::parse2(str_pause, pause);
+            if (!ec)
+            {
+                live_pause = (pause != 0);
+                return;
+            }
+        }
+        assert(false);
+    }
+
     // 直播Channel ID
     void PlayInfo::ParseChannelID(const network::Uri& uri, RID & channel_id)
     {
@@ -776,6 +814,5 @@ namespace p2sp
             return;
         }
         assert(false);
-
     }
 }

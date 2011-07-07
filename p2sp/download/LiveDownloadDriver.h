@@ -198,6 +198,16 @@ namespace p2sp
         const storage::LivePosition & GetStartPosition();
         // 获得当前数据推送点
         storage::LivePosition & GetPlayingPosition();
+        
+        const & RID GetChannelId()
+        {
+            return channel_id_;
+        }
+
+        void SetPause(bool pause)
+        {
+            pause_ = pause;
+        }
 
     public:
         //IGlobalControlTarget
@@ -279,6 +289,9 @@ namespace p2sp
 
         // 是否回放
         bool replay_;
+        
+        // 是否暂停
+        bool pause_;
 
         boost::uint8_t switch_state_http_;
         boost::uint8_t switch_state_p2p_;
