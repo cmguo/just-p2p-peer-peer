@@ -4,6 +4,12 @@
 #include "p2sp/download/LiveDownloadDriver.h"
 #include "statistic/DACStatisticModule.h"
 
+#ifdef AUTO_SVN_VERSION
+#include "autopeerversion.hpp"
+#else
+#include "PeerVersion.h"
+#endif
+
 using network::HttpClient;
 using namespace base;
 using namespace storage;
@@ -128,6 +134,11 @@ namespace p2sp
             http_client_ = HttpClient<protocol::LiveSubPieceContent>::create(io_svc_, pms_url_domain_,
                 pms_url_port_, MakeRequstPath(block_tasks_.front().GetBlockId()));
             http_client_->SetHandler(shared_from_this());
+
+            // 二代直播 PMS请求 加入版本号
+            // 用于后面添加防盗链
+            http_client_->AddPragma("", PEER_KERNEL_VERSION_STR);
+
             http_client_->Connect();
 
             status_ = connecting;
@@ -322,7 +333,6 @@ namespace p2sp
 
     void LiveHttpDownloader::RequestSubPiece()
     {
-        //http_client_->HttpRecv(length);
         http_client_->HttpRecvSubPiece();
         LOG(__DEBUG, "", "RequestSubPiece");
     }
