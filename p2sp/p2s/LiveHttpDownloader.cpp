@@ -4,12 +4,6 @@
 #include "p2sp/download/LiveDownloadDriver.h"
 #include "statistic/DACStatisticModule.h"
 
-#ifdef AUTO_SVN_VERSION
-#include "autopeerversion.hpp"
-#else
-#include "PeerVersion.h"
-#endif
-
 using network::HttpClient;
 using namespace base;
 using namespace storage;

@@ -18,6 +18,8 @@
 
 namespace statistic
 {
+    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics_collection");
+
     StatisticsCollectionController::StatisticsCollectionController(
         boost::shared_ptr<p2sp::BootStrapGeneralConfig> bootstrap_config, 
         const string& config_path)
@@ -29,35 +31,46 @@ namespace statistic
     {
         bootstrap_config_->AddUpdateListener(shared_from_this());
 
-        if (bootstrap_config_->IsDataCollectionOn())
+        if (!bootstrap_config_->IsDataCollectionOn())
         {
-            StatisticsCollectionConfigurationFile config_file(config_path_);
+            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics collection is OFF.");
+            return;
+        }
 
-            bool needs_to_download_config_from_server = true;
+        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics collection is ON.");
 
-            string config_xml;
-            std::time_t file_modified_time;
-            if (config_file.TryLoad(config_xml, file_modified_time))
+        StatisticsCollectionConfigurationFile config_file(config_path_);
+
+        bool needs_to_download_config_from_server = true;
+
+        string config_xml;
+        std::time_t file_modified_time;
+        if (config_file.TryLoad(config_xml, file_modified_time))
+        {
+            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " existing statistics configuration is loaded.");
+
+            StatisticsConfigurationsParser parser;
+            boost::shared_ptr<StatisticsConfigurations> config = parser.Parse(config_xml);
+
+            if (config)
             {
-                StatisticsConfigurationsParser parser;
-                boost::shared_ptr<StatisticsConfigurations> config = parser.Parse(config_xml);
+                LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " successfully parsed existing statistics configuration.");
 
-                if (config)
+                if (false == IsConfigurationExpired(file_modified_time, config->expires_in_minutes_))
                 {
-                    if (false == IsConfigurationExpired(file_modified_time, config->expires_in_minutes_))
-                    {
-                        needs_to_download_config_from_server = false;
-                        StartStatisticsCollection(config);
-                    }
+                    LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " existing statistics configuration is NOT yet expired and will be used for this session.");
+                    needs_to_download_config_from_server = false;
+                    StartStatisticsCollection(config);
                 }
             }
-            
-            if (needs_to_download_config_from_server)
-            {
-                config_file.Remove();
+        }
+        
+        if (needs_to_download_config_from_server)
+        {
+            config_file.Remove();
 
-                StartAsyncDownload();
-            }
+            LOG(__INFO, "statistics_collection", __FUNCTION__ << "starting download of statistics collection configuration.");
+            StartAsyncDownload();
         }
     }
 
@@ -84,6 +97,7 @@ namespace statistic
 
         if (statistics_configurations->statistics_configurations_.size() ==0)
         {
+            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " There's no active statistics configurations.");
             return;
         }
 
@@ -121,6 +135,8 @@ namespace statistic
     //这里的重点是，如果新的BS里日志收集开关与之前cached的状态不一致，以新的设置为准
     void StatisticsCollectionController::OnConfigUpdated()
     {
+        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Detected change of BS configuration.");
+
         if (bootstrap_config_->IsDataCollectionOn())
         {
             //如果已经在收集，或正在下载日志收集相关配置，
@@ -132,10 +148,13 @@ namespace statistic
             }
         }
 
+        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Stopping statistics collection.");
+
         Stop();
 
         if (bootstrap_config_->IsDataCollectionOn())
         {
+            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Starting statistics collection.");
             Start();
         }
     }

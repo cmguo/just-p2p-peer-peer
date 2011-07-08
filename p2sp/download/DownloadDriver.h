@@ -305,6 +305,7 @@ namespace p2sp
 
         void AddBakHttpDownloaders(protocol::UrlInfo& original_url_info);
 
+        void DetectBufferring();
         void StartBufferringMonitor();
 
     protected:

@@ -747,9 +747,21 @@ namespace p2sp
         if (instance_ && 
             false == instance_->GetRID().is_empty() && 
             false == instance_->IsComplete() &&
-            this->is_open_service_)
+            this->is_open_service_ && 
+            IsPPLiveClient())
         {
             bufferring_monitor_ = AppModule::Inst()->CreateBufferringMonitor(instance_->GetRID());
+        }
+        else
+        {
+            if (!instance_)
+            {
+                LOG(__DEBUG, "download", __FUNCTION__ << " instance is NULL.");
+            }
+            else if (instance_->GetRID().is_empty())
+            {
+                LOG(__DEBUG, "download", __FUNCTION__ << " instance does not have a valid RID.");
+            }
         }
     }
 
@@ -2585,6 +2597,8 @@ namespace p2sp
         DD_DEBUG("SetRestPlayTime " << rest_play_time);
         rest_play_time_ = rest_play_time;
         rest_play_time_set_counter_.reset();
+
+        DetectBufferring();
     }
 
     void DownloadDriver::SetDownloadMode(boost::int32_t download_mode)
@@ -2785,6 +2799,35 @@ namespace p2sp
         }
         state = (boost::int32_t)SwitchController::MS_UNDEFINED;
     }
+
+    void DownloadDriver::DetectBufferring()
+    {
+        if (bufferring_monitor_)
+        {
+            if (is_running_ &&
+                download_time_counter_.running() && 
+                download_time_counter_.elapsed() > 3*1000 &&
+                GetRestPlayableTime() <= 1000)
+            {
+                uint32_t data_rate = GetDataRate();
+                if (data_rate > 0)
+                {
+                    uint32_t bufferring_position_in_seconds = GetPlayingPosition()/data_rate;
+                    bufferring_monitor_->BufferringOccurs(bufferring_position_in_seconds);
+                }
+                else
+                {
+                    LOG(__ERROR, "", "data rate = 0");
+                }
+            }
+            else
+            {
+                LOG(__DEBUG, "", "RestPlayableTime " << GetRestPlayableTime());
+                LOG(__DEBUG, "", "download_time_counter.running " << download_time_counter_.running());
+                LOG(__DEBUG, "", "download_time_counter.elapsed " << download_time_counter_.elapsed());
+            }
+        }
+    }
     
     void DownloadDriver::OnTimerElapsed(framework::timer::Timer * pointer)
     {
@@ -2794,22 +2837,6 @@ namespace p2sp
             {
                 LOG(__DEBUG, "test", "DownloadDriver::OnTimerElapsed");
                 SmartLimitSpeed(pointer->times());
-            }
-
-            if (bufferring_monitor_)
-            {
-                if (is_running_ &&
-                    download_time_counter_.running() && 
-                    download_time_counter_.elapsed() > 3*1000 &&
-                    GetRestPlayableTime() <= 1000)
-                {
-                    uint32_t data_rate = GetDataRate();
-                    if (data_rate > 0)
-                    {
-                        uint32_t bufferring_position_in_seconds = GetPlayingPosition()/data_rate;
-                        bufferring_monitor_->BufferringOccurs(bufferring_position_in_seconds);
-                    }
-                }
             }
         }
     }
@@ -2919,6 +2946,9 @@ namespace p2sp
         {
             Storage::Inst()->AttachRidByUrl(origanel_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
         }
+
+        bufferring_monitor_.reset();
+        StartBufferringMonitor();
     }
 
     std::vector<IHTTPControlTarget::p> DownloadDriver::GetAllHttpControlTargets()

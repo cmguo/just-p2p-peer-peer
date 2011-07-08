@@ -42,6 +42,17 @@ namespace p2sp
         {
             bufferring_monitor_ = AppModule::Inst()->CreateBufferringMonitor(live_instance_->GetRID());
         }
+        else
+        {
+            if (!live_instance_)
+            {
+                LOG(__DEBUG, "live_download", __FUNCTION__ << " live_instance_ is NULL.");
+            }
+            else
+            {
+                LOG(__DEBUG, "live_download", __FUNCTION__ << " live_instance_ does not have a valid RID.");
+            }
+        }
     }
 
     void LiveDownloadDriver::Start(const protocol::UrlInfo& url_info, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
