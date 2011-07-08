@@ -137,7 +137,7 @@ namespace p2sp
 
             // 二代直播 PMS请求 加入版本号
             // 用于后面添加防盗链
-            http_client_->AddPragma("", PEER_KERNEL_VERSION_STR);
+            http_client_->AddPragma("", "1.0");
 
             http_client_->Connect();
 
