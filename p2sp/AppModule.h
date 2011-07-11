@@ -50,11 +50,7 @@ class AppModuleStartInterface
         string guid_str, string config_path, bool use_cache, bool use_push, bool disk_read_only,
         bool http_proxy_enabled, boost::uint8_t peer_catalog)
     {
-        Guid peer_guid;
-        // if (guid_str.length() < sizeof(Guid))
-        //    peer_guid.Generate();
-        // else
-        //    memcpy(&peer_guid, guid_str.c_str(), sizeof(Guid));
+        Guid peer_guid(guid_str);
 
         return p(new AppModuleStartInterface(local_udp_port, local_http_procy_port, url, port, bUseDisk, ullDiskLimit,
             disk_path, is_test_core, test_domain, peer_guid, config_path, use_cache, use_push, disk_read_only,

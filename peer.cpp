@@ -147,7 +147,7 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
         disk_path,
         bIsTestCore,
         test_domain,
-        string(lpParam->szPeerGuid, 16),
+        string(lpParam->szPeerGuid, 32),
         config_path,
         bUseCache,
         bUsePush,
