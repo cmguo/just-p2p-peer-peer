@@ -24,6 +24,7 @@
 #include "storage/Performance.h"
 #include "p2sp/p2p/UploadSpeedLimiter.h"
 #include "p2sp/p2p/UploadSpeedLimitTracker.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "statistic/SpeedInfoStatistic.h"
 
 namespace p2sp
@@ -261,6 +262,7 @@ namespace p2sp
         : public boost::noncopyable
         , public boost::enable_shared_from_this<UploadManager>
         , public storage::IUploadListener
+        , public ConfigUpdateListener
 #ifdef DUMP_OBJECT
         , public count_object_allocate<UploadManager>
 #endif
@@ -326,6 +328,9 @@ namespace p2sp
         boost::uint32_t GetUploadBandWidthInBytes() {return GetMaxUploadSpeedForControl();}
         size_t GetCurrentCacheSize() const;
         void SetCurrentCacheSize(size_t cache_size);
+
+        void OnConfigUpdated();
+        bool NeedUseUploadPingPolicy();
 
     private:
         void ShrinkCacheListIfNeeded(size_t cache_size);
@@ -396,7 +401,7 @@ namespace p2sp
         bool is_disable_upload_;
 
         boost::shared_ptr<NetworkQualityMonitor> network_quality_monitor_;
-
+        BootStrapGeneralConfig::UploadPolicy upload_policy_;
     private:
         UploadManager()
             : is_running_(false)
@@ -405,6 +410,7 @@ namespace p2sp
             , recent_play_series_(0)
             , upload_limiter_()
             , is_disable_upload_(false)
+            , upload_policy_(BootStrapGeneralConfig::policy_defalut)
         {}
     };
 

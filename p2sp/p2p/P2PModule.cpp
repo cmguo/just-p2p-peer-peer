@@ -472,6 +472,11 @@ namespace p2sp
         return GetUploadBandWidthInBytes() / 1024;
     }
 
+    bool P2PModule::NeedUseUploadPingPolicy()
+    {
+        return upload_manager_->NeedUseUploadPingPolicy();
+    }
+
     LiveP2PDownloader__p P2PModule::CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance)
     {
         if (live_rid_index_.find(rid) != live_rid_index_.end())

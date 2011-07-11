@@ -13,7 +13,6 @@
 #include "p2sp/p2p/PeerHelper.h"
 #include "p2sp/proxy/ProxyModule.h"
 #include "p2sp/p2p/NetworkQualityMonitor.h"
-#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 #include "protocol/PeerPacket.h"
 
@@ -79,7 +78,7 @@ namespace p2sp
         LoadHistoricalMaxUploadSpeed();
 
         network_quality_monitor_ = boost::shared_ptr<NetworkQualityMonitor>(new NetworkQualityMonitor(global_io_svc()));
-        //network_quality_monitor_->Start();
+        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
     }
 
     void UploadManager::Stop()
@@ -1423,16 +1422,15 @@ namespace p2sp
                 }
             }
 
-            bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
-            bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
-            if (BootStrapGeneralConfig::Inst()->GetUploadPolicy() == BootStrapGeneralConfig::policy_ping
-                && is_main_state && !is_watching_live && network_quality_monitor_->IsWorking())
+            if (NeedUseUploadPingPolicy())
             {
                 UploadControlOnPingPolicy();
                 return;
             }
 
             // status
+            bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
+            bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
             bool is_download_with_slowmode = p2sp::ProxyModule::Inst()->IsDownloadWithSlowMode();
             bool is_downloading_movie = p2sp::ProxyModule::Inst()->IsDownloadingMovie();
             bool is_http_downloading = p2sp::ProxyModule::Inst()->IsHttpDownloading();
@@ -1953,7 +1951,7 @@ namespace p2sp
     void UploadManager::UploadControlOnPingPolicy()
     {
         uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
-        DebugLog("upload lost_rate:%d\%, avg_delay:%d ms, upload_speed:%d, upload_bd:%d", network_quality_monitor_->GetPingLostRate(),
+        DebugLog("upload lost_rate:%d%%, avg_delay:%d ms, upload_speed:%d, upload_bd:%d", network_quality_monitor_->GetPingLostRate(),
             network_quality_monitor_->GetAveragePingDelay(), upload_speed_kbs, GetMaxUploadSpeedForControl() / 1024);
 
         bool is_network_good;
@@ -2014,6 +2012,49 @@ namespace p2sp
             }
 
             return upload_speed_limit_kbs * 1024;
+        }
+    }
+
+    void UploadManager::OnConfigUpdated()
+    {
+        BootStrapGeneralConfig::UploadPolicy new_policy = BootStrapGeneralConfig::Inst()->GetUploadPolicy();
+        if (new_policy != upload_policy_)
+        {
+            if (new_policy == BootStrapGeneralConfig::policy_defalut)
+            {
+                if (upload_policy_ == BootStrapGeneralConfig::policy_ping)
+                {
+                    DebugLog("upload change from policy_ping to policy_default");
+                    upload_policy_ = BootStrapGeneralConfig::policy_defalut;
+                    network_quality_monitor_->Stop();
+                }
+            }
+            else if (new_policy == BootStrapGeneralConfig::policy_ping)
+            {
+                if (upload_policy_ == BootStrapGeneralConfig::policy_defalut)
+                {
+                    DebugLog("upload change from policy_default to policy_ping");
+                    upload_policy_ = BootStrapGeneralConfig::policy_ping;
+                    network_quality_monitor_->Start();
+                }
+            }
+        }
+    }
+
+    bool UploadManager::NeedUseUploadPingPolicy()
+    {
+        bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
+        bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
+        bool is_watching_live_by_peer = p2sp::ProxyModule::Inst()->IsWatchingLive();
+        if (upload_policy_ == BootStrapGeneralConfig::policy_ping
+            && is_main_state && !is_watching_live && !is_watching_live_by_peer
+            && network_quality_monitor_->IsRunning() && network_quality_monitor_->HasGateWay())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
 }

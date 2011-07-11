@@ -17,7 +17,7 @@ namespace p2sp
         "[config]\r\n \
         hl=220.165.14.10@119.167.233.56\r\n \
         usepush=false\r\n \
-        uploadpolicy=1");
+        uploadpolicy=0");
 
     BootStrapGeneralConfig::BootStrapGeneralConfig()
         : use_push_(false), upload_policy_(policy_ping)

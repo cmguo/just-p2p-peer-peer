@@ -57,12 +57,6 @@ namespace storage
         bool HasFullBlock(uint32_t block_index) const {
             return block_bit_map_->HasBlock(block_index);
         }
-        void SetBlockVerifiedState(uint32_t block_index, uint8_t state) {
-            block_verify_set_[block_index] = state;
-        }
-        uint8_t GetBlockVerifiedState(uint32_t block_index) const {
-            return block_verify_set_[block_index];
-        }
         void RemoveBlockInfo(uint32_t block_index);
         void OnWriteBlockFinish(uint32_t block_index);
         void OnWriteSubPieceFinish(protocol::SubPieceInfo &subpiece_info);
@@ -224,7 +218,6 @@ namespace storage
         uint32_t last_subpiece_size_;        // �最后一片subpiece的容
 
         std::vector<BlockNode::p> blocks_;
-        std::vector<boost::uint8_t> block_verify_set_;
         protocol::BlockMap::p block_bit_map_;
         uint32_t blocks_count_;              // �非空的block
         uint32_t download_bytes_;            // �已下载字节数

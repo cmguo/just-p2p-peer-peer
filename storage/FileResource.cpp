@@ -680,6 +680,14 @@ namespace storage
         return NULL != file_handle_;
     }
 
+    boost::int64_t FileResource::GetLastWriteTime()
+    {
+        boost::int64_t file_modified_time;
+        boost::system::error_code err_code;
+        base::filesystem::last_write_time_nothrow(file_name_, file_modified_time, err_code);
+        return err_code ? 0 : file_modified_time;
+    }
+
 #endif  // #ifdef DISK_MODE
 
 }

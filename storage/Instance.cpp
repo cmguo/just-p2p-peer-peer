@@ -38,6 +38,7 @@ namespace storage
 
     const uint32_t storage_send_speed_limit = 2048;
     const int32_t deattach_timer_timeout = 5;
+    const boost::int64_t OneDayInSeconds = 24 * 60 * 60;
 
     Instance::Instance()
         : is_running_(true)
@@ -61,6 +62,7 @@ namespace storage
         , deattach_timer_(global_second_timer(), deattach_timer_timeout * 1000, boost::bind(&Instance::OnDeAttachTimerElapsed, this, &deattach_timer_))
         , md5_hash_failed_(0)
         , is_push_(false)
+        , filesystem_last_write_time_(0)
     {
         STORAGE_DEBUG_LOG(
             "traffic_timer_:" << (void*)&traffic_timer_ <<
@@ -848,15 +850,15 @@ namespace storage
         OnPendingHashContentFinish(hash_val, content_buffer_.Length());
     }
 
-    void Instance::OnHashBlockFinish(uint32_t block_index, MD5 hash_val, base::AppBuffer& buf, IUploadListener::p listener)
+    void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, 
+        IUploadListener::p listener, MD5 hash_val)
     {
         if (false == is_running_)
             return;
         if (!subpiece_manager_)
             return;
 
-        assert(subpiece_manager_->GetBlockVerifiedState(block_index) == BEING_VERIFIED);
-        STORAGE_DEBUG_LOG(" block_index:" << block_index << "md5:" << hash_val);
+        DebugLog("hash: OnReadBlockForUploadFinishWithHash index:%d md5:%s", block_index, hash_val.to_string().c_str());
 
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index].is_empty())
         {
@@ -866,18 +868,35 @@ namespace storage
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index] == hash_val)
         {
             // MD5校验成功--------------------------------
-            subpiece_manager_->SetBlockVerifiedState(block_index, HAS_BEEN_VERIFIED);
-            if (listener)
-                listener->OnAsyncGetBlockSucced(GetRID(), block_index, buf);
             STORAGE_TEST_DEBUG("Hash ok and Upload------>block index:" << block_index);
+            UpdateBlockHashTime(block_index);
+            if (listener)
+            {
+                listener->OnAsyncGetBlockSucced(GetRID(), block_index, buf);
+            }            
         }
         else
         {
             // MD5校验失败--------------------------------
-            subpiece_manager_->SetBlockVerifiedState(block_index, NO_VERIFIED);
-            if (listener)
-                listener->OnAsyncGetBlockFailed(GetRID(), block_index, (int) ERROR_GET_SUBPIECE_BLOCK_VERIFY_FAILED);
             STORAGE_TEST_DEBUG("Hash failed----->block index:" << block_index);
+            if (listener)
+            {
+                listener->OnAsyncGetBlockFailed(GetRID(), block_index, (int) ERROR_GET_SUBPIECE_BLOCK_VERIFY_FAILED);
+            }            
+        }
+    }
+
+    void Instance::OnReadBlockForUploadFinish(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener)
+    {
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        DebugLog("hash: OnReadBlockForUploadFinish index:%d", block_index);
+        if (listener)
+        {
+            listener->OnAsyncGetBlockSucced(GetRID(), block_index, buf);
         }
     }
 
@@ -890,8 +909,6 @@ namespace storage
         if (!subpiece_manager_)
             return;
 
-        assert(subpiece_manager_->GetBlockVerifiedState(block_index) == BEING_VERIFIED);
-
         STORAGE_DEBUG_LOG(" block_index:" << block_index << " md5:" << hash_val);
 
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index].is_empty())
@@ -903,7 +920,6 @@ namespace storage
         {
             STORAGE_DEBUG_LOG("Hash Block Verifed, block_index = " << block_index << ", HAS_BEEN_VERIFIED");
 
-            subpiece_manager_->SetBlockVerifiedState(block_index, HAS_BEEN_VERIFIED);
             // 告诉download_driver，hash成功
             OnNotifyHashBlock(block_index, true);
             if (subpiece_manager_->GenerateRid())
@@ -975,7 +991,6 @@ namespace storage
         }
         STORAGE_DEBUG_LOG(" block_index:" << block_index << "rid_info: " << subpiece_manager_->GetRidInfo());
         subpiece_manager_->RemoveBlockInfo(block_index);
-        subpiece_manager_->SetBlockVerifiedState(block_index, NO_VERIFIED);
 
         OnNotifyHashBlock(block_index, false);
     }
@@ -1003,9 +1018,12 @@ namespace storage
     // 如果某个block已被鉴定，则从文件中读取，将该block交给upload_driver，否则...
     void Instance::AsyncGetBlock(uint32_t block_index, IUploadListener::p listener)
     {
-        STORAGE_DEBUG_LOG("Upload Get Block index: " << block_index);
+        
         if (is_running_ == false)
+        {
             return;
+        }
+
         if (!subpiece_manager_)
         {
             STORAGE_ERR_LOG("AsyncGetBlock: subpiece_manager_==null");
@@ -1019,15 +1037,12 @@ namespace storage
         if (false == subpiece_manager_->HasFullBlock(block_index))
         {
             if (listener)
+            {
                 listener->OnAsyncGetBlockFailed(GetRID(), block_index, (int)ERROR_GET_SUBPIECE_BLOCK_NOT_FULL);
+            }
             return;
         }
 
-        if (subpiece_manager_->GetBlockVerifiedState(block_index) == BEING_VERIFIED)
-            return;
-
-        // NO_VERIFIED
-        subpiece_manager_->SetBlockVerifiedState(block_index, BEING_VERIFIED);
 #ifdef DISK_MODE
         // block是满的，校验，然后交给UploadDriver
         if (NULL == resource_p_)
@@ -1039,10 +1054,10 @@ namespace storage
         }
         else
         {
+            DebugLog("hash: Upload Get Block index: %d", block_index);
             StorageThread::Post(boost::bind(&Resource::ThreadReadBlockForUpload, resource_p_, GetRID(), block_index,
-                listener, true));
+                listener, CheckBlockNeedHash(block_index)));
         }
-
 #else
         if (listener)
         {
@@ -1825,4 +1840,42 @@ namespace storage
         return md5_hash_failed_;
     }
 #endif
+
+    void Instance::UpdateBlockHashTime(uint32_t block_index)
+    {
+#ifdef DISK_MODE
+        boost::int64_t last_write_time_now = resource_p_->GetLastWriteTime();
+        if (last_write_time_now != 0)
+        {
+            if (filesystem_last_write_time_ != last_write_time_now)
+            {
+                block_hash_time_map_.clear();
+            }
+
+            filesystem_last_write_time_ = last_write_time_now;
+            block_hash_time_map_[block_index] = std::time(NULL);
+            DebugLog("hash: update block %d, hash time to %ld", block_index, block_hash_time_map_[block_index]);
+        }        
+#endif
+    }
+
+    bool Instance::CheckBlockNeedHash(uint32_t block_index)
+    {
+#ifdef DISK_MODE
+        boost::uint64_t last_write_time_now = resource_p_->GetLastWriteTime();
+        if (last_write_time_now == 0 || filesystem_last_write_time_ != last_write_time_now
+            || block_hash_time_map_.find(block_index) == block_hash_time_map_.end())
+        {
+            DebugLog("hash: check block %d need hash:1", block_index);
+            return true;
+        }
+        else
+        {
+            bool need_hash = std::time(NULL) >  block_hash_time_map_[block_index] + OneDayInSeconds;
+            DebugLog("hash: check block %d need hash:%d", block_index, need_hash);
+            // 校验超过一天时间需要重新校验
+            return  need_hash;
+        }
+#endif
+    }
 }

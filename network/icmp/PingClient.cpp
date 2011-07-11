@@ -23,14 +23,14 @@ namespace network
 
     PingClient::PingClient(boost::asio::io_service & io_svc)
         : resolver_(io_svc), socket_(io_svc, boost::asio::ip::icmp::v4()), is_receiving_(false)
+        , is_ttl_support_tested_(false), is_ttl_supported_(false)
     {
     }
 
     void PingClient::Bind(const string & destination_ip)
     {
-        boost::asio::ip::icmp::resolver_query query(boost::asio::ip::icmp::v4(), destination_ip, "");
-        boost::system::error_code ec;
-        desination_endpoint_ = *resolver_.resolve(query, ec);
+        destination_endpoint_ = 
+            boost::asio::ip::icmp::endpoint(boost::asio::ip::address_v4::from_string(destination_ip), 0);
     }
 
     void PingClient::Cancel(uint16_t sequence_num)
@@ -38,10 +38,9 @@ namespace network
         handler_map_.erase(sequence_num);
     }
 
-    void PingClient::Close()
+    void PingClient::CancelAll()
     {
         handler_map_.clear();
-        socket_.close();
     }
 
     void PingClient::Receive()
@@ -122,12 +121,44 @@ namespace network
 #endif
     }
 
-    void PingClient::SetTtl(int32_t ttl)
+    bool PingClient::SetTtl(int32_t ttl)
     {
+        if (!is_ttl_support_tested_)
+        {
+            int current_ttl = 0;
+            is_ttl_supported_ = TryGetCurrentTtl(current_ttl);
+            is_ttl_support_tested_ = true;
+            DebugLog("SetTtl test %d", is_ttl_supported_);
+        }
+
+        if (is_ttl_supported_)
+        {
+            // windows and linux both have the setsockopt api with the same parameter definition.
+            if(setsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(int32_t)) != 0)
+            {
+                return false;
+            }
+            
+            int current_ttl = 0;
+            bool can_get_ttl = TryGetCurrentTtl(current_ttl);
+            assert(can_get_ttl);
+            DebugLog("SetTtl tryget:%d, current_ttl:%d, ttl %d", can_get_ttl, current_ttl, ttl);
+            return current_ttl == ttl;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    bool PingClient::TryGetCurrentTtl(int & ttl)
+    {
+        // windows and linux both have the getsockopt api with the similar parameter definition.
 #ifdef BOOST_WINDOWS_API
-        setsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(int32_t));
+        int opt_len = sizeof(int);
 #else
-        // TODO(herain):2011-6-17:linux ttl set not implemented
+        uint32_t opt_len = sizeof(int);
 #endif
+        return (getsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, &opt_len) == 0);
     }
 }

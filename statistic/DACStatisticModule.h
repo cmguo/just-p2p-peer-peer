@@ -24,7 +24,7 @@ namespace statistic
         boost::uint32_t       uUsedDiskSizeInMB;                    // 缓存目录已用大小
         boost::uint32_t       uTotalDiskSizeInMB;                   // 缓存目录设置大小
         boost::uint32_t       uUploadBandWidthInBytes;              // 上传带宽
-        boost::uint32_t       uIdleTimeInMins;                      // IDLE时长(分钟)
+        boost::uint32_t       uNeedUseUploadPingPolicy;             // 上传使用ping policy
         boost::uint32_t       uUploadLimitInKBytes;                 // p2p上传限速字节数
         boost::uint32_t       uUploadDiscardBytes;                  // p2p上传限速导致被丢弃的报文字节数
     } PERIOD_DAC_STATISTIC_INFO_STRUCT, *LPPERIOD_DAC_STATISTIC_INFO_STRUCT;

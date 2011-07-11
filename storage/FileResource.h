@@ -77,6 +77,7 @@ class FileResource: public Resource
     virtual void Erase(const uint32_t startpos, const uint32_t length);
     virtual bool TryRenameToNormalFile();
     virtual bool TryRenameToTppFile();
+    virtual boost::int64_t GetLastWriteTime();
     private:
     FILE* file_handle_;
 };

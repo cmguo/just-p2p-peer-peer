@@ -109,6 +109,11 @@ namespace storage
         return true;
     }
 
+    boost::int64_t NullResource::GetLastWriteTime()
+    {
+        return 0;
+    }
+
 #endif  // !DISK_MODE
 
 }

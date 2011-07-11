@@ -26,15 +26,18 @@ namespace p2sp
         void StartSend();
         void HandleTimeOut(const boost::system::error_code& error);
         void HandleReceive(unsigned char type, const string & src_ip);
+        void Reset();
 
     private:
         boost::asio::io_service & io_svc_;
         IGateWayFinderListener * listener_;
+        bool is_running_;
         network::PingClient::p ping_client_;
         boost::asio::deadline_timer timer_;
         boost::uint16_t sequence_number_;
         boost::posix_time::ptime time_sent_;
         int ttl_;
+        int32_t time_out_num_;
     };
 }
 

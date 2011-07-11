@@ -32,7 +32,7 @@ namespace network
             os << request << ping_request_body;
 
             boost::system::error_code ec;
-            socket_.send_to(request_buf.data(), desination_endpoint_, 0, ec);
+            socket_.send_to(request_buf.data(), destination_endpoint_, 0, ec);
             if (!ec)
             {
                 assert(handler_map_.find(sequence_num_) == handler_map_.end());
@@ -45,8 +45,8 @@ namespace network
         }
 
         void Cancel(uint16_t sequence_num);
-        void Close();
-        void SetTtl(int32_t ttl);
+        void CancelAll();
+        bool SetTtl(int32_t ttl);
 
     private:
         PingClient(boost::asio::io_service & io_svc);
@@ -54,6 +54,7 @@ namespace network
         static unsigned short GetIdentifier();
         void Receive();
         void HandleReceive(const boost::system::error_code & error_code, uint32_t bytes_transfered);
+        bool TryGetCurrentTtl(int & ttl);
 
     private:
         boost::asio::ip::icmp::socket socket_;
@@ -61,9 +62,12 @@ namespace network
         bool is_receiving_;
         boost::asio::streambuf recv_buffer_;
         std::map<uint16_t, boost::function<void (unsigned char, string)> > handler_map_;
-        boost::asio::ip::icmp::endpoint desination_endpoint_;
+        boost::asio::ip::icmp::endpoint destination_endpoint_;
 
         static uint16_t sequence_num_;
+
+        bool is_ttl_supported_;
+        bool is_ttl_support_tested_;
     };
 }
 

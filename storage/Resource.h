@@ -130,6 +130,8 @@ namespace storage
         virtual void CloseFileHandle() = 0;
         virtual bool IsFileOpen() = 0;
         virtual bool ReOpenFile() = 0;
+
+        virtual boost::int64_t GetLastWriteTime() = 0;
 #endif  // DISK_MODE
 
     public:

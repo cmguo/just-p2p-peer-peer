@@ -403,14 +403,22 @@ namespace storage
         {
             return;
         }
+
         STORAGE_DEBUG_LOG("Enter!");
-        STORAGE_TEST_DEBUG("Read Block From Disk------->block index:" << block_index);
+        DebugLog("hash: ThreadReadBlockForUpload index:%d, need_hash:%d", block_index, need_hash);
+#ifdef BOOST_WINDOWS_API
+        std::ostringstream oss;
+        oss << "read block" << block_index << " " << need_hash << std::endl;
+        OutputDebugString(oss.str().c_str());
+#endif
+
         assert(!rid.is_empty());
         bool if_file_exist = true;
         if (false == IsFileOpen() && false == ReOpenFile())
         {
             if_file_exist = false;
         }
+
         if (!subpiece_manager_->HasFullBlock(block_index) || false == if_file_exist)
         {
             STORAGE_TEST_DEBUG("Do not has full block---->block index:" << block_index);
@@ -431,38 +439,40 @@ namespace storage
             io_svc_.post(boost::bind(&Instance::SetIsUploadingBlock, instance_p_, false));
         }
 
-        /*
-        CMD5::p hash = CMD5::Create();need to be fixed 100712
-        hash->Add(ret_buf.Data(), ret_buf.Length());
-        hash->Finish();
-        */
-
-        framework::string::Md5 md5;
-        uint32_t subpiece_len = 0;
-        uint32_t offset = 0;
-        while (offset < buff.Length())
+        if (need_hash)
         {
-            if (offset + bytes_num_per_piece_g_ <= buff.Length())
-                subpiece_len = bytes_num_per_piece_g_;
-            else
-                subpiece_len = buff.Length() - offset;
-            md5.update(buff.Data() + offset, subpiece_len);
-            offset += subpiece_len;
+            framework::string::Md5 md5;
+            uint32_t subpiece_len = 0;
+            uint32_t offset = 0;
+            while (offset < buff.Length())
+            {
+                if (offset + bytes_num_per_piece_g_ <= buff.Length())
+                    subpiece_len = bytes_num_per_piece_g_;
+                else
+                    subpiece_len = buff.Length() - offset;
+                md5.update(buff.Data() + offset, subpiece_len);
+                offset += subpiece_len;
+            }
+
+            md5.final();
+
+            MD5 hash_val;
+            hash_val.from_bytes(md5.to_bytes());
+
+            if (instance_p_)
+            {
+                io_svc_.post(boost::bind(&Instance::OnReadBlockForUploadFinishWithHash, instance_p_, block_index,
+                    buff, listener, hash_val));
+            }
         }
-        md5.final();
-
-        /*
-        SMD5 hash_val;
-        hash->GetHash(hash_val);
-        */
-
-        MD5 hash_val;
-        hash_val.from_bytes(md5.to_bytes());
-        if (instance_p_)
+        else
         {
-            io_svc_.post(boost::bind(&Instance::OnHashBlockFinish, instance_p_, block_index, hash_val,
-                buff, listener));
+            if (instance_p_)
+            {
+                io_svc_.post(boost::bind(&Instance::OnReadBlockForUploadFinish, instance_p_, block_index, buff, listener));
+            }
         }
+        
         return;
     }
 

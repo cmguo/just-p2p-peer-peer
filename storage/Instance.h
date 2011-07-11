@@ -241,7 +241,9 @@ namespace storage
         // 读取需要上传的block，上传
         void OnPendingHashBlockFinish(uint32_t block_index, MD5 hash_val);
 
-        void OnHashBlockFinish(uint32_t block_index, MD5 hash_val, base::AppBuffer& buf, IUploadListener::p listener);
+        void OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener,
+            MD5 hash_val);
+        void OnReadBlockForUploadFinish(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener);
 
         // content写入完毕，通知download_driver
         void OnPendingHashContentFinish(MD5 hash_val, uint32_t content_bytes);
@@ -291,6 +293,9 @@ namespace storage
         void OnMergeTimerElapsed(framework::timer::Timer * pointer);
         void OnDeAttachTimerElapsed(framework::timer::Timer * pointer);
 
+        void UpdateBlockHashTime(uint32_t block_index);
+        bool CheckBlockNeedHash(uint32_t block_index);
+
     protected:
         volatile bool is_running_;
         bool b_pure_download_mode_;
@@ -327,6 +332,9 @@ namespace storage
         uint32_t is_open_service_;  // is_open_service
         // version 6
         bool is_push_;
+        //version 7
+        boost::int64_t filesystem_last_write_time_;    //操作系统获取的资源文件最后修改时间
+        std::map<uint32_t, boost::int64_t> block_hash_time_map_; //每个block的最近校验时间
 
         //
         string qname_;

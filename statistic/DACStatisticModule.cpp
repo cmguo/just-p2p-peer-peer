@@ -158,8 +158,8 @@ namespace statistic
         // 上传带宽
         lpPeriodDACStatisticInfo->uUploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
         // IDLE时长(分钟)
-        lpPeriodDACStatisticInfo->uIdleTimeInMins = idle_time_;
-        idle_time_ = 0;
+        //lpPeriodDACStatisticInfo->uIdleTimeInMins = idle_time_;
+        lpPeriodDACStatisticInfo->uNeedUseUploadPingPolicy = p2sp::P2PModule::Inst()->NeedUseUploadPingPolicy();
 
         // 上传限速字节数
         upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
@@ -179,7 +179,7 @@ namespace statistic
         LOGX(__DEBUG, "msg", "  uP2PUploadKBytesByNomal = " << lpPeriodDACStatisticInfo->uP2PUploadKBytesByNomal);
         LOGX(__DEBUG, "msg", "  uUsedDiskSizeInMB = " << lpPeriodDACStatisticInfo->uUsedDiskSizeInMB);
         LOGX(__DEBUG, "msg", "  uTotalDiskSizeInMB = " << lpPeriodDACStatisticInfo->uTotalDiskSizeInMB);
-        LOGX(__DEBUG, "msg", "  uIdleTimeInMins = " << lpPeriodDACStatisticInfo->uIdleTimeInMins);
+        LOGX(__DEBUG, "msg", "  uHasGateWay = " << lpPeriodDACStatisticInfo->uHasGateWay);
         LOGX(__DEBUG, "msg", "  uUploadLimitInKBytes = " << lpPeriodDACStatisticInfo->uUploadLimitInKBytes);
         LOGX(__DEBUG, "msg", "  uUploadDiscardBytes = " << lpPeriodDACStatisticInfo->uUploadDiscardBytes);
 

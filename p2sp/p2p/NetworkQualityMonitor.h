@@ -18,8 +18,10 @@ namespace p2sp
         void Start();
         void Stop();
 
+        bool IsRunning() const {return is_running_;}
+        bool HasGateWay() const {return !gateway_ip_.empty() && ping_counter_.running();}
+
         void OnGateWayFound(const string & gateway_ip);
-        bool IsWorking() const {return !gateway_ip_.empty() && ping_counter_.running();}
         uint32_t GetAveragePingDelay() {return ping_delay_buffer_.Average();}
         uint32_t GetPingLostRate();
         void ClearPingLostRate() {ping_lost_buffer_.Clear();}
@@ -30,9 +32,9 @@ namespace p2sp
 
     private:
         boost::asio::io_service & io_svc_;
+        bool is_running_;
         GateWayFinder gateway_finder_;
         string gateway_ip_;
-
         network::PingClient::p ping_client_;
         framework::timer::PeriodicTimer ping_timer_;
         framework::timer::TickCounter ping_counter_;

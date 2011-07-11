@@ -46,7 +46,6 @@ namespace storage
 
         // blocks
         blocks_.resize(rid_info_.GetBlockCount(), BlockNode::p());
-        block_verify_set_.resize(rid_info_.GetBlockCount(), NO_VERIFIED);
         block_bit_map_ = protocol::BlockMap::Create(rid_info_.GetBlockCount());
         block_bit_map_->SetAll(b_full_file);
         blocks_count_ = b_full_file ? rid_info_.GetBlockCount() : 0;
@@ -353,7 +352,6 @@ namespace storage
                 STORAGE_DEBUG_LOG("will post to ThreadPendingHashBlock:" << block_index << " buffer count:" << buffer_set_p->size());
                 StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
                 STORAGE_DEBUG_LOG("will post to SecSaveResourceFileInfo");
-                block_verify_set_[block_index] = BEING_VERIFIED;
             }
             else
                 node->WriteToResource(resource_p);

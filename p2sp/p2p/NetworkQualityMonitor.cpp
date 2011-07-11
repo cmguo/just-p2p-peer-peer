@@ -6,7 +6,7 @@
 namespace p2sp
 {
     NetworkQualityMonitor::NetworkQualityMonitor(boost::asio::io_service & io_svc)
-        : io_svc_(io_svc), gateway_finder_(io_svc, this)
+        : io_svc_(io_svc), is_running_(false), gateway_finder_(io_svc, this)
         , ping_timer_(global_second_timer(), 1000, boost::bind(&NetworkQualityMonitor::OnPingTimerElapsed, this, &ping_timer_))
         , ping_counter_(false), is_ping_replied_(false)
         , ping_delay_buffer_(5), ping_lost_buffer_(20)
@@ -20,7 +20,14 @@ namespace p2sp
 
     void NetworkQualityMonitor::Start()
     {
-        gateway_finder_.Start();
+        is_running_ = true;
+        if (gateway_ip_.empty())
+        {
+            gateway_finder_.Start();
+        }
+        
+        ping_delay_buffer_.Clear();
+        ping_lost_buffer_.Clear();
         ping_timer_.start();
     }
 
@@ -28,10 +35,13 @@ namespace p2sp
     {
         gateway_finder_.Stop();
         ping_timer_.stop();
+        ping_counter_.stop();
         if (ping_client_)
         {
-            ping_client_->Close();
+            ping_client_->CancelAll();
         }
+
+        is_running_ = false;
     }
 
     void NetworkQualityMonitor::OnGateWayFound(const string & gateway_ip)

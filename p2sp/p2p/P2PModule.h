@@ -88,6 +88,8 @@ namespace p2sp
         boost::uint32_t GetUploadBandWidthInBytes();
         boost::uint32_t GetUploadBandWidthInKBytes();
 
+        bool NeedUseUploadPingPolicy();
+
         // Live
         // 创建直播的P2PDownloader
         LiveP2PDownloader__p CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance);
