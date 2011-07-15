@@ -183,7 +183,10 @@ namespace statistic
 
         StatisticsConfigurationsParser parser;
         boost::shared_ptr<StatisticsConfigurations> config = parser.Parse(config_content);
-        StartStatisticsCollection(config);
+        if (config)
+        {
+            StartStatisticsCollection(config);
+        }
     }
 
     string StatisticsCollectionController::BuildRelativeDownloadUrl()

@@ -61,9 +61,15 @@ namespace storage
             }
             else
             {
-                if (instance_->subpiece_manager_->IsBlockDataInMemCache(block_id))
+                //从crash mini-dump记录看来，存在subpiece_manager_非空&&resource_p_为空&&resource_p->block_nodes已满的情况。
+                //这里加上asertion帮助我们找到这种状况
+                assert(instance_->resource_p_);
+                if (instance_->subpiece_manager_ && instance_->resource_p_)
                 {
-                    instance_->subpiece_manager_->RemoveBlockDataFromMemCache(instance_->resource_p_, block_id);
+                    if (instance_->subpiece_manager_->IsBlockDataInMemCache(block_id))
+                    {
+                        instance_->subpiece_manager_->RemoveBlockDataFromMemCache(instance_->resource_p_, block_id);
+                    }
                 }
             }
         }
@@ -77,9 +83,13 @@ namespace storage
                 iter != score_to_block_id.end() && blocks_to_remove > 0;
                 ++iter)
             {
-                assert(instance_->subpiece_manager_->IsBlockDataInMemCache(iter->second));
-                instance_->subpiece_manager_->RemoveBlockDataFromMemCache(instance_->resource_p_, iter->second);
-                --blocks_to_remove;
+                assert(instance_->resource_p_);
+                if (instance_->subpiece_manager_ && instance_->resource_p_)
+                {
+                    assert(instance_->subpiece_manager_->IsBlockDataInMemCache(iter->second));
+                    instance_->subpiece_manager_->RemoveBlockDataFromMemCache(instance_->resource_p_, iter->second);
+                    --blocks_to_remove;
+                }
             }
         }
     }

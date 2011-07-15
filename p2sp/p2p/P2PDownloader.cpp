@@ -760,7 +760,7 @@ namespace p2sp
             // IPPool Timer
             assert(ippool_);
             // 设置共享内存
-            statistic_->SetIpPoolPeerCount(ippool_->GetPeerCount());
+            statistic_->SetIpPoolPeerCount(ippool_ ? ippool_->GetPeerCount() : 0);
 
             // 点播的P2P没有定时去Exchange(但是在PeerConnection的Start的时候，还是会Exchange一次的)
             // 所以这里把Exchange代码删除，但是exchange_对象不能彻底拿掉
@@ -1723,7 +1723,7 @@ namespace p2sp
 
     void P2PDownloader::DoList()
     {
-        if (ippool_->GetNotTriedPeerCount() < 30 && NeedKickPeerConnection())
+        if (ippool_ && ippool_->GetNotTriedPeerCount() < 30 && NeedKickPeerConnection())
         {
             if ((dolist_count_ < 5 && (!last_dolist_time_.running() || last_dolist_time_.elapsed() > 2 * 1000)) ||
                 last_dolist_time_.elapsed() > 60 * 1000)
