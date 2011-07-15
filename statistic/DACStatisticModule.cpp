@@ -319,11 +319,11 @@ namespace statistic
 
         DebugLog("%s", log.c_str());
 
-        LPPERIOD_LIVE_DAC_STATISTIC_INFO upload_data =
-            MessageBufferManager::Inst()->NewStruct<PERIOD_LIVE_DAC_STATISTIC_INFO>();
-        memset(upload_data, 0, sizeof(PERIOD_LIVE_DAC_STATISTIC_INFO));
+        LPPERIOD_DAC_STATISTIC_INFO upload_data =
+            MessageBufferManager::Inst()->NewStruct<PERIOD_DAC_STATISTIC_INFO>();
+        memset(upload_data, 0, sizeof(PERIOD_DAC_STATISTIC_INFO));
 
-        upload_data->uSize = sizeof(PERIOD_LIVE_DAC_STATISTIC_INFO);
+        upload_data->uSize = sizeof(PERIOD_DAC_STATISTIC_INFO);
         strncpy(upload_data->szLog, log.c_str(), sizeof(upload_data->szLog) - 1);
 
         WindowsMessage::Inst().PostWindowsMessage(UM_PERIOD_DAC_LIVE_STATISTIC, (WPARAM)0, (LPARAM)upload_data);

@@ -71,11 +71,11 @@
 
 #define UM_LIVE_DAC_STATISTIC          WM_USER + 26
 // 参数wParam: 启动的LiveDownloadDriver ID
-// 参数lParam: 结构 LIVE_DOWNLOADDRIVER_STOP_DAC_DATA 结构指针, 用来传递下载停止时给DAC提交的数据
+// 参数lParam: 结构 DOWNLOADDRIVER_STOP_DAC_DATA_V1 结构指针, 用来传递下载停止时给DAC提交的数据
 
 #define UM_PERIOD_DAC_LIVE_STATISTIC     WM_USER + 27
 // 参数wParam: 无
-// 参数lParam: 结构 PERIOD_LIVE_DAC_STATISTIC_INFO 的指针，用来传递周期统计数据
+// 参数lParam: 结构 PERIOD_DAC_STATISTIC_INFO_V1 的指针，用来传递周期统计数据
 
 
 typedef struct _NOTIFY_TASK
@@ -170,18 +170,6 @@ typedef struct _PERIOD_DAC_STATISTIC_INFO
     uint32_t       uSize;                                       // 整个结构体大小
     char szLog[1024];                                           // 具体的日志内容
 } PERIOD_DAC_STATISTIC_INFO, *LPPERIOD_DAC_STATISTIC_INFO;
-
-typedef struct _LIVE_DOWNLOADDRIVER_STOP_DAC_DATA
-{
-    boost::uint32_t       uSize;                                // 整个结构体大小
-    char                  szLog[4096];                          // 具体的日志内容
-} LIVE_DOWNLOADDRIVER_STOP_DAC_DATA, *LPLIVE_DOWNLOADDRIVER_STOP_DAC_DATA;
-
-typedef struct _PERIOD_LIVE_DAC_STATISTIC_INFO
-{
-    uint32_t       uSize;                                       // 整个结构体大小
-    char szLog[1024];                                           // 具体的日志内容
-} PERIOD_LIVE_DAC_STATISTIC_INFO, *LPPERIOD_LIVE_DAC_STATISTIC_INFO;
 
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)

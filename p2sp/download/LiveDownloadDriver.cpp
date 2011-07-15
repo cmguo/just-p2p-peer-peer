@@ -665,12 +665,12 @@ namespace p2sp
 
         DebugLog("%s", log.c_str());
 
-        LPLIVE_DOWNLOADDRIVER_STOP_DAC_DATA dac_data =
-            MessageBufferManager::Inst()->NewStruct<LIVE_DOWNLOADDRIVER_STOP_DAC_DATA> ();
+        LPDOWNLOADDRIVER_STOP_DAC_DATA dac_data =
+            MessageBufferManager::Inst()->NewStruct<DOWNLOADDRIVER_STOP_DAC_DATA> ();
+        memset(dac_data, 0, sizeof(DOWNLOADDRIVER_STOP_DAC_DATA));
 
-        memset(dac_data, 0, sizeof(LIVE_DOWNLOADDRIVER_STOP_DAC_DATA));
-
-        dac_data->uSize = sizeof(LIVE_DOWNLOADDRIVER_STOP_DAC_DATA);
+        dac_data->uSize = sizeof(DOWNLOADDRIVER_STOP_DAC_DATA);
+        dac_data->uSourceType = source_type_;
         strncpy(dac_data->szLog, log.c_str(), sizeof(dac_data->szLog)-1);
 
         WindowsMessage::Inst().PostWindowsMessage(UM_LIVE_DAC_STATISTIC, (WPARAM)id_, (LPARAM)dac_data);
