@@ -206,7 +206,8 @@ namespace p2sp
             const string str_rid = "00000000000000000000000000000001";
             spec_rid.from_string(str_rid);
 
-            if (connect_packet.resource_id_ == spec_rid)
+            if (connect_packet.connect_type_ == protocol::CONNECT_NOTIFY ||
+                connect_packet.resource_id_ == spec_rid)
             {
                 p2sp::NotifyModule::Inst()->OnUdpRecv(connect_packet);
             }
