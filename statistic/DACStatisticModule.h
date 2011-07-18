@@ -52,7 +52,7 @@ namespace statistic
         boost::uint32_t       PeerVersion[4];                      // 内核版本：major, minor, micro, extra
         boost::uint32_t       P2PDownloadSpeed;                    // P2P下载速度
         boost::uint32_t       HttpDownloadSpeed;                   // Http下载速度
-        boost::uint32_t       P2PDownloadBytes;                    // P2P下载字节数
+        boost::uint32_t       P2PDownloadBytes;                    // P2P下载字节数(不包括UdpServer)
         boost::uint32_t       HTTPDownloadBytes;                   // HTTP下载字节数
         boost::uint32_t       P2PDownloadTimeInSecond;             // P2P下载的时间
         boost::uint32_t       HttpDownloadTimeInsecond;            // Http下载的时间
@@ -66,6 +66,7 @@ namespace statistic
         boost::uint32_t       ConnectedPeers;                      // 连接上的节点数
         boost::uint32_t       QueryedPeers;                        // 查询到的节点数
         RID                   ChannelID;                           // 频道ID
+        boost::uint32_t       UdpServerDownloadBytes;              // 从UdpServer下载的字节数
 
         void Clear()
         {
@@ -102,6 +103,7 @@ namespace statistic
         void SubmitHttpDownloadTime(uint32_t http_download_time);
         void SubmitRestPlayTime(uint32_t rest_play_time);
         void SubmitChannelID(const RID& channel_id);
+        void SubmitLiveUdpServerDownloadBytes(uint32_t live_udp_server_download_bytes);
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -258,6 +260,11 @@ namespace statistic
     inline void DACStatisticModule::SubmitChannelID(const RID& channel_id)
     {
         live_dac_statistic_info_.ChannelID = channel_id;
+    }
+
+    inline void DACStatisticModule::SubmitLiveUdpServerDownloadBytes(uint32_t live_udp_server_download_bytes)
+    {
+        live_dac_statistic_info_.UdpServerDownloadBytes += live_udp_server_download_bytes;
     }
 }
 

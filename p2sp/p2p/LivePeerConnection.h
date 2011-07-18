@@ -18,9 +18,9 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LivePeerConnection> p;
-        static p create(LiveP2PDownloader__p p2p_downloader)
+        static p create(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type)
         {
-            return p(new LivePeerConnection(p2p_downloader));
+            return p(new LivePeerConnection(p2p_downloader, connect_type));
         }
 
         void OnP2PTimer(boost::uint32_t times);
@@ -61,9 +61,11 @@ namespace p2sp
 
         bool LongTimeNoAnnounceResponse();
 
+        boost::uint8_t GetConnectType() const;
+
     private:
         // 构造
-        LivePeerConnection(LiveP2PDownloader__p p2p_downloader) 
+        LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 
             : p2p_downloader_(p2p_downloader)
             , window_size_(25)
             , requesting_count_(0)
@@ -72,7 +74,10 @@ namespace p2sp
             , avg_delta_time_(100)
             , is_running_(false)
             , no_announce_response_time_(0)
-        {}
+            , connect_type_(connect_type)
+        {
+            assert(connect_type < protocol::CONNECT_MAX);
+        }
 
         void DoAnnounce();
 
@@ -113,6 +118,8 @@ namespace p2sp
         protocol::CandidatePeerInfo candidate_peer_info_;
 
         volatile bool is_running_;
+
+        boost::uint8_t connect_type_;
     };
 }
 

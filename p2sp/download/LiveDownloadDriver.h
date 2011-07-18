@@ -48,7 +48,7 @@ namespace p2sp
         boost::uint32_t         PeerVersion[4];         // 内核版本：major, minor, micro, extra
         vector<boost::uint32_t> DataRates;              // 码流率
         string                  OriginalUrl;            // Url
-        boost::uint32_t         P2PDownloadBytes;       // P2P下载字节数
+        boost::uint32_t         P2PDownloadBytes;       // P2P下载字节数(不包括UdpServer)
         boost::uint32_t         HttpDownloadBytes;      // Http下载字节数
         boost::uint32_t         TotalDownloadBytes;     // 总下载字节数
         boost::uint32_t         AvgP2PDownloadSpeed;    // P2P平均速度
@@ -61,6 +61,7 @@ namespace p2sp
         boost::uint32_t         NumOfCheckSumFailedPieces;// 校验失败的piece个数
         boost::uint32_t         SourceType;             //
         RID                     ChannelID;              // 频道ID
+        boost::uint32_t         UdpDownloadBytes;       // 从UdpServer下载的字节数
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver

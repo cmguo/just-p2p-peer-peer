@@ -239,7 +239,7 @@ namespace p2sp
                 }
 
                 // 创建LivePeerConnection
-                LivePeerConnection::p connect_peer = LivePeerConnection::create(p2p_downloader);
+                LivePeerConnection::p connect_peer = LivePeerConnection::create(p2p_downloader, packet.connect_type_);
 
                 ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;

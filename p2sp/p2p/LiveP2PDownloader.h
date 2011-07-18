@@ -179,6 +179,7 @@ namespace p2sp
         boost::uint32_t GetTotalRequestSubPieceCount() const;
         boost::uint32_t GetTotalP2PDataBytes() const;
         boost::uint32_t GetMinRestTimeInSeconds() const;
+        boost::uint32_t GetTotalUdpServerDataBytes() const;
 
     private:
         void CheckBlockComplete();
@@ -265,6 +266,11 @@ namespace p2sp
     inline boost::uint32_t LiveP2PDownloader::GetTotalP2PDataBytes() const
     {
         return live_subpiece_request_manager_.GetTotalP2PDataBytes();
+    }
+
+    inline boost::uint32_t LiveP2PDownloader::GetTotalUdpServerDataBytes() const
+    {
+        return live_subpiece_request_manager_.GetTotalUdpServerDataBytes();
     }
 
     inline void LiveP2PDownloader::SubmitAllRequestSubPieceCount(boost::uint16_t request_sub_piece_count)

@@ -352,4 +352,9 @@ namespace p2sp
         // 连续 10 秒没有 AnnounceResponse 回包
         return no_announce_response_time_ > 10*1000;
     }
+
+    boost::uint8_t LivePeerConnection::GetConnectType() const
+    {
+        return connect_type_;
+    }
 }

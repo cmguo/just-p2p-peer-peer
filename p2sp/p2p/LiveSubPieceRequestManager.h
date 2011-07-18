@@ -60,6 +60,7 @@ namespace p2sp
             : total_unused_subpiece_count_(0)
             , total_received_subpiece_count_(0)
             , total_p2p_data_bytes_(0)
+            , total_udpserver_data_bytes_(0)
         {
 
         }
@@ -77,6 +78,7 @@ namespace p2sp
         boost::uint32_t GetTotalUnusedSubPieceCount() const;
         boost::uint32_t GetTotalRecievedSubPieceCount() const;
         boost::uint32_t GetTotalP2PDataBytes() const;
+        boost::uint32_t GetTotalUdpServerDataBytes() const;
 
     private:
         void CheckExternalTimeout();
@@ -90,6 +92,7 @@ namespace p2sp
         boost::uint32_t total_unused_subpiece_count_;  // 收到的所有的subpiece个数（包括冗余的）
         boost::uint32_t total_received_subpiece_count_;  // 收到的subpiece个数（不包括冗余的）
         boost::uint32_t total_p2p_data_bytes_;  // P2P总下载
+        boost::uint32_t total_udpserver_data_bytes_;  // 从UdpServer下载的字节数
     };
 }
 #endif

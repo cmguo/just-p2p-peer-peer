@@ -561,6 +561,10 @@ namespace p2sp
         // checksum failed
         live_download_driver_statistic_info_.NumOfChecksumFailedPieces =
             checksum_failed_times_ + live_instance_->GetChecksumFailedTimes();
+
+        // udp server download bytes
+        live_download_driver_statistic_info_.TotalUdpServerDataBytes = live_p2p_downloader_ ?
+            live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
     }
 #endif
 
@@ -588,6 +592,7 @@ namespace p2sp
         // Q: 校验失败次数
         // R: SourceType
         // S: 频道ID
+        // T: 从UdpServer下载的字节数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -606,6 +611,7 @@ namespace p2sp
 
         info.P2PDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalP2PDataBytes() : 0;
         info.HttpDownloadBytes = live_http_downloader_ ? live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;
+        info.UdpDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
         info.TotalDownloadBytes = info.P2PDownloadBytes + info.HttpDownloadBytes;
         info.AvgP2PDownloadSpeed = live_p2p_downloader_ ? live_p2p_downloader_->GetSpeedInfo().AvgDownloadSpeed : 0;
         info.MaxHttpDownloadSpeed = http_download_max_speed_;
@@ -660,6 +666,7 @@ namespace p2sp
         log_stream << "&Q=" << info.NumOfCheckSumFailedPieces;
         log_stream << "&R=" << info.SourceType;
         log_stream << "&S=" << info.ChannelID;
+        log_stream << "&T=" << info.UdpDownloadBytes;
 
         string log = log_stream.str();
 

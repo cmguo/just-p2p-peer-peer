@@ -45,10 +45,13 @@ namespace p2sp
 
         protocol::LiveSubPieceBuffer buffer(packet.sub_piece_content_, packet.sub_piece_length_);
 
+        boost::uint8_t connect_type = protocol::CONNECT_LIVE_PEER;
+
         if (iter != request_tasks_.end())
         {
             // 找到，删除
             iter->second->peer_connection_->OnSubPiece(iter->second->GetTimeElapsed(), buffer.Length());
+            connect_type = iter->second->peer_connection_->GetConnectType();
             request_tasks_.erase(iter);
             boost::uint32_t peer_ip = packet.end_point.address().to_v4().to_ulong();
             LOG(__DEBUG, "live_subpiece_request_manager", "receive subpiece from p2p, block id = " << packet.sub_piece_info_.GetBlockId()
@@ -61,9 +64,18 @@ namespace p2sp
 
         if (false == p2p_downloader_->HasSubPiece(packet.sub_piece_info_))
         {
-            total_p2p_data_bytes_ += buffer.Length();
             ++total_received_subpiece_count_;
-            statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(buffer.Length());
+
+            if (connect_type == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(buffer.Length());
+                total_udpserver_data_bytes_ += buffer.Length();
+            }
+            else
+            {
+                statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(buffer.Length());
+                total_p2p_data_bytes_ += buffer.Length();
+            }
         }
 
         p2p_downloader_->GetInstance()->AddSubPiece(packet.sub_piece_info_, buffer);
@@ -111,5 +123,10 @@ namespace p2sp
     boost::uint32_t LiveSubPieceRequestManager::GetTotalP2PDataBytes() const
     {
         return total_p2p_data_bytes_;
+    }
+
+    boost::uint32_t LiveSubPieceRequestManager::GetTotalUdpServerDataBytes() const
+    {
+        return total_udpserver_data_bytes_;
     }
 }
