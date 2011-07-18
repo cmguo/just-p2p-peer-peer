@@ -143,10 +143,10 @@ namespace p2sp
                     // const string str_rid = "00000000000000000000000000000001";
                     // spec_rid.Parse(str_rid);
 
-                    protocol::ConnectPacket re_connect_packet(protocol::Packet::NewTransactionID(), protocol::VOD_PACKET_TYPE, spec_rid,
+                    protocol::ConnectPacket re_connect_packet(protocol::Packet::NewTransactionID(), spec_rid,
                         AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION_V4,
                         0x01, framework::timer::TickCounter::tick_count(), AppModule::Inst()->GetPeerVersion(),
-                        AppModule::Inst()->GetCandidatePeerInfo(),
+                        AppModule::Inst()->GetCandidatePeerInfo(), protocol::ConnectType::CONNECT_NOTIFY,
                         AppModule::Inst()->GetPeerDownloadInfo(spec_rid), connect_packet.end_point,
                         0);
 
@@ -585,10 +585,10 @@ namespace p2sp
             boost::asio::ip::udp::endpoint end_point = candidate_peer_info.GetConnectEndPoint(local_detected_ip);
 
             // 构造Connect报文
-            protocol::ConnectPacket packet(protocol::Packet::NewTransactionID(), protocol::VOD_PACKET_TYPE, spec_rid,
+            protocol::ConnectPacket packet(protocol::Packet::NewTransactionID(), spec_rid,
                 AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION_V4,
                 0x00, framework::timer::TickCounter::tick_count(),
-                protocol::PEER_VERSION, AppModule::Inst()->GetCandidatePeerInfo(),
+                protocol::PEER_VERSION, AppModule::Inst()->GetCandidatePeerInfo(), protocol::ConnectType::CONNECT_NOTIFY,
                 AppModule::Inst()->GetPeerDownloadInfo(spec_rid), end_point,
                 0);
 
@@ -613,7 +613,7 @@ namespace p2sp
                 protocol::StunInvokePacket stun_invoke_packet(protocol::Packet::NewTransactionID()
                     , spec_rid, AppModule::Inst()->GetPeerGuid(), framework::timer::TickCounter::tick_count()
                     , AppModule::Inst()->GetCandidatePeerInfo()
-                    , protocol::VOD_PACKET_TYPE
+                    , protocol::ConnectType::CONNECT_NOTIFY
                     , candidate_peer_info
                     , AppModule::Inst()->GetPeerDownloadInfo(spec_rid)
                     , 0

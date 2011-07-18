@@ -358,7 +358,7 @@ namespace p2sp
         void OnVodConnectPacket(protocol::ConnectPacket const & packet);
         void OnLiveConnectPacket(protocol::ConnectPacket const & packet);
 
-        void SendErrorPacket(protocol::LivePeerPacket const &packet, boost::uint16_t error_code);
+        void SendErrorPacket(protocol::CommonPeerPacket const &packet, boost::uint16_t error_code);
 
         void KickUploadConnections();
 

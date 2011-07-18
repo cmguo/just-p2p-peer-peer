@@ -193,7 +193,7 @@ namespace p2sp
             return ;
         }
 
-        protocol::PeerPacket const & packet = (protocol::PeerPacket const &)packet_;
+        protocol::VodPeerPacket const & packet = (protocol::VodPeerPacket const &)packet_;
 
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
@@ -270,7 +270,7 @@ namespace p2sp
                 protocol::ErrorPacket  error_packet((protocol::ErrorPacket)packet);
                 error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
                 error_packet.error_code_ =  protocol::ErrorPacket::PPV_EXCHANGE_NOT_DOWNLOADING;
-                AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+                AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             }
         }
         else

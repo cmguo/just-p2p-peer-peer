@@ -443,7 +443,7 @@ namespace p2sp
         {
             UPLOAD_DEBUG("UploadManager::OnLiveRequestAnnouncePacket No Such EndPoint,  response error packet"
                 << packet.end_point );
-            SendErrorPacket((protocol::LivePeerPacket const &)packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
+            SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
             return;
         }
         accept_connecting_peers_[packet.end_point].last_talk_time.reset();
@@ -452,7 +452,7 @@ namespace p2sp
         if (!live_inst)
         {
             // error
-            SendErrorPacket((protocol::LivePeerPacket const &)packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
+            SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
         }
         else
         {
@@ -488,10 +488,10 @@ namespace p2sp
         // 如果不是在限定连接之内则回错误报文
         {
             UPLOAD_DEBUG("UploadManager::OnRequestAnnouncePacket No Such EndPoint,  response error packet" << packet.end_point);
-            protocol::ErrorPacket  error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket  error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             return;
         }
         accept_connecting_peers_[packet.end_point].last_talk_time.reset();
@@ -500,10 +500,10 @@ namespace p2sp
         if (!inst)
         {
             // error
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
         }
         else
         {
@@ -511,7 +511,7 @@ namespace p2sp
                 AppModule::Inst()->GetPeerGuid(), AppModule::Inst()->GetPeerDownloadInfo(inst->GetRID()),
                 *(inst->GetBlockMap()), packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(announce_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(announce_packet, packet.protocol_version_);
         }
     }
 
@@ -524,10 +524,10 @@ namespace p2sp
         // 如果不是在限定连接之内则回错误报文
         {
             UPLOAD_DEBUG("No such connection.");
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_RIDINFO_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             return;
         }
         accept_connecting_peers_[packet.end_point].last_talk_time.reset();
@@ -537,10 +537,10 @@ namespace p2sp
         {
             UPLOAD_DEBUG("No Such Instance");
 
-            protocol::ErrorPacket  error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket  error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_RIDINFO_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
         }
         else
         {
@@ -558,7 +558,7 @@ namespace p2sp
             protocol::RIDInfoResponsePacket ridinfo_packet (packet.transaction_id_, AppModule::Inst()->GetPeerGuid(),
                 rid_info, peer_count_info, packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(ridinfo_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(ridinfo_packet, packet.protocol_version_);
         }
     }
 
@@ -572,10 +572,10 @@ namespace p2sp
         {
             UPLOAD_DEBUG("No such connection.");
 
-            protocol::ErrorPacket  error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket  error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_RIDINFO_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             return;
         }
         accept_connecting_peers_[packet.end_point].last_talk_time.reset();
@@ -605,7 +605,7 @@ namespace p2sp
         {
             P2P_EVENT("UploadManager::OnLiveRequestSubPiecePacket No Such EndPoint,  response error packet"
                 <<packet.end_point );
-            SendErrorPacket((protocol::LivePeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
+            SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
             return;
         }
 
@@ -634,7 +634,7 @@ namespace p2sp
         if (!live_inst)
         {
             // error
-            SendErrorPacket((protocol::LivePeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
+            SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
         }
         else if (true == accept_connecting_peers_[packet.end_point].IsInLastDataTransIDs(packet.transaction_id_))
         {
@@ -680,7 +680,7 @@ namespace p2sp
                 }
                 else
                 {
-                    SendErrorPacket((protocol::LivePeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_SUBPIECE_NOT_FOUND);
+                    SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_SUBPIECE_SUBPIECE_NOT_FOUND);
                 }
 
             } // for
@@ -715,10 +715,10 @@ namespace p2sp
         {
             P2P_EVENT("UploadManager::OnRequestSubPiecePacket No Such EndPoint,  response error packet" << packet.end_point);
 
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             return;
         }
 
@@ -732,10 +732,10 @@ namespace p2sp
         {
             if (IsUploadConnectionFull(packet.end_point))
             {
-                protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+                protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
                 error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
                 error_packet.error_code_ =  protocol::ErrorPacket::PPV_CONNECT_CONNECTION_FULL;
-                AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+                AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
                 return;
             }
             UPLOAD_DEBUG("AcceptNewUploadingPeer=" << packet.end_point << " uploading_peers=" << accept_uploading_peers_.size());
@@ -755,10 +755,10 @@ namespace p2sp
         if (!inst)
         {
             // error
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
         }
         else if (true == accept_connecting_peers_[packet.end_point].IsInLastDataTransIDs(packet.transaction_id_))
         {
@@ -793,7 +793,7 @@ namespace p2sp
                 {
                     ++get_from_cache_;
                     OnAsyncGetSubPieceSucced(packet.resource_id_, sub_piece_info, packet.end_point,
-                        tmp_buf, packet, packet.priority_, packet.sequece_id_);
+                        tmp_buf, packet, packet.priority_, packet.protocol_version_);
                 }
                 else  // cache中没有，加入需要资源的队列中
                 {
@@ -836,10 +836,10 @@ namespace p2sp
         {
             P2P_EVENT("UploadManager::OnRequestSubPiecePacketOld No Such EndPoint,  response error packet" << packet.end_point);
 
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             return;
         }
 
@@ -853,10 +853,10 @@ namespace p2sp
         {
             if (IsUploadConnectionFull(packet.end_point))
             {
-                protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+                protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
                 error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
                 error_packet.error_code_ =  protocol::ErrorPacket::PPV_CONNECT_CONNECTION_FULL;
-                AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+                AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
                 return;
             }
             UPLOAD_DEBUG("AcceptNewUploadingPeer=" << packet.end_point << " uploading_peers=" << accept_uploading_peers_.size());
@@ -878,10 +878,10 @@ namespace p2sp
         if (!inst)
         {
             // error
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
         }
         else if (true == accept_connecting_peers_[packet.end_point].IsInLastDataTransIDs(packet.transaction_id_))
         {
@@ -916,7 +916,7 @@ namespace p2sp
                 {
                     ++get_from_cache_;
                     OnAsyncGetSubPieceSucced(packet.resource_id_, sub_piece_info, packet.end_point,
-                        tmp_buf, packet, protocol::RequestSubPiecePacket::DEFAULT_PRIORITY, packet.sequece_id_);
+                        tmp_buf, packet, protocol::RequestSubPiecePacket::DEFAULT_PRIORITY, packet.protocol_version_);
                 }
                 else  // cache中没有，加入需要资源的队列中
                 {
@@ -942,7 +942,7 @@ namespace p2sp
             return;
         }
 
-        if (protocol::LIVE_PACKET_TYPE == packet.packet_type_)  // live
+        if (protocol::ConnectType::CONNECT_LIVE_PEER == packet.connect_type_)  // live
         {
             OnLiveConnectPacket(packet);
         }
@@ -971,14 +971,15 @@ namespace p2sp
         else
         {
             // ReConnect
-            protocol::ConnectPacket connect_packet(packet.transaction_id_, protocol::LIVE_PACKET_TYPE, live_inst->GetRID(),
+            protocol::ConnectPacket connect_packet(packet.transaction_id_, live_inst->GetRID(),
                 AppModule::Inst()->GetPeerGuid(),  protocol::PEER_VERSION, 0x01, packet.send_off_time_,
                 AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
+                protocol::ConnectType::CONNECT_LIVE_PEER,
                 AppModule::Inst()->GetPeerDownloadInfo(), // global download info
                 packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.sequece_id_);
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
+            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
 
             UPLOAD_DEBUG("AcceptPeer: RID = " << packet.resource_id_
                 << ", Endpoint = " << packet.end_point << ", TransID = " << packet.transaction_id_);
@@ -1026,10 +1027,10 @@ namespace p2sp
         {
             UPLOAD_DEBUG("IsConnectionFull Reject endpoint: " << packet.end_point);
 
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_CONNECT_CONNECTION_FULL;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
 
             return;
         }
@@ -1038,23 +1039,24 @@ namespace p2sp
         if (!inst)  // no such instance
         {
             // error
-            protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+            protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
             error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
             error_packet.error_code_ =  protocol::ErrorPacket::PPV_CONNECT_NO_RESOURCEID;
-            AppModule::Inst()->DoSendPacket(error_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(error_packet, packet.protocol_version_);
             UPLOAD_DEBUG("No Such Instance: " << packet.resource_id_);
         }
         else
         {
             // ReConnect
-            protocol::ConnectPacket connect_packet(packet.transaction_id_, protocol::VOD_PACKET_TYPE, inst->GetRID(), 
+            protocol::ConnectPacket connect_packet(packet.transaction_id_, inst->GetRID(), 
                 AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION, 0x01, packet.send_off_time_,
                 AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
+                protocol::ConnectType::CONNECT_VOD,
                 AppModule::Inst()->GetPeerDownloadInfo(),  // global download info
                 packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.sequece_id_);
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
+            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
 
             UPLOAD_DEBUG("AcceptPeer: RID = " << packet.resource_id_
                 << ", IsOpenService = " << inst->IsOpenService() << ", Endpoint = " << packet.end_point
@@ -1085,7 +1087,7 @@ namespace p2sp
                 AppModule::Inst()->GetPeerGuid(), AppModule::Inst()->GetPeerDownloadInfo(inst->GetRID()),
                 *(inst->GetBlockMap()), packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(announce_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(announce_packet, packet.protocol_version_);
 
             // response ridinfo
             protocol::RidInfo rid_info;
@@ -1101,7 +1103,7 @@ namespace p2sp
             protocol::RIDInfoResponsePacket ridinfo_packet (protocol::Packet::NewTransactionID(), AppModule::Inst()->GetPeerGuid(),
                 rid_info, peer_count_info, packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(ridinfo_packet, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(ridinfo_packet, packet.protocol_version_);
         }
 
     }
@@ -1110,11 +1112,11 @@ namespace p2sp
     {
         if (packet.PacketAction == protocol::RequestSubPiecePacket::Action)
         {
-            return ((protocol::RequestSubPiecePacket const &)packet).sequece_id_;
+            return ((protocol::RequestSubPiecePacket const &)packet).protocol_version_;
         }
         
         assert(packet.PacketAction == protocol::RequestSubPiecePacketOld::Action);
-        return ((protocol::RequestSubPiecePacketOld const &)packet).sequece_id_;
+        return ((protocol::RequestSubPiecePacketOld const &)packet).protocol_version_;
     }
 
     void UploadManager::OnAsyncGetSubPieceSucced(const RID& rid, protocol::SubPieceInfo const& subpiece_info,
@@ -1157,20 +1159,20 @@ namespace p2sp
         P2P_EVENT("UploadManager::OnAsyncGetSubPieceFailed endpoint: " << end_point << " SendPacketFaild: " << subpiece_info);
 
         protocol::SubPieceBuffer buffer;
-        protocol::ErrorPacket error_packet((protocol::PeerPacket const &)packet);
+        protocol::ErrorPacket error_packet((protocol::VodPeerPacket const &)packet);
         error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();
         error_packet.error_code_ =  protocol::ErrorPacket::PPV_SUBPIECE_SUBPIECE_NOT_FOUND;
 
         if (packet.PacketAction == protocol::RequestSubPiecePacket::Action)
         {
             AppModule::Inst()->DoSendPacket(error_packet, 
-                ((protocol::RequestSubPiecePacket const &)packet).sequece_id_);
+                ((protocol::RequestSubPiecePacket const &)packet).protocol_version_);
         }
         else
         {
             assert(packet.PacketAction == protocol::RequestSubPiecePacketOld::Action);
             AppModule::Inst()->DoSendPacket(error_packet, 
-                ((protocol::RequestSubPiecePacketOld const &)packet).sequece_id_);
+                ((protocol::RequestSubPiecePacketOld const &)packet).protocol_version_);
         }        
     }
 
@@ -1273,13 +1275,13 @@ namespace p2sp
             apply_subpiece.priority = protocol::RequestSubPiecePacket::DEFAULT_PRIORITY;
             const protocol::RequestSubPiecePacketOld & rsp = 
                 dynamic_cast<const protocol::RequestSubPiecePacketOld&>(packet);
-            apply_subpiece.request_peer_version_ = rsp.sequece_id_;
+            apply_subpiece.request_peer_version_ = rsp.protocol_version_;
         }
         else if (packet.PacketAction == 0x5B)
         {
             const protocol::RequestSubPiecePacket & rsp = dynamic_cast<const protocol::RequestSubPiecePacket&>(packet);
             apply_subpiece.priority = rsp.priority_;
-            apply_subpiece.request_peer_version_ = rsp.sequece_id_;
+            apply_subpiece.request_peer_version_ = rsp.protocol_version_;
         }
         else
         {
@@ -1835,7 +1837,7 @@ namespace p2sp
         is_disable_upload_ = is_disable_upload;
     }
 
-    void UploadManager::SendErrorPacket(protocol::LivePeerPacket const &packet, boost::uint16_t error_code)
+    void UploadManager::SendErrorPacket(protocol::CommonPeerPacket const &packet, boost::uint16_t error_code)
     {
         protocol::ErrorPacket error_packet(packet);
         error_packet.peer_guid_ = AppModule::Inst()->GetPeerGuid();

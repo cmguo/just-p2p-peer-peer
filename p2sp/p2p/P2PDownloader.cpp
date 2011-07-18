@@ -998,7 +998,7 @@ namespace p2sp
         }
     }
 
-    void P2PDownloader::OnUdpRecv(protocol::PeerPacket const & packet)
+    void P2PDownloader::OnUdpRecv(protocol::VodPeerPacket const & packet)
     {
         if (is_running_ == false) return;
         // 检查 peer_connection的 PeerGuid 是否在 peers_ 中已经存在

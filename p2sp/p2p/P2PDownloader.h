@@ -139,7 +139,7 @@ namespace p2sp
     public:
 
         void OnP2PTimer(boost::uint32_t times);
-        void OnUdpRecv(protocol::PeerPacket const & packet);
+        void OnUdpRecv(protocol::VodPeerPacket const & packet);
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
 

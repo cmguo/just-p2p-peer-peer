@@ -83,15 +83,14 @@ namespace p2sp
             boost::uint8_t connect_type;
             if (p2p_downloader_->IsLive())
             {
-                connect_type = protocol::LIVE_PACKET_TYPE;
+                connect_type = protocol::ConnectType::CONNECT_LIVE_PEER;
             }
             else
             {
-                connect_type = protocol::VOD_PACKET_TYPE;
+                connect_type = protocol::ConnectType::CONNECT_VOD;
             }
             protocol::ConnectPacket packet(
                 protocol::Packet::NewTransactionID(),
-                connect_type,
                 p2p_downloader_->GetRid(),
                 AppModule::Inst()->GetPeerGuid(),
                 protocol::PEER_VERSION,
@@ -99,6 +98,7 @@ namespace p2sp
                 framework::timer::TickCounter::tick_count(),
                 AppModule::Inst()->GetPeerVersion(),
                 AppModule::Inst()->GetCandidatePeerInfo(),
+                connect_type,
                 AppModule::Inst()->GetPeerDownloadInfo(p2p_downloader_->GetRid()),
                 end_point,
                 ippool_->GetPeerCount());
@@ -116,11 +116,11 @@ namespace p2sp
                 boost::uint8_t connect_type;
                 if (p2p_downloader_->IsLive())
                 {
-                    connect_type = protocol::LIVE_PACKET_TYPE;
+                    connect_type = protocol::ConnectType::CONNECT_LIVE_PEER;
                 }
                 else
                 {
-                    connect_type = protocol::VOD_PACKET_TYPE;
+                    connect_type = protocol::ConnectType::CONNECT_VOD;
                 }
                 LOGX(__DEBUG, "conn", "StunInvoke");
                 protocol::StunInvokePacket stun_invoke_packet(

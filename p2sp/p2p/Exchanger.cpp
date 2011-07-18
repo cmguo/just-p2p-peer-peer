@@ -94,7 +94,7 @@ namespace p2sp
                 candidate_peers,
                 packet.end_point);
 
-            AppModule::Inst()->DoSendPacket(peer_exchange_packet_, packet.sequece_id_);
+            AppModule::Inst()->DoSendPacket(peer_exchange_packet_, packet.protocol_version_);
         }
     }
 }

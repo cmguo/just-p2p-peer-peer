@@ -396,7 +396,6 @@ namespace p2sp
 
         protocol::ConnectPacket connect_packet(
             packet.transaction_id_,
-            packet.connect_type_,
             packet.resource_id_,
             packet.peer_guid_,
             packet.candidate_peer_info_mine_.PeerVersion,
@@ -404,6 +403,7 @@ namespace p2sp
             packet.send_off_time_,
             packet.candidate_peer_info_mine_.PeerVersion,
             packet.candidate_peer_info_mine_,
+            packet.connect_type_,
             packet.peer_download_info_mine_,
             framework::network::Endpoint(packet.candidate_peer_info_mine_.DetectIP, packet.candidate_peer_info_mine_.DetectUdpPort));
         
