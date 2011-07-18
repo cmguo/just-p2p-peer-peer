@@ -146,7 +146,7 @@ namespace p2sp
                     protocol::ConnectPacket re_connect_packet(protocol::Packet::NewTransactionID(), spec_rid,
                         AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION_V4,
                         0x01, framework::timer::TickCounter::tick_count(), AppModule::Inst()->GetPeerVersion(),
-                        AppModule::Inst()->GetCandidatePeerInfo(), protocol::ConnectType::CONNECT_NOTIFY,
+                        AppModule::Inst()->GetCandidatePeerInfo(), protocol::CONNECT_NOTIFY,
                         AppModule::Inst()->GetPeerDownloadInfo(spec_rid), connect_packet.end_point,
                         0);
 
@@ -588,7 +588,7 @@ namespace p2sp
             protocol::ConnectPacket packet(protocol::Packet::NewTransactionID(), spec_rid,
                 AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION_V4,
                 0x00, framework::timer::TickCounter::tick_count(),
-                protocol::PEER_VERSION, AppModule::Inst()->GetCandidatePeerInfo(), protocol::ConnectType::CONNECT_NOTIFY,
+                protocol::PEER_VERSION, AppModule::Inst()->GetCandidatePeerInfo(), protocol::CONNECT_NOTIFY,
                 AppModule::Inst()->GetPeerDownloadInfo(spec_rid), end_point,
                 0);
 
@@ -613,7 +613,7 @@ namespace p2sp
                 protocol::StunInvokePacket stun_invoke_packet(protocol::Packet::NewTransactionID()
                     , spec_rid, AppModule::Inst()->GetPeerGuid(), framework::timer::TickCounter::tick_count()
                     , AppModule::Inst()->GetCandidatePeerInfo()
-                    , protocol::ConnectType::CONNECT_NOTIFY
+                    , protocol::CONNECT_NOTIFY
                     , candidate_peer_info
                     , AppModule::Inst()->GetPeerDownloadInfo(spec_rid)
                     , 0

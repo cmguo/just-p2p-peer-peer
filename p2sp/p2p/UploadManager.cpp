@@ -942,7 +942,7 @@ namespace p2sp
             return;
         }
 
-        if (protocol::ConnectType::CONNECT_LIVE_PEER == packet.connect_type_)  // live
+        if (protocol::CONNECT_LIVE_PEER == packet.connect_type_)  // live
         {
             OnLiveConnectPacket(packet);
         }
@@ -974,7 +974,7 @@ namespace p2sp
             protocol::ConnectPacket connect_packet(packet.transaction_id_, live_inst->GetRID(),
                 AppModule::Inst()->GetPeerGuid(),  protocol::PEER_VERSION, 0x01, packet.send_off_time_,
                 AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
-                protocol::ConnectType::CONNECT_LIVE_PEER,
+                protocol::CONNECT_LIVE_PEER,
                 AppModule::Inst()->GetPeerDownloadInfo(), // global download info
                 packet.end_point);
 
@@ -1051,7 +1051,7 @@ namespace p2sp
             protocol::ConnectPacket connect_packet(packet.transaction_id_, inst->GetRID(), 
                 AppModule::Inst()->GetPeerGuid(), protocol::PEER_VERSION, 0x01, packet.send_off_time_,
                 AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
-                protocol::ConnectType::CONNECT_VOD,
+                protocol::CONNECT_VOD,
                 AppModule::Inst()->GetPeerDownloadInfo(),  // global download info
                 packet.end_point);
 

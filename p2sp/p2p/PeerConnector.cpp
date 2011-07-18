@@ -83,11 +83,11 @@ namespace p2sp
             boost::uint8_t connect_type;
             if (p2p_downloader_->IsLive())
             {
-                connect_type = protocol::ConnectType::CONNECT_LIVE_PEER;
+                connect_type = protocol::CONNECT_LIVE_PEER;
             }
             else
             {
-                connect_type = protocol::ConnectType::CONNECT_VOD;
+                connect_type = protocol::CONNECT_VOD;
             }
             protocol::ConnectPacket packet(
                 protocol::Packet::NewTransactionID(),
@@ -116,11 +116,11 @@ namespace p2sp
                 boost::uint8_t connect_type;
                 if (p2p_downloader_->IsLive())
                 {
-                    connect_type = protocol::ConnectType::CONNECT_LIVE_PEER;
+                    connect_type = protocol::CONNECT_LIVE_PEER;
                 }
                 else
                 {
-                    connect_type = protocol::ConnectType::CONNECT_VOD;
+                    connect_type = protocol::CONNECT_VOD;
                 }
                 LOGX(__DEBUG, "conn", "StunInvoke");
                 protocol::StunInvokePacket stun_invoke_packet(
