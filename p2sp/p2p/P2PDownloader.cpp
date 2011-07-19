@@ -468,7 +468,10 @@ namespace p2sp
         if (pointer == &once_timer_)
         {
             Stop();
-            global_io_svc().post(boost::bind(&P2PModule::OnP2PDownloaderWillStop, P2PModule::Inst(), shared_from_this()));
+
+            //P2PModule::OnP2PDownloaderWillStop会去掉这个P2PDownloader，而那很可能是最后一个指向本downloader的shared_ptr。
+            //也就是说调完OnP2PDownloaderWillStop后这个p2pdownloader很可能已经被析构了，我们务必不要在这之后继续访问p2pdownloader的任何成员。
+            P2PModule::Inst()->OnP2PDownloaderWillStop(shared_from_this());
         }
     }
 
@@ -750,6 +753,13 @@ namespace p2sp
         count_cpu_time(__FUNCTION__);
 #endif
         if (!is_running_)
+        {
+            return;
+        }
+
+        //目前还没查清楚为何会出现is_running为true而statistic_为空的情况，但如果不处理会有好一些crash。
+        assert(statistic_);
+        if (!statistic_)
         {
             return;
         }

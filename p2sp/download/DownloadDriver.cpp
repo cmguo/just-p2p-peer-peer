@@ -131,6 +131,7 @@ namespace p2sp
         , openservice_head_length_(0)
         , drag_fetch_result_(0)
         , bak_host_status_(BAK_HOST_NONE)
+        , max_rest_playable_time_(0)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -2802,11 +2803,17 @@ namespace p2sp
 
     void DownloadDriver::DetectBufferring()
     {
+        if (GetRestPlayableTime() > max_rest_playable_time_ && static_cast<int>(GetRestPlayableTime()) > 0)
+        {
+            max_rest_playable_time_ = GetRestPlayableTime();
+        }
+
         if (bufferring_monitor_)
         {
             if (is_running_ &&
                 download_time_counter_.running() && 
                 download_time_counter_.elapsed() > 3*1000 &&
+                max_rest_playable_time_ > 2*1000 &&
                 GetRestPlayableTime() <= 1000)
             {
                 uint32_t data_rate = GetDataRate();

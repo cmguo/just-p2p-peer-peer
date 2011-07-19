@@ -346,6 +346,7 @@ namespace p2sp
         ProxyConnection__p proxy_connection_;
         statistic::DownloadDriverStatistic::p statistic_;
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
+        uint32_t max_rest_playable_time_;
 
         protocol::UrlInfo origanel_url_info_;
         uint32_t block_check_faild_times_;
