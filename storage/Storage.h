@@ -255,7 +255,6 @@ namespace storage
         boost::asio::io_service & io_svc_;
 
         volatile bool is_running_;
-        volatile bool is_stopping_;
         bool use_disk_;
 
         std::set<Instance::p> instance_set_;  // inst_set

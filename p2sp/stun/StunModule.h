@@ -7,6 +7,7 @@
 #define _P2SP_STUN_STUN_MODULE_H_
 
 #include <protocol/StunServerPacket.h>
+#include <p2sp/AppModule.h>
 
 namespace p2sp
 {
@@ -69,13 +70,10 @@ namespace p2sp
     public:
         static StunModule::p Inst()
         {
-            return inst_;
-        }
-
-        static StunModule::p CreateInst(
-            boost::asio::io_service & io_svc)
-        {
-            inst_.reset(new StunModule(io_svc));
+            if (!inst_)
+            {
+                inst_.reset(new StunModule(global_io_svc()));
+            }
             return inst_;
         }
     };

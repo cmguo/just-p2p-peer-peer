@@ -78,17 +78,19 @@ namespace p2sp
 
     VERSION_INFO AppModule::GetKernelVersionInfo() { return VERSION_INFO(PEER_KERNEL_VERSION); }
 
-    void AppModule::Start(
+    bool AppModule::Start(
         boost::asio::io_service & io_svc,
         AppModuleStartInterface::p appmodule_start_interface)
     {
         if (is_running_ == true)
-            return;
+        {
+            return true;
+        }
 
+        is_running_ = true;
+        
         LOG(__DEBUG, "app", "PeerVersion " << PEER_KERNEL_VERSION_STR);
         LOG(__DEBUG, "app", "AppModule::Start");
-
-        is_stopping_ = false;
 
         peer_state_ = (PEERSTATE_MAIN_STATE | PEERSTATE_LIVE_NONE);
 
@@ -109,9 +111,6 @@ namespace p2sp
         peer_catalog_ = appmodule_start_interface->peer_catalog_;
         // Set ServerPacket Default Peer Catalog
         // protocol::ServerPacket::DEFAULT_PEER_CATALOG = peer_catalog_;
-
-        // time counter
-        app_time_counter_.reset();
 
         // flush interval 1s
         StatisticModule::Inst()->Start(1, appmodule_start_interface->config_path_);
@@ -146,29 +145,14 @@ namespace p2sp
 
         if (false == ProxyModule::Inst()->IsRunning())
         {
-
             LOG(__DEBUG, "app", "Proxy Module Start Failed.");
 #ifdef NEED_TO_POST_MESSAGE
             WindowsMessage::Inst().PostWindowsMessage(UM_STARTUP_FAILED, NULL, NULL);
 #endif
-            exit(-1);
-            return;
+            return false;
         }
 
         StatisticModule::Inst()->SetHttpProxyPort(ProxyModule::Inst()->GetHttpPort());
-
-        // StorageModule
-        LOG(__DEBUG, "app", "Begin to Start Storage Module.");
-        uint32_t storage_mode =
-            (appmodule_start_interface->disk_read_only_ ? STORAGE_MODE_READONLY : STORAGE_MODE_NORMAL);
-
-        Storage::CreateInst(io_svc)->Start(
-            appmodule_start_interface->bUseDisk_,
-            appmodule_start_interface->ullDiskLimit_,
-            appmodule_start_interface->disk_path_,
-            appmodule_start_interface->config_path_,
-            storage_mode
-           );
 
         folder_path_ = (appmodule_start_interface->disk_path_);
 
@@ -177,6 +161,7 @@ namespace p2sp
 
         boost::uint16_t local_udp_port = appmodule_start_interface->local_udp_port_;
         boost::uint16_t try_count = 0;
+
         while (false == udp_server_->Listen(local_udp_port))
         {
             local_udp_port ++;
@@ -189,7 +174,7 @@ namespace p2sp
 #ifdef NEED_TO_POST_MESSAGE
                 WindowsMessage::Inst().PostWindowsMessage(UM_STARTUP_FAILED, NULL, NULL);
 #endif
-                return;
+                return false;
             }
         }
         LOG(__DEBUG, "app", "UdpServer Listening on port: " << local_udp_port);
@@ -199,6 +184,19 @@ namespace p2sp
         RegisterAllPackets();
 
         udp_server_->Recv(40);
+
+        // StorageModule
+        LOG(__DEBUG, "app", "Begin to Start Storage Module.");
+        uint32_t storage_mode =
+            (appmodule_start_interface->disk_read_only_ ? STORAGE_MODE_READONLY : STORAGE_MODE_NORMAL);
+
+        Storage::CreateInst(io_svc)->Start(
+            appmodule_start_interface->bUseDisk_,
+            appmodule_start_interface->ullDiskLimit_,
+            appmodule_start_interface->disk_path_,
+            appmodule_start_interface->config_path_,
+            storage_mode
+            );
 
         // 启动UploadStatistic模块
         UploadStatisticModule::Inst()->Start();
@@ -219,7 +217,7 @@ namespace p2sp
 
         P2PModule::Inst()->Start(appmodule_start_interface->config_path_);
 
-        StunModule::CreateInst(io_svc)->Start(appmodule_start_interface->config_path_);
+        StunModule::Inst()->Start(appmodule_start_interface->config_path_);
 
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_, need_report);
 
@@ -254,6 +252,8 @@ namespace p2sp
         statistics_collection_controller_->Start();
         
         LOG(__DEBUG, "app", "Start Finish!");
+
+        return true;
     }
 
     void AppModule::Stop()
@@ -265,8 +265,6 @@ namespace p2sp
         }
 
         LOG(__EVENT, "app", "AppModule is stopping...");
-
-        is_stopping_ = true;
 
         // PushModule::Inst()->Stop();
 
@@ -293,7 +291,12 @@ namespace p2sp
         // 停止本地Udp服务器
         // 停止IndexServer模块
 
-        IndexManager::Inst()->Stop();
+        if (IndexManager::Inst())
+        {
+            // IndexManager有可能为空，如果9000端口监听失败
+            // IndexManager并没有创建
+            IndexManager::Inst()->Stop();
+        }
 
         TrackerModule::Inst()->PPLeave();
         TrackerModule::Inst()->Stop();
@@ -311,7 +314,12 @@ namespace p2sp
         DACStatisticModule::Inst()->Stop();
 
         LOGX(__EVENT, "app", "Storage::Inst()->Stop()");
-        Storage::Inst()->Stop();
+        if (Storage::Inst())
+        {
+            // Storage有可能为空，如果9000端口或UDP 5041监听失败
+            // Storage并没有创建
+            Storage::Inst()->Stop();
+        }
 
 #ifdef DISK_MODE
         downloadcenter::DownloadCenterModule::Inst()->Stop();

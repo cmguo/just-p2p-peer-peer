@@ -120,7 +120,7 @@ class AppModule: public boost::noncopyable,
     public:
     typedef boost::shared_ptr<AppModule> p;
 
-    void Start(
+    bool Start(
         boost::asio::io_service & io_svc,
         AppModuleStartInterface::p appmodule_start_interface);
 
@@ -209,11 +209,6 @@ class AppModule: public boost::noncopyable,
         return udp_server_->GetUdpPort();
     }
 
-    framework::timer::TickCounter::count_value_type GetAppTimeElapsedInMilliSec() const
-    {
-        return app_time_counter_.elapsed();
-    }
-
     void DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
 
     // 上传统计信息
@@ -228,11 +223,7 @@ class AppModule: public boost::noncopyable,
     {
         return is_running_;
     }
-    bool IsStopping() const
-    {
-        return is_stopping_;
-    }
-
+    
     void RegisterAllPackets();
 
     static protocol::VERSION_INFO GetKernelVersionInfo();
@@ -268,9 +259,6 @@ class AppModule: public boost::noncopyable,
     Guid unique_guid_;
 
     volatile bool is_running_;
-    volatile bool is_stopping_;
-
-    framework::timer::TickCounter app_time_counter_;
 
     string folder_path_;
 

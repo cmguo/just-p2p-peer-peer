@@ -158,9 +158,11 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
     // global_io_svc().post(
     //    boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));
 
-    p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface);
-
-    MainThread::Start();
+    if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
+    {
+        p2sp::AppModule::Inst()->Stop();
+        MainThread::Start();
+    }
 }
 #else
 // PPBOX兼容接口
@@ -231,9 +233,11 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
    // global_io_svc().post(
    //     boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));
 
-    p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface);
-
-    MainThread::Start();
+    if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
+    {
+        p2sp::AppModule::Inst()->Stop();
+        MainThread::Start();
+    }
 }
 #endif
 
@@ -257,6 +261,11 @@ void PEER_API WillCleanup()
 
 void PEER_API StartTestCoreSucced(boost::uint16_t usHttpProxyPort)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     LOG(__INFO, "struct", "StartTestCoreSucced");
     global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartTestCoreSucced, p2sp::ProxyModule::Inst(),
         usHttpProxyPort));
@@ -264,12 +273,22 @@ void PEER_API StartTestCoreSucced(boost::uint16_t usHttpProxyPort)
 
 void PEER_API FreeBuffer(char* lpBuffer)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     global_io_svc().post(boost::bind(&p2sp::MessageBufferManager::DeleteBuffer, p2sp::MessageBufferManager::Inst(),
         (boost::uint8_t*) lpBuffer));
 }
 
 void PEER_API SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     global_io_svc().post(boost::bind(&p2sp::P2PModule::SetMaxUploadSpeedInKBps, p2sp::P2PModule::Inst(),
         MaxUploadP2PSpeed));
 }
@@ -285,6 +304,11 @@ void PEER_API OpenUPNPSucced(uint32_t ip, boost::uint16_t udp_port, boost::uint1
 #ifdef PEER_PC_CLIENT
 void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, wchar_t const * lptszFileName, boost::uint32_t nFileNameLength)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (lpszUrl == NULL || lptszFileName == NULL || nUrlLength == 0 || nFileNameLength == 0)
         return;
 
@@ -304,6 +328,11 @@ void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, w
 // PPBOX兼容接口
 void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszFileName, boost::uint32_t nFileNameLength)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (lpszUrl == NULL || lpszFileName == NULL || nUrlLength == 0 || nFileNameLength == 0)
         return;
 
@@ -324,6 +353,11 @@ void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, c
 // 向Peer上传特定操作的次数
 void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (!statistic::StatisticModule::Inst())
         return;
 
@@ -456,6 +490,11 @@ void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
 
 void PEER_API ResetCompleteCount()
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     global_io_svc().post(boost::bind(&statistic::StatisticModule::ResetCompleteCount,
         statistic::StatisticModule::Inst()));
 }
@@ -651,10 +690,16 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
 
 void PEER_API SetMaxUploadCacheSizeInMB(uint32_t nMaxUploadCacheSizeInMB)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (nMaxUploadCacheSizeInMB == 0)
     {
         return;
     }
+
     global_io_svc().post(boost::bind(&p2sp::P2PModule::SetMaxUploadCacheSizeInMB, p2sp::P2PModule::Inst(),
         nMaxUploadCacheSizeInMB));
 }
@@ -1129,6 +1174,11 @@ void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * 
 {
     LOGX(__DEBUG, "interface", "URL = " << url << " weburl = " << web_url);
 
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (NULL == url || 0 == url_len)
     {
         return;
@@ -1156,6 +1206,11 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
     peer_state.state_machine_ = -1;
     peer_state.http_speed_ = 0;
     peer_state.p2p_speed_ = 0;
+
+    if (!IsProxyModuleStarted())
+    {
+        return peer_state;
+    }
 
     if (NULL == lpwszRID || 0 == nRIDLength)
     {
@@ -1205,6 +1260,11 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const char * lpszRID, boost::uin
     peer_state.http_speed_ = 0;
     peer_state.p2p_speed_ = 0;
 
+    if (!IsProxyModuleStarted())
+    {
+        return peer_state;
+    }
+
     if (NULL == lpszRID || 0 == nRIDLength)
     {
         LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
@@ -1246,6 +1306,10 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const char * lpszRID, boost::uin
 
 void PEER_API NotifyTaskStatusChange(boost::uint32_t task_id, boost::uint32_t task_status)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
 #ifdef NOTIFY_ON
     global_io_svc().post(
         boost::bind(
@@ -1256,6 +1320,10 @@ void PEER_API NotifyTaskStatusChange(boost::uint32_t task_id, boost::uint32_t ta
 
 void PEER_API NotifyJoinLeave(boost::uint32_t join_or_leave)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
 #ifdef NOTIFY_ON
     global_io_svc().post(
         boost::bind(
@@ -1377,6 +1445,12 @@ void PEER_API SetDownloadMode(const char * lpszRID, boost::uint32_t nRIDLength, 
  */
 void PEER_API SetPeerState(uint32_t nPeerState)
 {
+    if (!IsProxyModuleStarted())
+    {
+        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        return;
+    }
+
     LOGX(__DEBUG, "struct", "nPeerState " << nPeerState);
     boost::uint32_t peer_state = 0;
     switch (nPeerState & 0xffff0000)
@@ -1418,6 +1492,11 @@ void PEER_API SetPeerState(uint32_t nPeerState)
 #ifdef PEER_PC_CLIENT
 void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (NULL == lpwszRID || 0 == nRIDLength)
     {
         LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
@@ -1453,6 +1532,11 @@ void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDL
 
 void PEER_API QueryDragPeerState(const char * lpszRID, boost::uint32_t nRIDLength, boost::int32_t * state)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
     if (NULL == lpszRID || 0 == nRIDLength)
     {
         LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
@@ -1496,6 +1580,11 @@ boost::int32_t PEER_API GetBasicPeerInfo(
                             boost::int32_t *upload_speed
                            )
 {
+    if (!IsProxyModuleStarted())
+    {
+        return 0;
+    }
+
     if (tcp_port == NULL || udp_port == NULL || bs_ip == NULL
         || tracker_count == NULL || stun_count == NULL || upload_speed == NULL)
     {
@@ -1560,6 +1649,11 @@ boost::int32_t PEER_API GetBasicPeerInfo(
                                 boost::int32_t *upload_speed
                                )
 {
+    if (!IsProxyModuleStarted())
+    {
+        return 0;
+    }
+
     if (tcp_port == NULL || udp_port == NULL || bs_ip == NULL
         || tracker_count == NULL || stun_count == NULL || upload_speed == NULL)
     {
@@ -1619,6 +1713,11 @@ boost::int32_t PEER_API GetBasicPeerInfo(
 #ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, wchar_t const * strURL)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return 0;
+    }
+
     if (ilistCount == NULL || iConnectCount == NULL || iAverSpeed == NULL
         || strURL == NULL)
     {
@@ -1684,6 +1783,11 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
 
 boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const char * strURL)
 {
+    if (!IsProxyModuleStarted())
+    {
+        return 0;
+    }
+
     if (ilistCount == NULL || iConnectCount == NULL || iAverSpeed == NULL
         || strURL == NULL)
     {
@@ -1785,6 +1889,11 @@ int PEER_API GetPeerBandWidthInKB()
 {
     LOGX(__DEBUG, "", "GetPeerBandWidthInKB");
 
+    if (!IsProxyModuleStarted())
+    {
+        return 0;
+    }
+
     if (NULL == statistic::StatisticModule::Inst())
     {
         return -1;
@@ -1878,6 +1987,12 @@ void PEER_API SetSendSpeedLimitByUrl(const char * url, boost::int32_t url_len, b
 //     is_disable = false 恢复上传
 void PEER_API DisableUpload(bool is_enable_or_disable)
 {
+    if (!IsProxyModuleStarted())
+    {
+        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        return;
+    }
+
     global_io_svc().post(boost::bind(&p2sp::P2PModule::SetUploadSwitch,
         p2sp::P2PModule::Inst(), is_enable_or_disable));
 }
@@ -1936,6 +2051,11 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachineByUrl(const char * url)
     peer_state.state_machine_ = -1;
     peer_state.http_speed_ = 0;
     peer_state.p2p_speed_ = 0;
+
+    if (!IsProxyModuleStarted())
+    {
+        return peer_state;
+    }
 
     LOGX(__DEBUG, "interface", " url = " << url);
 
