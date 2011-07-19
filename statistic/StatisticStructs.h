@@ -736,8 +736,9 @@ namespace statistic
         boost::uint8_t Is3200P2PSlow;                   // 3200状态下P2P是否慢
         RID ChannelID;                                  // 频道ID
         boost::uint32_t TotalUdpServerDataBytes;        // 从UdpServer下载的字节数
+        boost::uint8_t PmsStatus;                       // 0代表正常，1代表不正常
 
-        boost::uint8_t Reserved[955];
+        boost::uint8_t Reserved[954];
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -784,6 +785,7 @@ namespace statistic
             ar & Is3200P2PSlow;
             ar & ChannelID;
             ar & TotalUdpServerDataBytes;
+            ar & PmsStatus;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
 

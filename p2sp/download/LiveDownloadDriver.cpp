@@ -565,6 +565,9 @@ namespace p2sp
         // udp server download bytes
         live_download_driver_statistic_info_.TotalUdpServerDataBytes = live_p2p_downloader_ ?
             live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
+
+        // pms status
+        live_download_driver_statistic_info_.PmsStatus = live_http_downloader_->GetPmsStatus() ? 0 : 1;
     }
 #endif
 

@@ -93,6 +93,7 @@ namespace p2sp
         void Start();
         void OnDataRateChanged(const RID & rid);
         boost::uint32_t GetHttpStatusCode() const;
+        bool GetPmsStatus() const;  // for shared memory
 
     private:
         void OnTimerElapsed(framework::timer::Timer * timer);
@@ -122,6 +123,7 @@ namespace p2sp
         boost::uint32_t http_status_;
 
         uint32_t connect_failed_times_;
+        bool is_pms_status_good_;  // true代表正常，false代表不正常
     };
 
     inline statistic::SPEED_INFO LiveHttpDownloader::GetSpeedInfo()
@@ -132,6 +134,11 @@ namespace p2sp
     inline boost::uint32_t LiveHttpDownloader::GetHttpStatusCode() const
     {
         return http_status_;
+    }
+
+    inline bool LiveHttpDownloader::GetPmsStatus() const
+    {
+        return is_pms_status_good_;
     }
 }
 

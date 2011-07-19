@@ -24,6 +24,7 @@ namespace p2sp
         , sleep_timer_(global_second_timer(), 1000, boost::bind(&LiveHttpDownloader::OnTimerElapsed, this, &sleep_timer_))
         , http_status_(0)
         , connect_failed_times_(0)
+        , is_pms_status_good_(true)
     {
         network::Uri uri(url_info.url_);
         pms_url_domain_ = uri.getdomain();
@@ -153,6 +154,7 @@ namespace p2sp
     void LiveHttpDownloader::OnConnectSucced()
     {
         connect_failed_times_ = 0;
+        is_pms_status_good_ = true;
         if (status_ == connecting)
         {
             status_ = established;
@@ -182,6 +184,7 @@ namespace p2sp
         {
             // TODO: 连续10次连接PMS失败
             assert(false);
+            is_pms_status_good_ = false;
             return;
         }
 
