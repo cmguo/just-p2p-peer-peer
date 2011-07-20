@@ -737,8 +737,9 @@ namespace statistic
         RID ChannelID;                                  // 频道ID
         boost::uint32_t TotalUdpServerDataBytes;        // 从UdpServer下载的字节数
         boost::uint8_t PmsStatus;                       // 0代表正常，1代表不正常
+        boost::uint32_t UniqueID;                       // 播放器的ID
 
-        boost::uint8_t Reserved[954];
+        boost::uint8_t Reserved[950];
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -786,6 +787,7 @@ namespace statistic
             ar & ChannelID;
             ar & TotalUdpServerDataBytes;
             ar & PmsStatus;
+            ar & UniqueID;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
 

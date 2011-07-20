@@ -124,6 +124,8 @@ namespace p2sp
 
         bool GetLivePause() const { return live_pause_; }
 
+        boost::uint32_t GetUniqueID() const { return unique_id_; };
+
     public:
 
         static bool IsLocalHost(const string& host, boost::uint16_t port = 0);
@@ -168,6 +170,8 @@ namespace p2sp
         static void ParseChannelID(const network::Uri& uri, RID & channel_id);
         // 直播是否暂停
         static void ParseLivePause(const network::Uri & uri, bool & live_replay);
+        // 直播的播放器ID
+        static void ParseUniqueID(const network::Uri & uri, boost::uint32_t & unique_id);
 
     private:
 
@@ -218,6 +222,7 @@ namespace p2sp
         bool live_replay_;                    // 是否回拖
         RID channel_id_;                      // 频道ID
         bool live_pause_;                     // 是否暂停
+        boost::uint32_t unique_id_;           // 播放器的ID(用于区分多个播放器播放同一个频道的情况)
     };
 }
 

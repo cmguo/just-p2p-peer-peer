@@ -182,7 +182,7 @@ namespace p2sp
 
     public:
         void Start(const protocol::UrlInfo& url_info, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval, bool replay,
-            const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype);
+            const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype, uint32_t unique_id);
         void Stop();
 
         bool RequestNextBlock(LiveDownloader__p downloader);
@@ -208,6 +208,11 @@ namespace p2sp
         void SetPause(bool pause)
         {
             pause_ = pause;
+        }
+
+        boost::uint32_t GetUniqueID() const
+        {
+            return unique_id_;
         }
 
     public:
@@ -316,6 +321,7 @@ namespace p2sp
         boost::uint32_t source_type_;
         JumpBWType bwtype_;
         RID channel_id_;
+        boost::uint32_t unique_id_;
 
 #if ((defined _DEBUG || defined DEBUG) && (defined CHECK_DOWNLOADED_FILE))
         FILE *fp_;

@@ -1114,7 +1114,7 @@ namespace p2sp
                     PlayInfo::p play_info = PlayInfo::Parse(url_info_.url_);
                     if (play_info)
                     {
-                        OnLivePause(play_info->GetChannelID(), play_info->GetLivePause());
+                        OnLivePause(play_info->GetChannelID(), play_info->GetLivePause(), play_info->GetUniqueID());
                     }
                 }
                 else if (PlayInfo::IsGreenWayUri(uri_))
@@ -2007,12 +2007,12 @@ namespace p2sp
         live_download_driver_ = LiveDownloadDriver::create(io_svc_, shared_from_this());
         live_download_driver_->Start(play_info->GetUrlInfo(), play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
-            play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType());
+            play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID());
     }
 
-    void ProxyConnection::OnLivePause(const RID & rid, bool pause)
+    void ProxyConnection::OnLivePause(const RID & rid, bool pause, boost::uint32_t unique_id)
     {
-        ProxyModule::Inst()->OnLivePause(rid, pause);
+        ProxyModule::Inst()->OnLivePause(rid, pause, unique_id);
     }
 
     // 直播收到数据

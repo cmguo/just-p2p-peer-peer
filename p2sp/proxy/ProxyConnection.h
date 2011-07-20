@@ -229,7 +229,7 @@ namespace p2sp
     private:
         // 直播请求的处理函数
         void OnLiveRequest(PlayInfo::p play_info);
-        void OnLivePause(const RID & rid, bool pause);
+        void OnLivePause(const RID & rid, bool pause, boost::uint32_t unique_id);
         void OnUrlInfoRequest(const protocol::UrlInfo& url_info, const protocol::RidInfo& rid_info, network::HttpRequest::p http_request);
         void OnOpenServiceRequest(PlayInfo::p play_info);
         void OnPlayByRidRequest(PlayInfo::p play_info);

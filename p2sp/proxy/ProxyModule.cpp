@@ -1678,13 +1678,14 @@ namespace p2sp
         return false;
     }
 
-    void ProxyModule::OnLivePause(const RID & channel_id, bool pause)
+    void ProxyModule::OnLivePause(const RID & channel_id, bool pause, boost::uint32_t unique_id)
     {
         for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
             iter != proxy_connections_.end(); ++iter)
         {
             if ((*iter)->IsLiveConnection() &&
-                (*iter)->GetLiveDownloadDriver()->GetChannelId() == channel_id)
+                (*iter)->GetLiveDownloadDriver()->GetChannelId() == channel_id &&
+                (*iter)->GetLiveDownloadDriver()->GetUniqueID() == unique_id)
             {
                 (*iter)->GetLiveDownloadDriver()->SetPause(pause);
             }

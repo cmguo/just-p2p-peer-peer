@@ -56,7 +56,7 @@ namespace p2sp
     }
 
     void LiveDownloadDriver::Start(const protocol::UrlInfo& url_info, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
-        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype)
+        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, uint32_t unique_id)
     {
         data_rate_manager_.Start(rids, data_rate_s);
         start_position_.SetBlockId(start_position);
@@ -72,6 +72,8 @@ namespace p2sp
         bwtype_ = bwtype;
 
         channel_id_ = channel_id;
+
+        unique_id_ = unique_id;
 
         timer_->start();
 
@@ -119,6 +121,7 @@ namespace p2sp
         live_download_driver_statistic_info_.LiveDownloadDriverID = id_;
         live_download_driver_statistic_info_.ResourceID = live_instance_->GetRID();
         live_download_driver_statistic_info_.ChannelID = channel_id;
+        live_download_driver_statistic_info_.UniqueID = unique_id;
         framework::string::Url::truncate_to(url_info.url_, live_download_driver_statistic_info_.OriginalUrl);
         statistic_ = statistic::StatisticModule::Inst()->AttachLiveDownloadDriverStatistic(id_);
         assert(statistic_);

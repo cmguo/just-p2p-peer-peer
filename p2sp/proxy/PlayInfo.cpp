@@ -578,11 +578,14 @@ namespace p2sp
             ParseChannelID(uri, play_info->channel_id_);
             // SourceType
             ParseSourceType(uri, play_info->source_type_);
+            // UniqueID
+            ParseUniqueID(uri, play_info->unique_id_);
         }
         else if (boost::algorithm::istarts_with(uri.getpath(), LIVE_SET_FLAG))
         {
             ParseChannelID(uri, play_info->channel_id_);
             ParseLivePause(uri, play_info->live_pause_);
+            ParseUniqueID(uri, play_info->unique_id_);
 
             return play_info;
         }
@@ -813,6 +816,23 @@ namespace p2sp
         {
             return;
         }
+        assert(false);
+    }
+
+    // 直播的播放器id
+    void PlayInfo::ParseUniqueID(const network::Uri & uri, boost::uint32_t & unique_id)
+    {
+        string str_unique_id = uri.getparameter("uniqueid");
+        if (str_unique_id.length() > 0)
+        {
+            boost::system::error_code ec = framework::string::parse2(str_unique_id, unique_id);
+            if (!ec)
+            {
+                return;
+            }
+            unique_id = 0;
+        }
+        unique_id = 0;
         assert(false);
     }
 }
