@@ -942,13 +942,22 @@ namespace p2sp
             return;
         }
 
-        if (protocol::CONNECT_LIVE_PEER == packet.connect_type_)  // live
-        {
-            OnLiveConnectPacket(packet);
-        }
-        else  // vod
+        if (packet.protocol_version_ < protocol::PEER_VERSION_V7)
         {
             OnVodConnectPacket(packet);
+        }
+        else
+        {
+            if (protocol::CONNECT_LIVE_PEER == packet.connect_type_)  // live
+            {
+                OnLiveConnectPacket(packet);
+            }
+            else  // vod
+            {
+                // upload manager收到的connect request包，只可能是live peer和vod
+                assert(packet.connect_type_ == protocol::CONNECT_VOD);
+                OnVodConnectPacket(packet);
+            }
         }
     }
 
