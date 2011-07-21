@@ -2013,6 +2013,14 @@ namespace p2sp
     void ProxyConnection::OnLivePause(const RID & rid, bool pause, boost::uint32_t unique_id)
     {
         ProxyModule::Inst()->OnLivePause(rid, pause, unique_id);
+
+        proxy_sender_ = LiveProxySender::create(http_server_socket_);
+        proxy_sender_->Start();
+
+        // 成功收到通知暂停的请求
+        proxy_sender_->OnNoticeGetContentLength(0, network::HttpResponse::p());
+        // 断开连接
+        WillStop();
     }
 
     // 直播收到数据
