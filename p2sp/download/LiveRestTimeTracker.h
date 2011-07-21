@@ -54,16 +54,13 @@ namespace p2sp
         };
 
 
-        void Start(uint32_t block_id, uint32_t live_interval)
-        {
-            live_interval_ = live_interval;
-            current_progress_ = Progress(block_id, 0, live_interval_);
-            Reset();
-        }
-
+        RestTimeTracker();
+        void Start(uint32_t block_id, uint32_t live_interval);
         void UpdateCurrentProgress(uint32_t current_block_id, uint32_t current_progress_percentage);
         uint32_t GetRestTimeInSeconds();
         void UpdateRestTime();
+        void OnPause(bool pause);
+        bool IsPaused();
 
     private:
         void Reset();
@@ -74,6 +71,8 @@ namespace p2sp
         Progress last_reset_progress_;
         uint32_t rest_time_in_seconds_;
         uint32_t live_interval_;
+        bool paused_;
+        framework::timer::TickCounter paused_ticks_;
     };
 }
 

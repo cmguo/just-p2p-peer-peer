@@ -1687,7 +1687,7 @@ namespace p2sp
                 (*iter)->GetLiveDownloadDriver()->GetChannelId() == channel_id &&
                 (*iter)->GetLiveDownloadDriver()->GetUniqueID() == unique_id)
             {
-                (*iter)->GetLiveDownloadDriver()->SetPause(pause);
+                (*iter)->GetLiveDownloadDriver()->OnPause(pause);
             }
         }
     }

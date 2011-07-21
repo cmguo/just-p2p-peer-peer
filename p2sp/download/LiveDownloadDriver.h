@@ -205,10 +205,7 @@ namespace p2sp
             return channel_id_;
         }
 
-        void SetPause(bool pause)
-        {
-            pause_ = pause;
-        }
+        void OnPause(bool pause);
 
         boost::uint32_t GetUniqueID() const
         {
@@ -295,9 +292,6 @@ namespace p2sp
 
         // 是否回放
         bool replay_;
-        
-        // 是否暂停
-        bool pause_;
 
         boost::uint8_t switch_state_http_;
         boost::uint8_t switch_state_p2p_;

@@ -21,7 +21,6 @@ namespace p2sp
         : io_svc_(io_svc)
         , proxy_connection_(proxy_connetction)
         , replay_(false)
-        , pause_(false)
         , timer_(global_second_timer(), 1000, boost::bind(&LiveDownloadDriver::OnTimerElapsed, this, &timer_))
         , id_(++s_id_)
         , http_download_max_speed_(0)
@@ -214,7 +213,7 @@ namespace p2sp
             // 跳跃算法
             // 1. 回放不会跳跃
             // 2. 落后直播点120s
-            if (!replay_ && !pause_)
+            if (!replay_ && !rest_time_tracker_.IsPaused())
             {
                 while (playing_position_.GetBlockId() + 120 < live_instance_->GetCurrentLivePoint().GetBlockId())
                 {
@@ -693,5 +692,10 @@ namespace p2sp
     boost::uint32_t LiveDownloadDriver::GetBandWidth()
     {
         return statistic::StatisticModule::Inst()->GetBandWidth();
+    }
+
+    void LiveDownloadDriver::OnPause(bool pause)
+    {
+        rest_time_tracker_.OnPause(pause);
     }
 }
