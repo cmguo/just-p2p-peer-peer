@@ -89,7 +89,8 @@ namespace statistic
             {
 #ifdef NEED_TO_POST_MESSAGE
                 SendDacUploadMessage();
-                SendLiveDacMessage();
+                // TODO: 暂时先去掉，提交的日志内容暂时可能不是很有意义，需要重新考虑
+                //SendLiveDacMessage();
 #endif
                 ResetDacUploadData();
                 ResetLiveDacData();

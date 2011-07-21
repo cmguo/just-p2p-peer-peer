@@ -165,6 +165,7 @@ namespace p2sp
 
 #ifndef STATISTIC_OFF
         // 取消共享内存
+        live_download_driver_statistic_info_.Clear();
         statistic::StatisticModule::Inst()->DetachLiveDownloadDriverStatistic(statistic_);
         statistic_->Stop();
 #endif

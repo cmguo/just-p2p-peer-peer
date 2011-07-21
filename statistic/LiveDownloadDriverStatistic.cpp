@@ -46,9 +46,10 @@ namespace statistic
             return;
         }
 
-        is_running_ = false;
-
         Clear();
+        UpdateShareMemory();
+
+        is_running_ = false;
 
         shared_memory_.Close();
         live_download_driver_.reset();
