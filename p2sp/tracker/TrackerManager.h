@@ -40,10 +40,6 @@ namespace p2sp
 
     private:
 
-        void OnCommitResponsePacket(protocol::CommitPacket const & packet);
-
-        void OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet);
-
         void OnListResponsePacket(protocol::ListPacket const & packet);
 
         void OnReportResponsePacket(protocol::ReportPacket const & packet);

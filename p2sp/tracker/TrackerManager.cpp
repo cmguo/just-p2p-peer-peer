@@ -280,12 +280,6 @@ namespace p2sp
 
         switch (packet.PacketAction)
         {
-        case protocol::CommitPacket::Action:
-            OnCommitResponsePacket((protocol::CommitPacket const &)packet);
-            break;
-        case protocol::KeepAlivePacket::Action:
-            OnKeepAliveResponsePacket((protocol::KeepAlivePacket const &)packet);
-            break;
         case protocol::ListPacket::Action:
             OnListResponsePacket((protocol::ListPacket const &)packet);
             break;
@@ -300,20 +294,6 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::OnCommitResponsePacket(protocol::CommitPacket const & packet)
-    {
-        if (is_running_ == false) return;
-
-        // 根据 endpoint_indexer_ 索引 找到对应的 TrackerGroup
-        // 然后对这个Group调用 OnCommitResponsePacket(end_point, p packet)
-        // 如果找不到Group不管
-        if (endpoint_indexer_.count(packet.end_point) != 0)
-        {
-            const TrackerGroup::p group = endpoint_indexer_[packet.end_point];  // ! shared_ptr
-            group->OnCommitResponsePacket(packet);
-        }
-    }
-
     void TrackerManager::OnReportResponsePacket(protocol::ReportPacket const & packet)
     {
         if (is_running_ == false) return;
@@ -322,20 +302,6 @@ namespace p2sp
         {
             const TrackerGroup::p group = endpoint_indexer_[packet.end_point];  // ! shared_ptr
             group->OnReportResponsePacket(packet);
-        }
-    }
-
-    void TrackerManager::OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet)
-    {
-        if (is_running_ == false) return;
-
-        // 根据 endpoint_indexer_ 索引 找到对应的 TrackerGroup
-        // 然后对这个Group调用 OnCommitResponsePacket(end_point, p packet)
-        // 如果找不到Group不管
-        if (endpoint_indexer_.count(packet.end_point) != 0)
-        {
-            const TrackerGroup::p group = endpoint_indexer_[packet.end_point];  // ! shared_ptr
-            group->OnKeepAliveResponsePacket(packet);
         }
     }
 

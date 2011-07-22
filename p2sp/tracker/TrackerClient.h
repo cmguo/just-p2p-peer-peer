@@ -43,10 +43,6 @@ namespace p2sp
 
         void OnListResponsePacket(protocol::ListPacket const & packet);
 
-        void OnCommitResponsePacket(protocol::CommitPacket const & packet);
-
-        void OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet);
-
         void OnReportResponsePacket(protocol::ReportPacket const & packet);
 
         /**
@@ -72,12 +68,7 @@ namespace p2sp
 
         std::set<RID> GetClientResource() const;
 
-        // uint32_t DoCommit();
-
         uint32_t DoReport();
-
-    private:
-        // uint32_t DoKeepAlive();
 
     private:
 

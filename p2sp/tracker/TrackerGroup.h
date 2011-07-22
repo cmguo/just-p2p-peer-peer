@@ -36,18 +36,12 @@ namespace p2sp
 
         const std::vector<protocol::TRACKER_INFO> GetTrackers();
 
-        void DoCommit();
-
         void PPLeave();
 
     public:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
     public:
-
-        void OnCommitResponsePacket(protocol::CommitPacket const & packet);
-
-        void OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet);
 
         void OnListResponsePacket(protocol::ListPacket const & packet);
 
@@ -111,7 +105,6 @@ namespace p2sp
 
     private:
         static const uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 20;
-        static const uint32_t DEFAULT_INTERVAL_IN_MILLISECONDS_ = 1000 * DEFAULT_INTERVAL_IN_SECONDS_;
 
     private:
         TrackerGroup(bool is_vod)

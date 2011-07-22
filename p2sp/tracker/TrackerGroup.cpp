@@ -195,7 +195,7 @@ namespace p2sp
     void TrackerGroup::OnTimerElapsed(framework::timer::Timer * pointer)
     {
         TRACK_INFO("TrackerGroup::OnTimerElapsed times = " << pointer->times());
-        uint32_t times = pointer->times();
+
          // 确认是 Commit/KeepAlive 定时器
         if (pointer != &timer_)
         {
@@ -271,66 +271,6 @@ namespace p2sp
         }
     }
 
-    void TrackerGroup::DoCommit()
-    {
-        LOG(__INFO, "tracker", "TrackerGroup::DoCommit:");
-        if (current_tracker_)
-        {
-            last_transcation_id_ = current_tracker_->DoSubmit();
-        }
-    }
-
-    void TrackerGroup::OnCommitResponsePacket(protocol::CommitPacket const & packet)
-    {
-        LOG(__DEBUG, "tracker", "TrackerGroup::OnCommitPacket from: ");
-        boost::asio::ip::udp::endpoint end_point = packet.end_point;
-        // 在 trackers_ 中根据 end_point 找到对应的 TrackerClient, 如果找不到，直接返回
-        // 该 TrackerClient->OnCommitResponsePacket(packet);
-        if (trackers_.count(end_point) == 0)
-        {
-            LOG(__DEBUG, "tracker", "No such end_point: " << end_point);
-            return;
-        }
-        trackers_[end_point]->OnCommitResponsePacket(packet);
-
-        // 如果 packet::GetTranscationID() != trans_id_
-        //      直接返回
-        if (packet.transaction_id_ != last_transcation_id_)
-        {
-            LOG(__DEBUG, "tracker", "TrasactionID is " << packet.transaction_id_ << ", Expect: " << last_transcation_id_);
-            return;
-        }
-
-        // 如果 成功 packet->ErrorCode() == 0
-        //        error_time = 0    is_responsed_ = true;
-        //        timer_->SetInterval( packet->GetInterval());        定时器时间设长 （设为Tracker的返回值）
-        //        如果 current_tracker_ 为空
-        //            那么 current_tracker_ = 当前end_point对应 的 TrackerClient
-        //        current_tracker->Set_Rid_Count(packet->GetRidCount());
-        // 如果 失败 packet->ErrorCode() != 0
-        //      直接返回
-
-        if (packet.error_code_ == 0)  // success
-        {
-            error_times_ = 0;
-            is_responsed_ = true;
-            LOG(__DEBUG, "tracker", "TrackerGroup::OnCommitPacket  Interval:" << packet.response.keep_alive_interval_);
-            timer_.interval(packet.response.keep_alive_interval_ *1000);
-
-            if (!current_tracker_)
-            {
-                current_tracker_ = trackers_[end_point];
-                statistic::StatisticModule::Inst()->SetIsSubmitTracker(current_tracker_->GetTrackerInfo(), true);
-            }
-
-            // TODO commit's response does not contain resource count
-        }
-        else
-        {
-            LOG(__DEBUG, "tracker", "Error Code is: " << packet.error_code_);
-        }
-    }
-
     void TrackerGroup::OnReportResponsePacket(protocol::ReportPacket const & packet)
     {
         boost::asio::ip::udp::endpoint  end_point = packet.end_point;
@@ -384,60 +324,6 @@ namespace p2sp
         }
         else
         {
-            LOG(__DEBUG, "tracker", "Error Code is: " << packet.error_code_);
-        }
-    }
-
-    void TrackerGroup::OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet)
-    {
-        boost::asio::ip::udp::endpoint end_point = packet.end_point;
-        LOG(__DEBUG, "tracker", "TrackerGroup::OnKeepAlivePacket from: " << end_point);
-
-        // 在 trackers_ 中根据 end_point 找到对应的 TrackerClient, 如果找不到，直接返回
-        // 该 TrackerClient->OnKeepAliveResponsePacket(packet);
-        if (trackers_.count(end_point) == 0)
-        {
-            LOG(__DEBUG, "tracker", "No such end_point: " << end_point);
-            return;
-        }
-        trackers_[end_point]->OnKeepAliveResponsePacket(packet);
-
-        // 如果 packet::GetTranscationID() != trans_id_
-        //      直接返回
-        if (packet.transaction_id_ != last_transcation_id_)
-        {
-            LOG(__DEBUG, "tracker", "TrasactionID is " << packet.transaction_id_ << ", Expect: " << last_transcation_id_);
-            return;
-        }
-
-        // 如果 成功 packet->ErrorCode() == 0
-        //        error_time = 0    is_responsed_ = true;
-        //        timer_->SetInterval( packet->GetInterval());        定时器时间设长 （设为Tracker的返回值）
-        //        如果 current_tracker_ 为空
-        //            那么 current_tracker_  =  当前end_point对应 的 TrackerClient
-        //        current_tracker->Set_Rid_Count(packet->GetRidCount());
-        // 如果 失败 packet->ErrorCode() != 0
-        //      直接返回
-
-        if (packet.error_code_ == 0)  // success
-        {
-            error_times_ = 0;
-            is_responsed_ = true;
-            LOG(__DEBUG, "tracker", "TrackerGroup::OnKeepAlivePacket  Interval:" << packet.response.keep_alive_interval_ << " ResourceCount: " << (uint32_t) packet.response.resource_count_);
-            timer_.interval(1000* packet.response.keep_alive_interval_);
-
-            if (!current_tracker_)
-            {
-                current_tracker_ = trackers_[end_point];
-                // 统计信息
-                statistic::StatisticModule::Inst()->SetIsSubmitTracker(current_tracker_->GetTrackerInfo(), true);
-            }
-            current_tracker_->SetRidCount(packet.response.resource_count_);
-        }
-        else
-        {
-            // 统计信息
-            statistic::StatisticModule::Inst()->SubmitErrorCode(current_tracker_->GetTrackerInfo(), packet.error_code_);
             LOG(__DEBUG, "tracker", "Error Code is: " << packet.error_code_);
         }
     }

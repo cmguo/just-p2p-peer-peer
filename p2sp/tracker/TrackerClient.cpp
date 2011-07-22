@@ -76,27 +76,6 @@ namespace p2sp
         statistic::StatisticModule::Inst()->SubmitListResponse(tracker_info_, packet.response.peer_infos_.size());
     }
 
-    void TrackerClient::OnCommitResponsePacket(protocol::CommitPacket const & packet)
-    {
-        // 统计信息
-        statistic::StatisticModule::Inst()->SubmitCommitResponse(tracker_info_);
-
-        // IP信息
-        UpdateIpStatistic(protocol::SocketAddr(packet.response.detected_ip_, packet.response.detected_udp_port_));
-    }
-
-    void TrackerClient::OnKeepAliveResponsePacket(protocol::KeepAlivePacket const & packet)
-    {
-        last_response_rid_count_ = packet.response.resource_count_;
-        LOG(__DEBUG, "tracker", "KLP Response RID Count: " << last_response_rid_count_);
-
-        // 统计信息
-        statistic::StatisticModule::Inst()->SubmitKeepAliveResponse(tracker_info_, packet.response.keep_alive_interval_);
-
-        // IP信息
-        UpdateIpStatistic(protocol::SocketAddr(packet.response.detected_ip_, packet.response.detected_udp_port_));
-    }
-
     void TrackerClient::OnReportResponsePacket(protocol::ReportPacket const & packet)
     {
         TRACK_DEBUG("Report Response RID Count: " << last_response_rid_count_);
