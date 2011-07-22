@@ -413,6 +413,10 @@ namespace statistic
 
         static StatisticModule::p Inst()
         {
+            if (!inst_)
+            {
+                inst_.reset(new StatisticModule());
+            }
             return inst_;
         }
 

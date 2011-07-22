@@ -20,7 +20,7 @@
 
 namespace statistic
 {
-    StatisticModule::p StatisticModule::inst_(new StatisticModule());
+    StatisticModule::p StatisticModule::inst_;
 
     StatisticModule::StatisticModule()
         : share_memory_timer_(

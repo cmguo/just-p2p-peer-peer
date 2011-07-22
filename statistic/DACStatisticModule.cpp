@@ -20,7 +20,7 @@ namespace statistic
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("dacstatistic");
 
-    DACStatisticModule::p DACStatisticModule::inst_(new DACStatisticModule());
+    DACStatisticModule::p DACStatisticModule::inst_;
 
     DACStatisticModule::DACStatisticModule()
         : is_running_(false)

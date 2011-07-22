@@ -125,7 +125,14 @@ namespace p2sp
         P2PModule();
 
     public:
-        static P2PModule::p Inst() { return inst_; }
+        static P2PModule::p Inst()
+        {
+            if (!inst_)
+            {
+                inst_.reset(new P2PModule());
+            }
+            return inst_; 
+        }
     };
 }
 #endif  // _P2SP_P2P_P2PMODULE_H_

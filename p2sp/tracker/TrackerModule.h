@@ -44,7 +44,14 @@ namespace p2sp
     private:
         static TrackerModule::p inst_;
     public:
-        static TrackerModule::p Inst() { return inst_; }
+        static TrackerModule::p Inst()
+        {
+            if (!inst_)
+            {
+                inst_.reset(new TrackerModule());
+            }
+            return inst_; 
+        }
 
     private:
         TrackerModule()

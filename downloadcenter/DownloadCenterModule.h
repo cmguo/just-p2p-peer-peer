@@ -115,8 +115,14 @@ namespace downloadcenter
 
     public:
 
-        static DownloadCenterModule::p Inst() { return inst_; }
-
+        static DownloadCenterModule::p Inst() 
+        {
+            if (!inst_)
+            {
+                inst_.reset(new DownloadCenterModule());
+            }
+            return inst_; 
+        }
     };
 
 }

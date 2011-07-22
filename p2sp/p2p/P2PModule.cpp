@@ -42,7 +42,7 @@ namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
 
-    P2PModule::p P2PModule::inst_(new P2PModule());
+    P2PModule::p P2PModule::inst_;
 
     P2PModule::P2PModule()
         : p2p_timer_(global_250ms_timer(), 250, boost::bind(&P2PModule::OnTimerElapsed, this, &p2p_timer_))

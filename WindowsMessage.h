@@ -26,10 +26,14 @@ class WindowsMessage
     WindowsMessage();
     static WindowsMessage::p windows_message_;
     public:
-    static WindowsMessage& Inst() { return *windows_message_; };
+    static WindowsMessage& Inst() 
+    {
+        if (!windows_message_)
+        {
+            windows_message_.reset(new WindowsMessage());
+        }
+        return *windows_message_; 
+    };
 };
-
-string w2b(const wstring& _src);
-wstring b2w(const string& _src);
 
 #endif

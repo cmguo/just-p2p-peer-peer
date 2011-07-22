@@ -8,7 +8,7 @@
 
 namespace statistic
 {
-    UploadStatisticModule::p UploadStatisticModule::inst_(new UploadStatisticModule());
+    UploadStatisticModule::p UploadStatisticModule::inst_;
 
     UploadStatisticModule::UploadStatisticModule()
         : is_running_(false)

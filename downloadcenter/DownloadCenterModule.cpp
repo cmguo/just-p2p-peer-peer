@@ -16,7 +16,7 @@
 namespace downloadcenter
 {
 
-    DownloadCenterModule::p DownloadCenterModule::inst_(new DownloadCenterModule());
+    DownloadCenterModule::p DownloadCenterModule::inst_;
 
     DownloadCenterModule::DownloadCenterModule()
         : flush_timer_(global_second_timer(), 1000, boost::bind(&DownloadCenterModule::OnTimerElapsed, this, &flush_timer_))

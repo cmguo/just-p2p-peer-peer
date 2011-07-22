@@ -10,7 +10,7 @@ namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
 
-    TrackerModule::p TrackerModule::inst_(new TrackerModule());
+    TrackerModule::p TrackerModule::inst_;
 
     // need_report暂时没有用
     void TrackerModule::Start(const string& config_path, bool need_report)
