@@ -151,6 +151,50 @@ typedef struct _KEYWORD_DATA
     char                  szKeywordList[1024];                  // 关键字列表，用';'分割
 } KEYWORD_DATA, *LPKEYWORD_DATA;
 
+// TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
+// 在sop全部升级后发布的新内核可以删除这些代码
+
+// modified by jeffrey 2011-07-21
+// 由于暂时SOP没有全面升级，点播的STOP日志依然是按照原来的结构体发送
+// 所以原来的结构体依然放在message.h里面
+// 防止每次给客户端需要做merge工作
+#ifndef CLIENT_NEW_DAC_LOG
+typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
+{
+    boost::uint32_t       uSize;                                // 整个结构体大小
+    Guid                  gPeerID;                              // 华哥ID
+    Guid                  gResourceID;                          // ResourceID
+    boost::uint8_t        aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
+    char                  szVideoName[512];                    // 视频名称/WCHAR
+    char                  szOriginalUrl[1000];                  // Url
+    char                  szOriginalReferUrl[1000];             // Refer Url
+    boost::uint32_t       uDiskBytes;                           // 磁盘已有字节数
+    boost::uint32_t       uVideoBytes;                          // 影片大小
+    boost::uint32_t       uP2PDownloadBytes;                    // P2P下载字节数
+    boost::uint32_t       uHttpDownloadBytes;                   // HTTP下载字节数
+    boost::uint32_t       uAvgDownloadSpeed;                    // 平均下载速度 (B/s)
+    boost::uint8_t        bIsSaveMode;                          // 是否是下载模式完成的此次下载
+    // extend 1
+    boost::uint32_t       uStartPosition;                       // 拖动位置
+    boost::uint32_t       uMaxHttpDownloadSpeed;                // 最大HTTP下载速度
+    boost::uint32_t       uAvgP2PDownloadSpeed;                 // 最大P2P下载速度
+    boost::uint16_t       uQueriedPeerCount;                    // 查询到的节点数
+    boost::uint16_t       uConnectedPeerCount;                  // 连接上的节点数
+    boost::uint16_t       uFullPeerCount;                       // 资源全满节点数
+    boost::uint16_t       uBakHostStatus;                       // 活跃节点数峰值
+    // extend 2
+    boost::uint16_t       uSourceType;                          // 0:pplive, 1:ikan, 2:ppvod, 3:other
+    boost::uint32_t       uDataRate;                            // 码流率
+    boost::uint32_t       uAccelerateHttpSpeed;                 // 加速状态机切换之前的速度
+    boost::uint32_t       uAccelerateStatus;                    // 加速状态机的状态
+    // extend 3
+    boost::uint32_t       download_time;                        // 下载所用的时间
+    boost::uint32_t       last_speed;                           // 最后一刻下载速度
+    // extend 4
+    boost::uint32_t      is_got_rid;                 // 是否获得RID(0未获得;1获得)
+} DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
+#endif
+
 typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA
 {
     boost::uint32_t       uSize;                                // 整个结构体大小
@@ -164,6 +208,32 @@ typedef struct _RESOURCE_DATA_RATE_INFO
     char                  szOriginalUrl[1000];                  // 播放URL
     float                 fDataRate;                            // 码流率, 单位(Bytes/Second)
 } RESOURCE_DATA_RATE_INFO, *LPRESOURCE_DATA_RATE_INFO;
+
+// TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
+// 在sop全部升级后发布的新内核可以删除这些代码
+
+// modified by jeffrey 2011-07-21
+// 由于暂时SOP没有全面升级，点播的周期性日志依然是按照原来的结构体发送
+// 所以原来的结构体依然放在message.h里面
+// 防止每次给客户端需要做merge工作
+#ifndef CLIENT_NEW_DAC_LOG
+typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
+{
+    uint32_t       uSize;
+    Guid                  gPeerID;                              // 华哥ID
+    boost::uint8_t        aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
+    boost::uint32_t       uP2PUploadKBytesByNomal;              // 统计时长（分钟）
+    boost::uint32_t       uP2PDownloadBytes;                    // P2P下载字节数
+    boost::uint32_t       uHTTPDownloadBytes;                   // HTTP下载字节数
+    boost::uint32_t       uP2PUploadKBytesByPush;               // P2P上传字节数
+    boost::uint32_t       uUsedDiskSizeInMB;                    // 缓存目录已用大小
+    boost::uint32_t       uTotalDiskSizeInMB;                   // 缓存目录设置大小
+    boost::uint32_t       uUploadBandWidthInBytes;              // 上传带宽
+    boost::uint32_t       uNeedUseUploadPingPolicy;             // 上传使用ping policy
+    boost::uint32_t       uUploadLimitInKBytes;                 // p2p上传限速字节数
+    boost::uint32_t       uUploadDiscardBytes;                  // p2p上传限速导致被丢弃的报文字节数
+} PERIOD_DAC_STATISTIC_INFO_STRUCT, *LPPERIOD_DAC_STATISTIC_INFO_STRUCT;
+#endif
 
 typedef struct _PERIOD_DAC_STATISTIC_INFO
 {

@@ -11,25 +11,7 @@ namespace statistic
 {
     // TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
     // 在sop全部升级后发布的新内核可以删除这些代码
-#ifndef CLIENT_NEW_DAC_LOG
-    typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
-    {
-        uint32_t       uSize;
-        Guid                  gPeerID;                              // 华哥ID
-        boost::uint8_t        aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
-        boost::uint32_t       uP2PUploadKBytesByNomal;              // 统计时长（分钟）
-        boost::uint32_t       uP2PDownloadBytes;                    // P2P下载字节数
-        boost::uint32_t       uHTTPDownloadBytes;                   // HTTP下载字节数
-        boost::uint32_t       uP2PUploadKBytesByPush;               // P2P上传字节数
-        boost::uint32_t       uUsedDiskSizeInMB;                    // 缓存目录已用大小
-        boost::uint32_t       uTotalDiskSizeInMB;                   // 缓存目录设置大小
-        boost::uint32_t       uUploadBandWidthInBytes;              // 上传带宽
-        boost::uint32_t       uNeedUseUploadPingPolicy;             // 上传使用ping policy
-        boost::uint32_t       uUploadLimitInKBytes;                 // p2p上传限速字节数
-        boost::uint32_t       uUploadDiscardBytes;                  // p2p上传限速导致被丢弃的报文字节数
-    } PERIOD_DAC_STATISTIC_INFO_STRUCT, *LPPERIOD_DAC_STATISTIC_INFO_STRUCT;
-
-#else
+#ifdef CLIENT_NEW_DAC_LOG
     typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
     {
         boost::uint32_t       aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
@@ -44,7 +26,6 @@ namespace statistic
         boost::uint32_t       uUploadLimitInBytes;                  // p2p上传限速字节数
         boost::uint32_t       uUploadDiscardBytes;                  // p2p上传限速导致被丢弃的报文字节数
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
-
 #endif
 
     typedef struct _PERIOD_LIVE_DAC_STATISTIC_INFO_STRUCT

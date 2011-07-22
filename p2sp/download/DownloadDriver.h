@@ -42,46 +42,7 @@ namespace p2sp
     class HttpDragDownloader;
     typedef boost::shared_ptr<HttpDragDownloader> HttpDragDownloader__p;
 
-    // TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
-    // 在sop全部升级后发布的新内核可以删除这些代码
-#ifndef CLIENT_NEW_DAC_LOG
-#pragma pack(push, 1)
-    typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
-    {
-        boost::uint32_t       uSize;                                // 整个结构体大小
-        Guid                  gPeerID;                              // 华哥ID
-        Guid                  gResourceID;                          // ResourceID
-        boost::uint8_t        aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
-        char                  szVideoName[512];                    // 视频名称/WCHAR
-        char                  szOriginalUrl[1000];                  // Url
-        char                  szOriginalReferUrl[1000];             // Refer Url
-        boost::uint32_t       uDiskBytes;                           // 磁盘已有字节数
-        boost::uint32_t       uVideoBytes;                          // 影片大小
-        boost::uint32_t       uP2PDownloadBytes;                    // P2P下载字节数
-        boost::uint32_t       uHttpDownloadBytes;                   // HTTP下载字节数
-        boost::uint32_t       uAvgDownloadSpeed;                    // 平均下载速度 (B/s)
-        boost::uint8_t        bIsSaveMode;                          // 是否是下载模式完成的此次下载
-        // extend 1
-        boost::uint32_t       uStartPosition;                       // 拖动位置
-        boost::uint32_t       uMaxHttpDownloadSpeed;                // 最大HTTP下载速度
-        boost::uint32_t       uAvgP2PDownloadSpeed;                 // 最大P2P下载速度
-        boost::uint16_t       uQueriedPeerCount;                    // 查询到的节点数
-        boost::uint16_t       uConnectedPeerCount;                  // 连接上的节点数
-        boost::uint16_t       uFullPeerCount;                       // 资源全满节点数
-        boost::uint16_t       uBakHostStatus;                       // 活跃节点数峰值
-        // extend 2
-        boost::uint16_t       uSourceType;                          // 0:pplive, 1:ikan, 2:ppvod, 3:other
-        boost::uint32_t       uDataRate;                            // 码流率
-        boost::uint32_t       uAccelerateHttpSpeed;                 // 加速状态机切换之前的速度
-        boost::uint32_t       uAccelerateStatus;                    // 加速状态机的状态
-        // extend 3
-        boost::uint32_t       download_time;                        // 下载所用的时间
-        boost::uint32_t       last_speed;                           // 最后一刻下载速度
-        // extend 4
-        boost::uint32_t      is_got_rid;                 // 是否获得RID(0未获得;1获得)
-    } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
-#pragma pack(pop)
-#else
+#ifdef CLIENT_NEW_DAC_LOG
     typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
     {
         RID            gResourceID;                          // ResourceID
