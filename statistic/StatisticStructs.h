@@ -740,8 +740,9 @@ namespace statistic
         boost::uint32_t UniqueID;                       // 播放器的ID
         SPEED_INFO UdpServerSpeedInfo;                  // UdpServer速度
         boost::uint8_t IsPaused;                        // 是否暂停，0代表播放，1代表暂停
+        boost::uint8_t IsReplay;                        // 是否回拖，0代表不回拖，1代表回拖
 
-        boost::uint8_t Reserved[913];
+        boost::uint8_t Reserved[912];
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -792,6 +793,7 @@ namespace statistic
             ar & UniqueID;
             ar & UdpServerSpeedInfo;
             ar & IsPaused;
+            ar & IsReplay;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
 

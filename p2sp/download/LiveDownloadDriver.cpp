@@ -584,6 +584,9 @@ namespace p2sp
 
         // pause
         live_download_driver_statistic_info_.IsPaused = rest_time_tracker_.IsPaused() ? 1 : 0;
+
+        // replay
+        live_download_driver_statistic_info_.IsReplay = replay_ ? 1 : 0;
     }
 #endif
 
@@ -632,7 +635,7 @@ namespace p2sp
         info.P2PDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalP2PDataBytes() : 0;
         info.HttpDownloadBytes = live_http_downloader_ ? live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;
         info.UdpDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
-        info.TotalDownloadBytes = info.P2PDownloadBytes + info.HttpDownloadBytes;
+        info.TotalDownloadBytes = info.P2PDownloadBytes + info.HttpDownloadBytes + info.UdpDownloadBytes;
         info.AvgP2PDownloadSpeed = live_p2p_downloader_ ? live_p2p_downloader_->GetSpeedInfo().AvgDownloadSpeed : 0;
         info.MaxHttpDownloadSpeed = http_download_max_speed_;
         info.MaxP2PDownloadSpeed = p2p_download_max_speed_;

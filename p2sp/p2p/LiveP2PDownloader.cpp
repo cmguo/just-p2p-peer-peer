@@ -440,21 +440,18 @@ namespace p2sp
     void LiveP2PDownloader::OnUdpRecv(protocol::Packet const & packet)
     {
         // 统计速度时不只包括SubPiecePacket，而是包括收到的所有的包
-        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter;
-        for (iter = peers_.begin(); iter != peers_.end(); ++iter)
+        boost::uint8_t connect_type = protocol::CONNECT_LIVE_PEER;
+        if (peers_.find(packet.end_point) != peers_.end())
         {
-            if (iter->first == packet.end_point)
+            if (peers_[packet.end_point]->GetConnectType() == protocol::CONNECT_LIVE_PEER)
             {
-                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_PEER)
-                {
-                    p2p_speed_info_.SubmitDownloadedBytes(packet.length());
-                }
-                else
-                {
-                    assert(iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
-                    udp_server_speed_info_.SubmitDownloadedBytes(packet.length());
-                }
-                break;
+                p2p_speed_info_.SubmitDownloadedBytes(packet.length());
+            }
+            else
+            {
+                assert(peers_[packet.end_point]->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
+                connect_type = protocol::CONNECT_LIVE_UDPSERVER;
+                udp_server_speed_info_.SubmitDownloadedBytes(packet.length());
             }
         }
 
@@ -485,21 +482,14 @@ namespace p2sp
         else if (packet.PacketAction == protocol::LiveSubPiecePacket::Action)
         {
             // 收到数据包
-            if (iter != peers_.end())
+            if (connect_type == protocol::CONNECT_LIVE_PEER)
             {
-                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_PEER)
-                {
-                    p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
-                }
-                else
-                {
-                    assert(iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
-                    udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
-                }
+                p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
             }
             else
             {
-                p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+                assert(connect_type == protocol::CONNECT_LIVE_UDPSERVER);
+                udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
             }
             live_subpiece_request_manager_.OnSubPiece((const protocol::LiveSubPiecePacket &)packet);
         }
