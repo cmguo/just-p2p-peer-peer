@@ -214,6 +214,21 @@ namespace p2sp
 
     void TrackerGroup::SelectTracker()
     {
+        // 本地没有资源的情况下，不进行report
+        // 对点播和直播都有效
+        if (tracker_list_.empty())
+        {
+            return;
+        }
+
+        // 在一个 TrackerGroup 里面，每个tracker_list_里面的成员拿到的Resource都是相同的，
+        // 因为 TrackerGroup 本身就是把Mod相同的Tracker集合在一起
+        std::set<RID> local_resource = (*tracker_list_.begin())->GetClientResource();
+        if (local_resource.empty())
+        {
+            return;
+        }
+
         // 如果 is_responsed_ == false 上次发的Commit/KeepAlive 没有收到回包或者回包有问题
         //     error_time ++
         //   如果 error_times >= 3 那么就
