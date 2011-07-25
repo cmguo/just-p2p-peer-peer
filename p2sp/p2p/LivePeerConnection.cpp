@@ -255,7 +255,16 @@ namespace p2sp
             }
             else
             {
-                return block_bitmap_[subpiece.GetBlockId()].test(((subpiece.GetSubPieceIndex() - 1) >> 4) + 1);
+                uint32_t piece_index = ((subpiece.GetSubPieceIndex() - 1) >> 4) + 1;
+
+                if (piece_index < block_bitmap_[subpiece.GetBlockId()].size())
+                {
+                    return block_bitmap_[subpiece.GetBlockId()].test(piece_index);
+                }
+                else
+                {
+                    assert(false);
+                }
             }
         }
         return false;
