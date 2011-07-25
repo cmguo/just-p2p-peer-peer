@@ -44,6 +44,8 @@ namespace p2sp
         // SpeedInfo
         p2p_speed_info_.Start();
         p2p_subpiece_speed_info_.Start();
+        udp_server_speed_info_.Start();
+        udp_server_subpiece_speed_info_.Start();
 
         last_dolist_time_.start();
 
@@ -146,8 +148,9 @@ namespace p2sp
         is_running_ = false;
 
         p2p_subpiece_speed_info_.Stop();
-
         p2p_speed_info_.Stop();
+        udp_server_speed_info_.Stop();
+        udp_server_subpiece_speed_info_.Stop();
 
         if (ippool_)
         {
@@ -204,6 +207,16 @@ namespace p2sp
     statistic::SPEED_INFO_EX LiveP2PDownloader::GetSubPieceSpeedInfoEx()
     {
         return p2p_subpiece_speed_info_.GetSpeedInfoEx();
+    }
+
+    statistic::SPEED_INFO_EX LiveP2PDownloader::GetUdpServerSpeedInfoEx()
+    {
+        return udp_server_speed_info_.GetSpeedInfoEx();
+    }
+
+    statistic::SPEED_INFO_EX LiveP2PDownloader::GetUdpServerSubpieceSpeedInfoEx()
+    {
+        return udp_server_subpiece_speed_info_.GetSpeedInfoEx();
     }
 
     boost::uint32_t LiveP2PDownloader::GetCurrentDownloadSpeed() 
@@ -427,7 +440,23 @@ namespace p2sp
     void LiveP2PDownloader::OnUdpRecv(protocol::Packet const & packet)
     {
         // 统计速度时不只包括SubPiecePacket，而是包括收到的所有的包
-        p2p_speed_info_.SubmitDownloadedBytes(packet.length());
+        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter;
+        for (iter = peers_.begin(); iter != peers_.end(); ++iter)
+        {
+            if (iter->first == packet.end_point)
+            {
+                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_PEER)
+                {
+                    p2p_speed_info_.SubmitDownloadedBytes(packet.length());
+                }
+                else
+                {
+                    assert(iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
+                    udp_server_speed_info_.SubmitDownloadedBytes(packet.length());
+                }
+                break;
+            }
+        }
 
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
@@ -456,7 +485,22 @@ namespace p2sp
         else if (packet.PacketAction == protocol::LiveSubPiecePacket::Action)
         {
             // 收到数据包
-            p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+            if (iter != peers_.end())
+            {
+                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_PEER)
+                {
+                    p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+                }
+                else
+                {
+                    assert(iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
+                    udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+                }
+            }
+            else
+            {
+                p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+            }
             live_subpiece_request_manager_.OnSubPiece((const protocol::LiveSubPiecePacket &)packet);
         }
         else if (packet.PacketAction == protocol::ErrorPacket::Action)

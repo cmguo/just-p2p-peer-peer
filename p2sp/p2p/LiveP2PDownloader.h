@@ -108,6 +108,10 @@ namespace p2sp
         statistic::SPEED_INFO_EX GetSpeedInfoEx();
         statistic::SPEED_INFO GetSubPieceSpeedInfo();
         statistic::SPEED_INFO_EX GetSubPieceSpeedInfoEx();
+        statistic::SPEED_INFO GetUdpServerSpeedInfo();
+        statistic::SPEED_INFO_EX GetUdpServerSpeedInfoEx();
+        statistic::SPEED_INFO GetUdpServerSubpieceSpeedInfo();
+        statistic::SPEED_INFO_EX GetUdpServerSubpieceSpeedInfoEx();
 
         template <typename PacketType>
         void DoSendPacket(PacketType const & packet)
@@ -213,6 +217,8 @@ namespace p2sp
         statistic::SpeedInfoStatistic p2p_subpiece_speed_info_;
         boost::uint32_t total_all_request_subpiece_count_;  // 请求的所有subpiece个数（包括冗余的）
         boost::uint32_t total_request_subpiece_count_;  // 请求的subpiece个数（不包括冗余的）
+        statistic::SpeedInfoStatistic udp_server_speed_info_;
+        statistic::SpeedInfoStatistic udp_server_subpiece_speed_info_;
 
     };
 
@@ -224,6 +230,16 @@ namespace p2sp
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSubPieceSpeedInfo()
     {
         return p2p_subpiece_speed_info_.GetSpeedInfo();
+    }
+
+    inline statistic::SPEED_INFO LiveP2PDownloader::GetUdpServerSpeedInfo()
+    {
+        return udp_server_speed_info_.GetSpeedInfo();
+    }
+
+    inline statistic::SPEED_INFO LiveP2PDownloader::GetUdpServerSubpieceSpeedInfo()
+    {
+        return udp_server_subpiece_speed_info_.GetSpeedInfo();
     }
 
     inline uint32_t LiveP2PDownloader::GetConnectedPeersCount()

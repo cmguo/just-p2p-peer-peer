@@ -25,6 +25,7 @@ namespace p2sp
         , id_(++s_id_)
         , http_download_max_speed_(0)
         , p2p_download_max_speed_(0)
+        , udp_server_max_speed_(0)
         , jump_times_(0)
         , checksum_failed_times_(0)
         , source_type_(PlayInfo::SOURCE_LIVE_DEFAULT)
@@ -334,6 +335,11 @@ namespace p2sp
                 {
                     p2p_download_max_speed_ = live_p2p_downloader_->GetSpeedInfo().NowDownloadSpeed;
                 }
+
+                if (udp_server_max_speed_ < live_p2p_downloader_->GetUdpServerSpeedInfo().NowDownloadSpeed)
+                {
+                    udp_server_max_speed_ = live_p2p_downloader_->GetUdpServerSpeedInfo().NowDownloadSpeed;
+                }
             }
 
             ++elapsed_seconds_since_started_;
@@ -571,6 +577,13 @@ namespace p2sp
 
         // pms status
         live_download_driver_statistic_info_.PmsStatus = live_http_downloader_->GetPmsStatus() ? 0 : 1;
+
+        // udpserver speed
+        live_download_driver_statistic_info_.UdpServerSpeedInfo = live_p2p_downloader_ ?
+            live_p2p_downloader_->GetUdpServerSpeedInfo() : statistic::SPEED_INFO();
+
+        // pause
+        live_download_driver_statistic_info_.IsPaused = rest_time_tracker_.IsPaused() ? 1 : 0;
     }
 #endif
 
@@ -588,7 +601,7 @@ namespace p2sp
         // G: P2P下载字节数
         // H: Http下载字节数
         // I: 总下载字节数
-        // J: P2P平均速度
+        // J: P2P平均速度(会偏小)
         // K: P2P最大速度
         // L: Http最大速度
         // M: 连接上的节点数目
@@ -599,6 +612,7 @@ namespace p2sp
         // R: SourceType
         // S: 频道ID
         // T: 从UdpServer下载的字节数
+        // U: UdpServer下载最大速度
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -632,6 +646,8 @@ namespace p2sp
 
         info.SourceType = source_type_;
         info.ChannelID = channel_id_;
+
+        info.MaxUdpServerDownloadSpeed = udp_server_max_speed_;
 
         std::ostringstream log_stream;
 
@@ -673,6 +689,7 @@ namespace p2sp
         log_stream << "&R=" << info.SourceType;
         log_stream << "&S=" << info.ChannelID;
         log_stream << "&T=" << info.UdpDownloadBytes;
+        log_stream << "&U=" << info.MaxUdpServerDownloadSpeed;
 
         string log = log_stream.str();
 

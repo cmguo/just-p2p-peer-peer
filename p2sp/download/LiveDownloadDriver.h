@@ -52,7 +52,7 @@ namespace p2sp
         boost::uint32_t         HttpDownloadBytes;      // Http下载字节数
         boost::uint32_t         TotalDownloadBytes;     // 总下载字节数
         boost::uint32_t         AvgP2PDownloadSpeed;    // P2P平均速度
-        boost::uint16_t         MaxP2PDownloadSpeed;    // P2P最大速度
+        boost::uint32_t         MaxP2PDownloadSpeed;    // P2P最大速度
         boost::uint32_t         MaxHttpDownloadSpeed;   // Http最大速度
         boost::uint32_t         ConnectedPeerCount;     // 连接上的节点数目
         boost::uint32_t         QueriedPeerCount;       // 查询到的节点数目
@@ -62,6 +62,7 @@ namespace p2sp
         boost::uint32_t         SourceType;             //
         RID                     ChannelID;              // 频道ID
         boost::uint32_t         UdpDownloadBytes;       // 从UdpServer下载的字节数
+        boost::uint32_t         MaxUdpServerDownloadSpeed;  // 从UdpServer下载的最大速度
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -311,6 +312,7 @@ namespace p2sp
 #endif
         boost::uint32_t http_download_max_speed_;
         boost::uint32_t p2p_download_max_speed_;
+        boost::uint32_t udp_server_max_speed_;
 
         boost::uint32_t source_type_;
         JumpBWType bwtype_;
