@@ -85,6 +85,13 @@ namespace p2sp
         if (timer = &sleep_timer_)
         {
             sleep_timer_.stop();
+
+            // 状态机暂停
+            if (status_ == paused)
+            {
+                return;
+            }
+
             assert(status_ == sleeping);
 
             status_ = closed;
@@ -319,6 +326,15 @@ namespace p2sp
     {
         http_client_->Close();
         status_ = sleeping;
+
+        if (live_download_driver_->GetRestPlayableTime() > 2 * live_download_driver_->GetLiveInterval())
+        {
+            sleep_timer_.interval(live_download_driver_->GetLiveInterval()*1000);
+        }
+        else
+        {
+            sleep_timer_.interval(1000);
+        }
 
         sleep_timer_.start();
     }

@@ -213,6 +213,11 @@ namespace p2sp
             return unique_id_;
         }
 
+        boost::uint32_t GetLiveInterval() const
+        {
+            return live_instance_->GetLiveInterval();
+        }
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();

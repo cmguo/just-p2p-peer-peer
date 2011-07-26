@@ -117,7 +117,7 @@ namespace p2sp
 
         std::deque<protocol::LiveSubPieceInfo> block_tasks_;
         StatusEnum status_;
-        framework::timer::OnceTimer sleep_timer_;
+        framework::timer::PeriodicTimer sleep_timer_;
 
         statistic::SpeedInfoStatistic http_speed_info_;
         boost::uint32_t http_status_;

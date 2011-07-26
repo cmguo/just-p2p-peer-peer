@@ -89,7 +89,9 @@ namespace p2sp
         live_instance_->SetCurrentLivePoint(storage::LivePosition(start_position));
 
         // 创建HttpDownloader
-        live_http_downloader_ = LiveHttpDownloader::Create(io_svc_, url_info, data_rate_manager_.GetCurrentRID(), shared_from_this());
+        live_http_downloader_ = LiveHttpDownloader::Create(io_svc_, url_info, 
+            data_rate_manager_.GetCurrentRID(), shared_from_this());
+
         live_http_downloader_->Start();
         live_http_downloader_->Pause();
 
