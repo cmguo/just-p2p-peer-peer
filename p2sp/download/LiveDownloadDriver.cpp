@@ -214,34 +214,7 @@ namespace p2sp
         // progress_percentage保证当前block数据全部发送完毕
         if (progress_percentage == 100)
         {
-            // 跳跃算法
-            // 1. 回放不会跳跃
-            // 2. 落后直播点120s
-            if (!replay_ && !rest_time_tracker_.IsPaused())
-            {
-                while (playing_position_.GetBlockId() + 120 < live_instance_->GetCurrentLivePoint().GetBlockId())
-                {
-                    storage::LivePosition new_playing_position = live_p2p_downloader_ ?
-                        live_p2p_downloader_->Get75PercentPointInBitmap() : 0;
-
-                    if (playing_position_ < new_playing_position)
-                    {
-                        JumpTo(new_playing_position);
-                    }
-                    else
-                    {
-                        JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 90));
-                    }
-                }
-            }
-
-            // 码流切换算法
-            // 1. 当前block的数据必须全部发送完毕
-            if (data_rate_manager_.SwitchToHigherDataRateIfNeeded(GetRestPlayableTime()) ||
-                data_rate_manager_.SwitchToLowerDataRateIfNeeded(GetRestPlayableTime()))
-            {
-                OnDataRateChanged();
-            }
+            JumpOrSwitchIfNeeded();
         }
 
         // 把收到的数据往播放器推送
@@ -295,6 +268,12 @@ namespace p2sp
         if (pointer == &timer_)
         {
             rest_time_tracker_.UpdateRestTime();
+
+            if (playing_position_.GetSubPieceIndex() == 0)
+            {
+                JumpOrSwitchIfNeeded();
+            }
+
 #ifndef STATISTIC_OFF
             UpdateStatisticInfo();
             statistic_->UpdateShareMemory();
@@ -720,5 +699,37 @@ namespace p2sp
     void LiveDownloadDriver::OnPause(bool pause)
     {
         rest_time_tracker_.OnPause(pause);
+    }
+
+    void LiveDownloadDriver::JumpOrSwitchIfNeeded()
+    {
+        // 跳跃算法
+        // 1. 回放不会跳跃
+        // 2. 落后直播点120s
+        if (!replay_ && !rest_time_tracker_.IsPaused())
+        {
+            while (playing_position_.GetBlockId() + 120 < live_instance_->GetCurrentLivePoint().GetBlockId())
+            {
+                storage::LivePosition new_playing_position = live_p2p_downloader_ ?
+                    live_p2p_downloader_->Get75PercentPointInBitmap() : 0;
+
+                if (playing_position_ < new_playing_position)
+                {
+                    JumpTo(new_playing_position);
+                }
+                else
+                {
+                    JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 90));
+                }
+            }
+        }
+
+        // 码流切换算法
+        // 1. 当前block的数据必须全部发送完毕
+        if (data_rate_manager_.SwitchToHigherDataRateIfNeeded(GetRestPlayableTime()) ||
+            data_rate_manager_.SwitchToLowerDataRateIfNeeded(GetRestPlayableTime()))
+        {
+            OnDataRateChanged();
+        }
     }
 }

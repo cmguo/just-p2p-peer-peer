@@ -270,6 +270,8 @@ namespace p2sp
 
         void StartBufferringMonitor();
 
+        void JumpOrSwitchIfNeeded();
+
     private:
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
         boost::asio::io_service & io_svc_;
