@@ -25,6 +25,7 @@ namespace p2sp
         , http_status_(0)
         , connect_failed_times_(0)
         , is_pms_status_good_(true)
+        , is_http_pausing_(true)
     {
         network::Uri uri(url_info.url_);
         pms_url_domain_ = uri.getdomain();
@@ -52,31 +53,38 @@ namespace p2sp
 
     void LiveHttpDownloader::Pause()
     {
-        status_ = paused;
-
-        while (!block_tasks_.empty())
+        if (!is_http_pausing_)
         {
-            live_download_driver_->OnBlockTimeout(block_tasks_.front());
-        }
+            is_http_pausing_ = true;
 
-        if (http_client_)
-        {
-            http_client_->Close();
+            if (status_ == sleeping)
+            {
+                sleep_timer_.stop();
+            }
+
+            while (!block_tasks_.empty())
+            {
+                live_download_driver_->OnBlockTimeout(block_tasks_.front());
+            }
+
+            if (http_client_)
+            {
+                http_client_->Close();
+            }
+
+            status_ = closed;
         }
     }
 
     void LiveHttpDownloader::Resume()
     {
-        if (status_ == paused)
+        if (is_http_pausing_)
         {
             // 不在下载，申请Piece下载
+            is_http_pausing_ = false;
+
             status_ = closed;
             RequestNextBlock();
-        }
-        else
-        {
-            // assert(false);
-            LOG(__DEBUG, "", "Resume when LiveHttpDownloader not pausing but " << (int)status_);
         }
     }
 
@@ -87,7 +95,7 @@ namespace p2sp
             sleep_timer_.stop();
 
             // 状态机暂停
-            if (status_ == paused)
+            if (is_http_pausing_)
             {
                 return;
             }
@@ -170,10 +178,6 @@ namespace p2sp
             http_client_->HttpGet();
             status_ = sending_request_head;
         }
-        else if (status_ == paused)
-        {
-            return;
-        }
         else
         {
             assert(false);
@@ -187,6 +191,7 @@ namespace p2sp
 
         // 连接失败，重连
         connect_failed_times_++;
+        status_ = closed;
         if (connect_failed_times_ > 10)
         {
             // TODO: 连续10次连接PMS失败
@@ -389,17 +394,15 @@ namespace p2sp
             {
                 block_tasks_.erase(iter);
 
-                if (status_ != paused && status_ != closed)
+                if (!is_http_pausing_)
                 {
-                    if (status_ == sleeping)
+                    if (status_ != closed)
                     {
-                        sleep_timer_.stop();
+                        Pause();
+                        global_io_svc().post(boost::bind(&LiveHttpDownloader::Resume, shared_from_this()));
                     }
-
-                    Pause();
-                    global_io_svc().post(boost::bind(&LiveHttpDownloader::Resume, shared_from_this()));
                 }
-                
+
                 return;
             }
         }
@@ -409,7 +412,16 @@ namespace p2sp
 
     void LiveHttpDownloader::OnDataRateChanged(const RID & rid)
     {
-        rid_ = rid.to_string();
+        if (is_http_pausing_)
+        {
+            rid_ = rid.to_string();
+        }
+        else
+        {
+            Pause();
+            rid_ = rid.to_string();
+            Resume();
+        }
     }
 
     void LiveHttpDownloader::SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps)

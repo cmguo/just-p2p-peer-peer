@@ -44,7 +44,6 @@ namespace p2sp
             established, 
             sending_request_head, 
             recving_response_data, 
-            paused,
             sleeping
         };
 
@@ -62,7 +61,7 @@ namespace p2sp
 
         // Downloader
         virtual void Stop();
-        virtual bool IsPausing() {return status_ == paused;}
+        virtual bool IsPausing() {return is_http_pausing_;}
 
         virtual statistic::SPEED_INFO GetSpeedInfo();
         virtual statistic::SPEED_INFO_EX GetSpeedInfoEx();
@@ -124,6 +123,8 @@ namespace p2sp
 
         uint32_t connect_failed_times_;
         bool is_pms_status_good_;  // true代表正常，false代表不正常
+
+        bool is_http_pausing_;
     };
 
     inline statistic::SPEED_INFO LiveHttpDownloader::GetSpeedInfo()
