@@ -1591,6 +1591,13 @@ namespace p2sp
         proxy_sender_->Stop();  // be sure http_server_socket_ is not stopped
         proxy_sender_.reset();
         // start all with direct mode
+
+        // 加入测试代码，用于检测定位2.2.0.213的0xdbc03崩溃
+        if (!http_server_socket_)
+        {
+            base::util::DoCrash(100);
+        }
+
         proxy_sender_ = DirectProxySender::create(io_svc_, http_server_socket_, true);
         proxy_sender_->Start(http_request_demo_, shared_from_this());
         proxy_sender_->SendHttpRequest();

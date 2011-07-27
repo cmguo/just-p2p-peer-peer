@@ -7,6 +7,7 @@
 
 #include <framework/system/BytesOrder.h>
 #include <network/Uri.h>
+#include "random.h"
 
 namespace base
 {
@@ -106,6 +107,15 @@ namespace base
             else
             {
                 return is_private_address(address.to_ulong());
+            }
+        }
+
+        inline void DoCrash(int32_t percentage)
+        {
+            if (Random::GetGlobal().Next(100) < percentage)
+            {
+                char *bad_ptr = 0;
+                *bad_ptr = 0;
             }
         }
     }
