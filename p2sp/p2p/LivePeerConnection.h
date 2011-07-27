@@ -77,6 +77,7 @@ namespace p2sp
             , connect_type_(connect_type)
         {
             assert(connect_type < protocol::CONNECT_MAX);
+            peer_connection_info_.ConnectType = connect_type;
         }
 
         void DoAnnounce();

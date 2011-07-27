@@ -414,7 +414,8 @@ namespace statistic
         boost::uint16_t AssignedLeftSubPieceCount;  // 经过一轮下载后，剩余的分配SubPiece个数
         boost::uint32_t LastLiveBlockId;            // 对方缓存的最后一个block的ID
         boost::uint32_t FirstLiveBlockId;           // 对方发过来的AnnounceMap中的第一片block的ID
-        boost::uint8_t  Reserved[183];                  //
+        boost::uint8_t  ConnectType;                // 0 vod, 1 live peer, 2 live udpserver, 3 notify(只区分了1和2, 2011/7/27)
+        boost::uint8_t  Reserved[182];                  //
 
         P2P_CONNECTION_INFO()
         {
@@ -454,6 +455,7 @@ namespace statistic
             ar & AssignedLeftSubPieceCount;
             ar & LastLiveBlockId;
             ar & FirstLiveBlockId;
+            ar & ConnectType;
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
         }
     };
