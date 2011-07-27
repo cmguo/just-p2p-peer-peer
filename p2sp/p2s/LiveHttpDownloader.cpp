@@ -224,13 +224,9 @@ namespace p2sp
             RequestSubPiece();
             status_ = recving_response_data;
             break;
-        case 404:
+        default:
             // 重试
             SleepForConnect();
-            break;
-        default:
-            assert(false);
-            LOG(__DEBUG, "", "Unknown StatusCode " << http_response->GetStatusCode());
             break;
         }
     }
