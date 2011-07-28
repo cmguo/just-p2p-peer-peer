@@ -219,10 +219,10 @@ namespace p2sp
 
         // http速度可以满足要求，如果剩余缓冲足够大了，也需要转到p2p
         // 这个地方将对带宽节约比有很大的影响！zw
-        return rest_play_time_inms >= 40 * 1000 * data_rate_v &&
+        return rest_play_time_inms >= 20 * 1000 * data_rate_v &&
             peer_count > 10
             ||
-            rest_play_time_inms >= 50 * 1000 &&
+            rest_play_time_inms >= 30 * 1000 &&
             peer_count > 0;
     }
 
@@ -549,7 +549,7 @@ namespace p2sp
                 // 其他所有情况，均由http启动，如果是自然过渡，那么在获得剩余缓冲时间后自然会跳转到p2p
                 ChangeTo2300();
                 
-                return;
+                continue;
             }
             // <2200>
             else if (
@@ -657,7 +657,8 @@ namespace p2sp
                 if (http_status_ == http_good)
                 {
                     // http是好的，可以等到剩余缓冲下降到15秒以内才切换到http
-                    if (rest_playable_time_in_ms < 15000)
+                    if ((rest_playable_time_in_ms < 15000 && Is3200P2pSlow())
+                        || (rest_playable_time_in_ms < 10000))
                     {
                         p2p_failed_times_++;
                         p2p_status_ = p2p_bad;
