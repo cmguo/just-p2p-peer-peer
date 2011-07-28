@@ -271,6 +271,7 @@ namespace p2sp
         LOG(__ERROR, "", "OnRecvHttpDataPartial!");
         assert(false);
         DoConnect();
+        SleepForConnect();
     }
 
     void LiveHttpDownloader::OnRecvHttpDataFailed(uint32_t error_code)
