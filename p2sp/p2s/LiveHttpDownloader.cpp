@@ -231,6 +231,7 @@ namespace p2sp
             break;
         default:
             // 重试
+            DoClose();
             SleepForConnect();
             break;
         }
@@ -269,8 +270,7 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
         LOG(__ERROR, "", "OnRecvHttpDataPartial!");
-        assert(false);
-        DoConnect();
+        DoClose();
         SleepForConnect();
     }
 
@@ -284,6 +284,7 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvTimeout()
     {
         LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
+        DoClose();
         SleepForConnect();
     }
     
