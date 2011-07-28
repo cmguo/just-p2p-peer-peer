@@ -278,6 +278,7 @@ namespace p2sp
     {
         LOG(__ERROR, "", "OnRecvHttpDataFailed!");
         DoClose();
+        SleepForConnect();
     }
 
     void LiveHttpDownloader::OnRecvTimeout()
