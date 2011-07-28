@@ -663,6 +663,11 @@ namespace p2sp
             pos.erase(pos.begin());
         }
 
+        if (pos.empty())
+        {
+            return storage::LivePosition(0, 0);
+        }
+
         map<uint32_t, uint32_t>::iterator max_iter = pos.begin();
 
         for (map<uint32_t, uint32_t>::iterator pos_iter = pos.begin();
