@@ -66,7 +66,8 @@ namespace p2sp
             WindowsMessage::Inst().PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)s_id_, (LPARAM)lpDownloadDriverStartData);
 #endif
         }
-        else {
+        else 
+        {
             downloaddriver_statistic_->SetHidden(true);
         }
 
@@ -98,10 +99,11 @@ namespace p2sp
         if (need_bubble_)
         {
             downloaddriver_statistic_->DetachHttpDownloaderStatistic(httpdownloader_statistic_);
-            statistic::StatisticModule::Inst()->DetachDownloadDriverStatistic(downloaddriver_statistic_);
-            downloaddriver_statistic_.reset();
             httpdownloader_statistic_.reset();
         }
+
+        statistic::StatisticModule::Inst()->DetachDownloadDriverStatistic(downloaddriver_statistic_);
+        downloaddriver_statistic_.reset();
 
         if (http_request_)
         {
