@@ -200,7 +200,7 @@ namespace p2sp
             return;
         }
 
-        DoConnect();
+        SleepForConnect();
     }
 
     void LiveHttpDownloader::OnConnectTimeout()
