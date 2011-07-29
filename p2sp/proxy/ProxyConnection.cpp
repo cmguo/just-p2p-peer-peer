@@ -92,6 +92,7 @@ namespace p2sp
         , will_stop_download_(false)
         , send_count_(0)
         , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
+        , is_live_connection_(false)
     {
     }
 
