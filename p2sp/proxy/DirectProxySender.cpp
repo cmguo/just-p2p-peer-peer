@@ -86,7 +86,6 @@ namespace p2sp
         LOG(__EVENT, "proxy", "DirectProxySender::Stop");
         if (http_server_socket_)
         {
-            // http_server_socket_->WillClose();
             http_server_socket_.reset();
         }
 
@@ -124,7 +123,11 @@ namespace p2sp
 
         assert(http_request_);
         // 保证头部只发一次
-        if (have_send_http_header_) return;
+        if (have_send_http_header_)
+        {
+            return;
+        }
+
         have_send_http_header_ = true;
 
         LOG(__INFO, "proxy", "DirectProxySender::SendHttpRequest ");
@@ -139,26 +142,36 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
-        // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
     }
 
     void DirectProxySender::OnDownloadDriverError(uint32_t error_code)
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         assert(0);
     }
 
 
     void DirectProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
-        if (is_running_ == false) return;
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         assert(0);
     }
 
     void DirectProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
     {
-        if (is_running_ == false) return;
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         assert(0);
     }
 
@@ -174,10 +187,12 @@ namespace p2sp
     void DirectProxySender::OnConnectFailed(uint32_t error_code)
     {
         if (is_running_ == false)
+        {
             return;
+        }
 
         LOG(__INFO, "proxy", "DirectProxySender::OnConnectFailed");
-//        WillStop();
+
         proxy_connection_->WillStop();
 
     }
@@ -185,9 +200,12 @@ namespace p2sp
     void DirectProxySender::OnConnectTimeout()
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnConnectTimeout");
-//        WillStop();
+
         proxy_connection_->WillStop();
 
     }
@@ -195,10 +213,16 @@ namespace p2sp
     void DirectProxySender::OnRecvHttpHeaderSucced(network::HttpResponse::p http_response)
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpHeaderSucced");
 
-        http_server_socket_->HttpSendHeader(http_response->ToString());
+        if (http_server_socket_)
+        {
+            http_server_socket_->HttpSendHeader(http_response->ToString());
+        }
 
         http_client_->HttpRecvSubPiece();
     }
@@ -206,10 +230,12 @@ namespace p2sp
     void DirectProxySender::OnRecvHttpHeaderFailed(uint32_t error_code)
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpHeaderFailed");
 
-//        WillStop();
         proxy_connection_->WillStop();
 
 
@@ -218,7 +244,10 @@ namespace p2sp
     void DirectProxySender::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataSucced");
 
         if (need_bubble_)
@@ -226,7 +255,10 @@ namespace p2sp
             httpdownloader_statistic_->SubmitDownloadedBytes(buffer.Length());
         }
 
-        http_server_socket_->HttpSendBuffer(buffer);
+        if (http_server_socket_)
+        {
+            http_server_socket_->HttpSendBuffer(buffer);
+        }
 
         http_client_->HttpRecvSubPiece();
     }
@@ -234,50 +266,71 @@ namespace p2sp
     void DirectProxySender::OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
         if (is_running_ == false)
+        {
             return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataPartial");
 
-        http_server_socket_->HttpSendBuffer(buffer);
-
+        if (http_server_socket_)
+        {
+            http_server_socket_->HttpSendBuffer(buffer);
+        }
     }
 
     void DirectProxySender::OnRecvHttpDataFailed(uint32_t error_code)
     {
-        if (is_running_ == false) return;
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataFailed");
 
         proxy_connection_->WillStop();
-//        WillStop();
     }
 
     void DirectProxySender::OnRecvTimeout()
     {
-        if (is_running_ == false) return;
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnRecvTimeout");
 
         proxy_connection_->WillStop();
-//        WillStop();
     }
 
     void DirectProxySender::OnComplete()
     {
-        if (is_running_ == false) return;
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         LOG(__INFO, "proxy", "DirectProxySender::OnComplete");
         proxy_connection_->WillStop();
-
-//        WillStop();
     }
-    // 失锟斤拷
+
     void DirectProxySender::OnNotice403Header()
     {
         if (false == is_running_)
+        {
             return;
+        }
+
         if (true == is_response_header_)
+        {
             return;
+        }
 
         LOG(__EVENT, "proxy", __FUNCTION__ << ": Notice 403 header");
 
-        http_server_socket_->HttpSend403Header();
+        if (http_server_socket_)
+        {
+            http_server_socket_->HttpSend403Header();
+        }
     }
 
     void DirectProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
