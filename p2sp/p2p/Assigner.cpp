@@ -190,7 +190,7 @@ namespace p2sp
                         {
                             first_empty_offset_ = sub_piece.GetEndPosition(block_size_);
                         }
-                        if (!p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece))
+                        if (!p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece))
                         {
                             ++subpiece_count;
                         }
@@ -290,7 +290,7 @@ namespace p2sp
                     {
                         ++needdown_sp_num;
                         // 正常分配
-                        if (!p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece))
+                        if (!p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece))
                         {
                             subpiece_assign_map_.push_back(sub_piece);
                             total_subpiece_count++;
@@ -312,7 +312,7 @@ namespace p2sp
                             {
                                 protocol::SubPieceInfo sub_piece(piece.block_index_, piece.piece_index_ * SUB_PIECE_COUNT_PER_PIECE + i);
                                 if (false == p2p_downloader_->HasSubPiece(sub_piece)
-                                    && p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece))
+                                    && p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece))
                                 {
                                     // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                     subpiece_assign_map_.push_back(sub_piece);
@@ -346,8 +346,8 @@ namespace p2sp
                                     }
 
                                     // 正在请求的subpiece每一秒冗余一次
-                                    if (p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece)
-                                        && (p2p_downloader_->subpiece_request_manager_->IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
+                                    if (p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece)
+                                        && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
                                         P2P_DEBUG("redundant subpiece: " << sub_piece);
@@ -370,9 +370,9 @@ namespace p2sp
                                         // 紧急的piece每一秒冗余一次，不紧急的piece每3秒冗余一次
                                         uint32_t redundant_times = index <= P2SPConfigs::ASSIGN_REDUNTANT_PIECE_COUNT ?
                                             P2SPConfigs::ASSIGN_REDUNTANT_TIMES_URGENT :  P2SPConfigs::ASSIGN_REDUNTANT_TIMES_NORMAL;
-                                        if (p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece)
-                                            && (p2p_downloader_->subpiece_request_manager_->IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_REDUNTANT_DECISION_TIMEOUT, 10)
-                                            && p2p_downloader_->subpiece_request_manager_->GetRequestingCount(sub_piece, 3000)  < redundant_times))
+                                        if (p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece)
+                                            && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_REDUNTANT_DECISION_TIMEOUT, 10)
+                                            && p2p_downloader_->subpiece_request_manager_.GetRequestingCount(sub_piece, 3000)  < redundant_times))
                                         {
                                             // 正在请求的subpiece按一定条件冗余
                                             subpiece_assign_map_.push_back(sub_piece);
@@ -409,8 +409,8 @@ namespace p2sp
                                 }
 
                                 // 正在请求的subpiece每一秒冗余一次
-                                else if (p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece)
-                                    && (p2p_downloader_->subpiece_request_manager_->IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
+                                else if (p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece)
+                                    && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                 {
                                     subpiece_assign_map_.push_back(sub_piece);
                                     P2P_DEBUG("redundant subpiece: " << sub_piece);
@@ -425,7 +425,7 @@ namespace p2sp
                         {
                             protocol::SubPieceInfo sub_piece(piece.block_index_, piece.piece_index_ * SUB_PIECE_COUNT_PER_PIECE + i);
                             if (false == p2p_downloader_->HasSubPiece(sub_piece)
-                                && p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece))
+                                && p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece))
                             {
                                 // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                 subpiece_assign_map_.push_back(sub_piece);
@@ -444,8 +444,8 @@ namespace p2sp
                                 if (false == p2p_downloader_->HasSubPiece(sub_piece))
                                 {
                                     // 正在请求的subpiece每一秒冗余1次
-                                    if (p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece)
-                                        && (p2p_downloader_->subpiece_request_manager_->IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
+                                    if (p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece)
+                                        && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
                                         P2P_DEBUG("redundant subpiece: " << sub_piece);
@@ -463,7 +463,7 @@ namespace p2sp
                         {
                             protocol::SubPieceInfo sub_piece(piece.block_index_, piece.piece_index_ * SUB_PIECE_COUNT_PER_PIECE + i);
                             if (false == p2p_downloader_->HasSubPiece(sub_piece)
-                                && p2p_downloader_->subpiece_request_manager_->IsRequesting(sub_piece))
+                                && p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece))
                             {
                                 // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                 subpiece_assign_map_.push_back(sub_piece);

@@ -8,6 +8,7 @@
 #include "storage/Instance.h"
 #include "statistic/DACStatisticModule.h"
 #include "statistic/StatisticModule.h"
+#include "p2sp/p2p/P2PDownloader.h"
 
 #define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
 #define P2P_INFO(s)    LOG(__INFO, "P2P", s)
@@ -21,9 +22,11 @@ namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
 
-    void SubPieceRequestManager::Start()
+    void SubPieceRequestManager::Start(P2PDownloader__p p2p_downloader)
     {
         if (is_running_ == true) return;
+
+        p2p_downloader_ = p2p_downloader;
 
         P2P_EVENT("SubPieceRequestManager::Start " << p2p_downloader_);
 
@@ -105,7 +108,7 @@ namespace p2sp
 
         if (p2p_downloader_->GetDownloadDrivers().size() != 0)
         {
-             P2P_EVENT("SubPieceRequestManager::OnSubPiece " << (*(p2p_downloader_->GetDownloadDrivers().begin()))->GetDownloadDriverID() << " " << 0 << " " << 1 << " " << shared_from_this() << " " << sub_piece);
+             P2P_EVENT("SubPieceRequestManager::OnSubPiece " << (*(p2p_downloader_->GetDownloadDrivers().begin()))->GetDownloadDriverID() << " " << 0 << " " << 1 << " " << " " << sub_piece);
         }
 
         std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::iterator iter;

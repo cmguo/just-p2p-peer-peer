@@ -30,7 +30,11 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<PeerConnection> p;
-        static p create(P2PDownloader__p p2p_downloader, SubPieceRequestManager__p subpiece_request_manager) { return p(new PeerConnection(p2p_downloader, subpiece_request_manager)); }
+        static p create(P2PDownloader__p p2p_downloader) 
+        {
+            return p(new PeerConnection(p2p_downloader)); 
+        }
+
     public:
         // 启停
         void Start(protocol::ConnectPacket const & reconnect_packet, const boost::asio::ip::udp::endpoint &end_point, const protocol::CandidatePeerInfo& peer_info);
@@ -93,7 +97,6 @@ namespace p2sp
     private:
         // 模块
         P2PDownloader__p p2p_downloader_;
-        SubPieceRequestManager__p subpiece_request_manager_;
         statistic::PeerConnectionStatistic::p statistic_;
         // 请求算法变量
         std::deque<protocol::SubPieceInfo> task_queue_;
@@ -140,9 +143,8 @@ namespace p2sp
 
     private:
         // 构造
-        PeerConnection(P2PDownloader__p p2p_downloader, SubPieceRequestManager__p subpiece_request_manager)
+        PeerConnection(P2PDownloader__p p2p_downloader)
             : p2p_downloader_(p2p_downloader)
-            , subpiece_request_manager_(subpiece_request_manager)
             , requesting_count_(0)
             , last_receive_time_(0)
             , last_live_response_time_(0)

@@ -8,7 +8,6 @@
 #include "p2sp/p2p/Exchanger.h"
 #include "p2sp/p2p/IpPool.h"
 #include "p2sp/p2p/PeerConnector.h"
-#include "p2sp/p2p/SubPieceRequestManager.h"
 #include "p2sp/download/DownloadDriver.h"
 #include "p2sp/p2p/P2PModule.h"
 #include "p2sp/p2p/SessionPeerCache.h"
@@ -107,8 +106,7 @@ namespace p2sp
         assigner_ = Assigner::create(shared_from_this());
         assigner_->Start();
 
-        subpiece_request_manager_ = SubPieceRequestManager::create(shared_from_this());
-        subpiece_request_manager_->Start();
+        subpiece_request_manager_.Start(shared_from_this());
 
         data_rate_ = 0;
 
@@ -172,12 +170,7 @@ namespace p2sp
             assigner_.reset();
         }
         // 停止 SubPieceRequestManager
-        assert(subpiece_request_manager_);
-        if (subpiece_request_manager_)
-        {
-            subpiece_request_manager_->Stop();
-            subpiece_request_manager_.reset();
-        }
+        subpiece_request_manager_.Stop();
 
         // 释放downloader_drivers的引用
         download_driver_s_.clear();
@@ -879,15 +872,7 @@ namespace p2sp
             return;
         }
 
-        assert(subpiece_request_manager_);
-        if (subpiece_request_manager_)
-        {
-            subpiece_request_manager_->OnP2PTimer(times);
-        }
-        else
-        {
-            return;
-        }
+        subpiece_request_manager_.OnP2PTimer(times);
 
         // 驱动其他子模块定时器
         assert(assigner_);
@@ -1031,7 +1016,7 @@ namespace p2sp
 
         if (packet.PacketAction == protocol::SubPiecePacket::Action)
         {
-            subpiece_request_manager_->OnSubPiece((protocol::SubPiecePacket const &)packet);
+            subpiece_request_manager_.OnSubPiece((protocol::SubPiecePacket const &)packet);
             return;
         }
 
@@ -1756,5 +1741,11 @@ namespace p2sp
 
         return !assigner_->IsEndOfAssign() && (GetCurrentDownloadSpeed() < data_rate + 50 * 1024)
             && (GetCurrentDownloadSpeed() < data_rate * 14 / 10);
+    }
+
+    void P2PDownloader::AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
+        boost::uint32_t timeout, PeerConnection__p peer_connection)
+    {
+        subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection);
     }
 }

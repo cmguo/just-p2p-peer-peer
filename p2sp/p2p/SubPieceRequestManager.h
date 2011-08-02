@@ -12,7 +12,6 @@
 #endif
 
 #include "p2sp/p2p/PeerConnection.h"
-#include "p2sp/p2p/P2PDownloader.h"
 
 namespace p2sp
 {
@@ -50,15 +49,16 @@ namespace p2sp
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
 
     class SubPieceRequestManager
-        : public boost::noncopyable
-        , public boost::enable_shared_from_this<SubPieceRequestManager>
     {
     public:
-        typedef boost::shared_ptr<SubPieceRequestManager> p;
-        static p create(P2PDownloader__p p2p_downloader) { return p(new SubPieceRequestManager(p2p_downloader)); }
-    public:
+        SubPieceRequestManager()
+            : is_running_(false)
+        {
+
+        }
+
         // 启停
-        void Start();
+        void Start(P2PDownloader__p p2p_downloader);
         void Stop();
         // 操作
         void Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout, PeerConnection::p peer_connection);
@@ -71,8 +71,6 @@ namespace p2sp
         inline bool IsRequesting(const protocol::SubPieceInfo& subpiece_info) const;
         inline bool IsRequestingTimeout(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed, boost::uint8_t percent = 9) const;
         uint32_t GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const;
-    protected:
-        // void Remove(const protocol::SubPieceInfo& subpiece_info);
     private:
         // 模块
         P2PDownloader__p p2p_downloader_;
@@ -82,10 +80,6 @@ namespace p2sp
         volatile bool is_running_;
 
         boost::uint32_t block_size_;
-
-    private:
-        // 构造
-        SubPieceRequestManager(P2PDownloader__p p2p_downloader) : p2p_downloader_(p2p_downloader), is_running_(false) {}
     };
 
     inline bool SubPieceRequestManager::IsRequesting(const protocol::SubPieceInfo& subpiece_info) const

@@ -216,7 +216,7 @@ namespace p2sp
                 }
 
                 // 创建PeerConnection
-                PeerConnection::p connect_peer = PeerConnection::create(p2p_downloader, p2p_downloader->GetSubPieceRequestManager());
+                PeerConnection::p connect_peer = PeerConnection::create(p2p_downloader);
 
                 ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;

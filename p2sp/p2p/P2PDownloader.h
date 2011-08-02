@@ -7,6 +7,7 @@
 #ifndef _P2SP_P2P_P2P_DOWNLOADER_H_
 #define _P2SP_P2P_P2P_DOWNLOADER_H_
 
+#include "p2sp/p2p/SubPieceRequestManager.h"
 #include "p2sp/download/Downloader.h"
 #include "p2sp/download/SwitchController.h"
 #include "p2sp/p2p/Assigner.h"
@@ -34,8 +35,7 @@ namespace p2sp
     typedef boost::shared_ptr<PeerConnector> PeerConnector__p;
     class Assigner;
     typedef boost::shared_ptr<Assigner> Assigner__p;
-    class SubPieceRequestManager;
-    typedef boost::shared_ptr<SubPieceRequestManager> SubPieceRequestManager__p;
+    
     class PeerConnection;
     typedef boost::shared_ptr<PeerConnection> PeerConnection__p;
 
@@ -102,7 +102,6 @@ namespace p2sp
         void NoticeSubPiece(const protocol::SubPieceInfo& sub_piece);
         bool HasSubPiece(const protocol::SubPieceInfo& sub_piece);
 
-        SubPieceRequestManager__p GetSubPieceRequestManager() const {return subpiece_request_manager_;}
         bool IsDownloadInitialization() {return start_time_counter_.elapsed() <= p2sp::P2SPConfigs::P2P_DOWNLOAD_INIT_TIMEOUT;}
         bool IsConnected(const boost::asio::ip::udp::endpoint& end_point) const;
         bool IsConnected(const Guid& peer_guid) const;
@@ -212,6 +211,9 @@ namespace p2sp
         //
         void KeepConnectionAlive();
 
+        void AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
+            boost::uint32_t timeout, PeerConnection__p peer_connection);
+
     private:
         void DoList();
 
@@ -225,7 +227,7 @@ namespace p2sp
         Exchanger__p exchanger_;
         PeerConnector__p connector_;
         Assigner__p assigner_;
-        SubPieceRequestManager__p subpiece_request_manager_;
+        p2sp::SubPieceRequestManager subpiece_request_manager_;
         statistic::P2PDownloaderStatistic::p statistic_;
 
         RID rid_;

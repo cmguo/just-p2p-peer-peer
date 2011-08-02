@@ -150,7 +150,6 @@ namespace p2sp
         p2p_downloader_->GetStatistic()->DetachPeerConnectionStatistic(statistic_);
 
         p2p_downloader_.reset();
-        subpiece_request_manager_.reset();
         statistic_.reset();
 
         // recent_avg_delt_times_.reset();
@@ -218,10 +217,7 @@ namespace p2sp
                 break;
             }
         }
-        // check
-        /*
-            LOG(__DEBUG, "timeout", "P2PDownloader = " << p2p_downloader_ << ", Endpoint = " << end_point_
-                        << ", RequestTillFullWindow End, delta = " << delta << ", curr_request_count_ = " << curr_request_count_);*/
+        
         if (delta > 0)
         {
             uint32_t v = delta;  // min(delta, curr_request_count_);
@@ -245,17 +241,6 @@ namespace p2sp
         accumulative_subpiece_num = 0;
         RequestTillFullWindow(true);
     }
-    // bool PeerConnection::RequestNextSubpiece(const SubPieceInfo& subpiece_info)
-    // {
-    //    if (is_running_ == false) return false;
-
-    //    if (P2PModule::Inst()->CanRequest())
-    //    {
-    //            RequestSubPiece(subpiece_info);
-    //            return true;
-    //    }
-    //    return false;
-    // }
 
     bool PeerConnection::RequestSubPieces(uint32_t piece_count, uint32_t copy_count, bool need_check)
     {
@@ -360,20 +345,11 @@ namespace p2sp
         sent_count_ += subpieces.size();
         requested_size_ += subpieces.size();
 
-        // curr_time_out_ += avg_delt_time_ * (copy_count / 2);
-        /*
-        LOG(__DEBUG, "P2P", "P2PDownloader = " << p2p_downloader_ << ", Endpoint = " << end_point_
-                    << ", SendSubpieceCount = " << subpieces.size());*/
-
         for (uint32_t i = 0; i < subpieces.size(); ++i)
         {
             P2P_EVENT("bingo Subpiece = " << subpieces[i] << " trans_id = " << trans_id);
-            subpiece_request_manager_->Add(subpieces[i], curr_time_out_, shared_from_this());
-            /*
-                LOG(__DEBUG, "timeout", "P2PDownloader = " << p2p_downloader_
-                                << ", Endpoint = " << end_point_ << ", SubPiece = " << SubPieceInfo(subpieces[i])
-                                << ", Send, TimeOut = " << curr_time_out_);*/
-
+            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, shared_from_this());
+            
             curr_time_out_ += avg_delt_time_;
             P2PModule::Inst()->AddRequestCount();
         }
@@ -386,11 +362,7 @@ namespace p2sp
         if (is_running_ == false)
             return false;
         assert(statistic_);
-        // statistic_->SetAssignedSubPieceCount(task_queue_.size());
-
-        // if (requesting_count_ == 0)
-        //    last_recieve_time_.sync();
-
+        
         if (requesting_count_ == 0)
             last_receive_time_.reset();
 
@@ -441,13 +413,8 @@ namespace p2sp
         ++sent_count_;
         ++requested_size_;
 
-        /*
-            LOG(__DEBUG, "timeout", "P2PDownloader = " << p2p_downloader_
-                        << ", Endpoint = " << end_point_ << ", SubPiece = " << subpiece_info
-                        << ", Send, TimeOut = " << curr_time_out_ << ", single");*/
-
-
-        subpiece_request_manager_->Add(subpiece_info, curr_time_out_, shared_from_this());
+        p2p_downloader_->AddRequestingSubpiece(subpiece_info, curr_time_out_, shared_from_this());
+        
         curr_time_out_ += avg_delt_time_;
         P2PModule::Inst()->AddRequestCount();
 
