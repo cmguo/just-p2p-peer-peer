@@ -192,9 +192,10 @@ namespace p2sp
         // 连接失败，重连
         connect_failed_times_++;
         status_ = closed;
-        if (connect_failed_times_ > 10)
+        if (connect_failed_times_ > 20)
         {
-            // TODO: 连续10次连接PMS失败
+            // 如果连接失败，每秒连接一次，持续20次连接失败
+            // 默认PMS不可用，停止尝试连接
             assert(false);
             is_pms_status_good_ = false;
             return;
