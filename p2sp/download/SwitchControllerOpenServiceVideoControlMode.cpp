@@ -303,7 +303,7 @@ namespace p2sp
         statistic::StatisticModule::Inst()->SetMemoryPoolLeftSize(protocol::SubPieceContent::get_left_capacity());
         if (!is_memory_full)
         {
-            if (protocol::SubPieceContent::get_left_capacity() < 800)
+            if (protocol::SubPieceContent::get_left_capacity() < 1024)
             {
                 // 内存池可用内存低于800 KB停止下载
                 is_memory_full = true;
@@ -341,7 +341,7 @@ namespace p2sp
         }
         else
         {
-            if (protocol::SubPieceContent::get_left_capacity() >= 1000)
+            if (protocol::SubPieceContent::get_left_capacity() >= 1280)
             {
                 // 内存池可用内存多于1000 KB恢复下载
                 is_memory_full = false;

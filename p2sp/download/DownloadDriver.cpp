@@ -2105,9 +2105,11 @@ namespace p2sp
                 {
                     return true;
                 }
+
                 uint32_t play_position = proxy_connection_->GetPlayingPosition();
-                uint32_t download_position = piece_info_to_download.GetPosition(block_size);
-                if (download_position > play_position && download_position - play_position > (protocol::SubPieceContent::get_pool().max_object() - 2*1024) * 1024)
+                uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
+                if (base::SubPieceContent::get_left_capacity() < 128 || 
+                    download_position - play_position > (base::SubPieceContent::get_left_capacity() - 128) * 1024)
                 {
                     return true;
                 }
@@ -2133,7 +2135,7 @@ namespace p2sp
                     {
                         num = downloader->GetSpeedInfo().NowDownloadSpeed * P2SPConfigs::PIECE_TIME_OUT_IN_MILLISEC / (128 * 1024) - downloader->GetPieceTaskNum() - 2;
                     }
-                    LIMIT_MIN_MAX(num, 0, 8);
+                    LIMIT_MIN_MAX(num, 0, 7);
 
                     LOG(__DEBUG, "ppbug", "RequestPiecesssssss num = " << num);
 
@@ -2149,10 +2151,13 @@ namespace p2sp
                                 {
                                     return true;
                                 }
+
                                 uint32_t play_position = proxy_connection_->GetPlayingPosition();
-                                uint32_t download_position = piece_info_to_download.GetPosition(block_size);
-                                if (download_position > play_position && download_position - play_position > (protocol::SubPieceContent::get_pool().max_object() - 2*1024) * 1024)
+                                uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
+                                if (base::SubPieceContent::get_left_capacity() < 128 || 
+                                    download_position - play_position > (base::SubPieceContent::get_left_capacity() - 128) * 1024)
                                 {
+                                    downloader->PutPieceTask(piece_info_ex_s, shared_from_this());
                                     return true;
                                 }
 #endif

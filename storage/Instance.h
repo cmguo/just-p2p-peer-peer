@@ -294,7 +294,9 @@ namespace storage
         void OnDeAttachTimerElapsed(framework::timer::Timer * pointer);
 
         void UpdateBlockHashTime(uint32_t block_index);
+#ifdef DISK_MODE
         bool CheckBlockNeedHash(uint32_t block_index);
+#endif
 
     protected:
         volatile bool is_running_;

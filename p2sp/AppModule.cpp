@@ -99,7 +99,7 @@ namespace p2sp
 
 #ifdef USE_MEMORY_POOL
 #ifndef DISK_MODE
-        protocol::SubPieceContent::set_pool_capacity(8 * 1024 * 1024);
+        protocol::SubPieceContent::set_pool_capacity(3 * 1024 * 1024);
 #else
         protocol::SubPieceContent::set_pool_capacity(30 * 1024 * 1024);
 #endif

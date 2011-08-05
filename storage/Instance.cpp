@@ -1859,9 +1859,9 @@ namespace storage
 #endif
     }
 
+#ifdef DISK_MODE
     bool Instance::CheckBlockNeedHash(uint32_t block_index)
     {
-#ifdef DISK_MODE
         boost::uint64_t last_write_time_now = resource_p_->GetLastWriteTime();
         if (last_write_time_now == 0 || filesystem_last_write_time_ != last_write_time_now
             || block_hash_time_map_.find(block_index) == block_hash_time_map_.end())
@@ -1876,6 +1876,6 @@ namespace storage
             // 校验超过一天时间需要重新校验
             return  need_hash;
         }
-#endif
     }
+#endif
 }
