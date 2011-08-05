@@ -581,22 +581,6 @@ namespace p2sp
                 return;
             }
         }
-        else if (false == ProxyModule::Inst()->IsTestCore() && uri.getdomain() == ProxyModule::Inst()->GetTestDomain())
-        {
-            // 如果不是测试内核并且是测试域名（peer--> peert 通信）
-
-            //             proxy_sender_ = TestCoreProxySender::create(http_server_socket_);
-            //             proxy_sender_->Start(http_request, shared_from_this());
-            //
-            //             if (0 == ProxyModule::Inst()->GetTestCoreHttpPort())
-            //             {
-            //                 // framework::MainThread::Inst().PostWindowsMessage(UM_DISPATCH_MEET_TEST_CORE);
-            //             }
-            //             else
-            //             {
-            //                 proxy_sender_->SendHttpRequest();
-            //             }
-        }
         else
         {
             protocol::UrlInfo url_info_local = url_info;

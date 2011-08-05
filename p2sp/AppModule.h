@@ -46,15 +46,15 @@ class AppModuleStartInterface
         boost::uint16_t local_udp_port,
         boost::uint16_t local_http_procy_port,
         string url,  // IndexServer
-        boost::uint16_t port, bool bUseDisk, boost::uint64_t ullDiskLimit, string disk_path, bool is_test_core, string test_domain,
+        boost::uint16_t port, bool bUseDisk, boost::uint64_t ullDiskLimit, string disk_path, 
         string guid_str, string config_path, bool use_cache, bool use_push, bool disk_read_only,
-        bool http_proxy_enabled, boost::uint8_t peer_catalog)
+        bool http_proxy_enabled)
     {
         Guid peer_guid(guid_str);
 
         return p(new AppModuleStartInterface(local_udp_port, local_http_procy_port, url, port, bUseDisk, ullDiskLimit,
-            disk_path, is_test_core, test_domain, peer_guid, config_path, use_cache, use_push, disk_read_only,
-            http_proxy_enabled, peer_catalog));
+            disk_path, peer_guid, config_path, use_cache, use_push, disk_read_only,
+            http_proxy_enabled));
     }
     public:
     boost::uint16_t local_udp_port_;
@@ -64,15 +64,12 @@ class AppModuleStartInterface
     bool bUseDisk_;
     boost::uint64_t ullDiskLimit_;
     string disk_path_;
-    bool is_test_core_;
-    string test_domain_;
     Guid peer_guid_;
     string config_path_;
     bool use_cache_;
     bool use_push_;
     bool disk_read_only_;
     bool http_proxy_enabled_;
-    boost::uint8_t peer_catalog_;
 
     private:
     AppModuleStartInterface(
@@ -83,15 +80,13 @@ class AppModuleStartInterface
         bool bUseDisk,
         boost::uint64_t ullDiskLimit,
         string disk_path,
-        bool is_test_core,
-        string test_domain,
         Guid peer_guid,
         string config_path,
         bool use_cache,
         bool use_push,
         bool disk_read_only,
-        bool http_proxy_enabled,
-        boost::uint8_t peer_catalog)
+        bool http_proxy_enabled
+        )
         : local_udp_port_(local_udp_port)
         , local_http_procy_port_(local_http_procy_port)
         , url_(url)
@@ -99,15 +94,12 @@ class AppModuleStartInterface
         , bUseDisk_(bUseDisk)
         , ullDiskLimit_(ullDiskLimit)
         , disk_path_(disk_path)
-        , is_test_core_(is_test_core)
-        , test_domain_(test_domain)
         , peer_guid_(peer_guid)
         , config_path_(config_path)
         , use_cache_(use_cache)
         , use_push_(use_push)
         , disk_read_only_(disk_read_only)
         , http_proxy_enabled_(http_proxy_enabled)
-        , peer_catalog_(peer_catalog)
     {
     }
    ;

@@ -108,10 +108,6 @@ namespace p2sp
         live_subpiece_content.reset();
 #endif
 
-        peer_catalog_ = appmodule_start_interface->peer_catalog_;
-        // Set ServerPacket Default Peer Catalog
-        // protocol::ServerPacket::DEFAULT_PEER_CATALOG = peer_catalog_;
-
         // flush interval 1s
         StatisticModule::Inst()->Start(1, appmodule_start_interface->config_path_);
 
@@ -138,9 +134,9 @@ namespace p2sp
 
         // 启动 ProxyModule 模块
         if (appmodule_start_interface->http_proxy_enabled_) {
-            ProxyModule::CreateInst(io_svc)->Start(appmodule_start_interface->config_path_, appmodule_start_interface->local_http_procy_port_, appmodule_start_interface->is_test_core_, appmodule_start_interface->test_domain_);
+            ProxyModule::CreateInst(io_svc)->Start(appmodule_start_interface->config_path_, appmodule_start_interface->local_http_procy_port_);
         } else {
-            ProxyModule::CreateInst(io_svc)->Start(appmodule_start_interface->config_path_, 0, appmodule_start_interface->is_test_core_, appmodule_start_interface->test_domain_);
+            ProxyModule::CreateInst(io_svc)->Start(appmodule_start_interface->config_path_, 0);
         }
 
         if (false == ProxyModule::Inst()->IsRunning())

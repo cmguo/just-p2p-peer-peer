@@ -41,15 +41,13 @@ namespace p2sp
     {
     }
 
-    void ProxyModule::Start(const string& config_path, boost::uint16_t local_http_proxy_port, bool is_test_core, string test_domain)
+    void ProxyModule::Start(const string& config_path, boost::uint16_t local_http_proxy_port)
     {
         if (is_running_ == true) return;
 
 
         is_running_ = true;
 
-        is_test_core_ = is_test_core;
-        test_domain_ = test_domain;
         test_http_proxy_port_ = 0;
 
         if (config_path.length() == 0) {
@@ -165,8 +163,6 @@ namespace p2sp
     void ProxyModule::StartTestCoreSucced(boost::uint16_t test_core_proxy_port)
     {
         if (is_running_ == false) return;
-
-        assert(is_test_core_ == false);
 
         test_http_proxy_port_ = test_core_proxy_port;
         LOG(__INFO, "proxy", "StartTestCoreSucced");

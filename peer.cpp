@@ -97,14 +97,12 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
 #endif
     string disk_path(base::ws2s(lpParam->wszDiskPath));
     string index_domain(lpParam->aIndexServer[0].szIndexDomain);
-    string test_domain(lpParam->szTestDomain);
-
+    
     string config_path;
     bool bUseCache = true;
     bool bUsePush = true;
     bool bReadOnly = false;
     bool bHttpProxyEnabled = true;
-    boost::uint8_t cPeerCatalog = PCAT_NULL;
 
     // check size
     uint32_t cacheOffset = (uint32_t)&((STARTPARAM *)0)->bUseCache;
@@ -128,14 +126,8 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
     {
         bHttpProxyEnabled = (lpParam->bHttpProxyEnabled != 0);
     }
-    uint32_t peerCatalogOffset = (uint32_t)&((STARTPARAM *)0)->cPeerCatalog;
-    if (lpParam->uSize >= (uint32_t) peerCatalogOffset + sizeof(boost::uint8_t))
-    {
-        cPeerCatalog = lpParam->cPeerCatalog;
-    }
 
     bool bUseDisk = (lpParam->bUseDisk != 0);
-    bool bIsTestCore = (lpParam->bIsTestCore != 0);
 
     p2sp::AppModuleStartInterface::p appmodule_start_interface = p2sp::AppModuleStartInterface::create(
         lpParam->usUdpPort,
@@ -145,15 +137,12 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
         bUseDisk,
         lpParam->ullDiskLimit,
         disk_path,
-        bIsTestCore,
-        test_domain,
         string(lpParam->szPeerGuid, 32),
         config_path,
         bUseCache,
         bUsePush,
         bReadOnly,
-        bHttpProxyEnabled,
-        cPeerCatalog);
+        bHttpProxyEnabled);
 
     // global_io_svc().post(
     //    boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));
@@ -191,7 +180,6 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
     string disk_path(lpParam->szDiskPath);
     string index_domain(lpParam->aIndexServer[0].szIndexDomain);
-    string test_domain(lpParam->szTestDomain);
 
     string config_path;
     bool bUseCache = true;
@@ -222,16 +210,10 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     {
         bHttpProxyEnabled = lpParam->bHttpProxyEnabled;
     }
-    uint32_t peerCatalogOffset = (uint32_t)&((STARTPARAM *)0)->cPeerCatalog;
-    if (lpParam->uSize >= (uint32_t) peerCatalogOffset + sizeof(boost::uint8_t))
-    {
-        cPeerCatalog = lpParam->cPeerCatalog;
-    }
 
     p2sp::AppModuleStartInterface::p appmodule_start_interface = p2sp::AppModuleStartInterface::create(
         lpParam->usUdpPort, lpParam->usHttpProxyPort, index_domain, lpParam->aIndexServer[0].usIndexPort,
-        lpParam->bUseDisk, lpParam->ullDiskLimit, disk_path, lpParam->bIsTestCore, test_domain, string(
-        lpParam->szPeerGuid, 16), config_path, bUseCache, bUsePush, bReadOnly, bHttpProxyEnabled, cPeerCatalog);
+        lpParam->bUseDisk, lpParam->ullDiskLimit, disk_path, string(lpParam->szPeerGuid, 16), config_path, bUseCache, bUsePush, bReadOnly, bHttpProxyEnabled);
 
    // global_io_svc().post(
    //     boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));

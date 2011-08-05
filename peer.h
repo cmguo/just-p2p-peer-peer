@@ -44,16 +44,6 @@ namespace boost
 };
 #endif
 
-enum PeerCatalog  // : boost::uint8_t
-{
-    PCAT_NULL       = 0,        // 空类型 (旧Peer都是这个值)
-    PCAT_PPVA       = 1,        // PPLiveVA
-    PCAT_PPAD       = 2,        // PPLive广告素材下载
-    PCAT_PPZL       = 3,        // PP驻留
-    PCAT_PPNX        = 15,       //
-    PCAT_MAX_VALUE  = 16,       // 最大值, 必须小于这个值
-};
-
 typedef struct _INDEXSTARTPARAM
 {
     boost::uint8_t            cIndexServerType;
@@ -71,8 +61,8 @@ typedef struct _WSTRATPARAM{
     boost::int32_t             bUseDisk;                 // 是否使用磁盘, 如果是TRUE, 则使用磁盘; 如果是FALSE, 则纯内存
     boost::uint64_t            ullDiskLimit;             // 使用磁盘上限
     wchar_t                    wszDiskPath[256];         // 磁盘使用路径
-    boost::int32_t             bIsTestCore;              // 如果是测试内核，返回TRUE; 如果是正式内核，返回FALSE
-    char                       szTestDomain[64];         // 测试内核所使用的域名，只要在此域名下，表示启动测试内核
+    boost::int32_t             reserve1;
+    char                       reserve2[64];
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
     wchar_t                    wszConfigPath[256];       // 配置文件路径, "" 表示使用默认路径
@@ -80,7 +70,7 @@ typedef struct _WSTRATPARAM{
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             cPeerCatalog;             // Peer的类型, 见PeerCatalog, 默认是 PCAT_NULL
+    boost::uint8_t             reserve3;
 } WSTARTPARAM, *LPWSTARTPARAM;
 
 typedef struct _STRATPARAM{
@@ -93,8 +83,8 @@ typedef struct _STRATPARAM{
     boost::int32_t             bUseDisk;                 // 是否使用磁盘, 如果是TRUE, 则使用磁盘; 如果是FALSE, 则纯内存
     boost::uint64_t            ullDiskLimit;             // 使用磁盘上限
     char                       szDiskPath[512];          // 磁盘使用路径
-    boost::int32_t             bIsTestCore;              // 如果是测试内核，返回TRUE; 如果是正式内核，返回FALSE
-    char                       szTestDomain[64];         // 测试内核所使用的域名，只要在此域名下，表示启动测试内核
+    boost::int32_t             reserve1;
+    char                       reserve2[64];
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
     char                       szConfigPath[512];        // 配置文件路径, "" 表示使用默认路径
@@ -102,7 +92,7 @@ typedef struct _STRATPARAM{
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             cPeerCatalog;             // Peer的类型, 见PeerCatalog, 默认是 PCAT_NULL
+    boost::uint8_t             reserve3;
 } STARTPARAM, *LPSTARTPARAM;
 
 typedef struct _PEERSTATEMACHINE

@@ -34,14 +34,13 @@ namespace p2sp
         typedef boost::shared_ptr<ProxyModule> p;
     public:
         // 方法
-        void Start(const string& config_path, boost::uint16_t local_http_proxy_port, bool is_test_core, string test_domain);
+        void Start(const string& config_path, boost::uint16_t local_http_proxy_port);
         void Stop();
         bool IsRunning() const { return is_running_; }
         // 属性
         boost::uint16_t GetHttpPort() const;
         boost::uint16_t GetTestCoreHttpPort() {return test_http_proxy_port_;}
-        string GetTestDomain() const {return test_domain_;}
-        bool IsTestCore() {return is_test_core_;}
+
         // 消息
         void OnHttpAccept(boost::shared_ptr<network::HttpServer> http_server_for_accept);
         void OnHttpAcceptFailed();
@@ -140,8 +139,6 @@ namespace p2sp
         network::HttpAcceptor::pointer acceptor_place_holder_;
         std::set<ProxyConnection__p> proxy_connections_;
 
-        bool is_test_core_;
-        string test_domain_;
         boost::uint16_t test_http_proxy_port_;
         framework::timer::PeriodicTimer proxy_timer_;
         framework::timer::TickCounter speed_query_counter_;
