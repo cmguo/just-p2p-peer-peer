@@ -94,6 +94,11 @@ namespace p2sp
         {
             sleep_timer_.stop();
 
+            if (!is_running_)
+            {
+                return;
+            }
+
             // 状态机暂停
             if (is_http_pausing_)
             {
@@ -241,6 +246,12 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvHttpHeaderFailed(uint32_t error_code)
     {
         LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
+
+        if (!is_running_)
+        {
+            return;
+        }
+
         DoClose();
         SleepForConnect();
     }
@@ -271,6 +282,12 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
         LOG(__ERROR, "", "OnRecvHttpDataPartial!");
+
+        if (!is_running_)
+        {
+            return;
+        }
+
         DoClose();
         SleepForConnect();
     }
@@ -278,6 +295,12 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvHttpDataFailed(uint32_t error_code)
     {
         LOG(__ERROR, "", "OnRecvHttpDataFailed!");
+
+        if (!is_running_)
+        {
+            return;
+        }
+
         DoClose();
         SleepForConnect();
     }
@@ -285,6 +308,12 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvTimeout()
     {
         LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
+
+        if (!is_running_)
+        {
+            return;
+        }
+
         DoClose();
         SleepForConnect();
     }
