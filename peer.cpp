@@ -186,7 +186,6 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     bool bUsePush = true;
     bool bReadOnly = false;
     bool bHttpProxyEnabled = true;
-    boost::uint8_t cPeerCatalog = PCAT_NULL;
 
     // check size
     uint32_t cacheOffset = (uint32_t)&((STARTPARAM *)0)->bUseCache;
