@@ -2108,8 +2108,8 @@ namespace p2sp
 
                 uint32_t play_position = proxy_connection_->GetPlayingPosition();
                 uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
-                if (base::SubPieceContent::get_left_capacity() < 128 || 
-                    download_position - play_position > (base::SubPieceContent::get_left_capacity() - 128) * 1024)
+                if (protocol::SubPieceContent::get_left_capacity() < 128 || 
+                    download_position - play_position > (protocol::SubPieceContent::get_left_capacity() - 128) * 1024)
                 {
                     return true;
                 }
@@ -2154,8 +2154,8 @@ namespace p2sp
 
                                 uint32_t play_position = proxy_connection_->GetPlayingPosition();
                                 uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
-                                if (base::SubPieceContent::get_left_capacity() < 128 || 
-                                    download_position - play_position > (base::SubPieceContent::get_left_capacity() - 128) * 1024)
+                                if (protocol::SubPieceContent::get_left_capacity() < 128 || 
+                                    download_position - play_position > (protocol::SubPieceContent::get_left_capacity() - 128) * 1024)
                                 {
                                     downloader->PutPieceTask(piece_info_ex_s, shared_from_this());
                                     return true;
