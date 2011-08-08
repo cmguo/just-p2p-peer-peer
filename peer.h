@@ -66,11 +66,11 @@ typedef struct _WSTRATPARAM{
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
     wchar_t                    wszConfigPath[256];       // 配置文件路径, "" 表示使用默认路径
-    boost::int32_t             bUseCache;                // 是否使用Cache服务器，默认为FALSE
+    boost::int32_t             reserve3;
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             reserve3;
+    boost::uint8_t             reserve4;
 } WSTARTPARAM, *LPWSTARTPARAM;
 
 typedef struct _STRATPARAM{
@@ -88,11 +88,11 @@ typedef struct _STRATPARAM{
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
     char                       szConfigPath[512];        // 配置文件路径, "" 表示使用默认路径
-    boost::int32_t             bUseCache;                // 是否使用Cache服务器，默认为FALSE
+    boost::int32_t             reserve3;
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             reserve3;
+    boost::uint8_t             reserve4;
 } STARTPARAM, *LPSTARTPARAM;
 
 typedef struct _PEERSTATEMACHINE

@@ -12,8 +12,7 @@ namespace p2sp
 
     TrackerModule::p TrackerModule::inst_;
 
-    // need_report暂时没有用
-    void TrackerModule::Start(const string& config_path, bool need_report)
+    void TrackerModule::Start(const string& config_path)
     {
         if (is_running_ == true)
         {

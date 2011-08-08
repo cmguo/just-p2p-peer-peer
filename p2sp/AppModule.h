@@ -47,13 +47,13 @@ class AppModuleStartInterface
         boost::uint16_t local_http_procy_port,
         string url,  // IndexServer
         boost::uint16_t port, bool bUseDisk, boost::uint64_t ullDiskLimit, string disk_path, 
-        string guid_str, string config_path, bool use_cache, bool use_push, bool disk_read_only,
+        string guid_str, string config_path, bool use_push, bool disk_read_only,
         bool http_proxy_enabled)
     {
         Guid peer_guid(guid_str);
 
         return p(new AppModuleStartInterface(local_udp_port, local_http_procy_port, url, port, bUseDisk, ullDiskLimit,
-            disk_path, peer_guid, config_path, use_cache, use_push, disk_read_only,
+            disk_path, peer_guid, config_path, use_push, disk_read_only,
             http_proxy_enabled));
     }
     public:
@@ -66,7 +66,6 @@ class AppModuleStartInterface
     string disk_path_;
     Guid peer_guid_;
     string config_path_;
-    bool use_cache_;
     bool use_push_;
     bool disk_read_only_;
     bool http_proxy_enabled_;
@@ -82,7 +81,6 @@ class AppModuleStartInterface
         string disk_path,
         Guid peer_guid,
         string config_path,
-        bool use_cache,
         bool use_push,
         bool disk_read_only,
         bool http_proxy_enabled
@@ -96,7 +94,6 @@ class AppModuleStartInterface
         , disk_path_(disk_path)
         , peer_guid_(peer_guid)
         , config_path_(config_path)
-        , use_cache_(use_cache)
         , use_push_(use_push)
         , disk_read_only_(disk_read_only)
         , http_proxy_enabled_(http_proxy_enabled)
@@ -206,11 +203,6 @@ class AppModule: public boost::noncopyable,
     // 上传统计信息
     void SubmitToDataCollectionServer();
 
-    boost::uint8_t GetPeerCatalog() const
-    {
-        return peer_catalog_;
-    }
-
     bool IsRunning() const
     {
         return is_running_;
@@ -251,10 +243,6 @@ class AppModule: public boost::noncopyable,
     Guid unique_guid_;
 
     volatile bool is_running_;
-
-    string folder_path_;
-
-    boost::uint8_t peer_catalog_;
 
     uint32_t peer_state_;
 

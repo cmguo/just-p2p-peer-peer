@@ -93,59 +93,22 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
 
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
-    // framework::MainThread::Inst().SetHWND(lpParam->hWnd);
 #endif
-    string disk_path(base::ws2s(lpParam->wszDiskPath));
-    string index_domain(lpParam->aIndexServer[0].szIndexDomain);
-    
-    string config_path;
-    bool bUseCache = true;
-    bool bUsePush = true;
-    bool bReadOnly = false;
-    bool bHttpProxyEnabled = true;
-
-    // check size
-    uint32_t cacheOffset = (uint32_t)&((STARTPARAM *)0)->bUseCache;
-    if (lpParam->uSize >= (uint32_t) cacheOffset + sizeof(bool))
-    {
-        config_path.assign(base::ws2s(lpParam->wszConfigPath));
-        bUseCache = (lpParam->bUseCache != 0);
-    }
-    uint32_t pushOffset = (uint32_t)&((STARTPARAM *)0)->bUsePush;
-    if (lpParam->uSize >= (uint32_t) pushOffset + sizeof(bool))
-    {
-        bUsePush = (lpParam->bUsePush != 0);
-    }
-    uint32_t readOnlyOffset = (uint32_t)&((STARTPARAM *)0)->bReadOnly;
-    if (lpParam->uSize >= (uint32_t) readOnlyOffset + sizeof(bool))
-    {
-        bReadOnly = (lpParam->bReadOnly != 0);
-    }
-    uint32_t proxyEnabledOffset = (uint32_t)&((STARTPARAM *)0)->bHttpProxyEnabled;
-    if (lpParam->uSize >= (uint32_t) proxyEnabledOffset + sizeof(bool))
-    {
-        bHttpProxyEnabled = (lpParam->bHttpProxyEnabled != 0);
-    }
-
-    bool bUseDisk = (lpParam->bUseDisk != 0);
 
     p2sp::AppModuleStartInterface::p appmodule_start_interface = p2sp::AppModuleStartInterface::create(
         lpParam->usUdpPort,
         lpParam->usHttpProxyPort,
-        index_domain,
+        string(lpParam->aIndexServer[0].szIndexDomain),
         lpParam->aIndexServer[0].usIndexPort,
-        bUseDisk,
+        lpParam->bUseDisk != 0,
         lpParam->ullDiskLimit,
-        disk_path,
+        string (base::ws2s(lpParam->wszDiskPath)),
         string(lpParam->szPeerGuid, 32),
-        config_path,
-        bUseCache,
-        bUsePush,
-        bReadOnly,
-        bHttpProxyEnabled);
-
-    // global_io_svc().post(
-    //    boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));
+        string(base::ws2s(lpParam->wszConfigPath)),
+        lpParam->bUsePush != 0,
+        lpParam->bReadOnly != 0,
+        lpParam->bHttpProxyEnabled != 0
+        );
 
     if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
     {
@@ -176,46 +139,22 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     LOGX(__DEBUG, "app", "StartKernel");
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
-    // framework::MainThread::Inst().SetHWND(lpParam->hWnd);
 #endif
-    string disk_path(lpParam->szDiskPath);
-    string index_domain(lpParam->aIndexServer[0].szIndexDomain);
-
-    string config_path;
-    bool bUseCache = true;
-    bool bUsePush = true;
-    bool bReadOnly = false;
-    bool bHttpProxyEnabled = true;
-
-    // check size
-    uint32_t cacheOffset = (uint32_t)&((STARTPARAM *)0)->bUseCache;
-    if (lpParam->uSize >= (uint32_t) cacheOffset + sizeof(bool))
-    {
-        config_path.assign(lpParam->szConfigPath);
-        bUseCache = lpParam->bUseCache;
-    }
-    uint32_t pushOffset = (uint32_t)&((STARTPARAM *)0)->bUsePush;
-    if (lpParam->uSize >= (uint32_t) pushOffset + sizeof(bool))
-    {
-        bUsePush = lpParam->bUsePush;
-    }
-    uint32_t readOnlyOffset = (uint32_t)&((STARTPARAM *)0)->bReadOnly;
-    if (lpParam->uSize >= (uint32_t) readOnlyOffset + sizeof(bool))
-    {
-        bReadOnly = lpParam->bReadOnly;
-    }
-    uint32_t proxyEnabledOffset = (uint32_t)&((STARTPARAM *)0)->bHttpProxyEnabled;
-    if (lpParam->uSize >= (uint32_t) proxyEnabledOffset + sizeof(bool))
-    {
-        bHttpProxyEnabled = lpParam->bHttpProxyEnabled;
-    }
 
     p2sp::AppModuleStartInterface::p appmodule_start_interface = p2sp::AppModuleStartInterface::create(
-        lpParam->usUdpPort, lpParam->usHttpProxyPort, index_domain, lpParam->aIndexServer[0].usIndexPort,
-        lpParam->bUseDisk, lpParam->ullDiskLimit, disk_path, string(lpParam->szPeerGuid, 16), config_path, bUseCache, bUsePush, bReadOnly, bHttpProxyEnabled);
-
-   // global_io_svc().post(
-   //     boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), boost::ref(global_io_svc()), appmodule_start_interface));
+        lpParam->usUdpPort,
+        lpParam->usHttpProxyPort,
+        string(lpParam->aIndexServer[0].szIndexDomain),
+        lpParam->aIndexServer[0].usIndexPort,
+        lpParam->bUseDisk != 0,
+        lpParam->ullDiskLimit,
+        string(lpParam->szDiskPath),
+        string(lpParam->szPeerGuid, 16),
+        string(lpParam->szConfigPath),
+        lpParam->bUsePush != 0,
+        lpParam->bReadOnly != 0,
+        lpParam->bHttpProxyEnabled != 0
+        );
 
     if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
     {

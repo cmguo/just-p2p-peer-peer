@@ -150,8 +150,6 @@ namespace p2sp
 
         StatisticModule::Inst()->SetHttpProxyPort(ProxyModule::Inst()->GetHttpPort());
 
-        folder_path_ = (appmodule_start_interface->disk_path_);
-
         // 启动Udp服务器
         udp_server_.reset(new protocol::UdpServer(io_svc, this));
 
@@ -215,7 +213,7 @@ namespace p2sp
 
         StunModule::Inst()->Start(appmodule_start_interface->config_path_);
 
-        TrackerModule::Inst()->Start(appmodule_start_interface->config_path_, need_report);
+        TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
         StatisticModule::Inst()->SetLocalPeerUdpPort(local_udp_port);
         StatisticModule::Inst()->SetLocalPeerVersion(protocol::PEER_VERSION);

@@ -23,7 +23,7 @@ namespace p2sp
     public:
         typedef boost::shared_ptr<TrackerModule> p;
 
-        void Start(const string& config_path, bool need_report = true);
+        void Start(const string& config_path);
 
         void Stop();
 
