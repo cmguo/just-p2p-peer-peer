@@ -185,18 +185,6 @@ void PEER_API WillCleanup()
     Clearup();
 }
 
-void PEER_API StartTestCoreSucced(boost::uint16_t usHttpProxyPort)
-{
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    LOG(__INFO, "struct", "StartTestCoreSucced");
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartTestCoreSucced, p2sp::ProxyModule::Inst(),
-        usHttpProxyPort));
-}
-
 void PEER_API FreeBuffer(char* lpBuffer)
 {
     if (!IsProxyModuleStarted())
@@ -2139,7 +2127,6 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     // version 0, 1
     lpNetInterface->Startup = Startup;
     lpNetInterface->Cleanup = Clearup;
-    lpNetInterface->StartTestCoreSucced = StartTestCoreSucced;
     lpNetInterface->CoreFreeBuffer = FreeBuffer;
     lpNetInterface->WillCleanup = WillCleanup;
     lpNetInterface->SetMaxUploadSpeedInKBps = SetMaxUploadSpeedInKBps;

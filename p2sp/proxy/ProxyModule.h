@@ -39,13 +39,11 @@ namespace p2sp
         bool IsRunning() const { return is_running_; }
         // 属性
         boost::uint16_t GetHttpPort() const;
-        boost::uint16_t GetTestCoreHttpPort() {return test_http_proxy_port_;}
 
         // 消息
         void OnHttpAccept(boost::shared_ptr<network::HttpServer> http_server_for_accept);
         void OnHttpAcceptFailed();
         void RemoveProxyConnection(boost::shared_ptr<ProxyConnection> server_socket);
-        void StartTestCoreSucced(boost::uint16_t test_core_proxy_port);
         // 定时器
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
         void OnProxyTimer(uint32_t times);
@@ -139,7 +137,6 @@ namespace p2sp
         network::HttpAcceptor::pointer acceptor_place_holder_;
         std::set<ProxyConnection__p> proxy_connections_;
 
-        boost::uint16_t test_http_proxy_port_;
         framework::timer::PeriodicTimer proxy_timer_;
         framework::timer::TickCounter speed_query_counter_;
 

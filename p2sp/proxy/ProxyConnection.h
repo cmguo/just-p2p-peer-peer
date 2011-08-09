@@ -138,7 +138,6 @@ namespace p2sp
         void WillStop();
     public:
         virtual uint32_t GetPlayingPosition() const;
-        virtual bool IsTestCore() {return is_test_core_;}
         virtual void SendHttpRequest();
         virtual void ResetPlayingPostion();
         virtual bool IsWillStop() const { return will_stop_; }
@@ -252,11 +251,9 @@ namespace p2sp
         // framework::timer::PeriodicTimer play_timer_;
 
         volatile bool is_running_;
-        volatile bool is_header_prepared_;
 
         protocol::UrlInfo url_info_;
         protocol::UrlInfo url_info_true;
-        bool is_test_core_;
 
         uint32_t send_subpieces_per_interval_;
         uint32_t request_subpiece_per_interval_;

@@ -48,8 +48,6 @@ namespace p2sp
 
         is_running_ = true;
 
-        test_http_proxy_port_ = 0;
-
         if (config_path.length() == 0) {
             string szPath;
             if (base::util::GetAppDataPath(szPath)) {
@@ -158,25 +156,6 @@ namespace p2sp
         is_running_ = false;
 
         inst_.reset();
-    }
-
-    void ProxyModule::StartTestCoreSucced(boost::uint16_t test_core_proxy_port)
-    {
-        if (is_running_ == false) return;
-
-        test_http_proxy_port_ = test_core_proxy_port;
-        LOG(__INFO, "proxy", "StartTestCoreSucced");
-
-        for (std::set<ProxyConnection__p>::iterator iter =  proxy_connections_.begin();
-            iter != proxy_connections_.end();
-            iter++)
-        {
-            if ((*iter)->IsTestCore())
-            {
-                (*iter)->SendHttpRequest();
-            }
-        }
-
     }
 
     void ProxyModule::OnTimerElapsed(framework::timer::Timer * pointer)

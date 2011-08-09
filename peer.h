@@ -126,12 +126,6 @@ void        PEER_API    WillCleanup();
 typedef
 void        (PEER_API * LPWILLCLEANUP)();
 
-// 启动测试内核成功
-void        PEER_API    StartTestCoreSucced(boost::uint16_t usHttpProxyPort);
-// 参数usHttpProxyPort, 成功启动的测试内核的Http 代理端口
-typedef
-void        (PEER_API    * LPSTARTTESTCORESUCCED)(boost::uint16_t usHttpProxyPort);
-
 // 删除内核因为发送消息而临时申请的内存
 void        PEER_API    FreeBuffer(char * lpBuffer);
 // 参数 lpBuffer, SubPieceBuffer 的首地址
@@ -582,7 +576,7 @@ typedef struct _NETINTERFACE{
     // version 0, 1
     LPSTARTUP                Startup;
     LPCLEARUP                Cleanup;
-    LPSTARTTESTCORESUCCED   StartTestCoreSucced;
+    boost::uint32_t          Reserved1;
     LPFEERBUFFER            CoreFreeBuffer;
     LPWILLCLEANUP            WillCleanup;
     LPSETMAXUPLOADSPEEDINKBPS   SetMaxUploadSpeedInKBps;
@@ -648,7 +642,7 @@ typedef struct _NETINTERFACE{
     LPGetCompeletedFilePathByUrl GetCompeletedFilePathByUrl;
     LPQUERYBLOCKHASHFAILEDBYURL QueryBlockHashFailedByUrl;
     // reserve
-    boost::uint32_t                dwReserved[40];
+    boost::uint32_t                Reserved2[40];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)
