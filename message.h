@@ -219,7 +219,7 @@ typedef struct _RESOURCE_DATA_RATE_INFO
 #ifndef CLIENT_NEW_DAC_LOG
 typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
 {
-    uint32_t       uSize;
+    boost::uint32_t       uSize;
     Guid                  gPeerID;                              // 华哥ID
     boost::uint8_t        aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
     boost::uint32_t       uP2PUploadKBytesByNomal;              // 统计时长（分钟）
@@ -237,7 +237,7 @@ typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
 
 typedef struct _PERIOD_DAC_STATISTIC_INFO
 {
-    uint32_t       uSize;                                       // 整个结构体大小
+    boost::uint32_t       uSize;                                       // 整个结构体大小
     char szLog[1024];                                           // 具体的日志内容
 } PERIOD_DAC_STATISTIC_INFO, *LPPERIOD_DAC_STATISTIC_INFO;
 
