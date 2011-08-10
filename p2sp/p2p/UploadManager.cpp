@@ -34,6 +34,7 @@
 
 #define UPLOAD_DEBUG(msg) LOGX(__DEBUG, "upload", msg)
 
+static const int32_t MinUploadSpeedLimitInKbsResidentStatus = 10;
 static const int32_t MinUploadSpeedLimitInKbs = 20;
 
 namespace p2sp
@@ -1988,6 +1989,8 @@ namespace p2sp
     int32_t UploadManager::CalcUploadSpeedLimitOnPingPolicy(bool is_network_good)
     {
         int32_t upload_speed_limit_kbs = GetUploadSpeedLimitInKBps();
+        bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
+
         if (upload_speed_limit_kbs < 0)
         {
             if (is_network_good)
@@ -1996,7 +1999,14 @@ namespace p2sp
             }
             else
             {
-                return MinUploadSpeedLimitInKbs * 1024;
+                if (is_main_state)
+                {
+                    return MinUploadSpeedLimitInKbs * 1024;
+                }
+                else
+                {
+                    return MinUploadSpeedLimitInKbsResidentStatus * 1024;
+                }
             }
         }
         else
@@ -2004,7 +2014,16 @@ namespace p2sp
             if (!is_network_good)
             {
                 upload_speed_limit_kbs /= 2;
-                LIMIT_MIN(upload_speed_limit_kbs, MinUploadSpeedLimitInKbs);
+
+                if (is_main_state)
+                {
+                    LIMIT_MIN(upload_speed_limit_kbs, MinUploadSpeedLimitInKbs);
+                }
+                else
+                {
+                    LIMIT_MIN(upload_speed_limit_kbs, MinUploadSpeedLimitInKbsResidentStatus);
+                }
+                
                 DebugLog("upload UploadControlOnPingPolicy dec to %dkb", upload_speed_limit_kbs);
             }
             else
@@ -2054,11 +2073,10 @@ namespace p2sp
 
     bool UploadManager::NeedUseUploadPingPolicy()
     {
-        bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
         bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
         bool is_watching_live_by_peer = p2sp::ProxyModule::Inst()->IsWatchingLive();
         if (upload_policy_ == BootStrapGeneralConfig::policy_ping
-            && is_main_state && !is_watching_live && !is_watching_live_by_peer
+            && !is_watching_live && !is_watching_live_by_peer
             && network_quality_monitor_->IsRunning() && network_quality_monitor_->HasGateWay())
         {
             return true;
