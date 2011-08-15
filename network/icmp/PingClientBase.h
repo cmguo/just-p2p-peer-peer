@@ -10,7 +10,7 @@ namespace network
 
         virtual uint16_t AsyncRequest(boost::function<void(unsigned char, string)> handler) = 0;
 
-        virtual void Bind(const string & destination_ip) = 0;
+        virtual bool Bind(const string & destination_ip) = 0;
 
         virtual bool SetTtl(int32_t ttl) = 0;
 

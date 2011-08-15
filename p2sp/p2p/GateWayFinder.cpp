@@ -19,6 +19,7 @@ namespace p2sp
 {
     GateWayFinder::GateWayFinder(boost::asio::io_service& io_service, IGateWayFinderListener * listener)
         : io_svc_(io_service), listener_(listener), is_running_(false), timer_(io_service), sequence_number_(0)
+        , is_bind_success_(false)
     {
     }
 
@@ -39,11 +40,14 @@ namespace p2sp
                 return;
             }
 
-            ping_client_->Bind(cdnips[rand() % (sizeof(cdnips)/sizeof(cdnips[0]))]);
+            is_bind_success_ = ping_client_->Bind(cdnips[rand() % (sizeof(cdnips)/sizeof(cdnips[0]))]);
         }
 
-        Reset();
-        StartSend();     
+        if (is_bind_success_)
+        {
+            Reset();
+            StartSend();
+        }
     }
 
     void GateWayFinder::Stop()

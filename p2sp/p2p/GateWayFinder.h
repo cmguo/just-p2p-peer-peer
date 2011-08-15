@@ -39,6 +39,8 @@ namespace p2sp
         boost::posix_time::ptime time_sent_;
         int ttl_;
         int32_t time_out_num_;
+
+        bool is_bind_success_;
     };
 }
 

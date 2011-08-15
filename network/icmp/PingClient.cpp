@@ -50,10 +50,40 @@ namespace network
         return sequence_num_;
     }
 
-    void PingClient::Bind(const string & destination_ip)
+    bool PingClient::Bind(const string & destination_ip)
     {
-        destination_endpoint_ = 
-            boost::asio::ip::icmp::endpoint(boost::asio::ip::address_v4::from_string(destination_ip), 0);
+        boost::system::error_code ec;
+        boost::asio::ip::address_v4 ip = boost::asio::ip::address_v4::from_string(destination_ip, ec);
+
+        if (ec)
+        {
+            assert(false);
+            /*
+            10104的错误码解释:
+            Procedure call table is invalid.
+            The service provider procedure call table is invalid. 
+            A service provider returned a bogus procedure table to Ws2_32.dll. 
+            This is usually caused by one or more of the function pointers being NULL.
+
+            service provider指的是Layered Service Provider
+            详细的介绍在：http://www.microsoft.com/msj/0599/LayeredService/LayeredService.aspx
+            */
+
+            if (ec.value() != 10104)
+            {
+                char ip[256];
+                base::util::memcpy2(ip, sizeof(ip), destination_ip.c_str(), destination_ip.length());
+                base::util::DoCrash(100);
+            }
+
+            assert(ec.value() == 10104);
+
+            return false;
+        }
+
+        destination_endpoint_ = boost::asio::ip::icmp::endpoint(ip, 0);
+
+        return true;
     }
 
     void PingClient::Receive()

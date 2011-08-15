@@ -52,7 +52,8 @@ namespace p2sp
 
         if (ping_client_)
         {
-            ping_client_->Bind(gateway_ip_);
+            bool is_bind_success = ping_client_->Bind(gateway_ip_);
+            assert(is_bind_success);
         }        
     }
 

@@ -42,11 +42,6 @@ namespace network
         sequence_num_++;
         assert(ping_body_.length() >= 12);
 
-        if (destination_ip_ == INADDR_NONE) 
-        {
-            return 0;
-        }
-
         if (hIcmpFile_ == INVALID_HANDLE_VALUE)
         {
             return 0;
@@ -122,9 +117,16 @@ namespace network
         }
     }
 
-    void PingClientWithAPI::Bind(const string & destination_ip)
+    bool PingClientWithAPI::Bind(const string & destination_ip)
     {
         destination_ip_ = inet_addr(destination_ip.c_str());
+
+        if (destination_ip_ == INADDR_NONE) 
+        {
+            return false;
+        }
+
+        return true;
     }
 
     bool PingClientWithAPI::SetTtl(int32_t ttl)

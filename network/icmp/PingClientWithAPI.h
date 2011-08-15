@@ -18,7 +18,7 @@ namespace network
         typedef boost::shared_ptr<PingClientWithAPI> p;
         static p Create();
 
-        virtual void Bind(const string & destination_ip);
+        virtual bool Bind(const string & destination_ip);
 
         virtual uint16_t AsyncRequest(boost::function<void(unsigned char, string)> handler);
 
