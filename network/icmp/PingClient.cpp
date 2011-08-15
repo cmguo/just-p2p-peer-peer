@@ -10,37 +10,50 @@ namespace network
 
     PingClient::p PingClient::Create(boost::asio::io_service & io_svc)
     {
-        try
-        {
-            return PingClient::p(new PingClient(io_svc));
-        }
-        catch(boost::system::system_error & e)
-        {
-            DebugLog("upload create ping client failed ec:%d, %s", e.code().value(), e.what());
-            return PingClient::p();
-        }
+        return PingClient::p(new PingClient(io_svc));
     }
 
     PingClient::PingClient(boost::asio::io_service & io_svc)
-        : resolver_(io_svc), socket_(io_svc, boost::asio::ip::icmp::v4()), is_receiving_(false)
-        , is_ttl_support_tested_(false), is_ttl_supported_(false)
+        : resolver_(io_svc)
+        , socket_(io_svc, boost::asio::ip::icmp::v4())
+        , is_receiving_(false)
+        , is_ttl_support_tested_(false)
+        , is_ttl_supported_(false)
     {
+    }
+
+    uint16_t PingClient::AsyncRequest(boost::function<void(unsigned char, string)> handler)
+    {
+        static string ping_request_body("Hello");
+
+        ++sequence_num_;
+
+        icmp_header request;
+        request.type(icmp_header::echo_request);
+        request.code(0);
+        request.identifier(GetIdentifier());
+        request.sequence_number(sequence_num_);
+        compute_checksum(request, ping_request_body.begin(), ping_request_body.end());
+
+        boost::asio::streambuf request_buf;
+        std::ostream os(&request_buf);
+        os << request << ping_request_body;
+
+        boost::system::error_code ec;
+        socket_.send_to(request_buf.data(), destination_endpoint_, 0, ec);
+        if (!ec)
+        {
+            AddHandler(sequence_num_, handler);
+            Receive();
+        }
+
+        return sequence_num_;
     }
 
     void PingClient::Bind(const string & destination_ip)
     {
         destination_endpoint_ = 
             boost::asio::ip::icmp::endpoint(boost::asio::ip::address_v4::from_string(destination_ip), 0);
-    }
-
-    void PingClient::Cancel(uint16_t sequence_num)
-    {
-        handler_map_.erase(sequence_num);
-    }
-
-    void PingClient::CancelAll()
-    {
-        handler_map_.clear();
     }
 
     void PingClient::Receive()
@@ -71,11 +84,10 @@ namespace network
                 switch(icmp_hdr.type())
                 {
                 case icmp_header::echo_reply:
-                    if (icmp_hdr.identifier() == GetIdentifier() &&
-                        handler_map_.find(icmp_hdr.sequence_number()) != handler_map_.end())
+                    if (icmp_hdr.identifier() == GetIdentifier())
                     {
-                        handler_map_[icmp_hdr.sequence_number()](icmp_hdr.type(), ipv4_hdr.source_address().to_string());
-                        handler_map_.erase(icmp_hdr.sequence_number());
+                        NotifyHandler(icmp_hdr.sequence_number(), icmp_hdr.type(),
+                            ipv4_hdr.source_address().to_string());
                     }
                     break;
                 case icmp_header::destination_unreachable:
@@ -87,11 +99,8 @@ namespace network
                         if (is && icmp_hdr_src.type() == icmp_header::echo_request
                             && icmp_hdr_src.identifier() == GetIdentifier())
                         {
-                            if (handler_map_.find(icmp_hdr_src.sequence_number()) != handler_map_.end())
-                            {
-                                handler_map_[icmp_hdr_src.sequence_number()](icmp_hdr.type(), ipv4_hdr.source_address().to_string());
-                                handler_map_.erase(icmp_hdr_src.sequence_number());
-                            }
+                            NotifyHandler(icmp_hdr_src.sequence_number(), icmp_hdr.type(),
+                                ipv4_hdr.source_address().to_string());
                         }
                     }
                     break;
@@ -102,7 +111,7 @@ namespace network
         }  
         else
         {
-            DebugLog("PingClient::HandleReceive error:%s", error_code.message().c_str());
+            DebugLog("PingClient::HandleReceive error:%s\n", error_code.message().c_str());
         }
         
         recv_buffer_.consume(bytes_transfered);
@@ -128,7 +137,7 @@ namespace network
             int current_ttl = 0;
             is_ttl_supported_ = TryGetCurrentTtl(current_ttl);
             is_ttl_support_tested_ = true;
-            DebugLog("SetTtl test %d", is_ttl_supported_);
+            DebugLog("SetTtl test %d\n", is_ttl_supported_);
         }
 
         if (is_ttl_supported_)
@@ -142,7 +151,7 @@ namespace network
             int current_ttl = 0;
             bool can_get_ttl = TryGetCurrentTtl(current_ttl);
             assert(can_get_ttl);
-            DebugLog("SetTtl tryget:%d, current_ttl:%d, ttl %d", can_get_ttl, current_ttl, ttl);
+            DebugLog("SetTtl tryget:%d, current_ttl:%d, ttl %d\n", can_get_ttl, current_ttl, ttl);
             return current_ttl == ttl;
         }
         else

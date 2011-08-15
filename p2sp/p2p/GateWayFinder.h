@@ -3,7 +3,8 @@
 #ifndef _P2SP_GATEWAY_FINDER_H_
 #define _P2SP_GATEWAY_FINDER_H_
 
-#include "network/icmp/PingClient.h"
+#include "network/icmp/PingClientBase.h"
+#include "network/icmp/icmp_header.h"
 
 namespace p2sp
 {
@@ -32,7 +33,7 @@ namespace p2sp
         boost::asio::io_service & io_svc_;
         IGateWayFinderListener * listener_;
         bool is_running_;
-        network::PingClient::p ping_client_;
+        network::PingClientBase::p ping_client_;
         boost::asio::deadline_timer timer_;
         boost::uint16_t sequence_number_;
         boost::posix_time::ptime time_sent_;

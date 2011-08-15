@@ -1963,7 +1963,7 @@ namespace p2sp
     void UploadManager::UploadControlOnPingPolicy()
     {
         uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
-        DebugLog("upload lost_rate:%d%%, avg_delay:%d ms, upload_speed:%d, upload_bd:%d", network_quality_monitor_->GetPingLostRate(),
+        DebugLog("upload lost_rate:%d%%, avg_delay:%d ms, upload_speed:%d, upload_bd:%d\n", network_quality_monitor_->GetPingLostRate(),
             network_quality_monitor_->GetAveragePingDelay(), upload_speed_kbs, GetMaxUploadSpeedForControl() / 1024);
 
         bool is_network_good;
@@ -2024,7 +2024,7 @@ namespace p2sp
                     LIMIT_MIN(upload_speed_limit_kbs, MinUploadSpeedLimitInKbsResidentStatus);
                 }
                 
-                DebugLog("upload UploadControlOnPingPolicy dec to %dkb", upload_speed_limit_kbs);
+                DebugLog("upload UploadControlOnPingPolicy dec to %dkb\n", upload_speed_limit_kbs);
             }
             else
             {
@@ -2033,11 +2033,11 @@ namespace p2sp
                     upload_speed_limit_kbs < upload_speed_kbs * 12 / 10)
                 {
                     upload_speed_limit_kbs *= 1.2;
-                    DebugLog("upload UploadControlOnPingPolicy inc to %dkb", upload_speed_limit_kbs);
+                    DebugLog("upload UploadControlOnPingPolicy inc to %dkb\n", upload_speed_limit_kbs);
                 }
                 else
                 {
-                    DebugLog("upload UploadControlOnPingPolicy equal to %dkb", upload_speed_limit_kbs);
+                    DebugLog("upload UploadControlOnPingPolicy equal to %dkb\n", upload_speed_limit_kbs);
                 }
             }
 

@@ -35,7 +35,7 @@ namespace p2sp
         bool is_running_;
         GateWayFinder gateway_finder_;
         string gateway_ip_;
-        network::PingClient::p ping_client_;
+        network::PingClientBase::p ping_client_;
         framework::timer::PeriodicTimer ping_timer_;
         framework::timer::TickCounter ping_counter_;
         bool is_ping_replied_;

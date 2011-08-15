@@ -32,7 +32,8 @@ namespace p2sp
         is_running_ = true;
         if (!ping_client_)
         {
-            ping_client_ = network::PingClient::Create(io_svc_);
+            ping_client_ = network::PingClientBase::create(io_svc_);
+            
             if (!ping_client_)
             {
                 return;
@@ -81,7 +82,7 @@ namespace p2sp
     {
         if (error != boost::asio::error::operation_aborted)
         {
-            DebugLog("GateWayFinder::HandleTimeOut");
+            DebugLog("GateWayFinder::HandleTimeOut\n");
             assert(!error);
 
             ++time_out_num_;
@@ -97,24 +98,24 @@ namespace p2sp
     {
         if (type == icmp_header::time_exceeded)
         {
-            DebugLog("received time_exceeded");
+            DebugLog("received time_exceeded\n");
 
             time_out_num_ = 0;
             timer_.cancel();
 
             posix_time::ptime now = posix_time::microsec_clock::universal_time();
-            DebugLog("from %s, ttl=%d, time=%dms", src_ip.c_str(),
+            DebugLog("from %s, ttl=%d, time=%dms\n", src_ip.c_str(),
                 ttl_, (now - time_sent_).total_milliseconds());
 
             if (base::util::is_private_address(src_ip.c_str()))
             {
-                DebugLog("received my time_exceeded from private_address");
+                DebugLog("received my time_exceeded from private_address\n");
                 ++ttl_;
                 StartSend();
             }
             else
             {
-                DebugLog("get public gateway:%s", src_ip.c_str());
+                DebugLog("get public gateway:%s\n", src_ip.c_str());
                 listener_->OnGateWayFound(src_ip);
             }
         }

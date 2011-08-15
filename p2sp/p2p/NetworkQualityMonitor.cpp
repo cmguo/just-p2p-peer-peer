@@ -47,7 +47,9 @@ namespace p2sp
     void NetworkQualityMonitor::OnGateWayFound(const string & gateway_ip)
     {
         gateway_ip_ = gateway_ip;
-        ping_client_ = network::PingClient::Create(io_svc_);
+
+        ping_client_ = network::PingClientBase::create(io_svc_);
+
         if (ping_client_)
         {
             ping_client_->Bind(gateway_ip_);
