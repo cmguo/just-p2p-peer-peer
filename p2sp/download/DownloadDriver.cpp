@@ -416,7 +416,7 @@ namespace p2sp
             switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
         }
 
-        if (openservice_head_length_ > 0 && !rid_info_.HasRID())
+        if (is_open_service_ && !rid_info_.HasRID())
         {
             // 使用文件名为索引查询RID
             Instance::p temp_instance = boost::dynamic_pointer_cast<storage::Instance>(
@@ -461,7 +461,7 @@ namespace p2sp
 
         if (!rid_info_.HasRID())
         {
-            if (openservice_head_length_ > 0)
+            if (is_open_service_)
             {
                 http_drag_downloader_ = HttpDragDownloader::Create(io_svc_, shared_from_this(), 
                     url_info.url_);
