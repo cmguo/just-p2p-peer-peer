@@ -156,12 +156,7 @@ namespace p2sp
         virtual void OnTcpSendSucced(uint32_t length);
         virtual void OnTcpSendFailed();
         virtual void OnClose();
-        // virtual void OnPlayTimer(uint32_t times);
         void OnProxyTimer(uint32_t times);
-        virtual void OnDownloadDriverError(uint32_t error_code);
-        // virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, protocol::SubPieceBuffer buffer);
-        // virtual void OnAsyncGetSubPieceFailed(uint32_t start_position, int failed_code);
-        // virtual void OnAsyncGetBufferSucced(uint32_t start_position, protocol::SubPieceBuffer buffer);
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
         virtual void OnNoticeDirectMode(DownloadDriver__p download_driver);
         virtual void OnNoticeDownloadMode(const string& url, const string& refer_url, const string& web_url, const string& qualifed_file_name);
@@ -262,7 +257,6 @@ namespace p2sp
 
         uint32_t file_length_;
         uint32_t openservice_head_length_;
-        uint32_t openservice_range_position_;
 
         bool metadata_parsed_;
 

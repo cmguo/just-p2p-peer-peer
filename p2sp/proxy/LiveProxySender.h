@@ -40,13 +40,11 @@ namespace p2sp
     public:
         virtual void OnTcpSendSucced(uint32_t length);
         virtual void OnClose();
-        virtual void OnDownloadDriverError(uint32_t error_code);
         virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
         virtual void OnNotice403Header();
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
-        virtual uint32_t GetStartOffset();
 
     private:
         network::HttpServer::pointer http_server_socket_;

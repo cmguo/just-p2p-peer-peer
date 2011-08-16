@@ -41,8 +41,6 @@ public:
 
         // network::HttpServer
         virtual void OnTcpSendSucced(uint32_t length) = 0;
-        // 下载器
-        virtual void OnDownloadDriverError(uint32_t error_code) = 0;
         // 播放数据
         virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer) = 0;
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers) = 0;
@@ -51,7 +49,6 @@ public:
         // 失败
         virtual void OnNotice403Header() = 0;
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length) = 0;
-        virtual uint32_t GetStartOffset() = 0;
     };
 }
 

@@ -71,12 +71,6 @@ namespace p2sp
 
     }
 
-    // 下载器
-    void NullProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-
-    }
-
     // 播放数据
     void NullProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
@@ -144,10 +138,5 @@ namespace p2sp
         {
             LOG(__WARN, "proxy", "CommonProxySender::OnRecvSubPiece playing_position_ == file_length_ send \\r\\n\\r\\n");
         }
-    }
-
-    uint32_t NullProxySender::GetStartOffset()
-    {
-        return 0;
     }
 }

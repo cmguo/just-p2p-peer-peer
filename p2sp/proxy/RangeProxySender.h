@@ -42,8 +42,6 @@ namespace p2sp
         // 消息
         // network::HttpServer
         virtual void OnTcpSendSucced(uint32_t length);
-        // 下载器
-        virtual void OnDownloadDriverError(uint32_t error_code);
         // 播放数据
         virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
         // 获得Contentlength
@@ -52,7 +50,6 @@ namespace p2sp
         virtual void OnNotice403Header();
 
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
-        virtual uint32_t GetStartOffset();
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
 
     private:

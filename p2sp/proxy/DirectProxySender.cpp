@@ -144,17 +144,6 @@ namespace p2sp
             return;
     }
 
-    void DirectProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
-        assert(0);
-    }
-
-
     void DirectProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         if (is_running_ == false)
@@ -345,10 +334,5 @@ namespace p2sp
             OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
         }
-    }
-
-    uint32_t DirectProxySender::GetStartOffset()
-    {
-        return 0;
     }
 }

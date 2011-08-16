@@ -84,14 +84,6 @@ namespace p2sp
         if (is_running_ == false) return;
     }
 
-    void RangeProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (is_running_ == false) return;
-
-        string proxy_script_text = "not find";
-        http_server_socket_->HttpSendContent(proxy_script_text);
-    }
-
     void RangeProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         if (is_running_ == false) return;
@@ -224,16 +216,6 @@ namespace p2sp
             OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
         }
-    }
-
-    uint32_t RangeProxySender::GetStartOffset()
-    {
-        if (false == is_running_)
-            return 0;
-        if (range_info_) {
-            return range_info_->GetRangeBegin();
-        }
-        return 0;
     }
 
     void RangeProxySender::SendHttpHeader(network::HttpResponse::p http_response)

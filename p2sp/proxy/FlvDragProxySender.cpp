@@ -64,16 +64,6 @@ namespace p2sp
         // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
     }
 
-    void FlvDragProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (is_running_ == false) return;
-
-        string proxy_script_text = "not find";
-        http_server_socket_->HttpSendContent(proxy_script_text);
-
-    }
-
-
     void FlvDragProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         if (is_running_ == false) return;
@@ -178,13 +168,5 @@ namespace p2sp
             OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
         }
-    }
-
-
-    uint32_t FlvDragProxySender::GetStartOffset()
-    {
-        if (false == is_running_)
-            return 0;
-        return start_offset_;
     }
 }

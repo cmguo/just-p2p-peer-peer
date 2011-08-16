@@ -96,17 +96,6 @@ namespace p2sp
 
     }
 
-    // 下载器
-    void OpenServiceProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (false == is_running_)
-            return;
-
-        string proxy_script_text = "not find";
-        http_server_socket_->HttpSendContent(proxy_script_text);
-
-    }
-
     void OpenServiceProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
         for (uint32_t i = 0; i < buffers.size(); ++i)
@@ -272,11 +261,5 @@ namespace p2sp
         {
             OPEN_DEBUG("head_length=" << head_length << "(Too Large)");
         }
-    }
-    uint32_t OpenServiceProxySender::GetStartOffset()
-    {
-        if (false == is_running_)
-            return 0;
-        return start_offset_;
     }
 }

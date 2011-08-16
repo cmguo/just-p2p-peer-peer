@@ -108,7 +108,6 @@ namespace p2sp
 
         file_length_ = 0;
         openservice_head_length_ = 0;
-        openservice_range_position_ = 0;
 
         header_buffer_.Malloc(HEADER_LENGTH);
         header_buffer_length_ = 0;
@@ -724,7 +723,6 @@ namespace p2sp
                     is_openservice_range = true;
                     proxy_sender_ = RangeProxySender::create(http_server_socket_);
                     proxy_sender_->Start(http_request_demo_, shared_from_this());
-                    openservice_range_position_ = proxy_sender_->GetStartOffset();
                 }
                 else if (start_position == 0)
                 {
@@ -1458,53 +1456,6 @@ namespace p2sp
         if (is_running_ == false) return;
 
         LOG(__EVENT, "proxy", "ProxyConnection::OnClose");
-        WillStop();
-    }
-/*
-    void ProxyConnection::OnPlayTimer(uint32_t times)
-    {
-        assert(0);
-        if (false == is_running_)
-            return;
-
-        if (subpiece_fail_timer_ && subpiece_fail_timer_->IsStarted())
-        {
-            subpiece_fail_timer_->Stop();
-            LOGX(__EVENT, "proxy", "stop subpiece_fail_timer_ = " << subpiece_fail_timer_ << ", proxy_connection = " << shared_from_this());
-        }
-
-        if (file_length_ == 0)
-        {
-            LOGX(__DEBUG, "proxy", "file_length_ == 0, return");
-            return;
-        }
-
-        if (download_driver_ && download_driver_->IsOpenService() && openservice_head_length_ == 0)
-        {
-            LOGX(__DEBUG, "proxy", "download_driver_->IsOpenService() && openservice_head_length_ == 0");
-            if (play_info_ && play_info_->GetStartPosition() > 0 && play_info_->GetStartPosition() < file_length_)
-            {
-                LOGX(__DEBUG, "proxy", "start_position > 0 && start_position  < file_length, return");
-                return;
-            }
-        }
-
-        if (download_driver_ && send_subpieces_per_interval_ < expected_subpieces_per_interval_)
-        {
-            LOGX(__EVENT, "proxy", "download_driver_->OnPlayTimer(times); times = " << times);
-            download_driver_->OnPlayTimer(times);
-        }
-    }
-*/
-    void ProxyConnection::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (is_running_ == false) return;
-
-        LOG(__WARN, "proxy", "ProxyConnection::OnDownloadDriverError " << error_code);
-
-        assert(proxy_sender_);
-        proxy_sender_->OnDownloadDriverError(error_code);
-
         WillStop();
     }
 

@@ -109,16 +109,6 @@ namespace p2sp
 
     }
 
-    // 下载器
-    void Mp4DragProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (false == is_running_)
-            return;
-
-        string proxy_script_text = "not find";
-        http_server_socket_->HttpSendContent(proxy_script_text);
-
-    }
     // 播放数据
     void Mp4DragProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
@@ -312,12 +302,5 @@ namespace p2sp
             OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
         }
-    }
-
-    uint32_t Mp4DragProxySender::GetStartOffset()
-    {
-        if (false == is_running_)
-            return 0;
-        return start_offset_;
     }
 }

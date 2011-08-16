@@ -63,11 +63,6 @@ namespace p2sp
         assert(false);
     }
 
-    void LiveProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        assert(false);
-    }
-
     void LiveProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         assert(false);
@@ -110,11 +105,5 @@ namespace p2sp
     void LiveProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
     {
         assert(false);
-    }
-
-    uint32_t LiveProxySender::GetStartOffset()
-    {
-        assert(false);
-        return 0;
     }
 }

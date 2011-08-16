@@ -223,6 +223,7 @@ namespace p2sp
 
         // 在 Storage 里面 创建资源实例
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info));
+        assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
 
         if (instance_)
@@ -241,13 +242,6 @@ namespace p2sp
         piece_request_manager_ = PieceRequestManager::Create(shared_from_this());
         piece_request_manager_->Start();
 
-        if (!instance_)
-        {
-            // 资源实例创建失败
-            // MainThread::Post(boost::bind(&ProxyConnection::OnDownloadDriverError, proxy_connection_, 1));
-            proxy_connection_->OnDownloadDriverError(1);
-            return;
-        }
         // 资源创建成功，资源对象绑定 这个DownloadDriver
         instance_->AttachDownloadDriver(shared_from_this());
 
@@ -430,6 +424,7 @@ namespace p2sp
 
         // 在 Storage 里面 创建资源实例
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info_, rid_info_));
+        assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
         instance_->SetIsPush(is_push_);
 
@@ -448,14 +443,6 @@ namespace p2sp
         piece_request_manager_ = PieceRequestManager::Create(shared_from_this());
         piece_request_manager_->Start();
 
-        if (!instance_)
-        {
-            // 资源实例创建失败
-
-            // MainThread::Post(boost::bind(&ProxyConnection::OnDownloadDriverError, proxy_connetction_, 1));
-            proxy_connection_->OnDownloadDriverError(1);
-            return;
-        }
         // 资源创建成功，资源对象绑定 这个DownloadDriver
         instance_->AttachDownloadDriver(shared_from_this());
 
@@ -683,15 +670,8 @@ namespace p2sp
 
         // 在 Storage 里面 创建资源实例
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info_));
+        assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
-
-        if (!instance_)
-        {
-            // 资源实例创建失败
-
-            proxy_connection_->OnDownloadDriverError(1);
-            return;
-        }
 
         if (instance_)
         {

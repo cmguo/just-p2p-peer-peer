@@ -59,16 +59,6 @@ namespace p2sp
         // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
     }
 
-    void CommonProxySender::OnDownloadDriverError(uint32_t error_code)
-    {
-        if (is_running_ == false) return;
-
-        string proxy_script_text = "not find";
-        http_server_socket_->HttpSendContent(proxy_script_text);
-
-    }
-
-
     void CommonProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         if (is_running_ == false) return;
@@ -198,10 +188,5 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
-    }
-
-    uint32_t CommonProxySender::GetStartOffset()
-    {
-        return 0;
     }
 }
