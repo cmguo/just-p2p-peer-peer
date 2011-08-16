@@ -450,7 +450,7 @@ namespace p2sp
         }
 
         // 如果剩余时间比较多了，则根据P2P是否连接上节点来决定切到P2P还是Http
-        if (GetGlobalDataProvider()->GetRestPlayableTime() > 30)
+        if (GetGlobalDataProvider()->GetRestPlayableTime() > 15)
         {
             if (GetP2PControlTarget()->GetConnectedPeersCount() > 0)
             {
