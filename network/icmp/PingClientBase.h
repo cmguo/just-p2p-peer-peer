@@ -20,7 +20,7 @@ namespace network
         static p create(boost::asio::io_service & io_svc);
 
         void AddHandler(uint16_t sequence_num, boost::function<void(unsigned char, string)> handler);
-        void NotifyHandler(uint16_t sequence_num, unsigned char type, string & ip);
+        void NotifyHandler(uint16_t sequence_num, unsigned char type, const string & ip);
         void Cancel(uint16_t sequence_num);
         void CancelAll();
 

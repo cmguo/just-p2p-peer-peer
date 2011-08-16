@@ -32,7 +32,7 @@ namespace network
         handler_map_.insert(std::make_pair(sequence_num, handler));
     }
 
-    void PingClientBase::NotifyHandler(uint16_t sequence_num, unsigned char type, string & ip)
+    void PingClientBase::NotifyHandler(uint16_t sequence_num, unsigned char type, const string & ip)
     {
         if (handler_map_.find(sequence_num) != handler_map_.end())
         {
