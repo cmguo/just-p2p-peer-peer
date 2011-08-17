@@ -50,18 +50,7 @@ namespace p2sp
             http_server_socket_.reset();
         }
 
-        if (download_driver_)
-        {
-            download_driver_.reset();
-        }
-
         is_running_ = false;
-    }
-
-    void FlvDragProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (is_running_ == false) return;
-        // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
     }
 
     void FlvDragProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)

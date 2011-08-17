@@ -238,11 +238,6 @@ namespace network
 
             HTTPSVR_DEBUG("send_list = " << send_list_.size());
 
-            if (handler_)
-            {
-                handler_->OnTcpSendSucced(bytes_transferred);
-            }
-
             send_list_.pop_front();
             if (!send_list_.empty())
             {

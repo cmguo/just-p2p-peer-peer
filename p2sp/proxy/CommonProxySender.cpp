@@ -53,53 +53,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void CommonProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (is_running_ == false) return;
-        // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
-    }
-
-    void CommonProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
-    {
-        if (is_running_ == false) return;
-        assert(file_length_ > 0);
-        assert(playing_position_ < file_length_);
-        // ??????
-        //     ??????? http_server_->SendBuffer(buffer);
-
-        assert(playing_position_ == start_position);
-
-        // if (false == is_response_header_)
-        // {
-        //    // http_server_socket_->HttpSendHeader(content_length, "video/x-flv");
-
-        // } else
-        // {
-        //    http_server_socket_->HttpSendBuffer(buffer);
-
-        // }
-
-        // LOG(__INFO, "proxy", "CommonProxySender::OnAsyncGetSubPieceSucced Send protocol::SubPieceContent to: " << http_server_socket_->GetEndPoint() << " start_possition: " << start_position << " buffer_length: " << buffer.Length());
-        // LOG(__DEBUG, "proxy", "write buffer @" << buffer.GetSubPieceBuffer()->get_buffer_address());
-        http_server_socket_->HttpSendBuffer(buffer);
-
-        //     playing_position ??????????? buffer.Length()
-        playing_position_ += buffer.Length();
-
-        if (playing_position_ == file_length_)
-        {
-            LOG(__WARN, "proxy", "CommonProxySender::OnAsyncGetSubPieceSucced playing_position_ == file_length_ send \\r\\n\\r\\n");
-//            http_server_socket_->HttpSendBuffer(protocol::SubPieceContent("\\r\\n"));
-//            http_server_socket_->HttpSendBuffer((const boost::uint8_t *)"\r\n\r\n", sizeof("\r\n\r\n"));
-        }
-
-        // if (http_server_socket_->GetSendPendingCount() > 200)
-        // {
-        //    LOG(__WARN, "proxy", "ProxyConnection::OnAsyncGetSubPieceSucced but GetSendPendingCount" << http_server_socket_->GetSendPendingCount() << " > 200 So Close It");
-        //    WillStop();
-        // }
-    }
-
     void CommonProxySender::OnRecvSubPiece(uint32_t start_position, std::vector<base::AppBuffer> const & buffers)
     {
         if (is_running_ == false) return;

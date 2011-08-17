@@ -41,11 +41,8 @@ namespace p2sp
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
 
     public:
-        // 消息
-        // network::HttpServer
-        virtual void OnTcpSendSucced(uint32_t length);
         // 播放数据
-        virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
+        void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
         // 获得Contentlength
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
         // 失败
@@ -57,7 +54,7 @@ namespace p2sp
     private:
         boost::asio::io_service & io_svc_;
         network::HttpServer::pointer http_server_socket_;
-        DownloadDriver__p download_driver_;
+
         volatile bool is_running_;
         uint32_t playing_position_;
         protocol::UrlInfo url_info_;

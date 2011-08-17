@@ -89,13 +89,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void OpenServiceProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (false == is_running_)
-            return;
-
-    }
-
     void OpenServiceProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
         for (uint32_t i = 0; i < buffers.size(); ++i)

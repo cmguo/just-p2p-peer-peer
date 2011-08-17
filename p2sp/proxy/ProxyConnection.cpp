@@ -1241,26 +1241,6 @@ namespace p2sp
         WillStop();
     }
 
-    void ProxyConnection::OnTcpSendSucced(uint32_t length)
-    {
-        if (is_running_ == false) return;
-
-        if (false == save_mode_)
-        {
-            LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length << " " << shared_from_this());
-        }
-        else
-        {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
-        }
-
-        if (proxy_sender_)
-        {
-            assert(proxy_sender_);
-            proxy_sender_->OnTcpSendSucced(length);
-        }
-    }
-
     void ProxyConnection::OnTcpSendFailed()
     {
         if (is_running_ == false) return;

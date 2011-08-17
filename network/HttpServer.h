@@ -21,7 +21,6 @@ namespace network
         virtual void OnHttpRecvSucced(HttpRequest::p http_request) = 0;
         virtual void OnHttpRecvFailed(uint32_t error_code) = 0;
         virtual void OnHttpRecvTimeout() = 0;
-        virtual void OnTcpSendSucced(uint32_t length) = 0;
         virtual void OnTcpSendFailed() = 0;
         virtual void OnClose() = 0;
 

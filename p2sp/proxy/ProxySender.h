@@ -39,10 +39,7 @@ public:
         virtual void ResetPlayingPosition() = 0;
         virtual bool IsHeaderResopnsed() const = 0;
 
-        // network::HttpServer
-        virtual void OnTcpSendSucced(uint32_t length) = 0;
         // 播放数据
-        virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer) = 0;
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers) = 0;
         // 获得Contentlength
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response) = 0;

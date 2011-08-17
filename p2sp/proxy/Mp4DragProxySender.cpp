@@ -102,13 +102,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void Mp4DragProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (false == is_running_)
-            return;
-
-    }
-
     // 播放数据
     void Mp4DragProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {

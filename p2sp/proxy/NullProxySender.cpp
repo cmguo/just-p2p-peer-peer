@@ -63,38 +63,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void NullProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (false == is_running_) {
-            return;
-        }
-
-    }
-
-    // 播放数据
-    void NullProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
-    {
-        if (false == is_running_) {
-            return;
-        }
-        assert(playing_position_ == start_position);
-        playing_position_ += buffer.Length();
-        if (playing_position_ % (128*1024) == 0 || playing_position_ >= file_length_) {
-            NL_DEBUG("file_length_ " << file_length_ << ", playing_position = " << playing_position_);
-        }
-        // check
-        if (playing_position_ >= file_length_) {
-            // close
-            NL_DEBUG("Post ProxyConnection::WillStop, " << proxy_connection_);
-            // just notify, not stop; connection will be stopped in OnProxyTimer
-            if (proxy_connection_)
-            {
-                // MainThread::Post(boost::bind(&ProxyConnection::NotifyStop, proxy_connection_));
-                proxy_connection_->NotifyStop();
-            }
-        }
-    }
-
     // 获得Contentlength
     void NullProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
     {

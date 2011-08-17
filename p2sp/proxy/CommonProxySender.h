@@ -42,11 +42,6 @@ namespace p2sp
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
 
     public:
-        // 消息
-        // network::HttpServer
-        virtual void OnTcpSendSucced(uint32_t length);
-        // 播放数据
-        virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
         // 获得Contentlength
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
@@ -54,6 +49,7 @@ namespace p2sp
         virtual void OnNotice403Header();
 
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+
     private:
         boost::asio::io_service & io_svc_;
         network::HttpServer::pointer http_server_socket_;

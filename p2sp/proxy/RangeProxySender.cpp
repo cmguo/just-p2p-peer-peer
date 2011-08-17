@@ -79,11 +79,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void RangeProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (is_running_ == false) return;
-    }
-
     void RangeProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         if (is_running_ == false) return;

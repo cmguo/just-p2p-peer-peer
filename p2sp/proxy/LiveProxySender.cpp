@@ -53,17 +53,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void LiveProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        
-    }
-
     void LiveProxySender::OnClose()
-    {
-        assert(false);
-    }
-
-    void LiveProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
     {
         assert(false);
     }

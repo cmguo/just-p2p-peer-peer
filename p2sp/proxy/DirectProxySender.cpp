@@ -138,22 +138,6 @@ namespace p2sp
         http_client_->Connect();
     }
 
-    void DirectProxySender::OnTcpSendSucced(uint32_t length)
-    {
-        if (is_running_ == false)
-            return;
-    }
-
-    void DirectProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
-    {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
-        assert(0);
-    }
-
     void DirectProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false)
@@ -331,7 +315,6 @@ namespace p2sp
     {
         for (uint32_t i = 0; i < buffers.size(); ++i)
         {
-            OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
         }
     }
