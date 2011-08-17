@@ -226,7 +226,6 @@ namespace p2sp
         virtual uint32_t GetDownloadingPosition() {return 0;}
         virtual uint32_t GetDownloadedBytes() {return 0;}
         virtual uint32_t GetDataDownloadSpeed() {return 0;}
-        virtual bool IsStartFromZero() {return true;}
         virtual bool IsStartFromNonZero() {return true;}
         virtual bool IsDrag() {return true;}
         virtual bool IsHeadOnly() {return true;}

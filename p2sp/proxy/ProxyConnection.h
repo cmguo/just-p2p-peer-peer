@@ -196,8 +196,6 @@ namespace p2sp
         bool IsMovieUrl() const { return is_movie_url_; }
         bool IsDownloading() const;
 
-        boost::uint32_t GetSentBytes() const;
-
         void SetSendSpeedLimit(const boost::int32_t send_speed_limit);
 
         bool IsHeaderResopnsed();
@@ -247,7 +245,6 @@ namespace p2sp
         volatile bool is_running_;
 
         protocol::UrlInfo url_info_;
-        protocol::UrlInfo url_info_true;
 
         uint32_t send_subpieces_per_interval_;
         uint32_t request_subpiece_per_interval_;

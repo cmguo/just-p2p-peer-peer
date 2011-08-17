@@ -1877,15 +1877,6 @@ namespace p2sp
             StopDownloadDriver();
         }
     }
-    boost::uint32_t ProxyConnection::GetSentBytes() const
-    {
-        if (false == is_running_)
-            return 0;
-        if (false == save_mode_ && http_server_socket_) {
-            return 0;  // http_server_socket_->GetSentBytes();
-        }
-        return 0;
-    }
 
     bool ProxyConnection::IsDownloading() const
     {

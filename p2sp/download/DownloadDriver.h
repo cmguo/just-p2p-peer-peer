@@ -103,7 +103,6 @@ namespace p2sp
         void Start(const protocol::UrlInfo& url_info, bool is_support_start, bool open_service = false, boost::int32_t control_mode=-1, boost::int32_t force_mode = 0/*FORCE_MODE_NORMAL*/);
 
         void Stop();
-        void StopDownload();
 
         bool IsRunning() const { return is_running_; }
 
@@ -139,14 +138,9 @@ namespace p2sp
         boost::int32_t GetDownloadDriverID() const { return id_; }
         static boost::int32_t GetDownloaderDriverSID() {return s_id_ ++;}
 
-        void SetPausing();
-        void StopPausing();
-
         bool IsHttpDownloaderSupportRange();
 
         bool IsPlayByRID() const { return is_play_by_rid_; }
-
-        void NotifyHttpMultiConnection();
 
         void NoticePieceTaskTimeOut(const protocol::PieceInfoEx& piece_info_ex, VodDownloader__p downloader);
 
@@ -188,8 +182,6 @@ namespace p2sp
         uint32_t GetOpenServiceHeadLength() {return openservice_head_length_;}
         void SetBWType(JumpBWType bwtype) {bwtype_ = bwtype;}
 
-        boost::uint32_t GetSentBytes() const;
-
         bool IsSaveMode() const;
         bool IsDownloading() const;
         boost::uint32_t GetSecondDownloadSpeed();
@@ -220,7 +212,6 @@ namespace p2sp
         virtual uint32_t GetDownloadingPosition();
         virtual uint32_t GetDownloadedBytes();
         virtual uint32_t GetDataDownloadSpeed();
-        virtual bool IsStartFromZero();
         virtual bool IsStartFromNonZero();
         virtual bool IsDrag();
         virtual bool IsHeadOnly();

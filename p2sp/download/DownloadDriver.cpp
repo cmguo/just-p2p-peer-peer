@@ -746,14 +746,6 @@ namespace p2sp
         }
     }
 
-    void DownloadDriver::StopDownload()
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-    }
-
     void DownloadDriver::Stop()
     {
         if (is_running_ == false)
@@ -2179,31 +2171,6 @@ namespace p2sp
         instance_->AsyncGetSubPieceForPlay(proxy_connection_->GetPlayingPosition(), proxy_connection_);
     }
 */
-    void DownloadDriver::SetPausing()
-    {
-        if (!is_running_)
-            return;
-        if (is_pausing_)
-            return;
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
-        {
-            iter->second->SetPausing();
-        }
-        is_pausing_ = true;
-    }
-
-    void DownloadDriver::StopPausing()
-    {
-        if (!is_running_)
-            return;
-        if (!is_pausing_)
-            return;
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
-        {
-            iter->second->StopPausing();
-        }
-        is_pausing_ = false;
-    }
 
     bool DownloadDriver::IsHttpDownloaderSupportRange()
     {
@@ -2217,12 +2184,6 @@ namespace p2sp
             }
         }
         return false;
-    }
-
-    void DownloadDriver::NotifyHttpMultiConnection()
-    {
-        if (false == is_running_)
-            return;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -2304,16 +2265,6 @@ namespace p2sp
     bool DownloadDriver::IsStartFromNonZero()
     {
         return openservice_start_position_ != 0;
-    }
-
-    bool DownloadDriver::IsStartFromZero()
-    {
-        LOG(__DEBUG, "switch", "is_openservice_range_ = " << is_openservice_range_ << "openservice_start_position_ = " << openservice_start_position_);
-        if (is_openservice_range_ || openservice_start_position_ != 0)
-        {
-            return false;
-        }
-        return true;
     }
 
     bool DownloadDriver::IsDrag()
@@ -2523,16 +2474,6 @@ namespace p2sp
         }LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " OnNoticeFileDownloadComplete dd=" << shared_from_this() << ", proxy=" << proxy_connection_);
         // MainThread::Post(boost::bind(&ProxyConnection::OnNoticeStopDownloadDriver, proxy_connection_));
         proxy_connection_->OnNoticeStopDownloadDriver();
-    }
-
-    boost::uint32_t DownloadDriver::GetSentBytes() const
-    {
-        if (false == is_running_)
-            return 0;
-        if (proxy_connection_) {
-            return proxy_connection_->GetSentBytes();
-        }
-        return 0;
     }
 
     bool DownloadDriver::IsSaveMode() const

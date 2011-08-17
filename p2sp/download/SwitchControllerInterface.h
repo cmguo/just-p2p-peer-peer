@@ -157,8 +157,6 @@ namespace p2sp
 
         virtual uint32_t GetDataDownloadSpeed() = 0;
 
-        virtual bool IsStartFromZero() = 0;
-
         virtual bool IsStartFromNonZero() = 0;
 
         virtual bool IsDrag() = 0;
