@@ -408,6 +408,7 @@ namespace p2sp
                 // notify 过滤垃圾任务，即使收到，本地也不处理
                 if (task_map_.find(notify_request_packet.task_id_) == task_map_.end() && 
                     notify_request_packet.rest_time_ > 0 &&
+                    notify_request_packet.rest_time_ < 65535 &&
                     notify_request_packet.buffer_.length() > 0)
                 {
                     // 本地没有该任务
