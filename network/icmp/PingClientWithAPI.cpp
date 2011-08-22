@@ -108,7 +108,8 @@ namespace network
                 assert(false);
                 break;
             case IP_REQ_TIMED_OUT:
-                ping_client_with_api_->Cancel(ping_client_with_api_->sequence_num_);
+                global_io_svc().post(boost::bind(&PingClientWithAPI::Cancel, ping_client_with_api_,
+                    ping_client_with_api_->sequence_num_));
                 break;
             default:
                 DebugLog("\tExtended error returned: %ld\n", dwError);
