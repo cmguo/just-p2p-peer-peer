@@ -43,7 +43,10 @@ namespace network
 
     void PingClientBase::Cancel(uint16_t sequence_num)
     {
-        handler_map_.erase(sequence_num);
+        if (handler_map_.find(sequence_num) != handler_map_.end())
+        {
+            handler_map_.erase(sequence_num);
+        }
     }
 
     void PingClientBase::CancelAll()

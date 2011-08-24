@@ -2212,7 +2212,7 @@ namespace storage
             dir_iter != boost::filesystem::directory_iterator();)
         {
             boost::filesystem::path file_path = * dir_iter++;
-            if (boost::filesystem::is_regular_file(file_path))
+            if (base::filesystem::is_regular_file_nothrow(file_path))
             {
                 std::time_t last_modified_time;
                 boost::system::error_code ec;

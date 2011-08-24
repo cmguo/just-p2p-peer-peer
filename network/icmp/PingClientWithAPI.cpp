@@ -76,7 +76,7 @@ namespace network
             &(ping_client_with_api_->ip_option_),
             ping_client_with_api_->reply_buffer_,
             ping_client_with_api_->reply_buffer_size_,
-            1000
+            500
             );
 
         if (dwRetVal != 0) 

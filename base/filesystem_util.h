@@ -54,6 +54,18 @@ namespace base
                 code = e.code();
             }
         }
+
+        inline bool is_regular_file_nothrow(const path & file_path)
+        {
+            try
+            {
+                return boost::filesystem::is_regular_file(file_path);
+            }
+            catch (boost::filesystem::basic_filesystem_error<path> & e)
+            {
+                return false;
+            }
+        }
     }
 }
 #endif
