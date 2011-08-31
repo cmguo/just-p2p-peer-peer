@@ -2672,7 +2672,7 @@ namespace p2sp
             // 柔和下载模式
             boost::uint32_t data_rate = GetDataRate();
 
-            float rate;
+            float rate = 0.8;
             if (p2p_downloader_ && p2p_downloader_->GetStatistic())
             {
                 rate = p2p_downloader_->GetStatistic()->GetUDPLostRate();

@@ -410,8 +410,9 @@ namespace p2sp
             LimitMinMax(speed_limit, push_task_.param_.MinDownloadSpeedInKBps, push_task_.param_.MaxDownloadSpeedInKBpsWhenIdle);
             PUSH_DEBUG(" USER_IDLE, SpeedLimit = " << speed_limit << ", BandWidth = " << statistic::StatisticModule::Inst()->GetBandWidth());
         }
-        else if (push::USER_NONE == state_.user_) 
+        else
         {
+            assert(push::USER_NONE == state_.user_);
             boost::uint32_t bandwidth = (std::max)(statistic::StatisticModule::Inst()->GetBandWidth(), (boost::uint32_t)64 * 1024);
             speed_limit = 1.0 * bandwidth * push_task_.param_.BandwidthRatioWhenNormal / (255 * 1024);
             LimitMinMax(speed_limit, push_task_.param_.MinDownloadSpeedInKBps, push_task_.param_.MaxDownloadSpeedInKBpsWhenNormal);
