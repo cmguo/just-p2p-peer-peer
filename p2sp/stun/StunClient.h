@@ -44,7 +44,7 @@ namespace p2sp
     public:
         // 获取nat的类型
 
-        protocol::MY_STUN_NAT_TYPE StartGetNatTpye(const string& config_path);
+        protocol::MY_STUN_NAT_TYPE StartGetNatType(const string& config_path);
         void Stop();
 
     public:

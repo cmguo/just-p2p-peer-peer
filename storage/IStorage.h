@@ -47,8 +47,6 @@ namespace storage
 
         virtual void OnNoticeRIDChange() = 0;
 
-        virtual void OnNoticeUrlChange() = 0;
-
         virtual void OnNoticeDownloadComplete() = 0;
 
         virtual void OnNoticeMakeBlockSucced(uint32_t block_info) = 0;

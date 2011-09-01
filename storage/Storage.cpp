@@ -401,45 +401,12 @@ namespace storage
             return;
 
         if (instance_new->GetDownloadBytes() >= instance_old->GetDownloadBytes())
-            MergeInstance(instance_new, instance_old);
-        else
-            MergeInstance(instance_old, instance_new);  // new -> old
-        return;
-
-        /***
-        *  instance_new是新的instance，instance_old是老的instance
-        *  以下做条件判断时，"[]"包含的表明是已存在的资源，"()"包含的表明是新加入的资源
-        *  "==>"表示"merge to"
-        */
-        unsigned char merge_term = ((instance_old->down_mode_ << 4) & 0xf0) | (instance_new->down_mode_ & 0x0f);
-        switch (merge_term)
         {
-        case 0x00:    // <[VA加速], (VA加速)> : 老的 == >新的
-            // check file size
-            if (instance_new->GetDownloadBytes() >= instance_old->GetDownloadBytes())
-                MergeInstance(instance_new, instance_old);
-            else
-                MergeInstance(instance_old, instance_new);  // new -> old
-            break;
-        case 0x01:    // <[VA加速], (BHO保存)> : 老的 == >新的
             MergeInstance(instance_new, instance_old);
-            break;
-        case 0x10:    // <[BHO保存], (VA加速)> : 新的 == >老的
-            MergeInstance(instance_old, instance_new);
-            break;
-        case 0x11:    // <[BHO保存], [BHO保存]> : 老的 == >新的(Should not get this)
-            // MergeInstance(instance_new, instance_old);
-            if (instance_new->GetDownloadBytes() >= instance_old->GetDownloadBytes())
-                MergeInstance(instance_new, instance_old);
-            else
-                MergeInstance(instance_old, instance_new);
-            break;
-        default:
-            // MergeInstance(instance_new, instance_old);
-            if (instance_new->GetDownloadBytes() >= instance_old->GetDownloadBytes())
-                MergeInstance(instance_new, instance_old);
-            else
-                MergeInstance(instance_old, instance_new);
+        }
+        else
+        {
+            MergeInstance(instance_old, instance_new);  // new -> old
         }
     }
 

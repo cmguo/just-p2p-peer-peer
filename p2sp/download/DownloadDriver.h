@@ -266,8 +266,6 @@ namespace p2sp
         virtual void OnNoticeChangeResource(boost::shared_ptr<storage::Instance> instance_old, boost::shared_ptr<storage::Instance> instance_new);
         // 通知 DownloadDriver  rid 从无到有
         virtual void OnNoticeRIDChange();
-        // 通知 DownloadDriver  url 信息发生了变化
-        virtual void OnNoticeUrlChange();
         // 通知 DownloadDriver 下载完成
         virtual void OnNoticeDownloadComplete();
         // 通知 DownloadDriver 一个Block检验成功

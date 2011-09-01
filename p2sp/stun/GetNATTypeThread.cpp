@@ -38,8 +38,7 @@ namespace p2sp
 
     void GetNATTypeThread::GetNATType(const string& config_path)
     {
-        protocol::MY_STUN_NAT_TYPE nat_type = stun_client.StartGetNatTpye(config_path);
-//        if (nat_type == TYPE_IP_RESTRICTEDNAT || nat_type == TYPE_IP_PORT_RESTRICTEDNAT ||nat_type == TYPE_SYMNAT)
+        protocol::MY_STUN_NAT_TYPE nat_type = stun_client.StartGetNatType(config_path);
         ios_main_->post(boost::bind(&StunModule::OnGetNATType, StunModule::Inst(), nat_type));
         stun_client.Stop();
     }

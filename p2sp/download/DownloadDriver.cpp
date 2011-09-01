@@ -1692,9 +1692,6 @@ namespace p2sp
         statistic_->SetBlockCount(instance_->GetBlockCount());
         statistic_->SetLocalDataBytes(instance_->GetDownloadBytes() - statistic_->GetTotalHttpDataBytes());
 
-        //
-        // OnNoticeUrlChange()
-        OnNoticeUrlChange();
         GetSubPieceForPlay();
     }
 
@@ -1710,8 +1707,6 @@ namespace p2sp
         RID rid_;
         rid_ = instance_->GetRID();
         // assert(false == rid_.IsEmpty());
-        IndexManager::Inst()->DoQueryhttpServerByRid(rid_);
-
         // if (!IsPush())
         // {
         //    // check push module
@@ -1762,60 +1757,6 @@ namespace p2sp
 //             }
 //         }
 
-    }
-
-    void DownloadDriver::OnNoticeUrlChange()
-    {
-        if (is_running_ == false)
-            return;
-
-        return;
-
-        // 资源的 HttpServer部分发生变化
-        //
-        // ppassert(IInstance->RID) 存在
-        // ppassert(false == instance_->GetRID().IsEmpty());
-        // 获得 本RID所对应多有的 url
-        //
-        std::set<protocol::UrlInfo> urls_;
-
-        instance_->GetUrls(urls_);
-
-        assert(urls_.find(origanel_url_info_) != urls_.end());
-
-        // 停掉 并且删掉 多余的 HttpDownloader
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end();)
-        {
-            protocol::UrlInfo url_info_;
-            // assert(iter->second->GetUrlInfo(url_info_));
-            iter->second->GetUrlInfo(url_info_);
-            if ((urls_.find(url_info_)) == urls_.end() && iter->second->IsOriginal() == false)
-            {
-                assert(false == iter->second->IsOriginal());
-                SetDownloaderToDeath((iter++)->second);
-                // downloaders_.erase(iter->second);
-                // url_indexer_.erase(iter++);
-            }
-            else
-            {
-                iter++;
-            }
-        }
-
-        // 添加 并且启动 新加的 httpDownloader
-        //
-        for (std::set<protocol::UrlInfo>::iterator iter = urls_.begin(); iter != urls_.end(); iter++)
-        {
-            if (url_indexer_.find((*iter).url_) == url_indexer_.end() && !boost::algorithm::icontains(iter->refer_url_,
-                "ppvaplaybyrid"))
-            {
-                AddHttpDownloader((*iter));
-            }
-        }
-
-        // 如果 orignal_url 在资源文件中不存在了
-        //        ppassert(0);
-        // ppassert(url_indexer_.find(origanel_url_info_.url_) != url_indexer_.end());
     }
 
     void DownloadDriver::OnNoticeDownloadComplete()

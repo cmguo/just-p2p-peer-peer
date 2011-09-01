@@ -1237,9 +1237,6 @@ namespace p2sp
              if (verbose) clog << "Unknown or unsupported request " << endl;
              return false;
        }
-
-       assert(0);
-       return false;
     }
 
     bool
@@ -2147,7 +2144,6 @@ namespace p2sp
           clog << "preserver port = " << respTestPreservePort << endl;
        }
 
-    #if 1
        // implement logic flow chart from draft RFC
        if (respTestI)
        {
@@ -2192,55 +2188,7 @@ namespace p2sp
        {
           return StunTypeBlocked;
        }
-    #else
-       if (respTestI)  // not blocked
-       {
-          if (isNat)
-          {
-             if (mappedIpSame)
-             {
-                if (respTestII)
-                {
-                   return StunTypeIndependentFilter;
-                }
-                else
-                {
-                   if (respTestIII)
-                   {
-                      return StunTypeDependentFilter;
-                   }
-                   else
-                   {
-                      return StunTypePortDependedFilter;
-                   }
-                }
-             }
-             else  // mappedIp is not same
-             {
-                return StunTypeDependentMapping;
-             }
-          }
-          else  // isNat is false
-          {
-             if (respTestII)
-             {
-                return StunTypeOpen;
-             }
-             else
-             {
-                return StunTypeFirewall;
-             }
-          }
-       }
-       else
-       {
-          return StunTypeBlocked;
-       }
-    #endif
-
-       return StunTypeUnknown;
     }
-
 
     int
     stunOpenSocket(StunAddress4& dest, StunAddress4* mapAddr,

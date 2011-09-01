@@ -70,7 +70,7 @@ void CStunClient::Stop()
 
 protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 {
-    protocol::MY_STUN_NAT_TYPE snt_tpye = protocol::TYPE_ERROR;
+    protocol::MY_STUN_NAT_TYPE snt_type = protocol::TYPE_ERROR;
 
     initNetwork();
 
@@ -93,7 +93,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 
     if (stunParseServerName(pcServer, stunServerAddr) != true)
     {
-        return snt_tpye;
+        return snt_type;
     }
     if (srcPort == 0)
     {
@@ -111,8 +111,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
         sAddr[nic].port = srcPort;
         if (stunServerAddr.addr == 0)
         {
-
-            return snt_tpye;
+            return snt_type;
         }
 
         bool presPort = false;
@@ -126,23 +125,23 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
         switch (stype)
         {
         case StunTypeFailure:
-            snt_tpye = protocol::TYPE_ERROR;
+            snt_type = protocol::TYPE_ERROR;
             STUN_INFO("type=StunTypeFailure");
             break;
         case StunTypeUnknown:
-            snt_tpye = protocol::TYPE_ERROR;
+            snt_type = protocol::TYPE_ERROR;
             STUN_INFO("type=StunTypeUnknown");
             break;
         case StunTypeOpen:
-            snt_tpye = protocol::TYPE_PUBLIC;
+            snt_type = protocol::TYPE_PUBLIC;
             STUN_INFO("type=StunTypeOpen");
             break;
         case StunTypeFirewall:
-            snt_tpye = protocol::TYPE_ERROR;
+            snt_type = protocol::TYPE_ERROR;
             STUN_INFO("type=StunTypeFirewall");
             break;
         case StunTypeBlocked:
-            snt_tpye = protocol::TYPE_ERROR;
+            snt_type = protocol::TYPE_ERROR;
             STUN_INFO("type=StunTypeBlocked");
             break;
 
@@ -150,7 +149,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 #ifdef BOOST_WINDOWS_API
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_FULLCONENAT"), m_strConfig.c_str());
 #endif
-            snt_tpye = protocol::TYPE_FULLCONENAT;
+            snt_type = protocol::TYPE_FULLCONENAT;
             STUN_INFO("type=StunTypeConeNat");
             break;
 
@@ -158,7 +157,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 #ifdef BOOST_WINDOWS_API
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_IP_RESTRICTEDNAT"), m_strConfig.c_str());
 #endif
-            snt_tpye = protocol::TYPE_IP_RESTRICTEDNAT;
+            snt_type = protocol::TYPE_IP_RESTRICTEDNAT;
             STUN_INFO("type=StunTypeRestrictedNat");
             break;
 
@@ -166,7 +165,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 #ifdef BOOST_WINDOWS_API
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_IP_PORT_RESTRICTEDNAT"), m_strConfig.c_str());
 #endif
-            snt_tpye = protocol::TYPE_IP_PORT_RESTRICTEDNAT;
+            snt_type = protocol::TYPE_IP_PORT_RESTRICTEDNAT;
             STUN_INFO("type=StunTypePortRestrictedNat");
             break;
 
@@ -174,7 +173,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 #ifdef BOOST_WINDOWS_API
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_SYMNAT"), m_strConfig.c_str());
 #endif
-            snt_tpye = protocol::TYPE_SYMNAT;
+            snt_type = protocol::TYPE_SYMNAT;
             STUN_INFO("type=StunTypeSymNat");
             break;
 
@@ -182,78 +181,24 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
 #ifdef BOOST_WINDOWS_API
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("Unkown NAT type"), m_strConfig.c_str());
 #endif
-            snt_tpye = protocol::TYPE_ERROR;
+            snt_type = protocol::TYPE_ERROR;
             STUN_INFO("type=TYPE_ERROR");
             break;
         }
 
     }  // end of for loop
 
-
-    return snt_tpye;
+    return snt_type;
 }
+
 /*
-bool CStunClient::GetPPLiveAppDataPath(string& pszCachePath)
-{
-#ifdef BOOST_WINDOWS_API
-    // 通过注册表获取
-    bool bGetFromReg = FALSE;
-    CRegKey key;
-    if (key.Open(HKEY_LOCAL_MACHINE, ("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"), KEY_READ|KEY_QUERY_VALUE) == ERROR_SUCCESS)
-    {
-        uint32_t dwCount = MAX_PATH;
-        LONG lRes = key.QueryValue(pszCachePath.c_str(), ("Common AppData"), &dwCount);
-        if (lRes == ERROR_SUCCESS)
-        {
-            bGetFromReg = TRUE;
-        }
-        key.Close();
-    }
-
-    if (!bGetFromReg)
-    {
-        // 通过SHELL获取
-        HRESULT hr = SHGetFolderPath(NULL, CSIDL_COMMON_APPDATA, NULL, SHGFP_TYPE_DEFAULT, pszCachePath);
-        if (FAILED(hr))
-        {
-            // 通过环境变量获取"ALLUSERSPROFILE"
-            boost::uint32_t dwRet = GetEnvironmentVariable(("ALLUSERSPROFILE"), pszCachePath, MAX_PATH);
-            if (dwRet)
-            {
-                PathAppend(pszCachePath, ("Application Data"));
-            }
-            else
-            {
-                // 通过环境变量获取"ProgramFiles"
-                dwRet = GetEnvironmentVariable(("ProgramFiles"), pszCachePath, MAX_PATH);
-            }
-
-            if (dwRet == 0)
-            return FALSE;
-        }
-    }
-
-    // 得到完整的CACHE路径
-    PathAppend(pszCachePath, ("PPLiveVA"));
-
-    int retval = PathFileExists (pszCachePath);
-    if (retval != 1)
-    {
-        _wmkdir(pszCachePath);
-    }
-    return TRUE;
-#else
-    return false;
-#endif
-}
-    /*
-    // 判断是否需要使用stun协议检测NAT信息，同时将保存的nat信息输出到snt_result
-    // 需要更新NAT信息则返回true；否则返回false
-    需要更新NAT的条件为：
-    1.保存的nattype为error
-    2.获取的本地ip地址与保存的地址不同
-    3.保存信息已经过期(超过3天)
-    */
+// 判断是否需要使用stun协议检测NAT信息，同时将保存的nat信息输出到snt_result
+// 需要更新NAT信息则返回true；否则返回false
+需要更新NAT的条件为：
+1.保存的nattype为error
+2.获取的本地ip地址与保存的地址不同
+3.保存信息已经过期(超过3天)
+*/
 bool CStunClient::IsNeedToUpdateNat(protocol::MY_STUN_NAT_TYPE &snt_result, const string& config_path)
 {
     if (config_path.length() == 0)
@@ -301,23 +246,18 @@ bool CStunClient::IsNeedToUpdateNat(protocol::MY_STUN_NAT_TYPE &snt_result, cons
 string g_strStunServer[] = { "stun.ekiga.net", "stun.fwdnet.net", "stun.ideasip.com", "stun01.sipphone.com",
     "stun.xten.com", "stunserver.org", "stun.sipgate.net", "211.152.45.105" };
 
-protocol::MY_STUN_NAT_TYPE CStunClient::StartGetNatTpye(const string& config_path)
+protocol::MY_STUN_NAT_TYPE CStunClient::StartGetNatType(const string& config_path)
 {
 
     protocol::MY_STUN_NAT_TYPE snt_ret = protocol::TYPE_ERROR;
 
     if (IsNeedToUpdateNat(snt_ret, config_path))
     {
-        // 默认的stunserver服务器地址
-        string strStunServer = "211.152.45.105";
-
         // 从设置的多个服务器中随机选择一个
-        int ServerCounts = sizeof(g_strStunServer) / sizeof(string);
+        int serverCounts = sizeof(g_strStunServer) / sizeof(string);
+        assert(serverCounts > 0);
         srand((unsigned) time(NULL));
-        if (ServerCounts > 0)
-        {
-            strStunServer = g_strStunServer[rand() % ServerCounts];
-        }
+        string strStunServer = g_strStunServer[rand() % serverCounts];
 
         snt_ret = getNatType((char*) strStunServer.c_str());
 #ifdef BOOST_WINDOWS_API

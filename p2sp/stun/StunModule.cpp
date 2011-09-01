@@ -194,26 +194,20 @@ namespace p2sp
 
         if (is_select_stunserver_)
         {
-            int new_index = -1;
             for (uint32_t i = 0; i < stun_servers.size(); ++i)
             {
                 if (stun_servers[i] == stun_server_info_[stun_server_index_])
                 {
-                    new_index = i;
-                    break;
+                    // 正在使用的stun_server在新的stun_server_list中，更新index
+                    stun_server_index_ = i;
+                    stun_server_info_ = stun_servers;
+                    return;
                 }
-            }
-            if (new_index != -1)            // 正在使用的stun_server在新的stun_server_list中，更新index
-            {
-                stun_server_index_ = new_index;
-                stun_server_info_ = stun_servers;
-                return;
             }
         }
 
         // 当前没有使用stun_server或者使用的stun_server不在新的stun_server_list中
         ClearStunInfo();
-
         stun_server_info_ = stun_servers;
         statistic::StatisticModule::Inst()->SetStunInfo(stun_server_info_);
     }
@@ -264,16 +258,7 @@ namespace p2sp
 #endif
             ipArray[count++] = ntohl(v);
         }
-        for (uint32_t i = 0; i < count; i++)
-        {
-            for (uint32_t j = i; j < count; j++)
-            {
-                if (ipArray[i] < ipArray[j])
-                {
-                    std::swap(ipArray[i], ipArray[j]);
-                }
-            }
-        }
+        std::sort(ipArray, ipArray + count, std::greater<uint32_t>());
         return count;
     }
 
@@ -311,7 +296,6 @@ namespace p2sp
         if (count == 0)
         {
             STUN_ERROR("CIPTable::LoadLocal: No hostent found.");
-            return 0;
         }
         return count;
     }

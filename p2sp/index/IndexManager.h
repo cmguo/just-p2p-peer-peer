@@ -43,8 +43,6 @@ namespace p2sp
 
         void DoQueryRidByContent(string url, string refer, MD5 content_md5, uint32_t content_bytes, uint32_t file_length);
 
-        void DoQueryhttpServerByRid(RID rid);
-
         void DoQueryTrackerList();
 
         void DoQueryStunServerList();

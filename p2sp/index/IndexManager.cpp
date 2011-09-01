@@ -255,25 +255,6 @@ namespace p2sp
         AppModule::Inst()->DoSendPacket(packet);
     }
 
-    void IndexManager::DoQueryhttpServerByRid(RID rid)
-    {
-        // 放弃p2s
-        return;
-
-        LOG(__EVENT, "index", "DoQueryhttpServerByRid rid:" << rid);
-
-        if (is_running_ == false) return;
-        if (is_have_index_server_list_ == false) return;
-
-        // 根据rif拼出 QureyHttpServerByRidRequestPacket 包，然后发送
-
-        uint32_t transaction_id_ = protocol::Packet::NewTransactionID();
-        protocol::QueryHttpServerByRidPacket query_http_server_by_rid_request_packet (transaction_id_, protocol::PEER_VERSION, rid, GetIndexEndPoint(rid));
-
-        AppModule::Inst()->DoSendPacket(query_http_server_by_rid_request_packet);
-        statistic::StatisticModule::Inst()->SubmitQueryHttpServersByRIDRequest();
-    }
-
     void IndexManager::DoQueryTrackerList()
     {
         LOG(__EVENT, "index", "DoQueryTrackerList");

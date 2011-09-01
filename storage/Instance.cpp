@@ -632,15 +632,6 @@ namespace storage
         {
             return;
         }
-
-        for (std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin(); iter != download_driver_s_.end(); iter++)
-        {
-            STORAGE_DEBUG_LOG("Instance::AddUrlInfo Notify -> IDownloadDriver::OnNoticeUrlChange");
-            if (*iter)
-            {
-                (*iter)->OnNoticeUrlChange();
-            }
-        }
     }
 
     // 添加url(如果已存在，替换本地refer)，并通知download_driver
@@ -673,15 +664,6 @@ namespace storage
         {
             url_info_s_.insert(url_info);
         }
-
-        for (std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin(); iter != download_driver_s_.end(); iter++)
-        {
-            if (*iter)
-            {
-                // MainThread::Post(boost::bind(&IDownloadDriver::OnNoticeUrlChange, *iter));
-                (*iter)->OnNoticeUrlChange();
-            }
-        }
     }
 
     // 从url_info_s中删除某个url，并通知download_driver
@@ -708,17 +690,6 @@ namespace storage
         {
             STORAGE_ERR_LOG("erase error!");
             return;
-        }
-
-        std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin();
-        while (iter != download_driver_s_.end())
-        {
-            if (*iter)
-            {
-                // MainThread::Post(boost::bind(&IDownloadDriver::OnNoticeUrlChange, *iter));
-                (*iter)->OnNoticeUrlChange();
-            }
-            iter++;
         }
     }
 

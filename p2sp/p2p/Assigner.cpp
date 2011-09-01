@@ -628,17 +628,17 @@ namespace p2sp
             P2P_DEBUG(__FUNCTION__ << " RequestNextPiece Num =" << piece_num_to_request);
             for (boost::int32_t i = piece_num_to_request; i > 0; --i)
             {
-                for (std::set<DownloadDriver__p>::iterator iter = p2p_downloader_->download_driver_s_.begin();
-                    iter != p2p_downloader_->download_driver_s_.end();
-                    ++iter)
+                // If there are multiple downloaders, it means the same RID is being played from two 
+                // different places. We want to pick only one downloader to download (the first one is ok.)
+                std::set<DownloadDriver__p>::iterator iter = p2p_downloader_->download_driver_s_.begin();
+                if (iter != p2p_downloader_->download_driver_s_.end())
                 {
-                    if (true == (*iter)->RequestNextPiece(p2p_downloader_))
+                    // If the downloader failed to request a piece, it means download 
+                    // of the RID is complete, all subpeices have been allocated 
+                    // or the block size is unknown. 
+                    // There is no need to download other pieces in these cases.
+                    if (!(*iter)->RequestNextPiece(p2p_downloader_))
                     {
-                        break;
-                    }
-                    else
-                    {
-                        i = 0;
                         break;
                     }
                 }
