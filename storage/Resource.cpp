@@ -434,10 +434,6 @@ namespace storage
         subpiece_manager_->GetBlockPosition(block_index, startoffset, length);
         base::AppBuffer buff = ReadBuffer(startoffset, length);
         CloseFileHandle();
-        if (instance_p_)
-        {
-            io_svc_.post(boost::bind(&Instance::SetIsUploadingBlock, instance_p_, false));
-        }
 
         if (need_hash)
         {

@@ -47,7 +47,6 @@ namespace storage
         , local_complete_(false)
         , disk_file_size_(0)
         , flag_rid_origin_(protocol::RID_BY_URL)
-        , is_uploading_block_(false)
         , is_have_rename_(false)
         , send_speed_limit_(storage_send_speed_limit)
         , send_count_(0)
@@ -382,14 +381,6 @@ namespace storage
         }
         STORAGE_DEBUG_LOG("no");
         return false;
-    }
-
-    void Instance::Merge(Instance::p inst2)
-    {
-        if (is_running_ == false)
-            return;
-        assert(inst2);
-        STORAGE_DEBUG_LOG("Instance::Merge!inst1:" << subpiece_manager_->GetRID() << " inst2:" << inst2->GetRID());
     }
 
     // 将本instance合并到new_instance中，并通知download_driver，然后删除本instance
@@ -1002,7 +993,6 @@ namespace storage
         }
 
         assert(HasRID());
-        SetIsUploadingBlock(true);
 
         // block不是满的
         if (false == subpiece_manager_->HasFullBlock(block_index))
@@ -1460,7 +1450,6 @@ namespace storage
         {
             FreeResourceHandle();
         }
-        //            RELEASE_OUTPUT("Filename: " << framework::w2b(GetResourceName()) << " IsUploading: " << is_uploading_block_);
 
         // 借用traffic_timer_来控制发送数据的速度
         send_count_ = 0;

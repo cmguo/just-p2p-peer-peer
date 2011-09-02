@@ -14,7 +14,6 @@
 *******************************************************************************/
 
 #include "storage/Resource.h"
-#include "storage/StatisticTools.h"
 #include "storage/SubPieceManager.h"
 #include "struct/BlockMap.h"
 
@@ -90,9 +89,6 @@ namespace storage
 
     protected:
         protocol::SubPieceBuffer ToBuffer();
-
-        // ms什么都没做
-        void Merge(Instance::p);
 
         // 将本instance合并到new_instance中，并通知download_driver，然后删除本instance
         void BeMergedTo(Instance::p);
@@ -281,7 +277,6 @@ namespace storage
         // instance状态：NEED_RESOURCE --> APPLY_RESOURCE
         void TryCreateResource();
 
-        void SetIsUploadingBlock(bool is_up){ is_uploading_block_ = is_up;}
         void ReleaseData();
 #ifdef DISK_MODE
         void ReadFromDisk(protocol::SubPieceInfo & start_s_info);
@@ -354,12 +349,9 @@ namespace storage
 
         bool content_need_to_add_;
         bool content_need_to_query_;
-        HitRate hit_rate_;
-        HitRate upload_hit_rate_;
 
         MetaData meta_data_;
         int flag_rid_origin_;
-        bool is_uploading_block_;
         bool is_have_rename_;
 
         uint32_t send_speed_limit_;

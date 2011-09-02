@@ -463,7 +463,6 @@ namespace storage
         }
 
         // 将instance_p2资源拷贝到instance_p1
-        instance_p1->Merge(instance_p2);  // 只是打了个log，啥都没做
         instance_p2->BeMergedTo(instance_p1);  // 完成合并，并通知DownloadDriver迁移
     }
 

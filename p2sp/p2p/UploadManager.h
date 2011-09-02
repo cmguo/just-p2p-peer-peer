@@ -20,7 +20,6 @@
 #include <boost/multi_index/identity.hpp>
 
 #include "storage/IStorage.h"
-#include "storage/StatisticTools.h"
 #include "storage/Performance.h"
 #include "p2sp/p2p/UploadSpeedLimiter.h"
 #include "p2sp/p2p/UploadSpeedLimitTracker.h"
