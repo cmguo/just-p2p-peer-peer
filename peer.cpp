@@ -30,6 +30,7 @@
 
 
 #include <framework/memory/MemoryPoolObject.h>
+#include <framework/timer/AsioTimerManager.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
@@ -91,6 +92,9 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
     framework::logger::glog.load_config(conf);
 #endif
 
+    ((framework::timer::AsioTimerManager &)global_second_timer()).start();
+    ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
+
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
 #endif
@@ -127,14 +131,8 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     framework::logger::glog.load_config(conf);
 #endif
 
-    // 只有盒子平台才需要那么调用，这里需要保证盒子版本在WINDOWS上也可以运行
-    // 所以需要加上这个宏来控制
-    // 如果是盒子编译最新版本，需要把下面宏去掉
-    // 加宏的原因是因为自动编译系统使用的还不是framework最新版本
-#ifndef HUDSON_AUTO_BUILD
     ((framework::timer::AsioTimerManager &)global_second_timer()).start();
     ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
-#endif
 
     LOGX(__DEBUG, "app", "StartKernel");
 #ifdef NEED_TO_POST_MESSAGE
