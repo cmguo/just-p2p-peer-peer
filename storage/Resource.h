@@ -139,7 +139,7 @@ namespace storage
         unsigned char GetDownMode();
 
         // 改名并通知instance、删除某个block并通知instance、保存资源信息
-        virtual void ThreadRemoveBlock(uint32_t index);
+        virtual void ThreadRemoveBlock(uint32_t index, bool hash_check_failed);
 
         virtual void Rename(const string& newname) = 0;
         virtual void CloseResource(bool need_remove_file) = 0;
@@ -166,6 +166,9 @@ namespace storage
             }
         }
         static void ReleaseSubPieceBuffer(protocol::SubPieceBuffer * buf) {delete buf;}
+
+        bool ThreadReadBufferForPlayAfterHash(protocol::SubPieceInfo const & subpiece_info, std::vector<protocol::SubPieceContent*> const & buffs);
+        MD5 CalcHash(base::AppBuffer const & buff) const;
 
     protected:
         boost::asio::io_service & io_svc_;

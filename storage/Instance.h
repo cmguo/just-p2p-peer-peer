@@ -261,7 +261,7 @@ namespace storage
     protected:
         // 从资源描述, subpiece_manager_中删除block
         // 通知upload_listener获取subpiece失败，通知download_driver，makeblock失败
-        void OnRemoveResourceBlockFinish(uint32_t block_index);
+        void OnRemoveResourceBlockFinish(uint32_t block_index, bool hash_check_failed);
 
     private:
         // 从Url中获取文件名，如果获取失败，则生成一串随机数表示文件名, 生成的文件名写入resource_name_中
