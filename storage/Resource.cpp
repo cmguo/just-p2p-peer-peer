@@ -11,6 +11,7 @@
 #include "storage/Storage.h"
 #include "storage/SpaceManager.h"
 #include "storage/StorageThread.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -270,9 +271,7 @@ namespace storage
             return;
         }
 
-        // need config
-        bool need_check_hash_for_play = true;
-        if (!need_check_hash_for_play)
+        if (!p2sp::BootStrapGeneralConfig::Inst()->NeedCheckHashBeforePlay())
         {
             protocol::SubPieceInfo tmp_subpiece_info = subpiece_info;
             bool tmp_is_max = false;

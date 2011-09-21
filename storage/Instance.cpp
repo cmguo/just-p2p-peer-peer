@@ -26,6 +26,7 @@
 #include "downloadcenter/DownloadCenterModule.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "network/Uri.h"
 #include "random.h"
 
@@ -1774,8 +1775,14 @@ namespace storage
         {
             std::vector<protocol::SubPieceContent*> buffs;
             protocol::SubPieceInfo iter_sub_piece(start_s_info);
-            // TODO(herain):need config
-            uint32_t max_read_subpiece_num = default_subpiece_num_per_block_g_;
+            uint32_t max_read_subpiece_num = 256;
+            if (p2sp::BootStrapGeneralConfig::Inst()->NeedCheckHashBeforePlay())
+            {
+                // herain:如果需要在发送给播放器之前进行校验，一次读取的长度为一个Block的长度，
+                // 方便读取完之后进行校验。
+                max_read_subpiece_num = default_subpiece_num_per_block_g_;
+            }
+
             for (int i = 0; i < max_read_subpiece_num; ++i)
             {
                 protocol::SubPieceContent* content = new protocol::SubPieceContent();
