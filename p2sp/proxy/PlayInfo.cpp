@@ -246,19 +246,13 @@ namespace p2sp
         string source_str = uri.getparameter("source");
         if (source_str.length() > 0)
         {
-            // uint32_t type = boost::lexical_cast<uint32_t>(source_str);
             uint32_t type;
             boost::system::error_code ec = framework::string::parse2(source_str, type);
             if (!ec)
             {
-                if (type == PlayInfo::SOURCE_PPLIVE || type == PlayInfo::SOURCE_IKAN || type == PlayInfo::SOURCE_PPVOD || type == PlayInfo::SOURCE_DOWNLOAD_MOVIE)
-                {
-                    source_type = static_cast<PlayInfo::SourceType>(type);
-                    return true;
-                }
+                source_type = static_cast<PlayInfo::SourceType>(type);
+                return true;
             }
-            else
-                return false;
         }
         return false;
     }
@@ -531,7 +525,11 @@ namespace p2sp
             }
 
             play_info->play_type_ = PlayInfo::DOWNLOAD_BY_URL;
-            play_info->source_type_ = PlayInfo::SOURCE_PPVADOWNLOADBYURL;
+
+            if (false == ParseSourceType(uri, play_info->source_type_)) 
+            {
+                play_info->source_type_ = PlayInfo::SOURCE_PPVADOWNLOADBYURL;
+            }
         }
         // 直播的请求
         else if (boost::algorithm::istarts_with(uri.getpath(), LIVE_REQUEST_FLAG))
