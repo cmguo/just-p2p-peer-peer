@@ -128,7 +128,7 @@ namespace p2sp
         }
         catch (boost::program_options::error & e)
         {
-            DebugLog("Exception caught: ", e.what());
+            DebugLog("Exception caught: %s", e.what());
             assert(false);
         }
     }

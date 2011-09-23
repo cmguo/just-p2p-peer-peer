@@ -1825,7 +1825,6 @@ namespace p2sp
         downloaders_.clear();
         piece_request_manager_->ClearTasks();
 
-        proxy_connection_->ResetPlayingPostion();
 
         // 将这个Downloader设置为 原始的Downloader
         HttpDownloader::p downloader = AddHttpDownloader(origanel_url_info_, true);
