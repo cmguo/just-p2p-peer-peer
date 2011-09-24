@@ -103,7 +103,8 @@ namespace p2sp
         , is_http_304_header_(false)
         , is_play_by_rid_(false)
         , switch_control_mode_(SwitchController::CONTROL_MODE_NULL)
-        , is_drag_local_play(false)
+        , is_drag_local_play_for_switch_(false)
+        , is_drag_local_play_for_client_(false)
         , drag_machine_state_(SwitchController::MS_WAIT)
         , is_pool_mode_(false)
         , need_bubble_(true)
@@ -504,30 +505,9 @@ namespace p2sp
 
         if (is_open_service_ && is_drag_)
         {
-            is_drag_local_play = true;
-            // 按照10秒的码流率来进行判断
-            boost::uint32_t has_piece_num = GetDataRate() * 30 / storage::bytes_num_per_piece_g_;
-            boost::uint32_t start_position;
-            if (IsPPLiveClient())
-            {
-                start_position = proxy_connection_->GetPlayingPosition();
-            }
-            else
-            {
-                start_position = openservice_start_position_;
-            }
+            is_drag_local_play_for_switch_ = IsLocalDataEnough(30);
+            is_drag_local_play_for_client_ = IsLocalDataEnough(5);
 
-            for (boost::uint32_t i = 0; i < has_piece_num; ++i)
-            {
-                // HasPiece内部已经考虑了超过文件尾部的问题，这里简单处理即可
-                if (!instance_->HasPiece(start_position + i*storage::bytes_num_per_piece_g_))
-                {
-                    is_drag_local_play = false;
-                    break;
-                }
-            }
-
-            DebugLog("IsDragLocalPlay: %d", is_drag_local_play);
         }
         // assert(downloaders_.size() == 0);
 
@@ -2229,10 +2209,9 @@ namespace p2sp
         return false;
     }
 
-    bool DownloadDriver::IsDragLocalPlay()
+    bool DownloadDriver::IsDragLocalPlayForSwitch()
     {
-        LOG(__DEBUG, "switch", "IsDragLocalPlay = " << is_drag_local_play);
-        return is_drag_local_play;
+        return is_drag_local_play_for_switch_;
     }
 
     void DownloadDriver::SetSwitchState(boost::int32_t h, boost::int32_t p, boost::int32_t tu, boost::int32_t t)
@@ -2654,7 +2633,7 @@ namespace p2sp
         }
         if (is_drag_)
         {
-            if (is_drag_local_play)
+            if (is_drag_local_play_for_switch_)
             {
                 state = (boost::int32_t)SwitchController::MS_YES;
                 LOG(__DEBUG, "downloaddriver", "GetDragMachineState is_drag_local_play: MS_YES");
@@ -2849,5 +2828,36 @@ namespace p2sp
             string bak_url = "http://" + bak_hosts_[i] + uri_path + "?" + uri_parameter;
             AddHttpDownloader(HttpRequest::p(), protocol::UrlInfo(bak_url, ""), true);
         }
+    }
+
+    bool DownloadDriver::IsLocalDataEnough(const boost::uint32_t second)
+    {
+        // 按照 second 秒的码流率来进行判断
+        boost::uint32_t has_piece_num = GetDataRate() * second / storage::bytes_num_per_piece_g_;
+        boost::uint32_t start_position;
+        if (IsPPLiveClient())
+        {
+            start_position = proxy_connection_->GetPlayingPosition();
+        }
+        else
+        {
+            start_position = openservice_start_position_;
+        }
+
+        for (boost::uint32_t i = 0; i < has_piece_num; ++i)
+        {
+            // HasPiece内部已经考虑了超过文件尾部的问题，这里简单处理即可
+            if (!instance_->HasPiece(start_position + i*storage::bytes_num_per_piece_g_))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool DownloadDriver::IsDragLocalPlayForClient()
+    {
+        return is_drag_local_play_for_client_;
     }
 }

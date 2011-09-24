@@ -502,7 +502,7 @@ namespace p2sp
 
                 SWITCH_DEBUG((string)state_ << "3300" << times);
 
-                if (GetGlobalDataProvider()->IsDragLocalPlay())
+                if (GetGlobalDataProvider()->IsDragLocalPlayForSwitch())
                 {
                     SWITCH_DEBUG("IsDragLocalPlay!");
                     if (PrefersSavingServerBandwidth())

@@ -201,6 +201,8 @@ namespace p2sp
         void SetRidInfo(const protocol::RidInfo & ridinfo);
         void ReportDragFetchResult(uint32_t drag_fetch_result){ drag_fetch_result_ = drag_fetch_result;}
 
+        bool IsDragLocalPlayForClient();
+
     public:
         //////////////////////////////////////////////////////////////////////////
         // IGlobalControlTarget
@@ -221,7 +223,7 @@ namespace p2sp
         virtual boost::int32_t GetDownloadMode();
         virtual void SetDragMachineState(boost::int32_t state);
         virtual bool IsPPLiveClient();
-        virtual bool IsDragLocalPlay();
+        virtual bool IsDragLocalPlayForSwitch();
         virtual void SetAcclerateStatus(boost::int32_t status);
         virtual JumpBWType GetBWType() {return bwtype_;}
         virtual void NoticeLeave2300();
@@ -259,6 +261,8 @@ namespace p2sp
 
         void DetectBufferring();
         void StartBufferringMonitor();
+
+        bool IsLocalDataEnough(const boost::uint32_t second);
 
     protected:
         // IDownloadDriver 接口消息
@@ -307,7 +311,8 @@ namespace p2sp
         bool is_pausing_;
         bool is_open_service_;
         bool is_drag_;
-        bool is_drag_local_play;
+        bool is_drag_local_play_for_switch_;
+        bool is_drag_local_play_for_client_;
         boost::int32_t drag_machine_state_;
 
         bool is_http_403_header_;

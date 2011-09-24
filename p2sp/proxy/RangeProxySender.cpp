@@ -245,7 +245,7 @@ namespace p2sp
             http_response->SetProperty("Content-Range", oss_range.str());
             
             assert(proxy_connection_->GetDownloadDriver());
-            http_response->SetProperty("LocalPlay", proxy_connection_->GetDownloadDriver()->IsDragLocalPlay() ? "yes" : "no");
+            http_response->SetProperty("LocalPlay", proxy_connection_->GetDownloadDriver()->IsDragLocalPlayForClient() ? "yes" : "no");
             
             // send
             RANGE_DEBUG("Send response string: \n" << http_response->ToString());

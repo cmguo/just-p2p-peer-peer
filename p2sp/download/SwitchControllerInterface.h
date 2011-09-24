@@ -183,7 +183,7 @@ namespace p2sp
 
         virtual bool IsPPLiveClient() = 0;
 
-        virtual bool IsDragLocalPlay() = 0;
+        virtual bool IsDragLocalPlayForSwitch() = 0;
 
         virtual boost::int32_t GetDownloadMode() = 0;
 

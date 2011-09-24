@@ -239,7 +239,7 @@ namespace p2sp
         virtual void SetSwitchState(boost::int32_t h, boost::int32_t p, boost::int32_t tu, boost::int32_t t);
         virtual boost::uint32_t GetRestPlayableTime();
         virtual void SetDragMachineState(boost::int32_t state) {};
-        virtual bool IsDragLocalPlay() {return true;}
+        virtual bool IsDragLocalPlayForSwitch() {return true;}
         virtual boost::int32_t GetDownloadMode() {return true;}
         virtual void SetAcclerateStatus(boost::int32_t status) {};
         virtual JumpBWType GetBWType() {return bwtype_;}
