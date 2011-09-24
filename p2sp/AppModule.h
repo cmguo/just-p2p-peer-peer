@@ -254,6 +254,10 @@ class AppModule: public boost::noncopyable,
     public:
     static AppModule::p Inst()
     {
+        if (!inst_)
+        {
+            inst_.reset(new AppModule());
+        }
         return inst_;
     }
 };

@@ -27,19 +27,29 @@ namespace storage
         boost::thread* thread_;
 
     public:
-        StorageThread();
         void Start();
         void Stop();
 
     private:
         static StorageThread::p main_thread_;
     public:
-        static StorageThread& Inst() { return *main_thread_; };
+        static StorageThread& Inst()
+        {
+            if (!main_thread_)
+            {
+                main_thread_.reset(new StorageThread());
+            }
+
+            return *main_thread_; 
+        }
+
         static boost::asio::io_service& IOS() { return *main_thread_->ios_; };
         static void Post(boost::function<void()> handler);
         static void Dispatch(boost::function<void()> handler);
     protected:
         static void Run();
+    private:
+        StorageThread();
     };
 #endif  // DISK_MODE
 

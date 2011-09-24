@@ -69,7 +69,7 @@ namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("app");
 
-    AppModule::p AppModule::inst_(new AppModule());
+    AppModule::p AppModule::inst_;
 
     AppModule::AppModule()
         : is_running_(false)

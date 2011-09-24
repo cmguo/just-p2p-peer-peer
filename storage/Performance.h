@@ -27,7 +27,14 @@ namespace storage
     {
     public:
         typedef boost::shared_ptr<Performance> p;
-        static Performance::p Inst() { return inst_; }
+        static Performance::p Inst() 
+        {
+            if (!inst_)
+            {
+                inst_.reset(new Performance());
+            }
+            return inst_; 
+        }
 
         // 初始化参数, 打开进程, 开启定时器
         void Start();

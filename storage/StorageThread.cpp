@@ -12,7 +12,7 @@
 namespace storage
 {
 #ifdef DISK_MODE
-    StorageThread::p StorageThread::main_thread_(new StorageThread());
+    StorageThread::p StorageThread::main_thread_;
 
     StorageThread::StorageThread()
         : work_(NULL)

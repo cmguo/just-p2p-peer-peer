@@ -40,6 +40,7 @@ void MainThread::Stop()
 DWORD WINAPI MainThreadRunner(LPVOID)
 {
     MainThread::SetThreadId(::GetCurrentThreadId());
+    global_io_svc().reset();
     global_io_svc().run();
     return 0;
 }
@@ -71,6 +72,7 @@ BoostMainThread::BoostMainThread()
 
 void BoostMainThread::StartThread()
 {
+    global_io_svc().reset();
     ios_thread = new boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(global_io_svc())));
     // TODO(herain):2011-4-8:boost::thread没有直接获取thread id的接口，需要获取natvie handle后用natvie API获得
     // SetThreadId();
