@@ -143,7 +143,7 @@ namespace p2sp
     }
 
     // URL
-    void DownloadDriver::Start(const network::HttpRequest::p http_request_demo, const protocol::UrlInfo& origanel_url_info,
+    void DownloadDriver::Start(const network::HttpRequest::p http_request_demo, const protocol::UrlInfo& original_url_info,
         bool is_support_start, boost::int32_t control_mode)
     {
         if (is_running_ == true)
@@ -155,9 +155,9 @@ namespace p2sp
         is_running_ = true;
 
         // check push module
-        // if (!IsPush() && origanel_url_info.url_ == PushModule::Inst()->GetCurrentTaskUrl())
+        // if (!IsPush() && original_url_info_.url_ == PushModule::Inst()->GetCurrentTaskUrl())
         // {
-        //    LOG(__DEBUG, "push", "Url Same as push task: " << origanel_url_info.url_);
+        //    LOG(__DEBUG, "push", "Url Same as push task: " << original_url_info_.url_);
         //    PushModule::Inst()->StopCurrentTask();
         // }
 
@@ -170,26 +170,26 @@ namespace p2sp
         is_http_403_header_ = false;
         is_http_304_header_ = false;
 
-        origanel_url_info_ = origanel_url_info;
+        original_url_info_ = original_url_info;
         is_support_start_ = is_support_start;
         is_pragmainfo_noticed_ = false;
 
         // check 'www.pp.tv' refer
-        if (origanel_url_info_.refer_url_.find("www.pp.tv") != string::npos)
-            origanel_url_info_.refer_url_ = "";
+        if (original_url_info_.refer_url_.find("www.pp.tv") != string::npos)
+            original_url_info_.refer_url_ = "";
 
         DD_EVENT("Downloader Driver Start" << shared_from_this());
 
         // 关联 Statistic 模块
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
         assert(statistic_);
-        statistic_->SetOriginalUrl(origanel_url_info.url_);
-        statistic_->SetOriginalReferUrl(origanel_url_info.refer_url_);
+        statistic_->SetOriginalUrl(original_url_info_.url_);
+        statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
         statistic_->SetHidden(!need_bubble_);
 
 
         // 包含.exe则不发送消息
-        if (false == IsFileUrl(origanel_url_info.url_))
+        if (false == IsFileUrl(original_url_info_.url_))
         {
             if (true == need_bubble_)
             {
@@ -199,9 +199,9 @@ namespace p2sp
                 memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
                 lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
 
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, origanel_url_info.url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, origanel_url_info.refer_url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
 
                 LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
@@ -223,7 +223,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info));
+        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
 
@@ -247,7 +247,7 @@ namespace p2sp
         instance_->AttachDownloadDriver(shared_from_this());
 
         // 如果该 instance 没有 RID, 那么 要让 IndexManager 发出 QueryRidByUrl 请求
-        IndexManager::Inst()->DoQueryRidByUrl(origanel_url_info.url_, origanel_url_info.refer_url_);
+        IndexManager::Inst()->DoQueryRidByUrl(original_url_info_.url_, original_url_info_.refer_url_);
 
         // if (instance_->GetRID().IsEmpty())
         // {
@@ -263,7 +263,7 @@ namespace p2sp
             // check
         }
 
-        if (IsFileExtension(origanel_url_info_.url_, ".mp3") || IsFileExtension(origanel_url_info_.url_, ".wma"))
+        if (IsFileExtension(original_url_info_.url_, ".mp3") || IsFileExtension(original_url_info_.url_, ".wma"))
         {
             if (false == instance_->GetRID().is_empty() || true == instance_->IsComplete())
             {
@@ -291,8 +291,8 @@ namespace p2sp
         // 创建一个AddHttpDownloader(url_info)
 
         // 将这个Downloader设置为 原始的Downloader
-        HttpDownloader::p downloader = AddHttpDownloader(http_request_demo, origanel_url_info_, true);
-        // AddHttpDownloader(http_request_demo, origanel_url_info_, false);
+        HttpDownloader::p downloader = AddHttpDownloader(http_request_demo, original_url_info_, true);
+        // AddHttpDownloader(http_request_demo, original_url_info_, false);
 
         // control mode
         if (SwitchController::IsValidControlMode(control_mode))
@@ -348,14 +348,14 @@ namespace p2sp
         is_http_403_header_ = false;
         is_http_304_header_ = false;
 
-        origanel_url_info_ = url_info;
+        original_url_info_ = url_info;
         is_support_start_ = is_support_start;
         is_open_service_ = open_service;
         is_pragmainfo_noticed_ = false;
 
         // check 'www.pp.tv' refer
-        if (false == open_service && origanel_url_info_.refer_url_.find("www.pp.tv") != string::npos)
-            origanel_url_info_.refer_url_ = "";
+        if (false == open_service && original_url_info_.refer_url_.find("www.pp.tv") != string::npos)
+            original_url_info_.refer_url_ = "";
 
         DD_EVENT("Downloader Driver Start" << shared_from_this());
 
@@ -363,13 +363,13 @@ namespace p2sp
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
 
         assert(statistic_);
-        statistic_->SetOriginalUrl(origanel_url_info_.url_);
-        statistic_->SetOriginalReferUrl(origanel_url_info_.refer_url_);
+        statistic_->SetOriginalUrl(original_url_info_.url_);
+        statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
         statistic_->SetHidden(!need_bubble_);
 
 
         // 包含.exe则不发送消息
-        if (false == IsFileUrl(origanel_url_info_.url_))
+        if (false == IsFileUrl(original_url_info_.url_))
         {
             if (true == need_bubble_)
             {
@@ -379,9 +379,9 @@ namespace p2sp
                 memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
                 lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
 
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, origanel_url_info_.url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, origanel_url_info_.refer_url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
 
                 LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
@@ -424,7 +424,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info_, rid_info_));
+        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, rid_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
         instance_->SetIsPush(is_push_);
@@ -458,14 +458,14 @@ namespace p2sp
             else
             {
                 // 如果该 instance 没有 RID, 那么 要让 IndexManager 发出 QueryRidByUrl 请求
-                IndexManager::Inst()->DoQueryRidByUrl(origanel_url_info_.url_, origanel_url_info_.refer_url_);
+                IndexManager::Inst()->DoQueryRidByUrl(original_url_info_.url_, original_url_info_.refer_url_);
             }
         }
         else
         {
             LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " AttachRidByUrl inst = " << instance_
-                << ", url = " << origanel_url_info_.url_ << ", rid = " << rid_info_);
-            Storage::Inst()->AttachRidByUrl(origanel_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
+                << ", url = " << original_url_info_.url_ << ", rid = " << rid_info_);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
             if (instance_->GetRID().is_empty())
             {
                 // RID 错误, 使用普通模式
@@ -481,7 +481,7 @@ namespace p2sp
             init_local_data_bytes_ = instance_->GetDownloadBytes();
             if (openservice_head_length_ > 0)
             {
-                string server_mod = GenerateOpenServiceMod(origanel_url_info_.url_);
+                string server_mod = GenerateOpenServiceMod(original_url_info_.url_);
                 if (server_mod.length() > 0)
                 {
                     OnNoticePragmaInfo(server_mod, openservice_head_length_);
@@ -494,7 +494,7 @@ namespace p2sp
             LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete");
             proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
         }
-        else if (IsFileExtension(origanel_url_info_.url_, ".mp3") || IsFileExtension(origanel_url_info_.url_, ".wma"))
+        else if (IsFileExtension(original_url_info_.url_, ".mp3") || IsFileExtension(original_url_info_.url_, ".wma"))
         {
             if (false == instance_->GetRID().is_empty())
             {
@@ -541,8 +541,8 @@ namespace p2sp
             if (force_mode != FORCE_MODE_P2P_ONLY && force_mode != FORCE_MODE_P2P_TEST)
             {
                 LOGX(__DEBUG, "proxy", "Create HttpDownloader!");
-                downloader = AddHttpDownloader(network::HttpRequest::p(), origanel_url_info_, true);
-                AddBakHttpDownloaders(origanel_url_info_);
+                downloader = AddHttpDownloader(network::HttpRequest::p(), original_url_info_, true);
+                AddBakHttpDownloaders(original_url_info_);
             }
             else
             {
@@ -599,8 +599,8 @@ namespace p2sp
         is_http_403_header_ = false;
         is_http_304_header_ = false;
 
-        origanel_url_info_.url_ = rid_for_play.GetRID().to_string();
-        origanel_url_info_.refer_url_ = "PPVAPlayByRid";
+        original_url_info_.url_ = rid_for_play.GetRID().to_string();
+        original_url_info_.refer_url_ = "PPVAPlayByRid";
         is_support_start_ = false;
         is_pragmainfo_noticed_ = false;
 
@@ -609,12 +609,12 @@ namespace p2sp
         // 关联 Statistic 模块
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
         assert(statistic_);
-        statistic_->SetOriginalUrl(origanel_url_info_.url_);
-        statistic_->SetOriginalReferUrl(origanel_url_info_.refer_url_);
+        statistic_->SetOriginalUrl(original_url_info_.url_);
+        statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
         statistic_->SetHidden(!need_bubble_);
         statistic_->SetSourceType(source_type_);
 
-        if (false == IsFileUrl(origanel_url_info_.url_))
+        if (false == IsFileUrl(original_url_info_.url_))
         {
             if (true == need_bubble_)
             {
@@ -624,9 +624,9 @@ namespace p2sp
                 memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
                 lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
 
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, origanel_url_info_.url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, origanel_url_info_.refer_url_.c_str(),
+                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
                     sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
 
                 LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
@@ -649,7 +649,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info_));
+        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
 
@@ -757,7 +757,7 @@ namespace p2sp
         Rid_From rid_from = (Rid_From) (instance_->GetRidOriginFlag());
         if (rid_from != protocol::RID_BY_PLAY_URL)  // 通过播放串获得的RID不通知
         {
-            protocol::UrlInfo orig = origanel_url_info_;
+            protocol::UrlInfo orig = original_url_info_;
             string urlExt = AppModule::MakeUrlByRidInfo(ridInfo);
             uint32_t nSize = sizeof(RESOURCEID_DATA) + urlExt.length() + 1;
             const MetaData& meta = instance_->GetMetaData();
@@ -797,9 +797,9 @@ namespace p2sp
         memset(lpDownloadDriverStopData, 0, sizeof(DOWNLOADDRIVERSTOPDATA));
         lpDownloadDriverStopData->uSize = sizeof(DOWNLOADDRIVERSTOPDATA);
 
-        strncpy(lpDownloadDriverStopData->szOriginalUrl, origanel_url_info_.url_.c_str(),
+        strncpy(lpDownloadDriverStopData->szOriginalUrl, original_url_info_.url_.c_str(),
             sizeof(lpDownloadDriverStopData->szOriginalUrl)-1);
-        strncpy(lpDownloadDriverStopData->szOriginalReferUrl, origanel_url_info_.refer_url_.c_str(),
+        strncpy(lpDownloadDriverStopData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
             sizeof(lpDownloadDriverStopData->szOriginalReferUrl)-1);
 
         lpDownloadDriverStopData->bHasRID = !statistic_->GetResourceID().is_empty();
@@ -827,7 +827,7 @@ namespace p2sp
 
             lpDownloadDriverStopData->ulDownloadBytes = speed_info.TotalDownloadBytes
                 + lpDownloadDriverStopData->ulP2pDownloadBytes;
-            std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.find(origanel_url_info_.url_);
+            std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.find(original_url_info_.url_);
             if (iter != url_indexer_.end())
             {
                 HttpDownloader::p org_http_downloader_ = iter->second;  // boost::shared_dynamic_cast<HttpDownloader>(iter->second);
@@ -870,7 +870,7 @@ namespace p2sp
 
         assert(instance_);
         // 包含.exe则不发送消息
-        if (false == IsFileUrl(origanel_url_info_.url_))
+        if (false == IsFileUrl(original_url_info_.url_))
         {
     #ifdef NEED_TO_POST_MESSAGE
             // 先往客户端界面发送 UM_DOWNLOADDRIVER_STOP 消息
@@ -968,23 +968,16 @@ namespace p2sp
         // C1：是否获得RID
         // D1:有效下载字节数（不包括已经下载，不包括冗余）   J + K
 
-        // TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
-        // 在sop全部升级后发布的新内核可以删除这些代码
-#ifndef CLIENT_NEW_DAC_LOG
-        LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT dac_data =
-            MessageBufferManager::Inst()->NewStruct<DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT> ();
-        memset(dac_data, 0, sizeof(DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT));
-        dac_data->uSize = sizeof(DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT);
-        dac_data->gPeerID = AppModule::Inst()->GetUniqueGuid();  // huage id
+        DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
 
-        // C: 资源ID
-        dac_data->gResourceID = statistic_->GetResourceID();
+        // C: ResourceID
+        info.gResourceID = statistic_->GetResourceID();
 
-        // D: Peer版本(PeerVersion)
-        dac_data->aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
-        dac_data->aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
-        dac_data->aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
-        dac_data->aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
+        // D: 内核版本：major, minor, micro, extra
+        info.aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
+        info.aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
+        info.aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
+        info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
 
         // E: 视频名称(VideoName)
 #ifdef PEER_PC_CLIENT
@@ -997,10 +990,11 @@ namespace p2sp
         {
             w_file_name = base::s2ws(statistic_->GetFileName());
         }
-        wcscpy((wchar_t*)dac_data->szVideoName, w_file_name.c_str());
+        wcscpy((wchar_t*)info.szVideoName, w_file_name.c_str());
 #endif
+
         // F: OriginalUrl(原始URL)
-        string originalUrl(origanel_url_info_.url_);
+        string originalUrl(original_url_info_.url_);
         u_int pos = originalUrl.find_first_of('/');
         pos = originalUrl.find_first_of('/', pos + 1);
         pos = originalUrl.find_first_of('/', pos + 1);
@@ -1008,266 +1002,167 @@ namespace p2sp
         if (is_open_service_)
         {
             // 开放服务
-            strncpy(dac_data->szOriginalUrl, string(originalUrl, 0, pos).c_str(), sizeof(dac_data->szOriginalUrl)-1);
+            strncpy(info.szOriginalUrl, string(originalUrl, 0, pos).c_str(), sizeof(info.szOriginalUrl)-1);
         }
         else
         {
             // 加速
-            strncpy(dac_data->szOriginalUrl, originalUrl.c_str(), sizeof(dac_data->szOriginalUrl));
+            strncpy(info.szOriginalUrl, originalUrl.c_str(), sizeof(info.szOriginalUrl));
         }
 
         // G: OriginalReferUrl
-        strncpy(dac_data->szOriginalReferUrl, origanel_url_info_.refer_url_.c_str(), sizeof(dac_data->szOriginalReferUrl));
+        strncpy(info.szOriginalReferUrl, original_url_info_.refer_url_.c_str(), sizeof(info.szOriginalReferUrl));
 
-        if (p2p_downloader_ && p2p_downloader_->GetStatistic()) {
-            SPEED_INFO speed = p2p_downloader_->GetStatistic()->GetSpeedInfo();
-            dac_data->uAvgP2PDownloadSpeed = speed.AvgDownloadSpeed;
-        }
+        // H: 磁盘已有字节数
+        info.uDiskBytes = init_local_data_bytes_;
 
-        // I: 视频大小(VideoBytes)
-        dac_data->uVideoBytes = statistic_->GetFileLength();
-        // H: 磁盘已有字节数(DiskBytes)
-        dac_data->uDiskBytes = init_local_data_bytes_;
+        // I: 影片大小
+        info.uVideoBytes = statistic_->GetFileLength();
 
         // J: P2P下载字节数
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
-            dac_data->uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
+            info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
         }
+
         // K: HTTP总下载字节数
-        dac_data->uHttpDownloadBytes = statistic_->GetTotalHttpDataBytes();
+        info.uHttpDownloadBytes = statistic_->GetTotalHttpDataBytes();
 
         // L: 平均下载速度(AvgDownloadSpeed)
-        dac_data->uAvgDownloadSpeed = (dac_data->uP2PDownloadBytes + dac_data->uHttpDownloadBytes) * 1000.0 / download_time_counter_.elapsed();
+        info.uAvgDownloadSpeed = (download_time_counter_.elapsed() == 0) ? 0 : 
+            (info.uP2PDownloadBytes + info.uHttpDownloadBytes) * 1000.0 / download_time_counter_.elapsed();
 
-        // M: IsSaveMode
-        dac_data->bIsSaveMode = proxy_connection_->IsSaveMode();
+        // M: 是否是下载模式完成的此次下载
+        info.bIsSaveMode = proxy_connection_->IsSaveMode();
 
-        dac_data->uStartPosition = (boost::uint32_t)(p2sp::ProxyModule::Inst()->GetHistoryMaxDwonloadSpeed() / 1024.0);  // 鍘嗗彶鏈€澶т笅杞介€熷害
-        
-        dac_data->uMaxHttpDownloadSpeed = statistic_->GetHttpDownloadMaxSpeed();                 // 鏈€澶TTP涓嬭浇閫熷害
+        // N: 历史最大下载速度
+        info.MaxHistoryDownloadSpeed = (boost::uint32_t)(p2sp::ProxyModule::Inst()->GetHistoryMaxDwonloadSpeed() / 1024.0);
+
+        // O: P2P平均下载速度
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.uAvgP2PDownloadSpeed = p2p_downloader_->GetStatistic()->GetSpeedInfo().AvgDownloadSpeed;
+        }
+
+        // P: 最大HTTP下载速度
+        info.uMaxHttpDownloadSpeed = statistic_->GetHttpDownloadMaxSpeed();
 
         // Q: 连接上的节点数
-        dac_data->uConnectedPeerCount = statistic_->GetConnectedPeerCount();
-        // R: 资源全满的节点数
-        //dac_data->uFullPeerCount = statistic_->GetFullPeerCount();
-        // TODO(herain):2011-3-2:临时用uFullPeerCount表示拖动后http启动的状态
-        dac_data->uFullPeerCount = drag_http_status_;
+        info.uConnectedPeerCount = statistic_->GetConnectedPeerCount();
 
-        // S: 活跃节点数
-        //dac_data->uMaxActivePeerCount = statistic_->GetMaxActivePeerCount();        
-        dac_data->uBakHostStatus = (boost::uint32_t)bak_host_status_;
+        // R: 资源全满节点数
+        info.uFullPeerCount = statistic_->GetFullPeerCount();
+
+        // S: 备用CDN状态
+        info.uBakHostStatus = (boost::uint32_t)bak_host_status_;
 
         // T: 查询到的节点数
-        dac_data->uQueriedPeerCount = statistic_->GetQueriedPeerCount();
-        // U: 观看来源(SourceType)
-        dac_data->uSourceType = source_type_;
-        // V: 码流率(DataRate)
-        dac_data->uDataRate = GetDataRate();
-        // W: P2P开启切换之前的平均速度（新增）
+        info.uQueriedPeerCount = statistic_->GetQueriedPeerCount();
 
+        // U: SourceType
+        info.uSourceType = source_type_;
+
+        // V: 码流率
+        info.uDataRate = GetDataRate();
+
+        // W: P2P开启切换之前的平均速度（新增）
         // TODO(herain):2011-3-1:用uAccelerateHttpSpeed暂时表示2300状态的http平均速度
-        if (dac_data->uSourceType == 0 || dac_data->uSourceType == 1)
+
+        if (info.uSourceType == 0 || info.uSourceType == 1)
         {
             if (avg_http_download_speed_in2300_ == -1)
             {
-                dac_data->uAccelerateHttpSpeed = dac_data->uAvgDownloadSpeed;
+                info.uAccelerateHttpSpeed = info.uAvgDownloadSpeed;
             }
             else
             {
-                dac_data->uAccelerateHttpSpeed = avg_http_download_speed_in2300_;
+                info.uAccelerateHttpSpeed = avg_http_download_speed_in2300_;
             }
         }
         else
         {
             if (accelerate_http_speed == 0)
             {
-                dac_data->uAccelerateHttpSpeed = dac_data->uAvgDownloadSpeed;
+                info.uAccelerateHttpSpeed = info.uAvgDownloadSpeed;
             }
             else
             {
-                dac_data->uAccelerateHttpSpeed = accelerate_http_speed;
+                info.uAccelerateHttpSpeed = accelerate_http_speed;
             }
         }
 
         // X: 加速状态
-
         // TODO(herain):2011-2-25:临时把uAccelerateStatus替换为不限速时的平均下载速度，在启用新DAC日志系统后
         // 考虑恢复http最大下载速度的统计
 
-        if (dac_data->uSourceType == 0 || dac_data->uSourceType == 1)
+        if (info.uSourceType == 0 || info.uSourceType == 1)
         {
             if (avg_download_speed_before_limit_ == -1)
             {
-                dac_data->uAccelerateStatus = dac_data->uAvgDownloadSpeed;
+                info.uAccelerateStatus = info.uAvgDownloadSpeed;
             }
             else
             {
-                dac_data->uAccelerateStatus = (uint32_t)avg_download_speed_before_limit_;
+                info.uAccelerateStatus = (uint32_t)avg_download_speed_before_limit_;
             }
         }
         else
         {
-            dac_data->uAccelerateStatus = accelerate_status_;
+            info.uAccelerateStatus = accelerate_status_;
         }
 
-        // Y: 下载时间
-        dac_data->download_time = download_time_counter_.elapsed();
-        // Z: 最后一刻的速度
-        // TODO(herain):2011-4-20:使用last_speed来汇报drag获取的结果
-        if (dac_data->uSourceType == 0 || dac_data->uSourceType == 1)
-        {
-            if (http_drag_downloader_)
-            {
-                dac_data->last_speed = drag_fetch_result_;
-            }
-            else
-            {
-                dac_data->last_speed = -1;
-            }
-        }
-        else
-        {
-            dac_data->last_speed = statistic_->GetSpeedInfo().NowDownloadSpeed;
-        }        
-
-        // 是否获得RID
-        if (GetP2PControlTarget())
-        {
-            dac_data->is_got_rid = 1;
-        }
-        else
-        {
-            dac_data->is_got_rid = 0;
-        }
-
-        // log
-        LOGX(__DEBUG, "msg", "+-----------------DOWNLOADDRIVER_STOP_DAC_DATA-----------------+");
-        LOGX(__DEBUG, "msg", "|      gPeerID = " << dac_data->gPeerID);
-        LOGX(__DEBUG, "msg", "| C :  gResourceID = " << dac_data->gResourceID.to_string());
-        LOGX(__DEBUG, "msg", "| D :  PeerVersion = " <<
-            (uint32_t)dac_data->aPeerVersion[0] << "," << (uint32_t)dac_data->aPeerVersion[1] << "," <<
-            (uint32_t)dac_data->aPeerVersion[2] << "," << (uint32_t)dac_data->aPeerVersion[3]);
-        LOGX(__DEBUG, "msg", "| E :  VideoName = " << dac_data->szVideoName);
-        LOGX(__DEBUG, "msg", "| F :  Url = " << dac_data->szOriginalUrl);
-        LOGX(__DEBUG, "msg", "| G :  Refer = " << dac_data->szOriginalReferUrl);
-        LOGX(__DEBUG, "msg", "| H :  DiskBytes = " << dac_data->uDiskBytes);
-        LOGX(__DEBUG, "msg", "| I :  VideoBytes = " << dac_data->uVideoBytes);
-        LOGX(__DEBUG, "msg", "| J :  P2PDownloadBytes = " << dac_data->uP2PDownloadBytes);
-        LOGX(__DEBUG, "msg", "| K :  HttpDownloadBytes = " << dac_data->uHttpDownloadBytes);
-        LOGX(__DEBUG, "msg", "| L :  AvgP2PDownloadSpeed = " << dac_data->uAvgDownloadSpeed);
-        LOGX(__DEBUG, "msg", "| N :  StartPosition = " << dac_data->uStartPosition);
-        LOGX(__DEBUG, "msg", "| O :  MaxP2PDownloadSpeed = " << dac_data->uAvgP2PDownloadSpeed);
-        LOGX(__DEBUG, "msg", "| P :  MaxHttpDownloadSpeed = " << dac_data->uMaxHttpDownloadSpeed);
-        LOGX(__DEBUG, "msg", "| Q :  ConnectedPeerCount = " << dac_data->uConnectedPeerCount);
-        LOGX(__DEBUG, "msg", "| R :  FullPeerCount = " << dac_data->uFullPeerCount);
-        LOGX(__DEBUG, "msg", "| S :  BakHostStatus = " << dac_data->uBakHostStatus);
-        LOGX(__DEBUG, "msg", "| T :  QueriedPeerCount = " << dac_data->uQueriedPeerCount);
-        LOGX(__DEBUG, "msg", "| U :  SourceType = " << dac_data->uSourceType);
-        LOGX(__DEBUG, "msg", "| V :  DataRate = " << dac_data->uDataRate);
-        LOGX(__DEBUG, "msg", "| W :  uAccelerateHttpSpeed = " << dac_data->uAccelerateHttpSpeed);
-        LOGX(__DEBUG, "msg", "| X :  uAccelerateStatus = " << dac_data->uAccelerateStatus);
-        LOGX(__DEBUG, "msg", "| Y :  download_time = " << dac_data->download_time);
-        LOGX(__DEBUG, "msg", "| Z :  last_speed = " << dac_data->last_speed);
-        LOGX(__DEBUG, "msg", "| A1:  is_got_rid = " << dac_data->is_got_rid);
-
-        WindowsMessage::Inst().PostWindowsMessage(UM_DAC_STATISTIC, (WPARAM)id_, (LPARAM)dac_data);
-#else
-        DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
-
-        info.gResourceID = statistic_->GetResourceID();
-        info.aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
-        info.aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
-        info.aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
-        info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
-        info.videoName = is_open_service_ ? openservice_file_name_ : statistic_->GetFileName();
-
-        string originalUrl(origanel_url_info_.url_);
-        u_int pos = originalUrl.find_first_of('/');
-        pos = originalUrl.find_first_of('/', pos + 1);
-        pos = originalUrl.find_first_of('/', pos + 1);
-
-        info.originalUrl = is_open_service_ ? string(originalUrl, 0, pos) : originalUrl;
-        info.originalReferUrl = origanel_url_info_.refer_url_;
-        info.uDiskBytes = init_local_data_bytes_;
-        info.uVideoBytes = statistic_->GetFileLength();
-        info.uP2PDownloadBytes = 0;
-
-
-        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
-        {
-            info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
-            info.uAvgP2PDownloadSpeed = p2p_downloader_->GetStatistic()->GetSpeedInfo().AvgDownloadSpeed;
-        }
-        else
-        {
-            info.uP2PDownloadBytes = 0;
-            info.uAvgP2PDownloadSpeed = 0;
-        }
-
-        info.uHttpDownloadBytes = statistic_->GetTotalHttpDataBytes();
-        info.uTotalDownloadBytes = info.uP2PDownloadBytes + info.uHttpDownloadBytes;
-
-        info.uAvgDownloadSpeed = (download_time_counter_.elapsed() == 0) ? 0
-            : (info.uTotalDownloadBytes * 1000.0 / download_time_counter_.elapsed());
-        info.bIsSaveMode = proxy_connection_->IsSaveMode();
-
-        info.uMaxHttpDownloadSpeed = statistic_->GetHttpDownloadMaxSpeed();
-        info.uConnectedPeerCount = statistic_->GetConnectedPeerCount();
-        info.uFullPeerCount = statistic_->GetFullPeerCount();
-        info.uMaxActivePeerCount = statistic_->GetMaxActivePeerCount();
-        info.uQueriedPeerCount = statistic_->GetQueriedPeerCount();
-        info.uSourceType = source_type_;
-        info.uDataRate = GetDataRate();
-
-        if (accelerate_http_speed == 0)
-        {
-            info.uAccelerateHttpSpeed = (download_time_counter_.elapsed() == 0) ? 0 :
-                (info.uTotalDownloadBytes * 1000.0 / download_time_counter_.elapsed());
-        }
-        else
-        {
-            info.uAccelerateHttpSpeed = accelerate_http_speed;
-        }
-
-        info.uAccelerateStatus = accelerate_status_;
-        info.uVideoDuration = statistic_->GetFileLength() / GetDataRate();
+        // A1: 下载所用的时间
         info.download_time = download_time_counter_.elapsed();
+
+        // B1: 最后一刻下载速度
         info.last_speed = statistic_->GetSpeedInfo().NowDownloadSpeed;
+
+        // C1: 是否获得RID(0未获得;1获得)
         info.is_got_rid = (GetP2PControlTarget() ? 1 : 0);
+
+        // D1: 原来为客户端填写
+
+        // E1: bwtype
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
         log_stream << "C=" << info.gResourceID.to_string();
-        log_stream << "&D=" << info.aPeerVersion[0] << "." << info.aPeerVersion[1] << "."
-            << info.aPeerVersion[2] << "." << info.aPeerVersion[3];
-        log_stream << "&E=" << info.videoName;
-        log_stream << "&F=" << info.originalUrl;
-        log_stream << "&G=" << info.originalReferUrl;
-        log_stream << "&H=" << info.uDiskBytes;
-        log_stream << "&I=" << info.uVideoBytes;
-        log_stream << "&J=" << info.uP2PDownloadBytes;
-        log_stream << "&K=" << info.uHttpDownloadBytes;
-        log_stream << "&L=" << info.uAvgDownloadSpeed;
-        log_stream << "&M=" << info.bIsSaveMode;
-        log_stream << "&N=";
-        log_stream << "&O=" << info.uAvgP2PDownloadSpeed;
-        log_stream << "&P=" << info.uMaxHttpDownloadSpeed;
-        log_stream << "&Q=" << info.uConnectedPeerCount;
-        log_stream << "&R=" << info.uFullPeerCount;
-        log_stream << "&S=" << info.uMaxActivePeerCount;
-        log_stream << "&T=" << info.uQueriedPeerCount;
-        log_stream << "&U=" << info.uSourceType;
-        log_stream << "&V=" << info.uDataRate;
-        log_stream << "&W=" << info.uAccelerateHttpSpeed;
-        log_stream << "&X=" << info.uAccelerateStatus;
+        log_stream << "&D=" << (uint32_t)info.aPeerVersion[0] << "." << 
+            (uint32_t)info.aPeerVersion[1] << "." << 
+            (uint32_t)info.aPeerVersion[2] << "." << 
+            (uint32_t)info.aPeerVersion[3];
+        log_stream << "&E=" << info.szVideoName;
+        log_stream << "&F=" << info.szOriginalUrl;
+        log_stream << "&G=" << info.szOriginalReferUrl;
+        log_stream << "&H=" << (uint32_t)info.uDiskBytes;
+        log_stream << "&I=" << (uint32_t)info.uVideoBytes;
+        log_stream << "&J=" << (uint32_t)info.uP2PDownloadBytes;
+        log_stream << "&K=" << (uint32_t)info.uHttpDownloadBytes;
+        log_stream << "&L=" << (uint32_t)info.uAvgDownloadSpeed;
+        log_stream << "&M=" << (uint32_t)info.bIsSaveMode;
+        log_stream << "&N=" << (uint32_t)info.MaxHistoryDownloadSpeed;
+        log_stream << "&O=" << (uint32_t)info.uAvgP2PDownloadSpeed;
+        log_stream << "&P=" << (uint32_t)info.uMaxHttpDownloadSpeed;
+        log_stream << "&Q=" << (uint32_t)info.uConnectedPeerCount;
+        log_stream << "&R=" << (uint32_t)info.uFullPeerCount;
+        log_stream << "&S=" << (uint32_t)info.uBakHostStatus;
+        log_stream << "&T=" << (uint32_t)info.uQueriedPeerCount;
+        log_stream << "&U=" << (uint32_t)info.uSourceType;
+        log_stream << "&V=" << (uint32_t)info.uDataRate;
+        log_stream << "&W=" << (uint32_t)info.uAccelerateHttpSpeed;
+        log_stream << "&X=" << (uint32_t)info.uAccelerateStatus;
+        // 原来版本是客户端提交的操作系统版本
         log_stream << "&Y=";
-        log_stream << "&Z=" << info.uVideoDuration;
-        log_stream << "&A1=" << info.download_time;
-        log_stream << "&B1=" << info.last_speed;
-        log_stream << "&C1=" << info.is_got_rid;
-        log_stream << "&D1=" << info.uTotalDownloadBytes;
+        // 原来版本是客户端计算的平均下载速度
+        log_stream << "&Z=" << (uint32_t)(info.uVideoBytes / info.uDataRate);
+        log_stream << "&A1=" << (uint32_t)info.download_time;
+        log_stream << "&B1=" << (uint32_t)info.last_speed;
+        log_stream << "&C1=" << (uint32_t)info.is_got_rid;
+        // 原来版本是客户端计算的本次下载字节数
+        log_stream << "&D1=" << (uint32_t)(info.uP2PDownloadBytes + info.uHttpDownloadBytes);
+        // 暂时没有在结构体里面增加这个成员的原因是保证原来的老的日志也是可用的
+        log_stream << "&E1=" << (uint32_t)(bwtype_);
 
         string log = log_stream.str();
 
@@ -1284,7 +1179,6 @@ namespace p2sp
         strncpy(dac_data->szLog, log.c_str(), sizeof(dac_data->szLog)-1);
 
         WindowsMessage::Inst().PostWindowsMessage(UM_DAC_STATISTIC_V1, (WPARAM)id_, (LPARAM)dac_data);
-#endif
 #endif
     }
 
@@ -1728,7 +1622,7 @@ namespace p2sp
 //             proxy_connection_->OnNoticeGetContentLength(content_length, network::HttpResponse::p());
 //         }
 //         // 或者是音乐文件
-//         else if (IsFileExtension(origanel_url_info_.url_, ".mp3") || IsFileExtension(origanel_url_info_.url_, ".wma"))
+//         else if (IsFileExtension(original_url_info_.url_, ".mp3") || IsFileExtension(original_url_info_.url_, ".wma"))
 //         {
 //             if (false == instance_->GetRID().is_empty() || true == instance_->IsComplete())
 //             {
@@ -1767,7 +1661,7 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        LOG(__EVENT, "downloaddriver", "DownloadDriver::ChangeToPoolModel origanel_url_info_:" << origanel_url_info_ << ", inst=" << shared_from_this());
+        LOG(__EVENT, "downloaddriver", "DownloadDriver::ChangeToPoolModel original_url_info_:" << original_url_info_ << ", inst=" << shared_from_this());
 
         if (true == is_pool_mode_)
         {
@@ -1791,7 +1685,7 @@ namespace p2sp
 
         // herain:这里有潜在问题，发现校验错误后重新创建Instance，没有传入RID参数，这会造成重新
         // 创建一个新的资源文件，老的资源文件将被放弃，至于新资源和老资源会不会进行merge需要继续研究。
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(origanel_url_info_, true));
+        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, true));
         instance_->SetIsOpenService(is_open_service_);
         instance_->AttachDownloadDriver(shared_from_this());
         instance_->SetRidOriginFlag(flag);
@@ -1807,7 +1701,7 @@ namespace p2sp
 
 
         // 将这个Downloader设置为 原始的Downloader
-        HttpDownloader::p downloader = AddHttpDownloader(origanel_url_info_, true);
+        HttpDownloader::p downloader = AddHttpDownloader(original_url_info_, true);
 
         // switch controller
         switch_controller_ = SwitchController::Create(shared_from_this());
@@ -1850,7 +1744,7 @@ namespace p2sp
     {
         if (false == is_running_)
             return;DD_EVENT("DownloadDriver::OnNoticeContentHashSucced MD5:" << content_md5 << " file_length:" << content_bytes << " file_length:" << file_length);
-        IndexManager::Inst()->DoQueryRidByContent(origanel_url_info_.url_, origanel_url_info_.refer_url_, content_md5,
+        IndexManager::Inst()->DoQueryRidByContent(original_url_info_.url_, original_url_info_.refer_url_, content_md5,
             content_bytes, file_length);
     }
 
@@ -2799,7 +2693,7 @@ namespace p2sp
 
         if (instance_)
         {
-            Storage::Inst()->AttachRidByUrl(origanel_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
         }
 
         bufferring_monitor_.reset();

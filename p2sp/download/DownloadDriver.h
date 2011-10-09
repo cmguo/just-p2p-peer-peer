@@ -16,7 +16,6 @@
 #include "count_object_allocate.h"
 #endif
 
-
 namespace storage
 {
     class Instance;
@@ -29,6 +28,44 @@ namespace statistic
 
 namespace p2sp
 {
+    typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
+    {
+        boost::uint32_t       uSize;                                // 整个结构体大小
+        Guid                  gPeerID;                              // B: 华哥ID
+        Guid                  gResourceID;                          // C: ResourceID
+        boost::uint8_t        aPeerVersion[4];                      // D: 内核版本：major, minor, micro, extra
+        char                  szVideoName[512];                     // E: 视频名称/WCHAR
+        char                  szOriginalUrl[1000];                  // F: Url
+        char                  szOriginalReferUrl[1000];             // G: Refer Url
+        boost::uint32_t       uDiskBytes;                           // H: 磁盘已有字节数
+        boost::uint32_t       uVideoBytes;                          // I: 影片大小
+        boost::uint32_t       uP2PDownloadBytes;                    // J: P2P下载字节数
+        boost::uint32_t       uHttpDownloadBytes;                   // K: HTTP下载字节数
+        boost::uint32_t       uAvgDownloadSpeed;                    // L: 平均下载速度 (B/s)
+        boost::uint8_t        bIsSaveMode;                          // M: 是否是下载模式完成的此次下载
+        // extend 1
+        boost::uint32_t       MaxHistoryDownloadSpeed;              // N: 最大历史下载速度
+        boost::uint32_t       uAvgP2PDownloadSpeed;                 // O: P2P平均下载速度
+        boost::uint32_t       uMaxHttpDownloadSpeed;                // P: 最大HTTP下载速度
+        boost::uint16_t       uConnectedPeerCount;                  // Q: 连接上的节点数
+        boost::uint16_t       uFullPeerCount;                       // R: 资源全满节点数
+        boost::uint16_t       uBakHostStatus;                       // S: 备用CDN状态
+        boost::uint16_t       uQueriedPeerCount;                    // T: 查询到的节点数
+        // extend 2
+        boost::uint16_t       uSourceType;                          // U: SourceType
+        boost::uint32_t       uDataRate;                            // V: 码流率
+        boost::uint32_t       uAccelerateHttpSpeed;                 // W: 加速状态机切换之前的速度
+        boost::uint32_t       uAccelerateStatus;                    // X: 加速状态机的状态
+        // Y: 操作系统版本(客户端提交)
+        // Z: 文件时长(客户端提交) I/V
+        // extend 3
+        boost::uint32_t       download_time;                        // A1: 下载所用的时间
+        boost::uint32_t       last_speed;                           // B1: 最后一刻下载速度
+        // extend 4
+        boost::uint32_t       is_got_rid;                           // C1: 是否获得RID(0未获得;1获得)
+        // D1: J+K
+    } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
+
     class VodDownloader;
     typedef boost::shared_ptr<VodDownloader> VodDownloader__p;
     class PieceRequestManager;
@@ -41,43 +78,6 @@ namespace p2sp
     typedef boost::shared_ptr<HttpDownloader> HttpDownloader__p;
     class HttpDragDownloader;
     typedef boost::shared_ptr<HttpDragDownloader> HttpDragDownloader__p;
-
-#ifdef CLIENT_NEW_DAC_LOG
-    typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
-    {
-        RID            gResourceID;                          // ResourceID
-        uint32_t       aPeerVersion[4];                      // 内核版本：major, minor, micro, extra
-        string         videoName;                            // 视频名称
-        string         originalUrl;                          // Url
-        string         originalReferUrl;                     // Refer Url
-        uint32_t       uDiskBytes;                           // 磁盘已有字节数
-        uint32_t       uVideoBytes;                          // 影片大小
-        uint32_t       uP2PDownloadBytes;                    // P2P下载字节数
-        uint32_t       uHttpDownloadBytes;                   // HTTP下载字节数
-        uint32_t       uAvgDownloadSpeed;                    // 平均下载速度 (B/s)
-        uint32_t       bIsSaveMode;                          // 是否是下载模式完成的此次下载
-        // extend 1
-        uint32_t       uStartPosition;                       // 拖动位置
-        uint32_t       uMaxHttpDownloadSpeed;                // 最大HTTP下载速度
-        uint32_t       uAvgP2PDownloadSpeed;                 // 最大P2P下载速度
-        uint32_t       uQueriedPeerCount;                    // 查询到的节点数
-        uint32_t       uConnectedPeerCount;                  // 连接上的节点数
-        uint32_t       uFullPeerCount;                       // 资源全满节点数
-        uint32_t       uMaxActivePeerCount;                  // 活跃节点数峰值
-        // extend 2
-        uint32_t       uSourceType;                          // 0:pplive, 1:ikan, 2:ppvod, 3:other
-        uint32_t       uDataRate;                            // 码流率
-        uint32_t       uAccelerateHttpSpeed;                 // 加速状态机切换之前的速度
-        uint32_t       uAccelerateStatus;                    // 加速状态机的状态
-        uint32_t       uVideoDuration;                       // 影片时长(秒)
-        // extend 3
-        uint32_t       download_time;                        // 下载所用的时间
-        uint32_t       last_speed;                           // 最后一刻下载速度
-        // extend 4
-        uint32_t       is_got_rid;                           // 是否获得RID(0未获得;1获得)
-        uint32_t       uTotalDownloadBytes;                  // 总下载字节数
-    } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
-#endif
 
     class DownloadDriver
         // : public boost::noncopyable
@@ -144,7 +144,7 @@ namespace p2sp
 
         void NoticePieceTaskTimeOut(const protocol::PieceInfoEx& piece_info_ex, VodDownloader__p downloader);
 
-        protocol::UrlInfo GetOriginalUrlInfo() const { return origanel_url_info_; }
+        protocol::UrlInfo GetOriginalUrlInfo() const { return original_url_info_; }
 
         bool IsHttp403Header() const { return is_http_403_header_; }
 
@@ -302,7 +302,7 @@ namespace p2sp
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
         uint32_t max_rest_playable_time_;
 
-        protocol::UrlInfo origanel_url_info_;
+        protocol::UrlInfo original_url_info_;
         uint32_t block_check_faild_times_;
         bool is_complete_;
         boost::int32_t id_;

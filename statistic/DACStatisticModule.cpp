@@ -122,80 +122,20 @@ namespace statistic
 //             return;
 //         }
 
-        // TODO(herain):2011-1-4:这个为了兼容旧的SOP模块而保留了以前的代码
-        // 在sop全部升级后发布的新内核可以删除这些代码
-#ifndef CLIENT_NEW_DAC_LOG
-        // 分配内存 初始化
-        LPPERIOD_DAC_STATISTIC_INFO_STRUCT lpPeriodDACStatisticInfo =
-            MessageBufferManager::Inst()->NewStruct<PERIOD_DAC_STATISTIC_INFO_STRUCT>();
-        memset(lpPeriodDACStatisticInfo, 0, sizeof(PERIOD_DAC_STATISTIC_INFO_STRUCT));
-        lpPeriodDACStatisticInfo->uSize = sizeof(PERIOD_DAC_STATISTIC_INFO_STRUCT);
-
-        // 华哥ID
-        lpPeriodDACStatisticInfo->gPeerID = AppModule::Inst()->GetUniqueGuid();
-        // 内核版本：major, minor, micro, extra
-        lpPeriodDACStatisticInfo->aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
-        lpPeriodDACStatisticInfo->aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
-        lpPeriodDACStatisticInfo->aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
-        lpPeriodDACStatisticInfo->aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
-
-        // 统计时长（分钟）
-        lpPeriodDACStatisticInfo->uP2PUploadKBytesByNomal = p2p_upload_byte_by_normal_ / 1024;
-        // P2P下载字节数
-        lpPeriodDACStatisticInfo->uP2PDownloadBytes = p2p_download_byte_;
-        // HTTP下载字节数
-        lpPeriodDACStatisticInfo->uHTTPDownloadBytes = http_download_byte_;
-        // P2P上传字节数
-        lpPeriodDACStatisticInfo->uP2PUploadKBytesByPush = p2p_upload_byte_by_push_ / 1024;
-
-        Storage::p p_storage = Storage::Inst_Storage();
-
-#if DISK_MODE
-        // 缓存目录已用大小
-        lpPeriodDACStatisticInfo->uUsedDiskSizeInMB = (boost::uint32_t)(p_storage->GetUsedDiskSpace() / (1024 * 1024.0) + 0.5);
-        // 缓存目录设置大小
-        lpPeriodDACStatisticInfo->uTotalDiskSizeInMB = (boost::uint32_t)(p_storage->GetStoreSize() / (1024 * 1024.0) + 0.5);
-#endif  // #if DISK_MODE
-        // 上传带宽
-        lpPeriodDACStatisticInfo->uUploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
-        // IDLE时长(分钟)
-        //lpPeriodDACStatisticInfo->uIdleTimeInMins = idle_time_;
-        lpPeriodDACStatisticInfo->uNeedUseUploadPingPolicy = p2sp::P2PModule::Inst()->NeedUseUploadPingPolicy();
-
-        // 上传限速字节数
-        upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
-        lpPeriodDACStatisticInfo->uUploadLimitInKBytes = upload_limit_KBytes_;
-
-        // 上传丢弃字节数
-        lpPeriodDACStatisticInfo->uUploadDiscardBytes = upload_discard_byte_;
-
-        LOGX(__DEBUG, "msg", "  Size = " << lpPeriodDACStatisticInfo->uSize);
-        LOGX(__DEBUG, "msg", "  gPeerID = " << lpPeriodDACStatisticInfo->gPeerID.to_string());
-        LOGX(__DEBUG, "msg", "  aPeerVersion = " <<
-            (uint32_t)lpPeriodDACStatisticInfo->aPeerVersion[0] << "," << (uint32_t)lpPeriodDACStatisticInfo->aPeerVersion[1] << "," <<
-            (uint32_t)lpPeriodDACStatisticInfo->aPeerVersion[2] << "," << (uint32_t)lpPeriodDACStatisticInfo->aPeerVersion[3]);
-        LOGX(__DEBUG, "msg", "  uP2PUploadKBytesByPush = " << lpPeriodDACStatisticInfo->uP2PUploadKBytesByPush);
-        LOGX(__DEBUG, "msg", "  uP2PDownloadBytes = " << lpPeriodDACStatisticInfo->uP2PDownloadBytes);
-        LOGX(__DEBUG, "msg", "  uHTTPDownloadBytes = " << lpPeriodDACStatisticInfo->uHTTPDownloadBytes);
-        LOGX(__DEBUG, "msg", "  uP2PUploadKBytesByNomal = " << lpPeriodDACStatisticInfo->uP2PUploadKBytesByNomal);
-        LOGX(__DEBUG, "msg", "  uUsedDiskSizeInMB = " << lpPeriodDACStatisticInfo->uUsedDiskSizeInMB);
-        LOGX(__DEBUG, "msg", "  uTotalDiskSizeInMB = " << lpPeriodDACStatisticInfo->uTotalDiskSizeInMB);
-        LOGX(__DEBUG, "msg", "  uHasGateWay = " << lpPeriodDACStatisticInfo->uHasGateWay);
-        LOGX(__DEBUG, "msg", "  uUploadLimitInKBytes = " << lpPeriodDACStatisticInfo->uUploadLimitInKBytes);
-        LOGX(__DEBUG, "msg", "  uUploadDiscardBytes = " << lpPeriodDACStatisticInfo->uUploadDiscardBytes);
-
-        WindowsMessage::Inst().PostWindowsMessage(UM_PERIOD_DAC_STATISTIC, (WPARAM)0, (LPARAM)lpPeriodDACStatisticInfo);
-#else
-
         PERIOD_DAC_STATISTIC_INFO_STRUCT info;
         info.aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
         info.aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
         info.aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
         info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
-        info.uPeriodInMins = m_IntervalTime;
+
+        info.uP2PUploadKBytesByNomal = p2p_upload_byte_by_normal_ / 1024;
+
         info.uP2PDownloadBytes = p2p_download_byte_;
+
         info.uHTTPDownloadBytes = http_download_byte_;
-        //TODO(herain):2011-5-25:upload_byte_要按照push和非push区分统计
+
+        info.uP2PUploadKBytesByPush = p2p_upload_byte_by_push_ / 1024;
+
 #if DISK_MODE
         Storage::p p_storage = Storage::Inst_Storage();
         info.uUsedDiskSizeInMB = p_storage->GetUsedDiskSpace() / (1024 * 1024);
@@ -205,7 +145,8 @@ namespace statistic
         info.uTotalDiskSizeInMB = 0;
 #endif
         info.uUploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
-        info.uIdleTimeInMins = idle_time_;
+        
+        info.uNeedUseUploadPingPolicy = p2sp::P2PModule::Inst()->NeedUseUploadPingPolicy();
 
         upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
         info.uUploadLimitInBytes = upload_limit_KBytes_ * 1024;
@@ -214,18 +155,21 @@ namespace statistic
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
-        log_stream << "C=" << info.aPeerVersion[0] << "." << info.aPeerVersion[1] << "."
-            << info.aPeerVersion[2] << "." << info.aPeerVersion[3];
-        log_stream << "&D=" << info.uPeriodInMins;
-        log_stream << "&E=" << info.uP2PDownloadBytes;
-        log_stream << "&F=" << info.uHTTPDownloadBytes;
-        log_stream << "&G=" << info.uP2PUploadKBytes;
-        log_stream << "&H=" << info.uUsedDiskSizeInMB;
-        log_stream << "&I=" << info.uTotalDiskSizeInMB;
-        log_stream << "&J=" << info.uUploadBandWidthInBytes;
-        log_stream << "&K=" << info.uIdleTimeInMins;
-        log_stream << "&L=" << info.uUploadLimitInBytes;
-        log_stream << "&M=" << info.uUploadDiscardBytes;
+        log_stream << "C=" << (boost::uint32_t)info.aPeerVersion[0] << "." << 
+            (boost::uint32_t)info.aPeerVersion[1] << "." << 
+            (boost::uint32_t)info.aPeerVersion[2] << "." << 
+            (boost::uint32_t)info.aPeerVersion[3];
+
+        log_stream << "&D=" << (boost::uint32_t)info.uP2PUploadKBytesByNomal;
+        log_stream << "&E=" << (boost::uint32_t)info.uP2PDownloadBytes;
+        log_stream << "&F=" << (boost::uint32_t)info.uHTTPDownloadBytes;
+        log_stream << "&G=" << (boost::uint32_t)info.uP2PUploadKBytesByPush;
+        log_stream << "&H=" << (boost::uint32_t)info.uUsedDiskSizeInMB;
+        log_stream << "&I=" << (boost::uint32_t)info.uTotalDiskSizeInMB;
+        log_stream << "&J=" << (boost::uint32_t)info.uUploadBandWidthInBytes;
+        log_stream << "&K=" << (boost::uint32_t)info.uNeedUseUploadPingPolicy;
+        log_stream << "&L=" << (boost::uint32_t)info.uUploadLimitInBytes;
+        log_stream << "&M=" << (boost::uint32_t)info.uUploadDiscardBytes;
 
         string log = log_stream.str();
 
@@ -241,7 +185,6 @@ namespace statistic
         strncpy(upload_data->szLog, log.c_str(), sizeof(upload_data->szLog) - 1);
 
         WindowsMessage::Inst().PostWindowsMessage(UM_PERIOD_DAC_STATISTIC_V1, (WPARAM)0, (LPARAM)upload_data);
-#endif
 #endif
     }
 
