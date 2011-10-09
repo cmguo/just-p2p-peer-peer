@@ -52,6 +52,10 @@ namespace p2sp
     {
     }
 
+    HttpDownloader::~HttpDownloader()
+    {
+    }
+
     void HttpDownloader::Start(bool is_support_start)
     {
         if (is_running_ == true)
