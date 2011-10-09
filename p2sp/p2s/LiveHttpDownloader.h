@@ -83,6 +83,7 @@ namespace p2sp
         virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
         virtual void OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
         virtual void OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
+
         virtual void OnRecvHttpDataFailed(uint32_t error_code);
         virtual void OnRecvTimeout();
 
@@ -102,6 +103,7 @@ namespace p2sp
         string MakeRequstPath(uint32_t start_piece_id);
         void RequestNextBlock();
         void RequestSubPiece();
+        void OnError(); 
 
     private:
         boost::asio::io_service & io_svc_;

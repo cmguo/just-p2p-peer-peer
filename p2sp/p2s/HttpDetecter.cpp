@@ -44,8 +44,6 @@ namespace p2sp
 
     void HttpDetecter::Start()
     {
-        if (is_running_ == true)
-            return;
         is_running_ = true;
     }
 
@@ -88,17 +86,9 @@ namespace p2sp
             return false;
 
         is_detected_ = true;
-
         url_info_ = url_info;
-
         http_connection_ = http_connection;
-
-        http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
-        string pragma_client = http_connection_->GetPragmaClient();
-        if (pragma_client.length() != 0) http_client_->AddPragma("Client", pragma_client);
-        http_client_->SetHandler(shared_from_this());
-        http_client_->Connect();
-
+        SendDemoRequest();
         return true;
     }
 
@@ -109,7 +99,6 @@ namespace p2sp
 
         http_client_->Close();
         sleep_once_timer_.start();
-
     }
 
     void HttpDetecter::OnTimerElapsed(framework::timer::Timer * pointer)
@@ -118,15 +107,10 @@ namespace p2sp
             return;
         if (pointer == &sleep_once_timer_)
         {
-            http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
-            string pragma_client = http_connection_->GetPragmaClient();
-            if (pragma_client.length() != 0) http_client_->AddPragma("Client", pragma_client);
-            http_client_->SetHandler(shared_from_this());
-            http_client_->Connect();
+            SendDemoRequest();
         }
     }
 
-    // ???
     void HttpDetecter::OnConnectSucced()
     {
         if (is_running_ == false)
@@ -159,43 +143,28 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        HTTP_EVENT("HttpDetecter::OnRecvHttpHeaderSucced  url:" << url_info_.url_ << " " << " StatusCode " << http_response->GetStatusCode());
+        HTTP_EVENT("HttpDetecter::OnRecvHttpHeaderSucced  url:" << url_info_.url_ << " " 
+                << " StatusCode " << http_response->GetStatusCode());
+
+        assert(downloader_);
+        assert(http_connection_);
 
         if (http_response->GetStatusCode() == 200 || http_response->GetStatusCode() == 206)
         {
-            assert(downloader_);
-            assert(http_connection_);
             if (http_client_->IsBogusAcceptRange() == true)
             {
-                downloader_->DecetecterReport(http_connection_, false);
+                downloader_->DetectorReport(http_connection_, false);
             }
             else
             {
-                // ?????????????????????range????????ж?????????????
-                http_client_->HttpRecvSubPiece();  // ??????????
+                http_client_->HttpRecvSubPiece();  
             }
-            // http_client_->Close();
         }
-        else
-        if (http_response->GetStatusCode() == 403 || http_response->GetStatusCode() == 404)
+        else 
         {
-            assert(downloader_);
-            assert(http_connection_);
             if (downloader_)
             {
-                downloader_->DecetecterReport(http_connection_, false);
-            }
-            // downloader_->DecetecterReport(http_connection_, false);
-            http_client_->Close();
-        }
-        else
-        {
-            assert(downloader_);
-            assert(http_connection_);
-            // downloader_->DecetecterReport(http_connection_, false);
-            if (downloader_)
-            {
-                downloader_->DecetecterReport(http_connection_, false);
+                downloader_->DetectorReport(http_connection_, false);
             }
             http_client_->Close();
         }
@@ -213,7 +182,7 @@ namespace p2sp
         if (is_running_ == false)
             return;
         HTTP_EVENT(__FUNCTION__ << " file_offset=" << file_offset << " content_offset=" << content_offset);
-        downloader_->DecetecterReport(http_connection_, true);
+        downloader_->DetectorReport(http_connection_, true);
         http_client_->Close();
     }
 
@@ -229,12 +198,8 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        // if (error_code == 2)
-        {
-            HTTP_EVENT(__FUNCTION__ << " ErrorCode=" << error_code << " DecetecterReport range=" << false);
-            downloader_->DecetecterReport(http_connection_, false);
-        }
-
+        HTTP_EVENT(__FUNCTION__ << " ErrorCode=" << error_code << " DecetecterReport range=" << false);
+        downloader_->DetectorReport(http_connection_, false);
         http_client_->Close();
     }
 
@@ -251,6 +216,16 @@ namespace p2sp
         if (is_running_ == false)
             return;
         http_client_->Close();
+    }
+
+    void HttpDetecter::SendDemoRequest() 
+    {
+        http_client_ = network::HttpClient<protocol::SubPieceContent>::create(
+            io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
+        string pragma_client = http_connection_->GetPragmaClient();
+        if (pragma_client.length() != 0) http_client_->AddPragma("Client", pragma_client);
+        http_client_->SetHandler(shared_from_this());
+        http_client_->Connect();
     }
 }
 

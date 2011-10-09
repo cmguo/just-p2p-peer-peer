@@ -65,7 +65,7 @@ namespace p2sp
 
         // HttpConnection下达命令做detecter
         virtual void DoDetecter(HttpConnection__p http_connection, protocol::UrlInfo url_info);
-        virtual void DecetecterReport(HttpConnection__p http_connection, bool is_support_range);
+        virtual void DetectorReport(HttpConnection__p http_connection, bool is_support_range);
 
         virtual void StopPausing();
         virtual void SetPausing();

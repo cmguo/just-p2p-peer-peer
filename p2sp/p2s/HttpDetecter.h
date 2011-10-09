@@ -51,6 +51,8 @@ namespace p2sp
 
     private:
         void SleepForConnect();
+        void SendDemoRequest();
+
     public:
         // 消息
         virtual void OnConnectSucced();

@@ -157,7 +157,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void HttpConnection::DecetecterReport(bool is_support_range)
+    void HttpConnection::DetectorReport(bool is_support_range)
     {
         if (is_running_ == false)
             return;
@@ -186,12 +186,6 @@ namespace p2sp
 
         assert(downloader_->GetStatistics());
         downloader_->GetStatistics()->SubmitRetry();
-
-        // network::Uri url_(url_info_.url_);
-        // if (url_.getparameter("start") != "")
-        // {
-        //    url_info_.url_ = url_.getfileurl();
-        // }
 
         if (status == NONE)
         {
@@ -278,7 +272,7 @@ namespace p2sp
 
         if (!is_downloading_)
         {
-        // 没有在下载, 设置为正在下载
+            // 没有在下载, 设置为正在下载
             is_downloading_ = true;
             PutPieceTask();
         }
@@ -586,10 +580,6 @@ namespace p2sp
             downloader_->GetStatistics()->SetStartPieceInfo(piece_info_ex_.block_index_, piece_info_ex_.piece_index_, piece_info_ex_.subpiece_index_);
             downloader_->GetStatistics()->SubmitRequestPiece();
         }
-        else
-        {
-
-        }
     }
 
     void HttpConnection::OnConnectFailed(uint32_t error_code)
@@ -623,8 +613,6 @@ namespace p2sp
         {
             LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " UnknownState = " << status);
         }
-
-        // Stop();
     }
 
     void HttpConnection::OnConnectTimeout()
@@ -730,8 +718,7 @@ namespace p2sp
                         if (head_length_ != (uint32_t)-1) {
                             if (downloader_)
                             {
-                                // MainThread::Post(boost::bind(&HttpDownloader::DecetecterReport, downloader_, shared_from_this(), true));
-                                downloader_->DecetecterReport(shared_from_this(), true);
+                                downloader_->DetectorReport(shared_from_this(), true);
                             }
                         }
                         else {
@@ -785,36 +772,10 @@ namespace p2sp
                     is_support_range_ = false;
                     DoConnect();
                 }
-                /*
-                if (retry_count_403_header_ < 3)
-                {
-                    ++retry_count_403_header_;
-                    DoConnect();
-                }
-                */
             }
             else if (http_response->GetStatusCode() == 301 ||http_response->GetStatusCode() == 302||http_response->GetStatusCode() == 303)
             {
-                string location_url = http_response->GetProperty("Location");
-                if (location_url.find("http") == string::npos)
-                {
-                    if (location_url[0] == '/')
-                    {
-                        network::Uri uri_(url_info_.url_);
-                        uri_.replacepath(location_url);
-                        url_info_.url_ = uri_.geturl();
-                    } else
-                    {
-                        network::Uri uri_(url_info_.url_);
-                        uri_.replacefile(location_url);
-                        url_info_.url_ = uri_.geturl();
-                    }
-                }
-                else
-                    url_info_.url_ = http_response->GetProperty("Location");
-                status = NONE;
-                http_client_->Close();
-                DoConnect();
+                Redirect(http_response);
             }
             else if (http_response->GetStatusCode() == 500 && retry_count_500_header_ < 9)
             {
@@ -849,29 +810,7 @@ namespace p2sp
             }
             else if (http_response->GetStatusCode() == 301 ||http_response->GetStatusCode() == 302||http_response->GetStatusCode() == 303)
             {
-                // is_support_range_ = false;
-                string location_url = http_response->GetProperty("Location");
-                if (location_url.find("http") == string::npos)
-                {
-                    if (location_url[0] == '/')
-                    {
-                        network::Uri uri_(url_info_.url_);
-                        uri_.replacepath(location_url);
-                        url_info_.url_ = uri_.geturl();
-                    }
-                    else
-                    {
-                        network::Uri uri_(url_info_.url_);
-                        uri_.replacefile(location_url);
-                        url_info_.url_ = uri_.geturl();
-                    }
-                }
-                else
-                    url_info_.url_ = http_response->GetProperty("Location");
-                status = NONE;
-                http_client_->Close();
-
-                DoConnect();
+                Redirect(http_response);
             }
             else if (http_response->GetStatusCode() / 100 == 4)
             {
@@ -949,8 +888,6 @@ namespace p2sp
             // assert(0);
             HTTP_WARN(__FUNCTION__ << " status=" << status << " have_piece=" << have_piece_ << " range=" << is_support_range_);
         }
-
-//        Stop();
     }
 
     void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
@@ -1132,14 +1069,6 @@ namespace p2sp
         }
 
         HTTP_DEBUG(__FUNCTION__ << " http_connection_=" << shared_from_this() << " is_support_range_=" << is_support_range_ << " is_pausing_=" << is_pausing_);
-
-        if (true == is_support_range_)
-        {
-            // status = NONE;
-            // have_piece_ = false;
-            // http_client_->Close();
-            // if (pausing_sleep_timer_) { pausing_sleep_timer_->Stop(); pausing_sleep_timer_.reset(); }
-        }
     }
 
     void HttpConnection::StopPausing()
@@ -1209,10 +1138,6 @@ namespace p2sp
             else if (status == CONNECTING)
             {
                 LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " CONNECTING Ignore");
-//                 status = NONE;
-//                 have_piece_ = false;
-//                 is_to_get_header_ = false;
-//                 DoConnect();
             }
             else
             {
@@ -1256,31 +1181,6 @@ namespace p2sp
     {
         HTTP_EVENT("OnRecvHttpDataPartial " << url_info_ << " Length=" << buffer.Length());
         if (is_running_ == false) return;
-        // if (status == CONNECTED && have_piece_ == true && is_support_range_  == true)
-        // {
-        //    status = SLEEPING;
-        //    http_client_->Close();
-        //    SleepForConnect();
-        // } else
-        //    if (status == HEADERING && have_piece_ == true && is_support_range_  == true)
-        //    {
-        //        status = SLEEPING;
-        //        http_client_->Close();
-        //        SleepForConnect();
-        //    } else
-        //        if (status == PIECEING && have_piece_ == true && is_support_range_  == true)
-        //        {
-        //            status = SLEEPING;
-        //            http_client_->Close();
-        //            SleepForConnect();
-        //        } else
-        //            if (status == PIECED && have_piece_ == false && is_support_range_  == true)
-        //            {
-        //                status = SLEEPING;
-        //                http_client_->Close();
-        //                SleepForConnect();
-        //            } else
-        //                assert(0);
     }
 
     void HttpConnection::OnRecvHttpDataFailed(uint32_t error_code)
@@ -1295,7 +1195,7 @@ namespace p2sp
             is_support_range_ = false;
             status = NONE;
             http_client_->Close();
-            downloader_->DecetecterReport(shared_from_this(), false);
+            downloader_->DetectorReport(shared_from_this(), false);
             DoConnect();
         }
         else if (status == CONNECTED && have_piece_ == true)
@@ -1317,7 +1217,7 @@ namespace p2sp
                 is_support_range_ = false;
                 status = NONE;
                 http_client_->Close();
-                downloader_->DecetecterReport(shared_from_this(), false);
+                downloader_->DetectorReport(shared_from_this(), false);
                 DoConnect();
             }
             else
@@ -1491,5 +1391,32 @@ namespace p2sp
 
         // 都是连续的，不知道明确的终点
         return 0;
+    }
+
+    void HttpConnection::Redirect(network::HttpResponse::p http_response) 
+    {
+        string location_url = http_response->GetProperty("Location");
+        if (location_url.find("http") == string::npos)
+        {
+            if (location_url[0] == '/')
+            {
+                network::Uri uri_(url_info_.url_);
+                uri_.replacepath(location_url);
+                url_info_.url_ = uri_.geturl();
+            } 
+            else
+            {
+                network::Uri uri_(url_info_.url_);
+                uri_.replacefile(location_url);
+                url_info_.url_ = uri_.geturl();
+            }
+        }
+        else 
+        {
+            url_info_.url_ = http_response->GetProperty("Location");
+        }
+        status = NONE;
+        http_client_->Close();
+        DoConnect();
     }
 }

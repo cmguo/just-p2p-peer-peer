@@ -228,9 +228,6 @@ namespace p2sp
         switch(http_response->GetStatusCode())
         {
         case 200:
-            RequestSubPiece();
-            status_ = recving_response_data;
-            break;
         case 206:
             RequestSubPiece();
             status_ = recving_response_data;
@@ -282,40 +279,19 @@ namespace p2sp
     void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
         LOG(__ERROR, "", "OnRecvHttpDataPartial!");
-
-        if (!is_running_)
-        {
-            return;
-        }
-
-        DoClose();
-        SleepForConnect();
+        OnError();
     }
 
     void LiveHttpDownloader::OnRecvHttpDataFailed(uint32_t error_code)
     {
         LOG(__ERROR, "", "OnRecvHttpDataFailed!");
-
-        if (!is_running_)
-        {
-            return;
-        }
-
-        DoClose();
-        SleepForConnect();
+        OnError();
     }
 
     void LiveHttpDownloader::OnRecvTimeout()
     {
         LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
-
-        if (!is_running_)
-        {
-            return;
-        }
-
-        DoClose();
-        SleepForConnect();
+        OnError();
     }
     
     void LiveHttpDownloader::OnComplete()
@@ -459,6 +435,16 @@ namespace p2sp
 
     void LiveHttpDownloader::SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps)
     {
+    }
 
+    void LiveHttpDownloader::OnError()
+    {
+        if (!is_running_)
+        {
+            return;
+        }
+
+        DoClose();
+        SleepForConnect();
     }
 }

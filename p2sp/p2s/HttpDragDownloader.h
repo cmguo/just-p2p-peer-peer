@@ -74,6 +74,6 @@ namespace p2sp
         uint32_t drag_length_;
         string drag_string_;
 
-        bool using_bak_domain_;
+        bool using_backup_domain_;
     };
 }

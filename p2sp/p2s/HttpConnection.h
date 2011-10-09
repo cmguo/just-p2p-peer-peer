@@ -63,7 +63,7 @@ namespace p2sp
 
         bool IsSupportRange() const { return is_support_range_; }
 
-        void DecetecterReport(bool is_support_range);
+        void DetectorReport(bool is_support_range);
 
         void StopPausing();
 
@@ -93,6 +93,8 @@ namespace p2sp
         virtual void OnConnectFailed(uint32_t error_code);
         virtual void OnConnectTimeout();
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
+
+
         virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
         virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
         virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
@@ -161,6 +163,8 @@ namespace p2sp
             HttpDownloader__p downloader,
             protocol::UrlInfo url_info,
             bool is_to_get_header);
+
+        void Redirect( network::HttpResponse::p http_response );
     };
 }
 

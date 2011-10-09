@@ -33,7 +33,6 @@ namespace p2sp
         , download_driver_(download_driver)
         , http_speed_limiter_(1000)
     {
-        // LOG(__EVENT, "leak", __FUNCTION__ << " " << this);
     }
 
     HttpDownloader::HttpDownloader(
@@ -51,12 +50,6 @@ namespace p2sp
         , http_request_demo_(http_request_demo)
         , http_speed_limiter_(1000)
     {
-        // LOG(__EVENT, "leak", __FUNCTION__ << " " << this);
-    }
-
-    HttpDownloader::~HttpDownloader()
-    {
-        // LOG(__EVENT, "leak", __FUNCTION__ << " " << this);
     }
 
     void HttpDownloader::Start(bool is_support_start)
@@ -77,9 +70,6 @@ namespace p2sp
         statistic_->SetReferUrl(refer);
         statistic_->SetIsDeath(false);
 
-        // http_speed_limiter_ = HttpDownloadSpeedLimiter::Create(1000);
-        // http_speed_limiter_->Start();
-
         is_support_start_ = is_support_start;
 
         if (false == is_to_get_header_)
@@ -97,7 +87,6 @@ namespace p2sp
         else
             http_connection_ = HttpConnection::Create(io_svc_, shared_from_this(), url_info_);
 
-        // http_connection_->Start(is_support_start);
         if (is_original_)
         {
             http_connection_->Start(is_support_start, is_open_service_, download_driver_->GetOpenServiceHeadLength());
@@ -109,15 +98,12 @@ namespace p2sp
                 is_detecting_ = http_detecter_->DoDetect(http_connection_, url_info_);
             }
         }
-
     }
 
     void HttpDownloader::Stop()
     {
         if (is_running_ == false)
             return;
-
-        // LOG(__EVENT, "leak", __FUNCTION__ << " " << this);
 
         if (http_detecter_)
         {
@@ -144,10 +130,7 @@ namespace p2sp
             http_request_demo_.reset();
         }
 
-        // http_speed_limiter_->Stop();
-
         is_running_ = false;
-
     }
 
     bool HttpDownloader::IsSupportRange()
@@ -169,21 +152,21 @@ namespace p2sp
         }
     }
 
-    void HttpDownloader::DecetecterReport(HttpConnection__p http_connection, bool is_support_range)
+    void HttpDownloader::DetectorReport(HttpConnection__p http_connection, bool is_support_range)
     {
         if (is_running_ == false)
             return;
-        HTTP_EVENT("HttpDownloader::DecetecterReport is_support_range:" << is_support_range);
+        HTTP_EVENT("HttpDownloader::DetectorReport is_support_range:" << is_support_range);
         if (is_original_)
         {
-            http_connection->DecetecterReport(is_support_range);
+            http_connection->DetectorReport(is_support_range);
         }
         else
         {
             if (is_support_range)
             {
                 http_connection_->Start(is_support_start_);
-                http_connection_->DecetecterReport(is_support_range);
+                http_connection_->DetectorReport(is_support_range);
             }
             else
             {
@@ -206,12 +189,7 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        // LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " " << downloader_driver->GetDownloadDriverID() << " " << piece_info_ex);
-
         http_connection_->PutPieceTask(piece_info_ex_s);
-
-        assert(statistic_);
-        // statistic_->SetDownloadingPieceInfo(piece_info_ex.block_index_, piece_info_ex.piece_index_, piece_info_ex.subpiece_index_);
     }
 
     bool HttpDownloader::IsConnected()
@@ -336,6 +314,7 @@ namespace p2sp
         if (http_connection_)
             http_connection_->PieceTimeout();
     }
+
     boost::int32_t HttpDownloader::GetPieceTaskNum()
     {
         return http_connection_->GetPieceTaskNum();

@@ -34,7 +34,7 @@ namespace p2sp
         string filename, int segno)
         : io_svc_(io_svc), download_driver_(download_driver)
         , filename_(filename), segno_(segno), using_udp_proxy_(false)
-        , udp_proxy_port_(80), error_times_(0), tried_times_(0), using_bak_domain_(false)
+        , udp_proxy_port_(80), error_times_(0), tried_times_(0), using_backup_domain_(false)
     {
         string hou_list = BootStrapGeneralConfig::Inst()->GetHouServerList();
         boost::algorithm::split(udp_proxy_domain_vec_, hou_list,
@@ -106,10 +106,9 @@ namespace p2sp
 
     string HttpDragDownloader::ConstructUrl()
     {
-        string request_domain("tinydrag.synacast.com");
         std::ostringstream request_path_stream;
         request_path_stream << "/" << segno_ << "/" << filename_ << "0drag";
-        if (!using_bak_domain_)
+        if (!using_backup_domain_)
         {
             return string("tinydrag.synacast.com") + request_path_stream.str();
         }
@@ -237,10 +236,10 @@ namespace p2sp
             }
             else
             {
-                if (dns_error && !using_bak_domain_)
+                if (dns_error && !using_backup_domain_)
                 {
                     error_times_ = 0;
-                    using_bak_domain_ = true;
+                    using_backup_domain_ = true;
                     Connect();
                 }
                 else
