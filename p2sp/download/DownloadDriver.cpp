@@ -827,10 +827,11 @@ namespace p2sp
 
             lpDownloadDriverStopData->ulDownloadBytes = speed_info.TotalDownloadBytes
                 + lpDownloadDriverStopData->ulP2pDownloadBytes;
-            std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.find(original_url_info_.url_);
+
+            std::list<UrlHttpDownloaderPair>::iterator iter = std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(original_url_info_.url_));
             if (iter != url_indexer_.end())
             {
-                HttpDownloader::p org_http_downloader_ = iter->second;  // boost::shared_dynamic_cast<HttpDownloader>(iter->second);
+                HttpDownloader::p org_http_downloader_ = iter->http_downloader_;  // boost::shared_dynamic_cast<HttpDownloader>(iter->second);
                 lpDownloadDriverStopData->ulOtherServerDownloadBytes = speed_info.TotalDownloadBytes
                     - org_http_downloader_->GetStatistics()->GetSpeedInfo().TotalDownloadBytes;
             }
@@ -847,9 +848,9 @@ namespace p2sp
         lpDownloadDriverStopData->uDataRate = 0;
 
         // 停止所有 Downloader
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
+        for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
         {
-            iter->second->Stop();
+            iter->http_downloader_->Stop();
         }
         // 清除 管理所有的 downloader 的 set
         downloaders_.clear();
@@ -1182,12 +1183,6 @@ namespace p2sp
 #endif
     }
 
-    bool DownloadDriver::HasUrl(const string& url)
-    {
-        // ! check youtube
-        return url_indexer_.find(url) != url_indexer_.end();
-    }
-
     HttpDownloader::p DownloadDriver::AddHttpDownloader(const network::HttpRequest::p http_request, const protocol::UrlInfo& url_info,
         bool is_orginal)
     {
@@ -1200,12 +1195,14 @@ namespace p2sp
         if (url_indexer_.size() > 5)
             return HttpDownloader::p();
 
-        if (HasUrl(url_info.url_))
+        std::list<UrlHttpDownloaderPair>::iterator iter = 
+            std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(url_info.url_));
+
+        if (iter != url_indexer_.end())
         {
             // 如果该 UrlInfo 已经存在，则不创建，直接返回该类对应的Url
             DD_EVENT("HttpDownloader Existed " << url_info);
-            HttpDownloader::p downloader = url_indexer_.find(url_info.url_)->second;
-            return downloader;
+            return iter->http_downloader_;
         }
 
         HttpDownloader::p downloader;
@@ -1228,7 +1225,7 @@ namespace p2sp
             // 在 downloader集合中 添加这个Downloader
             downloaders_.insert(downloader);
             // 在 downloader_indexer索引中 添加这个Downloader
-            url_indexer_[url_info.url_] = downloader;
+            url_indexer_.push_back(UrlHttpDownloaderPair(url_info.url_, downloader));
 
             if (is_pausing_)
                 downloader->SetPausing();
@@ -1253,12 +1250,14 @@ namespace p2sp
         if (url_indexer_.size() > 5)
             return downloader;DD_EVENT("DownloadDriver::AddHttpDownloader " << url_info);
 
-        if (HasUrl(url_info.url_))
+        std::list<UrlHttpDownloaderPair>::iterator iter = 
+            std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(url_info.url_));
+
+        if (iter != url_indexer_.end())
         {
             // 如果该 UrlInfo 已经存在，则不创建，直接返回该类对应的Url
             DD_EVENT("HttpDownloader Existed " << url_info);
-            HttpDownloader::p downloader = url_indexer_.find(url_info.url_)->second;
-            return downloader;
+            return iter->http_downloader_;
         }
 
         if (instance_->IsComplete())
@@ -1278,7 +1277,7 @@ namespace p2sp
             // 在 downloader集合中 添加这个Downloader
             downloaders_.insert(downloader);
             // 在 downloader_indexer索引中 添加这个Downloader
-            url_indexer_[url_info.url_] = downloader;
+            url_indexer_.push_back(UrlHttpDownloaderPair(url_info.url_, downloader));
 
             if (is_pausing_)
                 downloader->SetPausing();
@@ -1372,9 +1371,9 @@ namespace p2sp
         // 删除索引
         downloaders_.erase(downloader);
 
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
+        for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
         {
-            if (iter->second == downloader)
+            if (iter->http_downloader_ == downloader)
             {
                 url_indexer_.erase(iter);
                 break;
@@ -1497,7 +1496,7 @@ namespace p2sp
             url_indexer_.clear();
             downloaders_.insert(downloader);
             p2p_downloader_.reset();
-            url_indexer_[url_info_.url_] = boost::shared_dynamic_cast<HttpDownloader>(downloader);
+            url_indexer_.push_back(UrlHttpDownloaderPair(url_info_.url_, boost::shared_dynamic_cast<HttpDownloader>(downloader)));
             // start
             switch_controller_ = SwitchController::Create(shared_from_this());
             switch_controller_->Start(switch_control_mode_);
@@ -1993,9 +1992,9 @@ namespace p2sp
     {
         if (!is_running_)
             return false;
-        for (std::map<string, HttpDownloader::p>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
+        for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
         {
-            if (iter->second->IsSupportRange())
+            if (iter->http_downloader_->IsSupportRange())
             {
                 return true;
             }
@@ -2145,7 +2144,7 @@ namespace p2sp
     {
         if (false == is_running_)
             return IHTTPControlTarget::p();
-        return url_indexer_.empty() ? IHTTPControlTarget::p() : url_indexer_.begin()->second;
+        return url_indexer_.empty() ? IHTTPControlTarget::p() : (*url_indexer_.begin()).http_downloader_;
     }
     IP2PControlTarget::p DownloadDriver::GetP2PControlTarget()
     {
@@ -2703,10 +2702,10 @@ namespace p2sp
     std::vector<IHTTPControlTarget::p> DownloadDriver::GetAllHttpControlTargets()
     {
         std::vector<IHTTPControlTarget::p> target_vec;
-        for (std::map<string, HttpDownloader__p>::iterator iter = url_indexer_.begin();
+        for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin();
             iter != url_indexer_.end(); ++iter)
         {
-            target_vec.push_back(iter->second);
+            target_vec.push_back(iter->http_downloader_);
         }
 
         return target_vec;

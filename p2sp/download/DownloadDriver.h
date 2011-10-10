@@ -248,8 +248,6 @@ namespace p2sp
         // 原来trunk没有这个函数
         // void OnDownloaderConnected(VodDownloader__p downloader);
 
-        bool HasUrl(const string& url);
-
         void ChangeToPoolModel();
 
         void GetSubPieceForPlay();
@@ -294,7 +292,43 @@ namespace p2sp
 
         P2PDownloader__p p2p_downloader_;
         std::set<VodDownloader__p> downloaders_;
-        std::map<string, HttpDownloader__p> url_indexer_;
+        
+        struct UrlHttpDownloaderPair
+        {
+            UrlHttpDownloaderPair(string url, HttpDownloader__p http_downloader)
+                : url_(url)
+                , http_downloader_(http_downloader)
+            {
+
+            }
+            string url_;
+            HttpDownloader__p http_downloader_;
+        };
+
+        class UrlHttpDownloaderEqual
+        {
+        public:
+            UrlHttpDownloaderEqual(string url)
+                : url_(url)
+            {
+
+            }
+            bool operator() (const UrlHttpDownloaderPair & other)
+            {
+                if (url_ == other.url_)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        private:
+            string url_;
+        };
+
+        std::list<UrlHttpDownloaderPair> url_indexer_;
         PieceRequestManager__p piece_request_manager_;
         boost::shared_ptr<storage::Instance> instance_;
         ProxyConnection__p proxy_connection_;
