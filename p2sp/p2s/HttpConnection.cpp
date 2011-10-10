@@ -28,7 +28,7 @@ namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("p2s");
 
-    uint32_t DELAY_CONNECT_TIME = 100;
+    uint32_t DELAY_CONNECT_TIME = 1000;
     const uint32_t HTTP_SLEEP_TIME = 1*1000;
     const uint32_t HTTP_PAUSING_SLEEP_TIME = 8*1000;
 
