@@ -26,7 +26,6 @@
 #include "downloadcenter/DownloadCenterModule.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
-#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "network/Uri.h"
 #include "random.h"
 
@@ -910,15 +909,15 @@ namespace storage
             if (resource_p_)
             {
 #ifdef DISK_MODE
-                StorageThread::Post(boost::bind(&Resource::ThreadRemoveBlock, resource_p_, block_index, true));
+                StorageThread::Post(boost::bind(&Resource::ThreadRemoveBlock, resource_p_, block_index));
 #else
-                resource_p_->ThreadRemoveBlock(block_index, true);
+                resource_p_->ThreadRemoveBlock(block_index);
 #endif  // #ifdef DISK_MODE
             }
             else
             {
                 // 删除block，作用同上
-                OnRemoveResourceBlockFinish(block_index, true);
+                OnRemoveResourceBlockFinish(block_index);
             }
         }
     }
@@ -946,24 +945,16 @@ namespace storage
 
     // 从资源描述, pending_subpiece_manager和pending_get_subpiece_manager中删除block
     // 通知upload_listener获取subpiece失败，通知download_driver，makeblock失败
-    void Instance::OnRemoveResourceBlockFinish(uint32_t block_index, bool hash_check_failed)
+    void Instance::OnRemoveResourceBlockFinish(uint32_t block_index)
     {
         if (!subpiece_manager_)
         {
             return;
         }
-
         STORAGE_DEBUG_LOG(" block_index:" << block_index << "rid_info: " << subpiece_manager_->GetRidInfo());
         subpiece_manager_->RemoveBlockInfo(block_index);
-#ifdef DISK_MODE
-        StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p_));
-#endif
-        
-        // herain:只有因为hash校验失败删除block时才需要汇报校验出错
-        if (hash_check_failed)
-        {
-            OnNotifyHashBlock(block_index, false);
-        }
+
+        OnNotifyHashBlock(block_index, false);
     }
 
     void Instance::WeUploadSubPiece(uint32_t num)
@@ -1775,15 +1766,7 @@ namespace storage
         {
             std::vector<protocol::SubPieceContent*> buffs;
             protocol::SubPieceInfo iter_sub_piece(start_s_info);
-            uint32_t max_read_subpiece_num = 256;
-            if (p2sp::BootStrapGeneralConfig::Inst()->NeedCheckHashBeforePlay())
-            {
-                // herain:如果需要在发送给播放器之前进行校验，一次读取的长度为一个Block的长度，
-                // 方便读取完之后进行校验。
-                max_read_subpiece_num = default_subpiece_num_per_block_g_;
-            }
-
-            for (int i = 0; i < max_read_subpiece_num; ++i)
+            for (int i = 0; i < 256; ++i)
             {
                 protocol::SubPieceContent* content = new protocol::SubPieceContent();
                 if (!content->get_buffer())
@@ -1796,9 +1779,7 @@ namespace storage
                     break;
                 }
 
-                // herain:没有到文件尾部并且没有到block的尾部，为了便于校验，保证一次读取请求不跨blcok。
-                if (false == subpiece_manager_->IncSubPieceInfo(iter_sub_piece) ||
-                    iter_sub_piece.block_index_ != start_s_info.block_index_)
+                if (false == subpiece_manager_->IncSubPieceInfo(iter_sub_piece))
                     break;
             }
 

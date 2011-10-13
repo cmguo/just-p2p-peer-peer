@@ -301,13 +301,11 @@ namespace p2sp
             // 开放服务
             if (true == is_open_service_)
             {
-                if (piece_info_ex_.GetEndPosition(block_size_) == current_position)
-                    //herain:下面这两个策略是有bug的，但是svn log里面看从一开始就是有的，
-                    // 不清楚删除之后会有什么预期不到的行为，先注释，待彻底测试验证没问题
-                    // 之后再彻底删除
+                if (piece_info_ex_.GetEndPosition(block_size_) == current_position ||
                     // head length 未获得
-                    // head_length_ == (uint32_t)-1 ||
-                    // current_position < head_length_)
+                    head_length_ == (uint32_t)-1 ||
+
+                    current_position < head_length_)
                 {
                     // 继续
                     piece_info_ex_ = piece_info_ex;

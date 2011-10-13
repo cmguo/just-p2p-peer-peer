@@ -26,7 +26,6 @@ namespace p2sp
         bool IsDataCollectionOn() const { return GetDataCollectionServers().size() > 0; }
 
         std::vector<string> GetDataCollectionServers() const;
-        bool NeedCheckHashBeforePlay() const {return need_check_hash_before_play_;}
 
         void AddUpdateListener(boost::shared_ptr<ConfigUpdateListener> listener);
         bool RemoveUpdateListener(boost::shared_ptr<ConfigUpdateListener> listener);
@@ -58,8 +57,6 @@ namespace p2sp
         bool use_push_;
 
         UploadPolicy upload_policy_;
-
-        bool need_check_hash_before_play_;
     };
 }
 #endif

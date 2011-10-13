@@ -188,7 +188,6 @@ namespace storage
         
         if (node->IsFull())
         {
-            STORAGE_DEBUG_LOG("Delete Block Node" << block_index);
             assert(block_bit_map_->HasBlock(block_index));
             node.reset();
         }
@@ -297,7 +296,6 @@ namespace storage
     }
 
     void SubPieceManager::RemoveBlockInfo(uint32_t block_index) {
-        STORAGE_DEBUG_LOG("RemoveBlockInfo block " << block_index);
         if (block_bit_map_->HasBlock(block_index))
             block_bit_map_->Reset(block_index);
 
@@ -311,7 +309,6 @@ namespace storage
     }
 
     void SubPieceManager::OnWriteBlockFinish(uint32_t block_index) {
-        STORAGE_DEBUG_LOG("OnWriteBlockFinish block " << block_index);
         BlockNode::p & node = blocks_[block_index];
         if (node) {
             node->OnWriteFinish();

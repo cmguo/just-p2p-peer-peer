@@ -11,7 +11,6 @@
 #include "storage/Storage.h"
 #include "storage/SpaceManager.h"
 #include "storage/StorageThread.h"
-#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -105,8 +104,6 @@ namespace storage
 
         FlushStore();
 
-        // herain:这里有潜在的问题，存储线程中访问subpiece_manager_，此时主线程可能同时
-        // 在修改subpiece_manager_的状态，可能会造成crash或者保存的状态和内存状态暂时不一致
         base::AppBuffer buf;
         if (!subpiece_manager_->ToBuffer(buf) || buf.Length() == 0)
         {
@@ -264,119 +261,56 @@ namespace storage
         }
 
         STORAGE_DEBUG_LOG("Enter!");
-        DebugLog("hash: Read for play from (%d|%d), length:%d", subpiece_info.block_index_, subpiece_info.subpiece_index_, buffs.size());
         if (false == IsFileOpen() && false == ReOpenFile())
         {
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
             return;
         }
 
-        if (!p2sp::BootStrapGeneralConfig::Inst()->NeedCheckHashBeforePlay())
+        protocol::SubPieceInfo tmp_subpiece_info = subpiece_info;
+        bool tmp_is_max = false;
+        for (int i = 0; i < buffs.size(); ++i)
         {
-            protocol::SubPieceInfo tmp_subpiece_info = subpiece_info;
-            bool tmp_is_max = false;
-            for (int i = 0; i < buffs.size(); ++i)
+            if (tmp_subpiece_info == subpiece_manager_->GetMaxSubPieceInfo())
             {
-                if (tmp_subpiece_info == subpiece_manager_->GetMaxSubPieceInfo())
-                {
-                    tmp_is_max = true;
-                    break;
-                }
-                if (false == subpiece_manager_->IncSubPieceInfo(tmp_subpiece_info))
-                {
-                    // assert(false);
-                    tmp_is_max = true;
-                    break;
-                }
+                tmp_is_max = true;
+                break;
             }
+            if (false == subpiece_manager_->IncSubPieceInfo(tmp_subpiece_info))
+            {
+                // assert(false);
+                tmp_is_max = true;
+                break;
+            }
+        }
 
-            uint32_t length;
-            if (tmp_is_max)
-            {
-                uint32_t last_subpiece_off, last_subpiece_len;
-                subpiece_manager_->GetSubPiecePosition(tmp_subpiece_info, last_subpiece_off, last_subpiece_len);
-                length = (buffs.size() - 1) * bytes_num_per_subpiece_g_ + last_subpiece_len;
-            }
-            else
-            {
-                length = buffs.size() * bytes_num_per_subpiece_g_;
-            }
-
-            uint32_t start_offset = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
-            STORAGE_ERR_LOG("start:!" << subpiece_info << ", continue_len=" << buffs.size());
-            STORAGE_DEBUG_LOG("(start offset: " << start_offset << ", Length: " << length << ")");
-
-            if (ReadBufferArray(start_offset, length, buffs))
-            {
-                STORAGE_DEBUG_LOG("ReadBufferArray succed!");
-                io_svc_.post(boost::bind(&Resource::ThreadReadBufferForPlayHelper,
-                    instance_p_, subpiece_manager_, subpiece_info, buffs));
-            }
-            else
-            {
-                STORAGE_DEBUG_LOG("ReadBufferArray failed!");
-                io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
-                assert(false);
-            }
+        uint32_t length;
+        if (tmp_is_max)
+        {
+            uint32_t last_subpiece_off, last_subpiece_len;
+            subpiece_manager_->GetSubPiecePosition(tmp_subpiece_info, last_subpiece_off, last_subpiece_len);
+            length = (buffs.size() - 1) * bytes_num_per_subpiece_g_ + last_subpiece_len;
         }
         else
         {
-            if (ThreadReadBufferForPlayAfterHash(subpiece_info, buffs))
-            {
-                DebugLog("hash: Check hash succeed");
-                io_svc_.post(boost::bind(&Resource::ThreadReadBufferForPlayHelper,
-                    instance_p_, subpiece_manager_, subpiece_info, buffs));
-            }
-            else
-            {
-                DebugLog("hash: ThreadReadBufferForPlayAfterHash failed!");
-                io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
-            }
-        }
-    }
-
-    bool Resource::ThreadReadBufferForPlayAfterHash(
-        protocol::SubPieceInfo const & subpiece_info, 
-        std::vector<protocol::SubPieceContent*> const & buffs)
-    {
-        if (!subpiece_manager_->HasFullBlock(subpiece_info.block_index_))
-        {
-            // herain:为了防止本地缓存的不完整的错误block数据被推送给播放器，因此
-            // 不完整的block全部删除，重新下载
-            ThreadRemoveBlock(subpiece_info.block_index_, false);
-            return false;
+            length = buffs.size() * bytes_num_per_subpiece_g_;
         }
 
-        uint32_t start_offset, length;
-        subpiece_manager_->GetBlockPosition(subpiece_info.block_index_, start_offset, length);
-        base::AppBuffer block_buffer = ReadBuffer(start_offset, length);
-        if(subpiece_manager_->GetRidInfo().block_md5_s_[subpiece_info.block_index_] == CalcHash(block_buffer))
+        uint32_t start_offset = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
+        STORAGE_ERR_LOG("start:!" << subpiece_info << ", continue_len=" << buffs.size());
+        STORAGE_DEBUG_LOG("(start offset: " << start_offset << ", Length: " << length << ")");
+
+        if (ReadBufferArray(start_offset, length, buffs))
         {
-            uint32_t subpiece_index = subpiece_info.subpiece_index_;
-            for (uint32_t i = 0; i < buffs.size(); ++i, ++subpiece_index)
-            {
-                protocol::SubPieceInfo subpiece_info(subpiece_info.block_index_, subpiece_index);
-                uint32_t subpiece_length = bytes_num_per_subpiece_g_;
-                if (subpiece_info == subpiece_manager_->GetMaxSubPieceInfo())
-                {
-                    uint32_t last_subpiece_off, last_subpiece_length;
-                    subpiece_manager_->GetSubPiecePosition(subpiece_info, last_subpiece_off, last_subpiece_length);
-                    subpiece_length = last_subpiece_length;
-                }
-
-                assert(subpiece_index*bytes_num_per_subpiece_g_ + subpiece_length <= block_buffer.Length());
-                base::util::memcpy2(buffs[i]->get_buffer(), bytes_num_per_subpiece_g_, 
-                    block_buffer.Data() + subpiece_index*bytes_num_per_subpiece_g_, subpiece_length);
-            }
-
-            return true;
+            STORAGE_DEBUG_LOG("ReadBufferArray succed!");
+            io_svc_.post(boost::bind(&Resource::ThreadReadBufferForPlayHelper,
+                instance_p_, subpiece_manager_, subpiece_info, buffs));
         }
         else
         {
-            // herain:本地缓存数据校验错误，将数据删除，重新下载
+            STORAGE_DEBUG_LOG("ReadBufferArray failed!");
+            io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
             assert(false);
-            ThreadRemoveBlock(subpiece_info.block_index_, true);
-            return false;
         }
     }
 
@@ -503,10 +437,28 @@ namespace storage
 
         if (need_hash)
         {
+            framework::string::Md5 md5;
+            uint32_t subpiece_len = 0;
+            uint32_t offset = 0;
+            while (offset < buff.Length())
+            {
+                if (offset + bytes_num_per_piece_g_ <= buff.Length())
+                    subpiece_len = bytes_num_per_piece_g_;
+                else
+                    subpiece_len = buff.Length() - offset;
+                md5.update(buff.Data() + offset, subpiece_len);
+                offset += subpiece_len;
+            }
+
+            md5.final();
+
+            MD5 hash_val;
+            hash_val.from_bytes(md5.to_bytes());
+
             if (instance_p_)
             {
                 io_svc_.post(boost::bind(&Instance::OnReadBlockForUploadFinishWithHash, instance_p_, block_index,
-                    buff, listener, CalcHash(buff)));
+                    buff, listener, hash_val));
             }
         }
         else
@@ -610,7 +562,7 @@ namespace storage
 
 #endif  // #ifdef DISK_MODE
 
-    void Resource::ThreadRemoveBlock(uint32_t index, bool hash_check_failed)
+    void Resource::ThreadRemoveBlock(uint32_t index)
     {
         if (is_running_ == false)
         {
@@ -640,7 +592,11 @@ namespace storage
 #endif  // #ifdef DISK_MODE
 
         assert(instance_p_);
-        io_svc_.post(boost::bind(&Instance::OnRemoveResourceBlockFinish, instance_p_, index, hash_check_failed));
+        io_svc_.post(boost::bind(&Instance::OnRemoveResourceBlockFinish, instance_p_, index));
+
+#ifdef DISK_MODE
+        SecSaveResourceFileInfo();
+#endif  // #ifdef DISK_MODE
     }
 
     unsigned char Resource::GetDownMode()
@@ -653,27 +609,5 @@ namespace storage
         {
             return DM_BY_ACCELERATE;
         }
-    }
-
-    MD5 Resource::CalcHash(base::AppBuffer const & buff) const
-    {
-        framework::string::Md5 md5;
-        uint32_t subpiece_len = 0;
-        uint32_t offset = 0;
-        while (offset < buff.Length())
-        {
-            if (offset + bytes_num_per_piece_g_ <= buff.Length())
-                subpiece_len = bytes_num_per_piece_g_;
-            else
-                subpiece_len = buff.Length() - offset;
-            md5.update(buff.Data() + offset, subpiece_len);
-            offset += subpiece_len;
-        }
-
-        md5.final();
-
-        MD5 hash_val;
-        hash_val.from_bytes(md5.to_bytes());
-        return hash_val;
     }
 }

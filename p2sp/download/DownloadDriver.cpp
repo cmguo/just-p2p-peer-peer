@@ -1681,9 +1681,6 @@ namespace p2sp
         }
         boost::int32_t flag = instance_->GetRidOriginFlag();
         instance_->DettachDownloadDriver(shared_from_this());
-
-        // herain:这里有潜在问题，发现校验错误后重新创建Instance，没有传入RID参数，这会造成重新
-        // 创建一个新的资源文件，老的资源文件将被放弃，至于新资源和老资源会不会进行merge需要继续研究。
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, true));
         instance_->SetIsOpenService(is_open_service_);
         instance_->AttachDownloadDriver(shared_from_this());
@@ -1698,6 +1695,7 @@ namespace p2sp
         downloaders_.clear();
         piece_request_manager_->ClearTasks();
 
+        proxy_connection_->ResetPlayingPostion();
 
         // 将这个Downloader设置为 原始的Downloader
         HttpDownloader::p downloader = AddHttpDownloader(original_url_info_, true);

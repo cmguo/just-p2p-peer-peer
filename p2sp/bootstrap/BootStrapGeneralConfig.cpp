@@ -17,11 +17,10 @@ namespace p2sp
         "[config]\r\n \
         hl=220.165.14.10@119.167.233.56\r\n \
         usepush=false\r\n \
-        uploadpolicy=0\r\n \
-        hashBeforePlay=true");
+        uploadpolicy=0");
 
     BootStrapGeneralConfig::BootStrapGeneralConfig()
-        : use_push_(false), upload_policy_(policy_ping), need_check_hash_before_play_(true)
+        : use_push_(false), upload_policy_(policy_ping)
     {
     }
 
@@ -89,8 +88,7 @@ namespace p2sp
                 ("config.hl", po::value<string>())
                 ("config.dc_servers", po::value<string>())
                 ("config.usepush", po::value<bool>())
-                ("config.uploadpolicy", po::value<uint32_t>())
-                ("config.hashBeforePlay", po::value<bool>());
+                ("config.uploadpolicy", po::value<uint32_t>());
 
             std::istringstream config_stream(config_string);
 
@@ -100,8 +98,7 @@ namespace p2sp
 
             if (vm.count("config.hl") == 0 ||
                 vm.count("config.usepush") == 0 ||
-                vm.count("config.uploadpolicy") == 0 ||
-                vm.count("config.hashBeforePlay") == 0)
+                vm.count("config.uploadpolicy") == 0)
             {
                 assert(false);
                 return;
@@ -120,15 +117,13 @@ namespace p2sp
                 data_collection_server_list_ = vm["config.dc_servers"].as<string>();
             }
 
-            need_check_hash_before_play_ = vm["config.hashBeforePlay"].as<bool>();
-
             SaveLocalConfig(config_string);
 
             NotifyConfigUpdateEvent();
         }
         catch (boost::program_options::error & e)
         {
-            DebugLog("Exception caught: %s", e.what());
+            DebugLog("Exception caught: ", e.what());
             assert(false);
         }
     }
