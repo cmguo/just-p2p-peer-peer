@@ -40,6 +40,8 @@ namespace statistic
 
         SetUrl(url_);
 
+        http_downloader_info_.IsPause = true;
+
         speed_info_.Start();
         STAT_DEBUG("Started Speed Info.");
 
