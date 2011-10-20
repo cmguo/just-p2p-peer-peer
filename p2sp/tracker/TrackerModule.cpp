@@ -41,11 +41,11 @@ namespace p2sp
     {
         if (is_vod)
         {
-            vod_tracker_manager_.SetTrackerList(group_count, tracker_s);
+            vod_tracker_manager_.SetTrackerList(group_count, tracker_s, true);
         }
         else
         {
-            live_tracker_manager_.SetTrackerList(group_count, tracker_s);
+            live_tracker_manager_.SetTrackerList(group_count, tracker_s, true);
         }
     }
 

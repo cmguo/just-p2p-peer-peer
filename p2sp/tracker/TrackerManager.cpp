@@ -51,7 +51,8 @@ namespace p2sp
         group_count_ = 0;
 
         LOG(__EVENT, "tracker", "Tracker Manager has started successfully.");
-        LoadTrackerList();
+
+        load_tracker_list_timer_.start();
 
         is_running_ = true;
     }
@@ -115,7 +116,7 @@ namespace p2sp
             return;
         }
 
-        SetTrackerList(save_group_count, save_tracker_info);
+        SetTrackerList(save_group_count, save_tracker_info, false);
     }
 
     void TrackerManager::SaveTrackerList()
@@ -146,8 +147,16 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s)
+    void TrackerManager::SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s,
+        bool is_got_tracker_list_from_bs)
     {
+        assert(!is_got_tracker_list_from_bs_);
+
+        if (is_got_tracker_list_from_bs)
+        {
+            is_got_tracker_list_from_bs_ = is_got_tracker_list_from_bs;
+        }
+
         // 验证输入
         if (group_count == 0 && tracker_s.empty())
         {
@@ -359,6 +368,14 @@ namespace p2sp
         for (std::map<int, TrackerGroup::p> ::iterator iter = mod_indexer_.begin(); iter != mod_indexer_.end(); iter++)
         {
             iter->second->PPLeave();
+        }
+    }
+
+    void TrackerManager::OnLoadTrackerTimer(framework::timer::Timer::pointer timer)
+    {
+        if (!is_got_tracker_list_from_bs_)
+        {
+            LoadTrackerList();
         }
     }
 }
