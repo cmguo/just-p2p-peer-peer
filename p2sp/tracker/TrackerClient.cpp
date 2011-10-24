@@ -297,7 +297,6 @@ namespace p2sp
                 local_resource_set.size(),
                 local_resources_.size(),
                 local_udp_port,
-                protocol::PEER_VERSION,
                 stun_ip,
                 stun_port,
                 stun_detect_port,
