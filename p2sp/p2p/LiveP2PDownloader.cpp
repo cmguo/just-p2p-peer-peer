@@ -64,11 +64,7 @@ namespace p2sp
             }
 
             DoList();
-        }
-        else
-        {
-            return;
-        }
+        }        
 
         // 每秒
         // 驱动一次发起连接和断开连接

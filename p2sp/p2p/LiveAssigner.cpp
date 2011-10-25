@@ -13,6 +13,12 @@ namespace p2sp
 
     void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent)
     {
+		// 500ms分配一次
+		if (times % 2 == 0)
+		{			
+			return;
+		}
+
         // 根据已有的subpiece_cout和需要分配的capacity
         // 计算出还需要请求多少片piece才能到capacity
         CalcSubpieceTillCapacity();
