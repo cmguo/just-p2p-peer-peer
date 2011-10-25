@@ -119,18 +119,20 @@ namespace p2sp
 
     P2PDownloader::p P2PModule::CreateP2PDownloader(const RID& rid)
     {
-        // !TEST
-        // return P2PDownloader::p();
-        if (is_running_ == false) return P2PDownloader::p();
+		if (is_running_ == false)
+        {
+            return P2PDownloader::p();
+        }
 
-        storage::IStorage::p storag = storage::Storage::Inst();
-        storage::Instance::p instance = boost::dynamic_pointer_cast<storage::Instance>(storag->GetInstanceByRID(rid));
-        assert(instance);
-        assert(false == instance->GetRID().is_empty());
         // 如果 在 rid_indexer_ 中找到了 这个 P2PDownloader, 就是用这个 P2PDownloader
         if (rid_indexer_.find(rid) != rid_indexer_.end())
         {
             P2PDownloader::p downloader = rid_indexer_[rid];
+            storage::IStorage::p storage = storage::Storage::Inst();
+            storage::Instance::p instance = boost::dynamic_pointer_cast<storage::Instance>(storage->GetInstanceByRID(rid));
+            assert(instance);
+            assert(false == instance->GetRID().is_empty());
+
             // ! 有问题
             if (downloader->GetInstance() != instance) {
                 LOG(__DEBUG, "storage", __FUNCTION__ << " downloader->instance_ != instance, change from " << downloader->GetInstance() << " to " << instance);
