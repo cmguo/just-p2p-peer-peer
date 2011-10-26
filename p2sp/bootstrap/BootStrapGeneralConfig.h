@@ -55,7 +55,7 @@ namespace p2sp
         std::set<boost::shared_ptr<ConfigUpdateListener> > update_listeners_;
 
         bool use_push_;
-
+    
         UploadPolicy upload_policy_;
     };
 }
