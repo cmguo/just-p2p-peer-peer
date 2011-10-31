@@ -286,6 +286,10 @@ namespace p2sp
 
         IPPoolIndexUpdating updating(peer, shared_from_this());
         peer->last_active_time_ = framework::timer::TickCounter::tick_count();
+
+		// reset last_connect_time_ to avoid re-connecting the peer immediately		
+		peer->last_connect_time_ = peer->last_active_time_;
+
         peer->is_connecting_ = false;
         peer->is_connction_ = false;
     }
