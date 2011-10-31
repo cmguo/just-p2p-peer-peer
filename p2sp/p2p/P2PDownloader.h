@@ -172,7 +172,7 @@ namespace p2sp
 
         boost::uint32_t GetDownloadingTimeInSeconds() const {return downloading_time_in_seconds_;}
 
-        boost::uint32_t GetConnectFullTimeInSeconds() const {return connect_full_time_in_seconds_;}
+        boost::uint32_t GetConnectFullTimeInSeconds() const {return seconds_elapsed_until_connection_full_;}
     public:
         //////////////////////////////////////////////////////////////////////////
         // IP2PControlTarget

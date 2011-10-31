@@ -1234,7 +1234,7 @@ namespace p2sp
         log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
         log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
         log_stream << "&J1=" << (uint32_t)info.connect_full_time_in_seconds;
-        log_stream << "&K1=" << (uint32_t)info.is_head_only_;
+        log_stream << "&K1=" << (uint32_t)info.is_head_only;
 
         log_stream << "&L1=" << (uint32_t)info.avg_connect_rtt;
         log_stream << "&M1=" << (uint32_t)info.avg_lost_rate;
