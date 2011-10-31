@@ -72,7 +72,8 @@ namespace p2sp
         uint32_t rest_time_in_seconds_;
         uint32_t live_interval_;
         bool paused_;
-        framework::timer::TickCounter paused_ticks_;
+
+        boost::uint32_t accumulate_pausing_time_in_seconds_;
     };
 }
 

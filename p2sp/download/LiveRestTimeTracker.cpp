@@ -5,6 +5,7 @@ namespace p2sp
 {
     RestTimeTracker::RestTimeTracker()
         : paused_(false)
+        , accumulate_pausing_time_in_seconds_(0)
     {
 
     }
@@ -33,9 +34,10 @@ namespace p2sp
         
         if (paused_)
         {
-            DebugLog("REST paused\n time + %d\n", paused_ticks_.elapsed() / 1000);
-            downloaded_data_in_seconds_since_reset += paused_ticks_.elapsed() / 1000;
+            accumulate_pausing_time_in_seconds_++;
         }
+
+        downloaded_data_in_seconds_since_reset += accumulate_pausing_time_in_seconds_;
 
         uint32_t elapsed_seconds_since_reset = ticks_since_last_progress_update_.elapsed() / 1000;
         if (elapsed_seconds_since_reset >= downloaded_data_in_seconds_since_reset)
@@ -53,17 +55,14 @@ namespace p2sp
         last_reset_progress_ = current_progress_;
         ticks_since_last_progress_update_.reset();
         rest_time_in_seconds_ = 0;
+        accumulate_pausing_time_in_seconds_ = 0;
     }
 
     void RestTimeTracker::OnPause(bool pause)
     {
         // 客户端应该可以保证不重复调用
         assert(paused_ != pause);
-
-        DebugLog("REST paused = %d\n", pause);
-
         paused_ = pause;
-        paused_ticks_.reset();
     }
 
     bool RestTimeTracker::IsPaused()
