@@ -169,6 +169,10 @@ namespace p2sp
         boost::int32_t GetDownloadPriority() const {return download_priority_;}
 
         bool NeedKickPeerConnection();
+
+        boost::uint32_t GetDownloadingTimeInSeconds() const {return downloading_time_in_seconds_;}
+
+        boost::uint32_t GetConnectFullTimeInSeconds() const {return connect_full_time_in_seconds_;}
     public:
         //////////////////////////////////////////////////////////////////////////
         // IP2PControlTarget
@@ -213,6 +217,8 @@ namespace p2sp
 
         void AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
             boost::uint32_t timeout, PeerConnection__p peer_connection);
+
+        boost::uint32_t GetAvgConnectRTT() const;
 
     private:
         void DoList();
@@ -279,6 +285,12 @@ namespace p2sp
         // List相关
         framework::timer::TickCounter last_dolist_time_;
         uint32_t dolist_count_;
+
+        boost::uint32_t downloading_time_in_seconds_;
+
+        bool is_connect_full_;
+        boost::uint32_t seconds_elapsed_until_connection_full_;
+
     private:
         P2PDownloader(const RID& rid);
     };

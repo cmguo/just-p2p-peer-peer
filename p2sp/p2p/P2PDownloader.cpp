@@ -21,10 +21,6 @@
 
 #include <framework/network/Endpoint.h>
 
-#ifdef COUNT_CPU_TIME
-#include "count_cpu_time.h"
-#endif
-
 #define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
 #define P2P_INFO(s)    LOG(__INFO, "P2P", s)
 #define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
@@ -52,6 +48,9 @@ namespace p2sp
         , download_speed_limiter_(600, 2500), download_priority_(protocol::RequestSubPiecePacket::DEFAULT_PRIORITY)
         , dolist_count_(0)
         , last_dolist_time_(false)
+        , downloading_time_in_seconds_(0)
+        , seconds_elapsed_until_connection_full_(0)
+        , is_connect_full_(false)
     {
     }
 
@@ -742,9 +741,6 @@ namespace p2sp
     void P2PDownloader::OnP2PTimer(uint32_t times)
     {
         // P2PModule调用，250ms执行一次
-#ifdef COUNT_CPU_TIME
-        count_cpu_time(__FUNCTION__);
-#endif
         if (!is_running_)
         {
             return;
@@ -759,6 +755,23 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
+            if (!is_p2p_pausing_)
+            {
+                downloading_time_in_seconds_++;
+            }
+
+            if (!is_connect_full_)
+            {
+                if (peers_.size() >= p2p_max_connect_count_)
+                {
+                    is_connect_full_ = true;
+                }
+                else
+                {
+                    seconds_elapsed_until_connection_full_++;
+                }
+            }
+
             // 每秒
             // IPPool Timer
             assert(ippool_);
@@ -1747,5 +1760,25 @@ namespace p2sp
         boost::uint32_t timeout, PeerConnection__p peer_connection)
     {
         subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection);
+    }
+
+    boost::uint32_t P2PDownloader::GetAvgConnectRTT() const
+    {
+        boost::uint32_t sum_rtt = 0;
+
+        for (std::map<Guid, PeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            sum_rtt += iter->second->GetConnectRTT();
+        }
+
+        if (peers_.empty())
+        {
+            return 0;
+        }
+        else
+        {
+            return sum_rtt / peers_.size();
+        }
     }
 }

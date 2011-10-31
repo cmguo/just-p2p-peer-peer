@@ -53,6 +53,7 @@ namespace p2sp
         , delay_once_timer_(global_second_timer(), DELAY_CONNECT_TIME, boost::bind(&HttpConnection::OnTimerElapsed, this, &delay_once_timer_))
         , retry_count_403_header_(0)
         , connect_fail_count_(0)
+        , download_bytes_(0)
     {}
 
     HttpConnection::HttpConnection(
@@ -79,6 +80,7 @@ namespace p2sp
         , http_request_demo_(http_request_demo)
         , retry_count_403_header_(0)
         , connect_fail_count_(0)
+        , download_bytes_(0)
     {}
 
     void HttpConnection::Start(bool is_support_start, bool is_open_service, uint32_t head_length)
@@ -191,7 +193,12 @@ namespace p2sp
         {
             status = CONNECTING;
 
-            if (http_client_) http_client_->Close();
+            if (http_client_)
+            {
+                downloader_->SubmitHttpDownloadBytesInConnection(download_bytes_);
+                download_bytes_ = 0;
+                http_client_->Close();
+            }
             http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
             LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " create http_client = " << http_client_);
             if (is_open_service_) http_client_->AddPragma("Client", pragma_client_);
@@ -893,6 +900,8 @@ namespace p2sp
         HTTP_EVENT("OnRecvHttpDataSucced " << url_info_ << " file_offset=" << file_offset << " content_offset=" << content_offset);
 
         if (is_running_ == false) return;
+
+        download_bytes_ += buffer.Length();
 
         downloader_->GetStatistics()->SubmitDownloadedBytes(buffer.Length());
         if (downloader_->IsOriginal())

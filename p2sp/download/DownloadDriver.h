@@ -57,13 +57,30 @@ namespace p2sp
         boost::uint32_t       uAccelerateHttpSpeed;                 // W: 加速状态机切换之前的速度
         boost::uint32_t       uAccelerateStatus;                    // X: 加速状态机的状态
         // Y: 操作系统版本(客户端提交)
-        // Z: 文件时长(客户端提交) I/V
+        // Z: tiny drag下载结果
+        boost::uint32_t       tiny_drag_result;
         // extend 3
         boost::uint32_t       download_time;                        // A1: 下载所用的时间
         boost::uint32_t       last_speed;                           // B1: 最后一刻下载速度
         // extend 4
         boost::uint32_t       is_got_rid;                           // C1: 是否获得RID(0未获得;1获得)
         // D1: J+K
+        // E1: bwtype
+        boost::uint32_t       bwtype;
+        // F1: http 平均下载速度
+        boost::uint32_t       http_avg_speed_in_KBps;
+        // G1: p2p 平均下载速度
+        boost::uint32_t       p2p_avg_speed_in_KBps;
+        // J1: p2p 连满的时间
+        boost::uint32_t       connect_full_time_in_seconds;
+        // K1: 是否下载MP4头部
+        bool                  is_head_only;
+        // L1: 平均RTT
+        boost::uint32_t       avg_connect_rtt;
+        // M1: UDP丢包率
+        boost::uint32_t       avg_lost_rate;
+        // N1: HTTP平均下载的长度
+        boost::uint32_t       avg_http_download_byte;
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

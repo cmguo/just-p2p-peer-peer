@@ -104,6 +104,8 @@ namespace p2sp
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
+        boost::uint32_t  GetDownloadByteInConnection() const {return download_bytes_;}
+
     private:
         boost::uint32_t GetTaskRangeEnd(boost::uint32_t block_size);
 
@@ -150,6 +152,8 @@ namespace p2sp
 
         std::deque<protocol::PieceInfoEx> piece_task;
         bool is_downloading_;
+
+        boost::uint32_t download_bytes_;
 
     private:
         HttpConnection(

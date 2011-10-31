@@ -97,6 +97,14 @@ namespace p2sp
 
         virtual void DoRequestSubPiece(HttpConnection__p http_connection);
 
+        void OnSecondTimer();
+
+        boost::uint32_t GetDownloadingTimeInSeconds() const {return downloading_time_in_seconds_;}
+
+        void SubmitHttpDownloadBytesInConnection(boost::uint32_t bytes);
+
+        boost::uint32_t GetHttpAvgDownloadBytes();
+
     public:
         //////////////////////////////////////////////////////////////////////////
         // IHTTPControlTarget
@@ -127,6 +135,10 @@ namespace p2sp
         statistic::HttpDownloaderStatistic::p statistic_;
         network::HttpRequest::p http_request_demo_;
         HttpDownloadSpeedLimiter http_speed_limiter_;
+
+        boost::uint32_t downloading_time_in_seconds_;
+
+        std::deque<boost::uint32_t> http_download_bytes_deque_;
 
     protected:
 

@@ -32,6 +32,7 @@ namespace p2sp
         , is_open_service_(is_open_service)
         , download_driver_(download_driver)
         , http_speed_limiter_(1000)
+        , downloading_time_in_seconds_(0)
     {
     }
 
@@ -49,6 +50,7 @@ namespace p2sp
         , download_driver_(download_driver)
         , http_request_demo_(http_request_demo)
         , http_speed_limiter_(1000)
+        , downloading_time_in_seconds_(0)
     {
     }
 
@@ -322,5 +324,43 @@ namespace p2sp
     boost::int32_t HttpDownloader::GetPieceTaskNum()
     {
         return http_connection_->GetPieceTaskNum();
+    }
+
+    void HttpDownloader::OnSecondTimer()
+    {
+        if (!http_connection_->IsPausing())
+        {
+            downloading_time_in_seconds_++;
+        }
+    }
+
+    void HttpDownloader::SubmitHttpDownloadBytesInConnection(boost::uint32_t bytes)
+    {
+        http_download_bytes_deque_.push_back(bytes);
+    }
+
+    boost::uint32_t HttpDownloader::GetHttpAvgDownloadBytes()
+    {
+        // 特殊处理最后一次的情况
+        boost::uint32_t bytes = http_connection_->GetDownloadByteInConnection();
+
+        if (bytes != 0)
+        {
+            SubmitHttpDownloadBytesInConnection(bytes);  
+        }
+
+        if (!http_download_bytes_deque_.empty())
+        {
+            boost::uint32_t total_bytes = 0;
+            for (std::deque<boost::uint32_t>::const_iterator iter = http_download_bytes_deque_.begin();
+                iter != http_download_bytes_deque_.end(); ++iter)
+            {
+                total_bytes += *iter;
+            }
+
+            return total_bytes / http_download_bytes_deque_.size();
+        }
+
+        return 0;
     }
 }

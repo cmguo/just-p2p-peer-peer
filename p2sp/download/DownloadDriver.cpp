@@ -731,6 +731,10 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
+#ifdef NEED_TO_POST_MESSAGE
+        SendDacStopData();
+#endif
+
         DD_EVENT("Downloader Driver Stop" << shared_from_this());
         // LOG(__EVENT, "leak", __FUNCTION__ << " p2p_downloader: " << p2p_downloader_);
 
@@ -887,10 +891,6 @@ namespace p2sp
             // 不发送消息则自己释放
             MessageBufferManager::Inst()->DeleteBuffer((boost::uint8_t*) lpDownloadDriverStopData);
         }
-
-#ifdef NEED_TO_POST_MESSAGE
-        SendDacStopData();
-#endif
 
         if (bufferring_monitor_)
         {
@@ -1112,6 +1112,16 @@ namespace p2sp
             info.uAccelerateStatus = accelerate_status_;
         }
 
+        // Z: tiny drag
+        if (http_drag_downloader_)
+        {
+            info.tiny_drag_result = drag_fetch_result_;
+        }
+        else
+        {
+            info.tiny_drag_result = -1;
+        }
+
         // A1: 下载所用的时间
         info.download_time = download_time_counter_.elapsed();
 
@@ -1124,6 +1134,62 @@ namespace p2sp
         // D1: 原来为客户端填写
 
         // E1: bwtype
+        info.bwtype = (uint32_t)bwtype_;
+
+        // F1: http 平均下载速度
+
+        if (!url_indexer_.empty())
+        {
+            boost::uint32_t downloading_time_in_seconds = 
+                (*url_indexer_.begin()).http_downloader_->GetDownloadingTimeInSeconds();
+
+            if (downloading_time_in_seconds == 0)
+            {
+                info.http_avg_speed_in_KBps = 0;
+            }
+            else
+            {
+                info.http_avg_speed_in_KBps = info.uHttpDownloadBytes / downloading_time_in_seconds / 1024;
+            }
+        }
+
+        // G1: p2p 平均下载速度
+        if (p2p_downloader_)
+        {
+            boost::uint32_t download_time_in_seconds = p2p_downloader_->GetDownloadingTimeInSeconds();
+            if (download_time_in_seconds == 0)
+            {
+                info.p2p_avg_speed_in_KBps = 0;
+            }
+            else
+            {
+                info.p2p_avg_speed_in_KBps = info.uP2PDownloadBytes / download_time_in_seconds / 1024;
+            }
+        }
+
+        // J1: p2p连满的时间
+        info.connect_full_time_in_seconds = p2p_downloader_->GetConnectFullTimeInSeconds();
+
+        // K1: 是否下载MP4头部
+        info.is_head_only = is_head_only_;
+
+        // L1: 平均RTT
+        if (p2p_downloader_)
+        {
+            info.avg_connect_rtt = p2p_downloader_->GetAvgConnectRTT();
+        }
+        
+        // M1: UDP丢包率
+        if (p2p_downloader_)
+        {
+            info.avg_lost_rate = p2p_downloader_->GetStatistic()->GetUDPLostRate();
+        }
+
+        // N1: HTTP平均下载的长度
+        if (!url_indexer_.empty())
+        {
+            info.avg_http_download_byte = (*url_indexer_.begin()).http_downloader_->GetHttpAvgDownloadBytes();
+        }
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
@@ -1163,7 +1229,16 @@ namespace p2sp
         // 原来版本是客户端计算的本次下载字节数
         log_stream << "&D1=" << (uint32_t)(info.uP2PDownloadBytes + info.uHttpDownloadBytes);
         // 暂时没有在结构体里面增加这个成员的原因是保证原来的老的日志也是可用的
-        log_stream << "&E1=" << (uint32_t)(bwtype_);
+        log_stream << "&E1=" << (uint32_t)(info.bwtype);
+
+        log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
+        log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
+        log_stream << "&J1=" << (uint32_t)info.connect_full_time_in_seconds;
+        log_stream << "&K1=" << (uint32_t)info.is_head_only_;
+
+        log_stream << "&L1=" << (uint32_t)info.avg_connect_rtt;
+        log_stream << "&M1=" << (uint32_t)info.avg_lost_rate;
+        log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
 
         string log = log_stream.str();
 
@@ -2583,6 +2658,12 @@ namespace p2sp
             {
                 LOG(__DEBUG, "test", "DownloadDriver::OnTimerElapsed");
                 SmartLimitSpeed(pointer->times());
+            }
+
+            for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin();
+                iter != url_indexer_.end(); ++iter)
+            {
+                iter->http_downloader_->OnSecondTimer();
             }
         }
     }
