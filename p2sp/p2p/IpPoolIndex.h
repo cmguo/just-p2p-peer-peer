@@ -12,6 +12,8 @@
 
 namespace p2sp
 {
+    class CandidatePeer;
+
     template <typename T1, typename T2>
     inline bool CompareIndicator(const T1& x, const T2& keyX, const T1& y, const T2& keyY)
     {
@@ -41,21 +43,19 @@ namespace p2sp
     struct ConnectIndicator
     {
         protocol::SocketAddr key_;
-        uint32_t last_connect_time_;
+        uint32_t next_time_to_connect_;
         bool is_connecting_;
         bool is_connction_;
 
         uint32_t tracker_priority_;
 
+        // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
         {
             return is_connecting_ == false && is_connction_ == false;
         }
 
-        ConnectIndicator(const protocol::SocketAddr& key, uint32_t last_connect_time, bool is_connecting, bool is_connction, boost::uint8_t tracker_priority)
-            : key_(key), last_connect_time_(last_connect_time), is_connecting_(is_connecting), is_connction_(is_connction), tracker_priority_(tracker_priority)
-        {
-        }
+        ConnectIndicator(const CandidatePeer & candidate_peer);
     };
 
     /// 比较两个ConnectIndicator，用于构造std::map
@@ -63,23 +63,20 @@ namespace p2sp
     {
         if (x.CanConnect() != y.CanConnect())
         {
-            if (x.tracker_priority_ != y.tracker_priority_) {
-                return CompareIndicator((uint32_t)y.CanConnect(), x.tracker_priority_, (uint32_t)x.CanConnect(), y.tracker_priority_);
-            }
-            else {
-                return CompareIndicator((uint32_t)y.CanConnect(), y.key_, (uint32_t)x.CanConnect(), x.key_);
-            }
-        }
-        else
-        {
-            if (x.tracker_priority_ != y.tracker_priority_) {
-                return CompareIndicator(x.last_connect_time_, x.tracker_priority_, y.last_connect_time_, y.tracker_priority_);
-            }
-            else {
-                return CompareIndicator(x.last_connect_time_, x.key_, y.last_connect_time_, y.key_);
-            }
+            return x.CanConnect();
         }
 
+        if (x.next_time_to_connect_ != y.next_time_to_connect_)
+        {
+            return x.next_time_to_connect_ < y.next_time_to_connect_;
+        }
+
+        if (x.tracker_priority_ != y.tracker_priority_)
+        {
+            return x.tracker_priority_ < y.tracker_priority_;
+        }
+
+        return x.key_ < y.key_;
     }
 
     /// 活跃相关的索引键
@@ -100,7 +97,6 @@ namespace p2sp
         // return x.active_time_ < y.active_time_;
         return CompareIndicator(x.active_time_, x.key_, y.active_time_, y.key_);
     }
-
 
     /// peer地址信息项
     class CandidatePeer : public protocol::CandidatePeerInfo
@@ -140,7 +136,7 @@ namespace p2sp
             return this->GetKeySocketAddr(local_detected_ip);
         }
         ExchangeIndicator GetExchangeIndicator() const { return ExchangeIndicator(this->GetKey(), last_exchage_time_, exchange_times_); }
-        ConnectIndicator GetConnectIndicator() const { return ConnectIndicator(this->GetKey(), last_connect_time_, is_connecting_, is_connction_, 255-TrackerPriority); }
+        ConnectIndicator GetConnectIndicator() const { return ConnectIndicator(*this); }
         ActiveIndicator GetActiveIndicator() const { return ActiveIndicator(this->GetKey(), last_active_time_); }
 
         protocol::CandidatePeerInfo GetCandidatePeerInfo() const
@@ -186,6 +182,8 @@ namespace p2sp
             return true;
         }
 
+        // 不光检测了是不是已经连接上(is_connction_)，是不是正在连(is_connecting_)
+        // 还检测了是否处于连接的保护时间内
         bool CanConnect() const
         {
             if (is_connction_ || is_connecting_) return false;
@@ -213,6 +211,7 @@ namespace p2sp
                 UploadPriority = peer->UploadPriority;
             }
         }
+
     private:
         CandidatePeer(const protocol::CandidatePeerInfo& peer)
             : protocol::CandidatePeerInfo(peer)

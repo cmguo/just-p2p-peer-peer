@@ -37,13 +37,21 @@ namespace p2sp
     {
         while (p2p_downloader_->GetBlockTaskNum() < 3)
         {
+            bool added = false;
+
             for (std::set<LiveDownloadDriver__p>::const_iterator iter = p2p_downloader_->GetDownloadDriverSet().begin();
                 iter != p2p_downloader_->GetDownloadDriverSet().end(); ++iter)
             {
-                if (!(*iter)->RequestNextBlock(p2p_downloader_))
+                if ((*iter)->RequestNextBlock(p2p_downloader_))
                 {
-                    return;
+                    added = true;
+                    break;
                 }
+            }
+
+            if (added == false)
+            {
+                return;
             }
         }
     }
@@ -81,9 +89,21 @@ namespace p2sp
                         iter == p2p_downloader_->GetBlockTasks().begin())
                     {
                         // 冗余
-                        retry = 2;
+                        retry = 3;
                     }
                 }
+            }
+        }
+
+        if (subpiece_assign_deque_.size() <= 30)
+        {
+            std::deque<protocol::LiveSubPieceInfo>::const_iterator end_iter = subpiece_assign_deque_.end();
+
+            for (std::deque<protocol::LiveSubPieceInfo>::const_iterator iter = subpiece_assign_deque_.begin();
+                iter != end_iter;
+                ++iter)
+            {
+                subpiece_assign_deque_.push_back(*iter);
             }
         }
     }

@@ -510,40 +510,21 @@ namespace p2sp
         boost::shared_ptr<SwitchController::QueryControlMode> query_control_mode =
             boost::shared_dynamic_cast<SwitchController::QueryControlMode>(switch_controller_->GetControlMode());
 
-        if (query_control_mode)
-        {
-            // P2P failed times
-            live_download_driver_statistic_info_.P2PFailedTimes = query_control_mode->GetP2PFailedTimes();
+        // 目前没有关于状态机的信息，所以都填0
+        // P2P failed times
+        live_download_driver_statistic_info_.P2PFailedTimes = 0;
 
-            // 2300 http speed status
-            live_download_driver_statistic_info_.HttpSpeedStatus = query_control_mode->Get2300HttpSpeedStatus();
+        // 2300 http speed status
+        live_download_driver_statistic_info_.HttpSpeedStatus = 0;
 
-            // http status
-            live_download_driver_statistic_info_.HttpStatus = query_control_mode->GetHttpStatus();
+        // http status
+        live_download_driver_statistic_info_.HttpStatus = 0;
 
-            // p2p status
-            live_download_driver_statistic_info_.P2PStatus = query_control_mode->GetP2PStatus();
+        // p2p status
+        live_download_driver_statistic_info_.P2PStatus = 0;
 
-            // is 3200 p2p slow
-            live_download_driver_statistic_info_.Is3200P2PSlow = query_control_mode->GetWhether3200P2PSlow();
-        }
-        else
-        {
-            // P2P failed times
-            live_download_driver_statistic_info_.P2PFailedTimes = 0;
-
-            // http speed status
-            live_download_driver_statistic_info_.HttpSpeedStatus = 0;
-
-            // http status
-            live_download_driver_statistic_info_.HttpStatus = 0;
-
-            // p2p status
-            live_download_driver_statistic_info_.P2PStatus = 0;
-
-            // is 3200 p2p slow
-            live_download_driver_statistic_info_.Is3200P2PSlow = 0;
-        }
+        // is 3200 p2p slow
+        live_download_driver_statistic_info_.Is3200P2PSlow = 0;
 
         // jump times
         live_download_driver_statistic_info_.JumpTimes = jump_times_;

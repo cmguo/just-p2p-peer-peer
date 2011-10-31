@@ -189,12 +189,6 @@ namespace p2sp
         class QueryControlMode
             : public ControlMode
         {
-        public:
-            virtual int32_t GetP2PFailedTimes() const = 0;
-            virtual boost::uint8_t GetHttpStatus() const = 0;
-            virtual boost::uint8_t GetP2PStatus() const = 0;
-            virtual boost::uint8_t Get2300HttpSpeedStatus() const = 0;
-            virtual bool GetWhether3200P2PSlow() const = 0;
         protected:
             QueryControlMode(SwitchController::p controller)
                 :ControlMode(controller)
@@ -489,74 +483,39 @@ namespace p2sp
             static LiveControlMode::p Create(SwitchController::p controller);
             virtual void Start();
             virtual void OnControlTimer(uint32_t times);
-            virtual boost::int32_t GetP2PFailedTimes() const;
-            virtual boost::uint8_t GetHttpStatus() const;
-            virtual boost::uint8_t GetP2PStatus() const;
-            virtual boost::uint8_t Get2300HttpSpeedStatus() const;
-            virtual bool GetWhether3200P2PSlow() const;
 
         protected:
             LiveControlMode(SwitchController::p controller)
                 :QueryControlMode(controller)
-                , is_3200_p2p_slow_(false)
-                , http_status_(http_unknown)
-                , p2p_status_(p2p_unknown)
-                , p2p_failed_times_(0)
+                , is_started_(true)
+                , rest_play_time_when_switched_(0)
             {
             }
 
         private:
-            enum HTTPSPEED
-            {
-                http_fast = 0,
-                http_checking,
-                http_slow,
-                http_none
-            }http_speed_;
-
-            enum HTTPSTASUS
-            {
-                http_unknown = 0,
-                http_bad,
-                http_good
-            } http_status_;
-
-            enum P2PSTATUS
-            {
-                p2p_unknown = 0,
-                p2p_bad,
-                p2p_good
-            } p2p_status_;
-
             framework::timer::TickCounter time_counter_live_control_mode_;
             framework::timer::TickCounter time_counter_2300_;
             framework::timer::TickCounter time_counter_3200_;
-            int32_t p2p_failed_times_;
 #ifdef USE_MEMORY_POOL
             bool is_memory_full;
 #endif
-            bool is_3200_p2p_slow_;
+            bool is_started_;
+            boost::uint32_t rest_play_time_when_switched_;
 
         private:
             void ChangeTo3200();
             void ChangeTo2300();
-            void ChangeTo2200();
 
-            void CheckState3300();
             void CheckState3200();
             void CheckState2300();
-            void CheckState2200();
-            void CheckState3000();
-            void CheckState0300();
+
+            bool NeedChangeTo2300();
 
             void PauseHttpDownloader();
             void ResumeHttpDownloader();
             void PauseP2PDownloader();
             void ResumeP2PDownloader();
 
-            HTTPSPEED Check2300HttpSpeed();
-            bool Is3200P2PSlow();  // 根据3200持续的时间，P2P的速度与码流和带宽的大小来判断
-            bool Is2300RestTimeEnough();  // 根据剩余时间和码流率的关系、P2P连接上的节点数来判断
 #ifdef USE_MEMORY_POOL
             bool CheckMemory();
 #endif
