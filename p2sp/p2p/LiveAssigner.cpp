@@ -97,11 +97,10 @@ namespace p2sp
 
         if (subpiece_assign_deque_.size() <= 30)
         {
-            std::deque<protocol::LiveSubPieceInfo>::const_iterator end_iter = subpiece_assign_deque_.end();
+            std::deque<protocol::LiveSubPieceInfo> subpieces_need_retry = subpiece_assign_deque_;
 
-            for (std::deque<protocol::LiveSubPieceInfo>::const_iterator iter = subpiece_assign_deque_.begin();
-                iter != end_iter;
-                ++iter)
+            for (std::deque<protocol::LiveSubPieceInfo>::const_iterator iter = subpieces_need_retry.begin();
+                iter != subpieces_need_retry.end(); ++iter)
             {
                 subpiece_assign_deque_.push_back(*iter);
             }
