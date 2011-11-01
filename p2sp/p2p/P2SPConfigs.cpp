@@ -240,9 +240,9 @@ namespace p2sp
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_INIT_TIMEOUT = 1200;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT = 25;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT = 40;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT = 5;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT = 25;
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_SCHEDULE_COUNT = 25;
     //

@@ -755,6 +755,8 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
+            AdjustConnectionSize();
+
             if (!is_p2p_pausing_)
             {
                 downloading_time_in_seconds_++;
@@ -1779,6 +1781,31 @@ namespace p2sp
         else
         {
             return sum_rtt / peers_.size();
+        }
+    }
+
+    // 根据码流动态调整连接数
+    void P2PDownloader::AdjustConnectionSize()
+    {
+        if (P2PModule::Inst()->IsConnectionPolicyEnable())
+        {
+            // 75KB以上，5K多一个连接，最多40
+            if (GetDataRate() / 1024 > 75)
+            {
+                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT
+                    + (GetDataRate() / 1024 - 75) / 5;
+
+                LIMIT_MIN_MAX(p2p_max_connect_count_, P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT,
+                    P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT);
+            }
+            else
+            {
+                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
+            }
+        }
+        else
+        {
+            p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
         }
     }
 }

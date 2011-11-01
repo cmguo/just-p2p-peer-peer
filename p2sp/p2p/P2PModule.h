@@ -8,6 +8,7 @@
 #define _P2SP_P2P_P2PMODULE_H_
 
 #include <protocol/PeerPacket.h>
+#include <p2sp/bootstrap/BootStrapGeneralConfig.h>
 
 namespace storage
 {
@@ -32,6 +33,7 @@ namespace p2sp
     class P2PModule
         : public boost::noncopyable
         , public boost::enable_shared_from_this<P2PModule>
+        , public ConfigUpdateListener
 #ifdef DUMP_OBJECT
         , public count_object_allocate<P2PModule>
 #endif
@@ -95,6 +97,10 @@ namespace p2sp
         LiveP2PDownloader__p CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance);
         void OnLiveP2PDownloaderStop(LiveP2PDownloader__p p2p_downloader);
 
+        virtual void OnConfigUpdated();
+
+        bool IsConnectionPolicyEnable();
+
     private:
         // 变量
         typedef std::map<RID, P2PDownloader__p> RIDIndexerMap;
@@ -119,6 +125,8 @@ namespace p2sp
 
         // 直播索引，每个rid对应一个直播的LiveP2PDownloader
         std::map<RID, LiveP2PDownloader__p> live_rid_index_;
+
+        bool is_connection_policy_enable_;
 
     private:
         static P2PModule::p inst_;

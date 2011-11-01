@@ -36,6 +36,7 @@ namespace p2sp
             policy_ping
         };
         UploadPolicy GetUploadPolicy() {return upload_policy_;}
+        bool IsConnectionPolicyEnable() {return connection_policy_enable_;}
 
     private:
         BootStrapGeneralConfig();
@@ -57,6 +58,8 @@ namespace p2sp
         bool use_push_;
     
         UploadPolicy upload_policy_;
+
+        bool connection_policy_enable_;
     };
 }
 #endif

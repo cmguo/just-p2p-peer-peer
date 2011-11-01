@@ -47,6 +47,7 @@ namespace p2sp
     P2PModule::P2PModule()
         : p2p_timer_(global_250ms_timer(), 250, boost::bind(&P2PModule::OnTimerElapsed, this, &p2p_timer_))
         , is_running_(false), global_request_send_count_(0)
+        , is_connection_policy_enable_(true)
     {
     }
 
@@ -75,6 +76,8 @@ namespace p2sp
 
 
         session_cache_ = SessionPeerCache::create();
+
+        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
     }
 
     void P2PModule::Stop()
@@ -506,5 +509,15 @@ namespace p2sp
         }
 
         live_rid_index_.erase(p2p_downloader->GetRid());
+    }
+
+    void P2PModule::OnConfigUpdated()
+    {
+        is_connection_policy_enable_ = BootStrapGeneralConfig::Inst()->IsConnectionPolicyEnable();
+    }
+
+    bool P2PModule::IsConnectionPolicyEnable()
+    {
+        return is_connection_policy_enable_;
     }
 }

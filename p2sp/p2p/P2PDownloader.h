@@ -223,6 +223,9 @@ namespace p2sp
     private:
         void DoList();
 
+        // 根据码流动态调整连接数
+        void AdjustConnectionSize();
+
     private:
 
         boost::shared_ptr<storage::Instance> instance_;

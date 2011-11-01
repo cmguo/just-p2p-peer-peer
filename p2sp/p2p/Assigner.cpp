@@ -128,7 +128,7 @@ namespace p2sp
         peer_connection_recvtime_list_.sort();
 
         // 控制调度大小
-        if (peer_connection_recvtime_list_.size() > P2SPConfigs::P2P_DOWNLOAD_MAX_SCHEDULE_COUNT)
+        if (peer_connection_recvtime_list_.size() > p2p_downloader_->p2p_max_connect_count_)
         {
             std::list<PEER_RECVTIME>::iterator it = peer_connection_recvtime_list_.begin();
             for (boost::int32_t i = 0; i<P2SPConfigs::P2P_DOWNLOAD_MAX_SCHEDULE_COUNT; ++i)
