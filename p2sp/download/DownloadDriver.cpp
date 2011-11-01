@@ -1168,7 +1168,14 @@ namespace p2sp
         }
 
         // J1: p2p连满的时间
-        info.connect_full_time_in_seconds = p2p_downloader_->GetConnectFullTimeInSeconds();
+        if (p2p_downloader_)
+        {
+            info.connect_full_time_in_seconds = p2p_downloader_->GetConnectFullTimeInSeconds();
+        }
+        else
+        {
+            info.connect_full_time_in_seconds = 0;
+        }
 
         // K1: 是否下载MP4头部
         info.is_head_only = is_head_only_;
@@ -1177,6 +1184,10 @@ namespace p2sp
         if (p2p_downloader_)
         {
             info.avg_connect_rtt = p2p_downloader_->GetAvgConnectRTT();
+        }
+        else
+        {
+            info.avg_connect_rtt = 0;
         }
         
         // M1: UDP丢包率
