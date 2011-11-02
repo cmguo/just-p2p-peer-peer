@@ -1025,6 +1025,10 @@ namespace p2sp
         {
             info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
         }
+        else
+        {
+            info.uP2PDownloadBytes = 0;
+        }
 
         // K: HTTP总下载字节数
         info.uHttpDownloadBytes = statistic_->GetTotalHttpDataBytes();
@@ -1043,6 +1047,10 @@ namespace p2sp
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
             info.uAvgP2PDownloadSpeed = p2p_downloader_->GetStatistic()->GetSpeedInfo().AvgDownloadSpeed;
+        }
+        else
+        {
+            info.uAvgP2PDownloadSpeed = 0;
         }
 
         // P: 最大HTTP下载速度
@@ -1201,6 +1209,21 @@ namespace p2sp
         {
             info.avg_http_download_byte = (*url_indexer_.begin()).http_downloader_->GetHttpAvgDownloadBytes();
         }
+        else
+        {
+            assert(false);
+            info.avg_http_download_byte = 0;
+        }
+
+        // O1: 冗余率
+        if (p2p_downloader_)
+        {
+            info.retry_rate = p2p_downloader_->GetStatistic()->GetSubPieceRetryRate();
+        }
+        else
+        {
+            info.retry_rate = 0;
+        }
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
@@ -1241,15 +1264,14 @@ namespace p2sp
         log_stream << "&D1=" << (uint32_t)(info.uP2PDownloadBytes + info.uHttpDownloadBytes);
         // 暂时没有在结构体里面增加这个成员的原因是保证原来的老的日志也是可用的
         log_stream << "&E1=" << (uint32_t)(info.bwtype);
-
         log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
         log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
         log_stream << "&J1=" << (uint32_t)info.connect_full_time_in_seconds;
         log_stream << "&K1=" << (uint32_t)info.is_head_only;
-
         log_stream << "&L1=" << (uint32_t)info.avg_connect_rtt;
         log_stream << "&M1=" << (uint32_t)info.avg_lost_rate;
         log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
+        log_stream << "&O1=" << (uint32_t)info.retry_rate;
 
         string log = log_stream.str();
 

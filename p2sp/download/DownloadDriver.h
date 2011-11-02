@@ -81,6 +81,8 @@ namespace p2sp
         boost::uint32_t       avg_lost_rate;
         // N1: HTTP平均下载的长度
         boost::uint32_t       avg_http_download_byte;
+        // O1: 冗余率
+        boost::uint32_t       retry_rate;
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
