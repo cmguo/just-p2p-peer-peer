@@ -133,6 +133,7 @@ namespace p2sp
         , drag_fetch_result_(0)
         , bak_host_status_(BAK_HOST_NONE)
         , max_rest_playable_time_(0)
+        , tiny_drag_http_status_(0)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -968,6 +969,15 @@ namespace p2sp
         // B1:最后一刻下载速度（last_speed)
         // C1：是否获得RID
         // D1:有效下载字节数（不包括已经下载，不包括冗余）   J + K
+        // E1: bwtype
+        // F1: http 平均下载速度
+        // G1: p2p 平均下载速度
+        // J1: p2p连满的时间
+        // K1: 是否下载MP4头部
+        // L1: 平均RTT
+        // M1: UDP丢包率
+        // N1: HTTP平均下载的长度
+        // O1: 冗余率
 
         DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
 
@@ -1225,6 +1235,9 @@ namespace p2sp
             info.retry_rate = 0;
         }
 
+        // P1: drag状态码
+        info.tiny_drag_http_status = tiny_drag_http_status_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1272,6 +1285,7 @@ namespace p2sp
         log_stream << "&M1=" << (uint32_t)info.avg_lost_rate;
         log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
         log_stream << "&O1=" << (uint32_t)info.retry_rate;
+        log_stream << "&P1=" << (uint32_t)info.tiny_drag_http_status;
 
         string log = log_stream.str();
 
@@ -2864,5 +2878,10 @@ namespace p2sp
     bool DownloadDriver::IsDragLocalPlayForClient()
     {
         return is_drag_local_play_for_client_;
+    }
+
+    void DownloadDriver::ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status)
+    {
+        tiny_drag_http_status_ = tiny_drag_http_status;
     }
 }

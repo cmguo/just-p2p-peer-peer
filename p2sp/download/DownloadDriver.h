@@ -83,6 +83,8 @@ namespace p2sp
         boost::uint32_t       avg_http_download_byte;
         // O1: 冗余率
         boost::uint32_t       retry_rate;
+        // P1: drag状态码
+        boost::uint32_t       tiny_drag_http_status;
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
@@ -221,6 +223,8 @@ namespace p2sp
         void ReportDragFetchResult(uint32_t drag_fetch_result){ drag_fetch_result_ = drag_fetch_result;}
 
         bool IsDragLocalPlayForClient();
+
+        void ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status);
 
     public:
         //////////////////////////////////////////////////////////////////////////
@@ -419,6 +423,8 @@ namespace p2sp
         // 4-7: 获取次数(无论是否获取成功都有)
         // 8-31：获取时间(ms)(仅仅在获取成功时设置)
         uint32_t drag_fetch_result_;
+
+        boost::uint32_t tiny_drag_http_status_;
 
         std::vector<std::string> bak_hosts_;
         enum BakHostStatus

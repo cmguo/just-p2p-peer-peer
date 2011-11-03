@@ -148,6 +148,8 @@ namespace p2sp
 
     void HttpDragDownloader::OnRecvHttpHeaderSucced(network::HttpResponse::p http_response)
     {
+        download_driver_->ReportDragHttpStatus(http_response->GetStatusCode());
+
         switch (http_response->GetStatusCode())
         {
         case 200:
