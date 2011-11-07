@@ -3,6 +3,7 @@
 #include "p2sp/download/LiveDownloadDriver.h"
 #include "LivePeerConnection.h"
 #include "p2sp/p2p/P2PModule.h"
+#include "statistic/StatisticUtil.h"
 
 namespace p2sp
 {
@@ -365,5 +366,10 @@ namespace p2sp
     boost::uint8_t LivePeerConnection::GetConnectType() const
     {
         return connect_type_;
+    }
+
+    uint32_t LivePeerConnection::GetConnectedTimeInMillseconds()
+    {
+        return statistic::GetTickCountInMilliSecond() - this->GetSpeedInfo().StartTime;
     }
 }

@@ -63,6 +63,13 @@ namespace p2sp
 
         boost::uint8_t GetConnectType() const;
 
+        bool IsBlockBitmapEmpty() const
+        {
+            return block_bitmap_.empty();
+        }
+
+        uint32_t GetConnectedTimeInMillseconds();
+
     private:
         // 构造
         LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 

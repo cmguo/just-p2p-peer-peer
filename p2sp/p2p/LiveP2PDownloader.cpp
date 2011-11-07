@@ -13,12 +13,11 @@ namespace p2sp
         , live_instance_(live_instance)
         , is_running_(false)
         , is_p2p_pausing_(true)
-        , p2p_max_connect_count_(30)
+        , p2p_max_connect_count_(20)
         , total_all_request_subpiece_count_(0)
         , total_request_subpiece_count_(0)
         , dolist_time_interval_(1000)
     {
-
     }
 
     void LiveP2PDownloader::Start()
@@ -37,7 +36,6 @@ namespace p2sp
 
         // Assigner
         live_assigner_.Start(shared_from_this());
-
         // SubpieceRequestManager
         live_subpiece_request_manager_.Start(shared_from_this());
 
@@ -50,6 +48,30 @@ namespace p2sp
         last_dolist_time_.start();
 
         is_running_ = true;
+    }
+
+    LIVE_CONNECT_LEVEL LiveP2PDownloader::GetConnectLevel()
+    {
+        LIVE_CONNECT_LEVEL level = MEDIUM;
+        int32_t rest_time = this->GetMinRestTimeInSeconds();
+
+        if (rest_time >= 25 && !this->is_p2p_pausing_)
+        {
+            // enough time; don't need to rush for new connections
+            // under http only mode, still try new connection
+            level = LOW;
+        }
+        else if (rest_time >= 12)
+        {   
+            level = MEDIUM;
+        }
+        else
+        {
+            // urgent. Replace connection quickly
+            level = HIGH;
+        }        
+
+        return level;
     }
 
     // 250ms 被调用一次
@@ -75,9 +97,9 @@ namespace p2sp
                 connector_->OnP2PTimer(times);
             }
 
-            KickPeerConnection();
-
-            InitPeerConnection();
+            LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
+            KickPeerConnection(connect_level);
+            InitPeerConnection(connect_level);
         }
 
         if (!is_p2p_pausing_)
@@ -116,7 +138,8 @@ namespace p2sp
         if (ippool_->GetPeerCount() == 0)
         {
             ippool_->AddCandidatePeers(peers);
-            InitPeerConnection();
+            LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
+            InitPeerConnection(connect_level);
         }
         else
         {
@@ -345,7 +368,7 @@ namespace p2sp
          return p2p_max_connect_count_;
      }
 
-    void LiveP2PDownloader::InitPeerConnection()
+    void LiveP2PDownloader::InitPeerConnection(LIVE_CONNECT_LEVEL connect_level)
     {
         if (!is_running_)
         {
@@ -354,17 +377,37 @@ namespace p2sp
 
         if (!connector_)
         {
-            return ;
+            return;
         }
 
-        boost::int32_t connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
-        LIMIT_MIN(connect_count, 1);
+        boost::int32_t connect_count = 0;
+        if (connect_level <= LOW)
+        {   
+            connect_count = (p2p_max_connect_count_ * 3 / 4 - peers_.size()) - connector_->GetConnectingPeerCount();
+        }
+        else if (connect_level <= MEDIUM)
+        {
+            connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
+        }
+        else
+        {
+            // high mode
+            assert(connect_level == HIGH);
+            connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
+            LIMIT_MIN(connect_count, 1);
+        }
+
+        if (connect_count <= 0)
+        {
+            // no need to connect new peers. skip.
+            return;
+        }
 
         for (boost::int32_t i = 0; i < connect_count; ++i)
         {
             protocol::CandidatePeerInfo candidate_peer_info;
             if (false == ippool_->GetForConnect(candidate_peer_info)) 
-            {
+            {   
                 break;
             }
 
@@ -372,10 +415,9 @@ namespace p2sp
         }
     }
 
-    void LiveP2PDownloader::KickPeerConnection()
-    {
-        boost::int32_t kick_count = 0;
-        std::multimap<uint32_t, LivePeerConnection::p> peer_kick_map;
+    void LiveP2PDownloader::KickPeerConnection(LIVE_CONNECT_LEVEL connect_level)
+    {   
+        std::multimap<KickLiveConnectionIndicator, LivePeerConnection::p> peer_kick_map;
 
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator 
             iter = peers_.begin(); iter != peers_.end(); )
@@ -386,25 +428,51 @@ namespace p2sp
                 DelPeer((iter++)->second);
             }
             else
-            {
-                boost::uint32_t peer_now_speed = iter->second->GetSpeedInfo().NowDownloadSpeed;
-                peer_kick_map.insert(std::make_pair(peer_now_speed, iter->second));
+            {   if (connect_level >= MEDIUM)
+                {   
+                    if (iter->second->GetConnectedTimeInMillseconds() >= 15000)
+                    {
+                        // only kick peers which are connected longer than 15 seconds
+                        peer_kick_map.insert(std::make_pair(KickLiveConnectionIndicator(iter->second), iter->second));
+                    }
+                }
+                
                 ++iter;
             }
         }
 
-        if (peers_.size() > p2p_max_connect_count_)
+        if (connect_level <= LOW)
         {
-            kick_count = peers_.size() - p2p_max_connect_count_;
+            // no more kicking
+            return;
+        }
 
-            std::multimap<uint32_t, LivePeerConnection::p>::iterator iter = peer_kick_map.begin();
+        boost::int32_t kick_count = 0;
+        if (connect_level <= MEDIUM)
+        {
+            // make sure to kick at least one "bad" connection
+            kick_count = peers_.size() + 1 - p2p_max_connect_count_;
+        }
+        else
+        {
+            assert(connect_level == HIGH);
+
+            // kick peers more aggressively in case of urgency
+            kick_count = peers_.size() - p2p_max_connect_count_ * 3 / 4;
+        }        
+
+        if (kick_count > 0)
+        {
+            std::multimap<KickLiveConnectionIndicator, LivePeerConnection::p>::iterator iter = peer_kick_map.begin();
             for (boost::int32_t i = 0; i < kick_count; i++)
             {
-                if (iter == peer_kick_map.end())
-                {
+                if (iter == peer_kick_map.end() ||
+                    !iter->first.ShouldKick())
+                {   
                     break;
                 }
-
+                
+                ippool_->OnDisConnect(iter->second->GetEndpoint());
                 DelPeer(iter->second);
                 iter++;
             }
@@ -690,8 +758,16 @@ namespace p2sp
 
     void LiveP2PDownloader::DoList()
     {
+        if (!is_p2p_pausing_ && 
+            GetMinRestTimeInSeconds() < 13 &&
+            dolist_time_interval_ >= 16000)
+        {
+            // reset list cycle.
+            dolist_time_interval_ = 1000;
+        }
+
         if (GetConnectedPeersCount() < GetMaxConnectCount() &&
-            last_dolist_time_.elapsed() > dolist_time_interval_)
+            last_dolist_time_.elapsed() >= dolist_time_interval_)
         {
             // DoList 的间隔按照指数增长，最多128秒
             dolist_time_interval_ *= 2;
@@ -701,7 +777,6 @@ namespace p2sp
             }
 
             last_dolist_time_.reset();
-
             p2sp::TrackerModule::Inst()->DoList(GetRid(), false);
         }
     }

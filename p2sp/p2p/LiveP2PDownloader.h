@@ -37,6 +37,57 @@ namespace p2sp
 
     class LiveDownloadDriver;
 
+    enum LIVE_CONNECT_LEVEL
+    {
+        LOW = 0,
+        MEDIUM = 1,
+        HIGH = 2
+    };
+
+    struct KickLiveConnectionIndicator
+    {   
+        bool block_bitmap_empty_;
+        uint32_t last_minute_speed_in_bytes_;
+        uint32_t connected_time_in_millseconds_;
+
+        bool ShouldKick() const
+        {
+            return block_bitmap_empty_ ||
+                last_minute_speed_in_bytes_ == 0;
+        }
+
+        KickLiveConnectionIndicator(const LivePeerConnection__p connection)
+        {
+            this->block_bitmap_empty_ = connection->IsBlockBitmapEmpty();
+            this->last_minute_speed_in_bytes_ = connection->GetSpeedInfo().MinuteDownloadSpeed;
+            this->connected_time_in_millseconds_ = connection->GetConnectedTimeInMillseconds();
+        }
+    };
+
+    inline bool operator<(const KickLiveConnectionIndicator& x, const KickLiveConnectionIndicator& y)
+    {
+        if (x.block_bitmap_empty_ != y.block_bitmap_empty_)
+        {
+            return x.block_bitmap_empty_;
+        }
+
+        if (x.block_bitmap_empty_)
+        {
+            // both empty
+            // kick first if longer
+            return x.connected_time_in_millseconds_ > y.connected_time_in_millseconds_;
+        }
+
+        // both not empty
+        // kick first if lower speed
+        if (x.last_minute_speed_in_bytes_ != y.last_minute_speed_in_bytes_)
+        {
+            return x.last_minute_speed_in_bytes_ < y.last_minute_speed_in_bytes_;
+        }
+
+        return x.connected_time_in_millseconds_ > y.connected_time_in_millseconds_;
+    }
+
     class LiveP2PDownloader
         : public LiveDownloader
         , public IP2PControlTarget
@@ -125,8 +176,8 @@ namespace p2sp
 
         void GetCandidatePeerInfos(std::vector<protocol::CandidatePeerInfo> &candidate_peers);
 
-        void InitPeerConnection();
-        void KickPeerConnection();
+        void InitPeerConnection(LIVE_CONNECT_LEVEL connect_level);
+        void KickPeerConnection(LIVE_CONNECT_LEVEL connect_level);
 
         void AttachDownloadDriver(LiveDownloadDriver__p download_driver);
         void DetachDownloadDriver(LiveDownloadDriver__p download_driver);
@@ -188,6 +239,7 @@ namespace p2sp
     private:
         void CheckBlockComplete();
         void DoList();
+        LIVE_CONNECT_LEVEL GetConnectLevel();
 
     public:
         bool is_running_;
@@ -198,7 +250,7 @@ namespace p2sp
         PeerConnector__p connector_;
         std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> peers_;
         bool is_p2p_pausing_;
-        boost::uint32_t p2p_max_connect_count_;
+        boost::int32_t p2p_max_connect_count_;
         std::set<LiveDownloadDriver__p> download_driver_s_;
 
         storage::LiveInstance__p live_instance_;
