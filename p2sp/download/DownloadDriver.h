@@ -43,7 +43,6 @@ namespace p2sp
         boost::uint32_t       uHttpDownloadBytes;                   // K: HTTP下载字节数
         boost::uint32_t       uAvgDownloadSpeed;                    // L: 平均下载速度 (B/s)
         boost::uint8_t        bIsSaveMode;                          // M: 是否是下载模式完成的此次下载
-        // extend 1
         boost::uint32_t       MaxHistoryDownloadSpeed;              // N: 最大历史下载速度
         boost::uint32_t       uAvgP2PDownloadSpeed;                 // O: P2P平均下载速度
         boost::uint32_t       uMaxHttpDownloadSpeed;                // P: 最大HTTP下载速度
@@ -51,40 +50,26 @@ namespace p2sp
         boost::uint16_t       uFullPeerCount;                       // R: 资源全满节点数
         boost::uint16_t       uBakHostStatus;                       // S: 备用CDN状态
         boost::uint16_t       uQueriedPeerCount;                    // T: 查询到的节点数
-        // extend 2
         boost::uint16_t       uSourceType;                          // U: SourceType
         boost::uint32_t       uDataRate;                            // V: 码流率
         boost::uint32_t       uAccelerateHttpSpeed;                 // W: 加速状态机切换之前的速度
         boost::uint32_t       uAccelerateStatus;                    // X: 加速状态机的状态
-        // Y: 操作系统版本(客户端提交)
-        // Z: tiny drag下载结果
-        boost::uint32_t       tiny_drag_result;
-        // extend 3
+        boost::uint32_t       reserved1;                            // Y: 备用 (原来是客户端提交，操作系统版本)
+        boost::uint32_t       file_length_in_second;                // Z: 文件时常(原来是客户端提交的)
         boost::uint32_t       download_time;                        // A1: 下载所用的时间
-        boost::uint32_t       last_speed;                           // B1: 最后一刻下载速度
-        // extend 4
+        boost::uint32_t       tiny_drag_result;                     // B1: tiny_drag结果
         boost::uint32_t       is_got_rid;                           // C1: 是否获得RID(0未获得;1获得)
-        // D1: J+K
-        // E1: bwtype
-        boost::uint32_t       bwtype;
-        // F1: http 平均下载速度
-        boost::uint32_t       http_avg_speed_in_KBps;
-        // G1: p2p 平均下载速度
-        boost::uint32_t       p2p_avg_speed_in_KBps;
-        // J1: p2p 连满的时间
-        boost::uint32_t       connect_full_time_in_seconds;
-        // K1: 是否下载MP4头部
-        bool                  is_head_only;
-        // L1: 平均RTT
-        boost::uint32_t       avg_connect_rtt;
-        // M1: UDP丢包率
-        boost::uint32_t       avg_lost_rate;
-        // N1: HTTP平均下载的长度
-        boost::uint32_t       avg_http_download_byte;
-        // O1: 冗余率
-        boost::uint32_t       retry_rate;
-        // P1: drag状态码
-        boost::uint32_t       tiny_drag_http_status;
+        boost::uint32_t       total_downloaded_bytes;               // D1: J+K
+        boost::uint32_t       bwtype;                               // E1: bwtype
+        boost::uint32_t       http_avg_speed_in_KBps;               // F1: http 平均下载速度
+        boost::uint32_t       p2p_avg_speed_in_KBps;                // G1: p2p 平均下载速度
+        boost::uint32_t       connect_full_time_in_seconds;         // J1: p2p 连满的时间
+        bool                  is_head_only;                         // K1: 是否下载MP4头部
+        boost::uint32_t       avg_connect_rtt;                      // L1: 平均RTT
+        boost::uint32_t       avg_lost_rate;                        // M1: UDP丢包率
+        boost::uint32_t       avg_http_download_byte;               // N1: HTTP平均下载的长度
+        boost::uint32_t       retry_rate;                           // O1: 冗余率
+        boost::uint32_t       tiny_drag_http_status;                // P1: drag状态码
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

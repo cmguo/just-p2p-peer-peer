@@ -1130,7 +1130,16 @@ namespace p2sp
             info.uAccelerateStatus = accelerate_status_;
         }
 
-        // Z: tiny drag
+        // Y: 备用 (原来是客户端提交，操作系统版本)
+        info.reserved1 = 0;
+
+        // Z: 文件时常(原来是客户端提交的)
+        info.file_length_in_second = info.uVideoBytes / info.uDataRate;
+
+        // A1: 下载所用的时间
+        info.download_time = download_time_counter_.elapsed();
+
+        // B1: tinydrag结果
         if (http_drag_downloader_)
         {
             info.tiny_drag_result = drag_fetch_result_;
@@ -1140,16 +1149,11 @@ namespace p2sp
             info.tiny_drag_result = -1;
         }
 
-        // A1: 下载所用的时间
-        info.download_time = download_time_counter_.elapsed();
-
-        // B1: 最后一刻下载速度
-        info.last_speed = statistic_->GetSpeedInfo().NowDownloadSpeed;
-
         // C1: 是否获得RID(0未获得;1获得)
         info.is_got_rid = (GetP2PControlTarget() ? 1 : 0);
 
-        // D1: 原来为客户端填写
+        // D1: J+K
+        info.total_downloaded_bytes = info.uP2PDownloadBytes + info.uHttpDownloadBytes;
 
         // E1: bwtype
         info.bwtype = (uint32_t)bwtype_;
@@ -1270,14 +1274,13 @@ namespace p2sp
         // 原来版本是客户端提交的操作系统版本
         log_stream << "&Y=";
         // 原来版本是客户端计算的平均下载速度
-        log_stream << "&Z=" << (uint32_t)(info.uVideoBytes / info.uDataRate);
+        log_stream << "&Z=" << (uint32_t)info.file_length_in_second;
         log_stream << "&A1=" << (uint32_t)info.download_time;
-        log_stream << "&B1=" << (uint32_t)info.last_speed;
+        log_stream << "&B1=" << (uint32_t)info.tiny_drag_result;
         log_stream << "&C1=" << (uint32_t)info.is_got_rid;
         // 原来版本是客户端计算的本次下载字节数
-        log_stream << "&D1=" << (uint32_t)(info.uP2PDownloadBytes + info.uHttpDownloadBytes);
-        // 暂时没有在结构体里面增加这个成员的原因是保证原来的老的日志也是可用的
-        log_stream << "&E1=" << (uint32_t)(info.bwtype);
+        log_stream << "&D1=" << (uint32_t)info.total_downloaded_bytes;
+        log_stream << "&E1=" << (uint32_t)info.bwtype;
         log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
         log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
         log_stream << "&J1=" << (uint32_t)info.connect_full_time_in_seconds;
