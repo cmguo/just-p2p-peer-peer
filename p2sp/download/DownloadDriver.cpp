@@ -1221,7 +1221,8 @@ namespace p2sp
         }
         else
         {
-            assert(false);
+            // 如果本地资源是完整的，url_indexer_就可能为空
+            // ProxyConnection::OnProxyTimer 会 WillStop
             info.avg_http_download_byte = 0;
         }
 
