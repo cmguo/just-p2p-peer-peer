@@ -129,15 +129,7 @@ namespace p2sp
             }
 
             // 预分配
-            if (GetMinRestTimeInSeconds() < 10)
-            {
-                live_assigner_.OnP2PTimer(times, true);
-            }
-            else
-            {
-                live_assigner_.OnP2PTimer(times, false);
-            }
-            
+            live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH);
         }
         
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();

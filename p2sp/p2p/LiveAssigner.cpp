@@ -9,6 +9,7 @@ namespace p2sp
     void LiveAssigner::Start(LiveP2PDownloader__p p2p_downloader)
     {
         p2p_downloader_ = p2p_downloader;
+        urgent_ = false;
     }
 
     void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent)
@@ -19,12 +20,11 @@ namespace p2sp
 			return;
 		}
 
+        urgent_ = urgent;
+
         // 根据已有的subpiece_cout和需要分配的capacity
         // 计算出还需要请求多少片piece才能到capacity
         CalcSubpieceTillCapacity();
-
-        // 分配subpiece的任务
-        CaclSubPieceAssignMap(urgent);
 
         CaclPeerConnectionRecvTimeMap();
 
@@ -35,8 +35,19 @@ namespace p2sp
     // 计算出还需要请求多少片piece才能到capacity
     void LiveAssigner::CalcSubpieceTillCapacity()
     {
-        while (p2p_downloader_->GetBlockTaskNum() < 3)
+        // 按照1s 300KB的理论速度 (500ms 150KB)
+        boost::uint32_t last_subpiece_count = -1;
+        while (true)
         {
+            boost::uint32_t subpiece_count = CaclSubPieceAssignMap();
+
+            if (subpiece_count >= 150 || subpiece_count == last_subpiece_count)
+            {
+                return;
+            }
+
+            last_subpiece_count = subpiece_count;
+
             bool added = false;
 
             for (std::set<LiveDownloadDriver__p>::const_iterator iter = p2p_downloader_->GetDownloadDriverSet().begin();
@@ -57,9 +68,11 @@ namespace p2sp
     }
 
     // 分配subpiece的任务
-    void LiveAssigner::CaclSubPieceAssignMap(bool urgent)
+    boost::uint32_t LiveAssigner::CaclSubPieceAssignMap()
     {
         subpiece_assign_deque_.clear();
+
+        boost::uint32_t total_subpiece_count = 0;
 
         for (std::list<protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin();
             iter != p2p_downloader_->GetBlockTasks().end(); ++iter)
@@ -80,12 +93,17 @@ namespace p2sp
                         if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info) && 
                             !p2p_downloader_->IsRequesting(live_subpiece_info))
                         {
+                            if (j == 0)
+                            {
+                                total_subpiece_count++;
+                            }
+                            
                             subpiece_assign_deque_.push_back(live_subpiece_info);
                         }
                     }
 
                     // 第一个Block的没有的subpiece数量<20, 冗余一次
-                    if (urgent && subpiece_assign_deque_.size() < 20 && 
+                    if (urgent_ && subpiece_assign_deque_.size() < 20 && 
                         iter == p2p_downloader_->GetBlockTasks().begin())
                     {
                         // 冗余
@@ -105,6 +123,8 @@ namespace p2sp
                 subpiece_assign_deque_.push_back(*iter);
             }
         }
+
+        return total_subpiece_count;
     }
 
     void LiveAssigner::CaclPeerConnectionRecvTimeMap()

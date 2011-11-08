@@ -23,12 +23,14 @@ namespace p2sp
 
     private:
         void CalcSubpieceTillCapacity();
-        void CaclSubPieceAssignMap(bool urgent);
+        boost::uint32_t CaclSubPieceAssignMap();
         void CaclPeerConnectionRecvTimeMap();
         void AssignerPeers();
 
     private:
         LiveP2PDownloader__p p2p_downloader_;
+
+        bool urgent_;
 
         std::deque<protocol::LiveSubPieceInfo> subpiece_assign_deque_;
 
