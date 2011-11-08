@@ -133,9 +133,6 @@ namespace p2sp
             {
                 block_bitmap_[bitmap_iter->first] = bitmap_iter->second;
             }
-
-            peer_connection_info_.LastLiveBlockId = packet.live_announce_map_.subpiece_map_.rbegin()->first;
-            peer_connection_info_.FirstLiveBlockId = packet.live_announce_map_.subpiece_map_.begin()->first;
         }
 
         // 收到Announce, 重置
@@ -279,14 +276,19 @@ namespace p2sp
         }
     }
 
-    void LivePeerConnection::EliminateBlockBitMap(uint32_t block_id)
+    void LivePeerConnection::EliminateElapsedBlockBitMap(uint32_t block_id)
     {
-        map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::iterator iter;
-        iter = block_bitmap_.find(block_id);
-
-        if (iter != block_bitmap_.end())
+        for (map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::iterator 
+            iter = block_bitmap_.begin(); iter != block_bitmap_.end();)
         {
-            block_bitmap_.erase(iter);
+            if (iter->first < block_id)
+            {
+                block_bitmap_.erase(iter++);
+            }
+            else
+            {
+                break;
+            }
         }
 
         LOG(__DEBUG, "live_p2p", "block_bitmap_.size() = " << block_bitmap_.size());
@@ -343,6 +345,17 @@ namespace p2sp
         peer_connection_info_.AverageDeltaTime = avg_delta_time_;
         peer_connection_info_.Requesting_Count = requesting_count_;
         peer_connection_info_.AssignedSubPieceCount = task_queue_.size();
+
+        if (block_bitmap_.empty())
+        {
+            peer_connection_info_.FirstLiveBlockId = 0;
+            peer_connection_info_.LastLiveBlockId = 0;
+        }
+        else
+        {
+            peer_connection_info_.FirstLiveBlockId = block_bitmap_.begin()->first;
+            peer_connection_info_.LastLiveBlockId = block_bitmap_.rbegin()->first;
+        }
     }
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()

@@ -241,6 +241,9 @@ namespace p2sp
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
 
+        storage::LivePosition GetMinPlayingPosition() const;
+        void EliminateElapsedBlockCountMap(boost::uint32_t block_id);
+
     public:
         bool is_running_;
         RID rid_;

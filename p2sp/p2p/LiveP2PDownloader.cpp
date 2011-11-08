@@ -102,6 +102,21 @@ namespace p2sp
             InitPeerConnection(connect_level);
         }
 
+        // 每秒
+        // 删除 block_count_map 和 bitmap 中过期的数据
+        if (times % 4 == 0)
+        {
+            // 删除block_count_map中过期的节点
+            EliminateElapsedBlockCountMap(GetMinPlayingPosition().GetBlockId());
+
+            // 删除PeerConnection中过期的节点
+            for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer_iter = peers_.begin();
+                peer_iter != peers_.end(); ++peer_iter)
+            {
+                peer_iter->second->EliminateElapsedBlockBitMap(GetMinPlayingPosition().GetBlockId());
+            }
+        }
+
         if (!is_p2p_pausing_)
         {
             LOG(__DEBUG, "live_p2p", "block_count_map_.size() = " << block_count_map_.size());
@@ -617,20 +632,6 @@ namespace p2sp
             protocol::LiveSubPieceInfo & live_block = *(iter++);
             if (live_instance_->HasCompleteBlock(live_block.GetBlockId()))
             {
-                // 删除block_count_map中相对应的节点
-                map<uint32_t, uint16_t>::iterator it = block_count_map_.find(live_block.GetBlockId());
-                if (it != block_count_map_.end())
-                {
-                    block_count_map_.erase(it);
-                }
-
-                // 删除PeerConnection中想对应的节点
-                for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer_iter = peers_.begin();
-                    peer_iter != peers_.end(); ++peer_iter)
-                {
-                    peer_iter->second->EliminateBlockBitMap(live_block.GetBlockId());
-                }
-
                 completed_block_set.insert(live_block);
             }
         }
@@ -784,6 +785,9 @@ namespace p2sp
     boost::uint32_t LiveP2PDownloader::GetMinRestTimeInSeconds() const
     {
         boost::uint32_t min_rest_time = 32768;
+
+        assert(!download_driver_s_.empty());
+
         for (std::set<LiveDownloadDriver::p>::const_iterator iter = download_driver_s_.begin();
             iter != download_driver_s_.end(); iter++)
         {
@@ -794,5 +798,40 @@ namespace p2sp
         }
 
         return min_rest_time;
+    }
+
+    storage::LivePosition LiveP2PDownloader::GetMinPlayingPosition() const
+    {
+        std::set<LiveDownloadDriver__p>::const_iterator iter = download_driver_s_.begin();
+
+        storage::LivePosition min_position = (*iter)->GetPlayingPosition();
+
+        do 
+        {
+            if ((*iter)->GetPlayingPosition() < min_position)
+            {
+                min_position = (*iter)->GetPlayingPosition();
+            }
+
+            ++iter;
+        } while (iter != download_driver_s_.end());
+
+        return min_position;
+    }
+
+    void LiveP2PDownloader::EliminateElapsedBlockCountMap(boost::uint32_t block_id)
+    {
+        for (map<uint32_t, uint16_t>::iterator iter = block_count_map_.begin(); 
+            iter != block_count_map_.end(); )
+        {
+            if (iter->first < block_id)
+            {
+                block_count_map_.erase(iter++);
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 }

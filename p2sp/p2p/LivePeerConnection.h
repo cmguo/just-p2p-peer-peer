@@ -45,7 +45,7 @@ namespace p2sp
 
         bool HasSubPiece(const protocol::LiveSubPieceInfo & subpiece);
 
-        void EliminateBlockBitMap(uint32_t block_id);
+        void EliminateElapsedBlockBitMap(uint32_t block_id);
 
         boost::uint32_t GetAvgDeltaTime() const;
 
