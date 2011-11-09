@@ -42,6 +42,8 @@ namespace p2sp
 
         void PPLeave();
 
+        void DoReport();
+
     private:
 
         void OnListResponsePacket(protocol::ListPacket const & packet);

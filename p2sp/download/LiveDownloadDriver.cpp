@@ -10,6 +10,7 @@
 #include "p2sp/proxy/MessageBufferManager.h"
 #include "WindowsMessage.h"
 #include "statistic/DACStatisticModule.h"
+#include "p2sp/tracker/TrackerModule.h"
 
 namespace p2sp
 {
@@ -135,6 +136,8 @@ namespace p2sp
 #endif
 
         StartBufferringMonitor();
+
+        p2sp::TrackerModule::Inst()->DoReport(false);
     }
 
     void LiveDownloadDriver::Stop()

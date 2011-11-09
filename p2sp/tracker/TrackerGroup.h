@@ -38,6 +38,8 @@ namespace p2sp
 
         void PPLeave();
 
+        void SelectTracker();
+
     public:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -52,8 +54,6 @@ namespace p2sp
         void StartAllClients();
 
         void ClearAllClients();
-
-        void SelectTracker();
 
     private:
         /**

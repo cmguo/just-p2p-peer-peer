@@ -85,4 +85,16 @@ namespace p2sp
         vod_tracker_manager_.PPLeave();
         live_tracker_manager_.PPLeave();
     }
+
+    void TrackerModule::DoReport(bool is_vod)
+    {
+        if (is_vod)
+        {
+            vod_tracker_manager_.DoReport();
+        }
+        else
+        {
+            live_tracker_manager_.DoReport();
+        }
+    }
 }

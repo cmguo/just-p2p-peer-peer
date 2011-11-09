@@ -35,6 +35,8 @@ namespace p2sp
 
         void PPLeave();
 
+        void DoReport(bool is_vod);
+
     private:
         bool is_running_;
 

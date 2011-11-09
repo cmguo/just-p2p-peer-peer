@@ -378,4 +378,12 @@ namespace p2sp
             LoadTrackerList();
         }
     }
+
+    void TrackerManager::DoReport()
+    {
+        for (ModIndexer::iterator it = mod_indexer_.begin(); it != mod_indexer_.end(); ++it)
+        {
+            it->second->SelectTracker();
+        }
+    }
 }
