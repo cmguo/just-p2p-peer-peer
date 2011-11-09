@@ -2011,7 +2011,12 @@ void PEER_API SetRestPlayTimeByUrl(const char * url, boost::uint32_t rest_play_t
 
 void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 {
-    DebugLog("QueryDragPeerStateByUrl url:%s", url);
+    if (!IsProxyModuleStarted())
+    {
+        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        return;
+    }
+
     LOGX(__DEBUG, "interface", " url = " << url);
 
     Event::p event_wait = Event::Create();
@@ -2024,7 +2029,6 @@ void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
     event_wait->Wait();
 
     LOGX(__DEBUG, "interface", "QueryDragPeerStateByUrl Succeed: " << *state);
-    DebugLog("QueryDragPeerStateByUrl Succeed: %d", *state);
 
     return;
 }
