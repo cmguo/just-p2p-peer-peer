@@ -46,46 +46,55 @@ namespace p2sp
 
     struct KickLiveConnectionIndicator
     {   
-        bool block_bitmap_empty_;
         uint32_t last_minute_speed_in_bytes_;
-        uint32_t connected_time_in_millseconds_;
+        uint32_t block_bitmap_empty_in_millseconds_;
 
         bool ShouldKick() const
         {
-            return block_bitmap_empty_ ||
+            return block_bitmap_empty_in_millseconds_ > 0 &&
                 last_minute_speed_in_bytes_ == 0;
         }
 
         KickLiveConnectionIndicator(const LivePeerConnection__p connection)
         {
-            this->block_bitmap_empty_ = connection->IsBlockBitmapEmpty();
             this->last_minute_speed_in_bytes_ = connection->GetSpeedInfo().MinuteDownloadSpeed;
-            this->connected_time_in_millseconds_ = connection->GetConnectedTimeInMillseconds();
+            this->block_bitmap_empty_in_millseconds_ = connection->GetBitmapEmptyTimeInMillseconds();
         }
     };
 
     inline bool operator<(const KickLiveConnectionIndicator& x, const KickLiveConnectionIndicator& y)
     {
-        if (x.block_bitmap_empty_ != y.block_bitmap_empty_)
+        if (x.block_bitmap_empty_in_millseconds_ > 0 &&
+            y.block_bitmap_empty_in_millseconds_ == 0)
         {
-            return x.block_bitmap_empty_;
+            // x empty, y not empty
+            return true;
         }
 
-        if (x.block_bitmap_empty_)
+        if (x.block_bitmap_empty_in_millseconds_ == 0 &&
+            y.block_bitmap_empty_in_millseconds_ > 0)
+        {
+            // x not empty, y empty
+            return false;
+        }
+
+        if (x.block_bitmap_empty_in_millseconds_ > 0 &&
+            y.block_bitmap_empty_in_millseconds_ > 0)
         {
             // both empty
-            // kick first if longer
-            return x.connected_time_in_millseconds_ > y.connected_time_in_millseconds_;
-        }
+            if (x.last_minute_speed_in_bytes_ == 0 &&
+                y.last_minute_speed_in_bytes_ == 0)
+            {
+                // both no speed; compare empty time
+                return x.block_bitmap_empty_in_millseconds_ > y.block_bitmap_empty_in_millseconds_;
+            }
 
-        // both not empty
-        // kick first if lower speed
-        if (x.last_minute_speed_in_bytes_ != y.last_minute_speed_in_bytes_)
-        {
+            // kick first if less speed
             return x.last_minute_speed_in_bytes_ < y.last_minute_speed_in_bytes_;
         }
 
-        return x.connected_time_in_millseconds_ > y.connected_time_in_millseconds_;
+        // both non empty; kick first if less speed
+        return x.last_minute_speed_in_bytes_ < y.last_minute_speed_in_bytes_;
     }
 
     class LiveP2PDownloader

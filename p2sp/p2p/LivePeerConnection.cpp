@@ -93,6 +93,8 @@ namespace p2sp
         if (false == is_running_)
             return;
 
+        bool block_bitmap_empty_before_update = block_bitmap_.empty();
+
         if (packet.live_announce_map_.block_info_count_ > 0)
         {
             std::map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::const_iterator iter;
@@ -134,9 +136,35 @@ namespace p2sp
                 block_bitmap_[bitmap_iter->first] = bitmap_iter->second;
             }
         }
+        else
+        {
+            block_bitmap_.clear();
+        }
+
+        if (!block_bitmap_empty_before_update &&
+            block_bitmap_.empty())
+        {
+            UpdateBlockBitmapEmptyTickCount();
+        }
 
         // 收到Announce, 重置
         no_announce_response_time_ = 0;
+    }
+
+    uint32_t LivePeerConnection::GetBitmapEmptyTimeInMillseconds()
+    {
+        if (!block_bitmap_.empty())
+        {
+            return 0;
+        }
+
+        return statistic::GetTickCountInMilliSecond() - block_bitmap_empty_tick_count_in_millseconds_;
+    }
+
+    void LivePeerConnection::UpdateBlockBitmapEmptyTickCount()
+    {
+        assert(block_bitmap_.empty());
+        block_bitmap_empty_tick_count_in_millseconds_ = statistic::GetTickCountInMilliSecond();
     }
 
     void LivePeerConnection::ClearTaskQueue()
@@ -278,6 +306,7 @@ namespace p2sp
 
     void LivePeerConnection::EliminateElapsedBlockBitMap(uint32_t block_id)
     {
+        bool block_bitmap_empty_before_update = block_bitmap_.empty();
         for (map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::iterator 
             iter = block_bitmap_.begin(); iter != block_bitmap_.end();)
         {
@@ -289,6 +318,12 @@ namespace p2sp
             {
                 break;
             }
+        }
+
+        if (!block_bitmap_empty_before_update &&
+            block_bitmap_.empty())
+        {
+            UpdateBlockBitmapEmptyTickCount();
         }
 
         LOG(__DEBUG, "live_p2p", "block_bitmap_.size() = " << block_bitmap_.size());

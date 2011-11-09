@@ -70,6 +70,8 @@ namespace p2sp
 
         uint32_t GetConnectedTimeInMillseconds();
 
+        uint32_t GetBitmapEmptyTimeInMillseconds();
+
     private:
         // 构造
         LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 
@@ -81,10 +83,11 @@ namespace p2sp
             , avg_delta_time_(100)
             , is_running_(false)
             , no_announce_response_time_(0)
-            , connect_type_(connect_type)
+            , connect_type_(connect_type)            
         {
             assert(connect_type < protocol::CONNECT_MAX);
             peer_connection_info_.ConnectType = connect_type;
+            UpdateBlockBitmapEmptyTickCount();
         }
 
         void DoAnnounce();
@@ -96,6 +99,8 @@ namespace p2sp
         void RequestTillFullWindow();
 
         void RequestSubPieces(uint32_t block_count, bool need_check = false);
+
+        void UpdateBlockBitmapEmptyTickCount();
 
     private:
         LiveP2PDownloader__p p2p_downloader_;
@@ -127,7 +132,9 @@ namespace p2sp
 
         volatile bool is_running_;
 
-        boost::uint8_t connect_type_;
+        boost::uint8_t connect_type_;        
+
+        uint32_t block_bitmap_empty_tick_count_in_millseconds_;
     };
 }
 
