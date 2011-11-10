@@ -23,9 +23,10 @@
 #include "storage/InstanceMemoryConsumer.h"
 #include "storage/LiveInstanceMemoryConsumer.h"
 #include "storage/UploaderMemoryConsumer.h"
-#include "p2sp/p2p/P2PModule.h"
 #include "network/Uri.h"
 #include "base/util.h"
+#include "p2sp/p2p/UploadStruct.h"
+#include "p2sp/p2p/UploadModule.h"
 
 #include <framework/configure/Config.h>
 
@@ -1052,21 +1053,6 @@ namespace storage
                 Instance::p p_inst = *i;
                 p_inst->FreeResourceHandle();
                 p_inst->SetSaveMode(false);
-
-#ifdef USE_PREFIX_FILENAME
-                // 检查文件前缀名
-                FileResourceInfo res_info;
-                p_inst->GetFileResourceInfo(res_info);
-                string tmp_file_path = res_info.file_path_;
-                if (false == CheckPrefixName(tmp_file_path))
-                {
-                    p_inst->Rename(tmp_file_path);
-                }
-                else
-                {
-                    is_name_use_ppva = true;
-                }
-#endif
             }
 
         }  // 打开ResourceInfo.dat成功
@@ -1338,8 +1324,6 @@ namespace storage
             return;
         }
 
-        CheckPrefixName(qualified_filename);
-
         string q_name = qualified_filename;
         // !
         boost::filesystem::path path(q_name);
@@ -1450,8 +1434,6 @@ namespace storage
         {
             return;
         }
-
-        CheckPrefixName(filename);
 
         string file_name = filename;
         string file_ext = fs::path(file_name).extension();
@@ -1978,7 +1960,7 @@ namespace storage
     void Storage::MonitorMemoryConsumption(size_t memory_quota_in_bytes)
     {
         MemoryConsumptionMonitor monitor(memory_quota_in_bytes);
-        monitor.Add(boost::shared_ptr<IMemoryConsumer>(new UploaderMemoryConsumer(p2sp::P2PModule::Inst()->GetUploadManager())));
+        monitor.Add(boost::shared_ptr<IMemoryConsumer>(new UploaderMemoryConsumer(p2sp::UploadModule::Inst())));
 
         for(std::map<RID, LiveInstance::p>::iterator iter = rid_to_live_instance_map_.begin();
             iter != rid_to_live_instance_map_.end();
@@ -2144,32 +2126,6 @@ namespace storage
 
 #ifdef DISK_MODE
 
-#ifdef USE_PREFIX_FILENAME
-    bool Storage::CheckPrefixName(string &filename)
-    {
-        boost::filesystem::path file_path(filename);
-        string old_name = file_path.filename();
-        if (false == boost::algorithm::starts_with(old_name, GetPrefixName()))
-        {
-            old_name = GetPrefixName() + old_name;
-            file_path.remove_filename();
-            file_path /= old_name;
-            filename = file_path.native_file_string();
-
-            return false;
-        }
-        else
-        {
-            return true;
-        }
-    }
-#else
-    bool Storage::CheckPrefixName(string &filename)
-    {
-        return true;
-    }
-#endif
-
     void Storage::RemoveExpiredInvisibleFiles()
     {
         boost::gregorian::date today(boost::gregorian::day_clock::local_day());
@@ -2198,5 +2154,52 @@ namespace storage
     }
 #endif  // #ifdef DISK_MODE
 
+    protocol::SubPieceBuffer Storage::GetSubPieceFromBlock(const protocol::SubPieceInfo& subpiece_info,
+        const RID& rid, const base::AppBuffer& block_buf)
+    {
+        p2sp::RBIndex rb_index(rid, subpiece_info.block_index_);
+
+        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(GetInstanceByRID(rb_index.rid, false));
+        assert(inst);
+        if (!inst)
+        {
+            return protocol::SubPieceBuffer();
+        }
+
+        uint32_t block_offset, block_len;
+        inst->GetBlockPosition(rb_index.block_index, block_offset, block_len);
+        uint32_t sub_offset, sub_len;
+        inst->GetSubPiecePosition(subpiece_info, sub_offset, sub_len);
+        STORAGE_TEST_DEBUG("block index:" << rb_index.block_index << "--block offset, block len:<"
+            << block_offset << "," << block_len << ">--sub offset, sub len:<" << sub_offset << "," << sub_len << ">"
+            << "--buf len:" << block_buf.Length());
+        assert(sub_offset >= block_offset);
+        assert(sub_len <= block_len);
+        assert(block_len == block_buf.Length());
+        uint32_t start = sub_offset - block_offset;
+
+        if (start + sub_len > block_buf.Length() || sub_offset < block_offset || sub_len > block_len || block_len
+            != block_buf.Length())
+        {
+            return protocol::SubPieceBuffer();
+        }
+        else
+        {
+            protocol::SubPieceBuffer buf(new protocol::SubPieceContent, sub_len);
+            if (buf) {
+                base::util::memcpy2(buf.Data(), buf.Length(), block_buf.Data() + start, sub_len);
+            }
+            return buf;
+        }
+    }
+
+    void Storage::UploadOneSubPiece(const RID & rid)
+    {
+        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid, false));
+        if (inst)
+        {
+            inst->UploadOneSubPiece();
+        }
+    }
 
 }  // namespace storage

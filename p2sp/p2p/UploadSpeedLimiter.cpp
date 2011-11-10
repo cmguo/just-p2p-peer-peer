@@ -73,6 +73,12 @@ namespace p2sp
         DoSendPacket(boost::shared_ptr<LivePacket>(new LivePacket(packet)), ignoreUploadSpeedLimit, priority, dest_protocol_version);
     }
 
+    void UploadSpeedLimiter::SendPacket(const protocol::TcpSubPieceResponsePacket & packet, bool ignoreUploadSpeedLimit,
+        uint16_t priority, uint16_t dest_protocol_viersion)
+    {
+        DoSendPacket(boost::shared_ptr<TcpPacket>(new TcpPacket(packet)), ignoreUploadSpeedLimit, priority, dest_protocol_viersion);
+    }
+
     void UploadSpeedLimiter::DoSendPacket(boost::shared_ptr<PacketBase> packet, bool ignoreUploadSpeedLimit,
         uint16_t priority, uint16_t dest_protocol_version)
     {

@@ -32,28 +32,27 @@ namespace statistic
         inst_.reset();
     }
 
-    void UploadStatisticModule::SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::udp::endpoint> uploading_peers_)
+    void UploadStatisticModule::SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
     {
         upload_info_.peer_upload_count = uploading_peers_.size();
         upload_info_.speed_limit = upload_speed_limit;
 
         if (m_upload_map.size() == 0)
         {
-            for (std::set<boost::asio::ip::udp::endpoint>::iterator iter = uploading_peers_.begin();
+            for (std::set<boost::asio::ip::address>::iterator iter = uploading_peers_.begin();
                 iter != uploading_peers_.end(); iter++)
             {
                 if (m_upload_map.find(*iter) == m_upload_map.end())
                 {
-                    // 找不到
-                    boost::asio::ip::udp::endpoint end_point = *iter;
-                    m_upload_map.insert(std::make_pair(end_point, SpeedInfoStatistic()));
+                    boost::asio::ip::address ip_address = *iter;
+                    m_upload_map.insert(std::make_pair(ip_address, SpeedInfoStatistic()));
                     m_upload_map[*iter].Start();
                 }
             }
         }
         else
         {
-            for (std::map<boost::asio::ip::udp::endpoint, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
+            for (std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
                 iter != m_upload_map.end();)
             {
                 if (uploading_peers_.find(iter->first) == uploading_peers_.end())
@@ -69,9 +68,9 @@ namespace statistic
         }
     }
 
-    void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::udp::endpoint end_point, uint32_t size)
+    void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size)
     {
-        std::map<boost::asio::ip::udp::endpoint, SpeedInfoStatistic>::iterator iter = m_upload_map.find(end_point);
+        std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.find(address);
         if (iter != m_upload_map.end())
         {
             // 找到了
@@ -79,9 +78,9 @@ namespace statistic
         }
         else
         {
-            m_upload_map.insert(std::make_pair(end_point, SpeedInfoStatistic()));
-            m_upload_map[end_point].Start();
-            m_upload_map[end_point].SubmitUploadedBytes(size);
+            m_upload_map.insert(std::make_pair(address, SpeedInfoStatistic()));
+            m_upload_map[address].Start();
+            m_upload_map[address].SubmitUploadedBytes(size);
         }
     }
 
@@ -99,14 +98,12 @@ namespace statistic
     void UploadStatisticModule::OnShareMemoryTimer(uint32_t times)
     {
         int i = 0;
-        for (std::map<boost::asio::ip::udp::endpoint, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
+        for (std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
             iter != m_upload_map.end(); iter++)
         {
-            framework::network::Endpoint ep(iter->first);
-            uint32_t ip = ep.ip_v4();
-            boost::uint16_t port = ep.port();
+            uint32_t ip = iter->first.to_v4().to_ulong();
             upload_info_.peer_upload_info[i].ip = ip;
-            upload_info_.peer_upload_info[i].port = port;
+            upload_info_.peer_upload_info[i].port = 0;
             upload_info_.peer_upload_info[i].upload_speed = iter->second.GetSpeedInfo().NowUploadSpeed;
             i++;
             LOG(__DEBUG, "ppbug", "IP = " << upload_info_.peer_upload_info[i].ip << " PORT = " << upload_info_.peer_upload_info[i].port);

@@ -224,12 +224,6 @@ namespace storage
             return prefix_filename_;
         }
 
-        /*
-         *  检查文件名是否含有前缀
-         *  有：返回true, 没有：增加前缀，返回false
-         */
-        bool CheckPrefixName(string& filename);
-
         StorageMode GetStorageMode() const
         {
             return storage_mode_;
@@ -240,6 +234,11 @@ namespace storage
             return resource_data_path_;
         }
 #endif  // DISK_MODE
+
+        protocol::SubPieceBuffer GetSubPieceFromBlock(const protocol::SubPieceInfo& subpiece_info,
+            const RID& rid, const base::AppBuffer& block_buf);
+
+        void UploadOneSubPiece(const RID & rid);
 
     protected:
         virtual void DoMerge(Instance::p instance_old, Instance::p instance_new);

@@ -6,6 +6,7 @@
 #define P2SP_UPLOAD_SPEED_LIMITER_H
 
 #include "p2sp/AppModule.h"
+#include "network/tcp/TcpConnection.h"
 
 namespace p2sp
 {
@@ -53,6 +54,28 @@ namespace p2sp
         }
     };
 
+    class TcpPacket
+        : public PacketBase
+    {
+    private:
+        protocol::TcpSubPieceResponsePacket tcp_subpiece_packet_;
+    public:
+        TcpPacket(const protocol::TcpSubPieceResponsePacket & packet)
+            : tcp_subpiece_packet_(packet)
+        {
+
+        }
+
+        void SendPacket(boost::uint16_t dest_protocol_version)
+        {
+            tcp_subpiece_packet_.tcp_connection_->DoSend(tcp_subpiece_packet_);
+        }
+        size_t GetPacketSize() const
+        {
+            return SUB_PIECE_SIZE;
+        }
+    };
+
     class UploadSpeedLimiter
     {
     public:
@@ -63,6 +86,9 @@ namespace p2sp
 
         void SendPacket(const protocol::LiveSubPiecePacket & packet, bool ignoreUploadSpeedLimit,
             uint16_t priority, uint16_t dest_protocol_version);
+
+        void SendPacket(const protocol::TcpSubPieceResponsePacket & packet, bool ignoreUploadSpeedLimit,
+            uint16_t priority, uint16_t dest_protocol_viersion);
 
         void SetSpeedLimitInKBps(uint32_t speed_limit_in_KBps);
         uint32_t GetSpeedLimitInKBps() const;

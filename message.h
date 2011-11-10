@@ -77,6 +77,10 @@
 // 参数wParam: 无
 // 参数lParam: 结构 PERIOD_DAC_STATISTIC_INFO_V1 的指针，用来传递周期统计数据
 
+#define UM_INTERNAL_TCP_PORT_SUCCED     WM_USER + 28
+// 参数wParam: 无
+// 参数lParam: Tcp上传的内部监听端口
+
 
 typedef struct _NOTIFY_TASK
 {

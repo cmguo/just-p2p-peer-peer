@@ -73,6 +73,7 @@ namespace p2sp
 
     AppModule::AppModule()
         : is_running_(false)
+        , tcp_server_(global_io_svc())
     {
     }
 
@@ -213,6 +214,22 @@ namespace p2sp
 
         StunModule::Inst()->Start(appmodule_start_interface->config_path_);
 
+        // 启动TCP Server
+        RegisterTcpPackets();
+
+        // 记录端口，汇报
+        upnp_port_ = 0;
+        for (boost::uint32_t port = 16000; port <=16010; port++)
+        {
+            if (tcp_server_.Start(port))
+            {
+#ifdef NEED_TO_POST_MESSAGE
+                WindowsMessage::Inst().PostWindowsMessage(UM_INTERNAL_TCP_PORT_SUCCED, (WPARAM)0, (LPARAM)port);
+#endif
+                break;
+            }
+        }
+
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
         StatisticModule::Inst()->SetLocalPeerUdpPort(local_udp_port);
@@ -244,7 +261,7 @@ namespace p2sp
                 appmodule_start_interface->config_path_));
 
         statistics_collection_controller_->Start();
-        
+
         LOG(__DEBUG, "app", "Start Finish!");
 
         return true;
@@ -448,7 +465,12 @@ namespace p2sp
         P2PModule::Inst()->AddCandidatePeers(rid, peers);
     }
 
-    void AppModule::OnUdpRecv(Packet const & packet)
+    void AppModule::OnUdpRecv(protocol::Packet const & packet)
+    {
+        OnPacketRecv(packet);
+    }
+
+    void AppModule::OnPacketRecv(Packet const & packet)
     {
         if (false == is_running_)
         {
@@ -480,8 +502,9 @@ namespace p2sp
         }
 
         // Peer 相关协议
-        if (packet.PacketAction  >= 0x50 && packet.PacketAction < 0x70||
-            packet.PacketAction >= 0xC0 && packet.PacketAction < 0xC5)
+        if (packet.PacketAction  >= 0x50 && packet.PacketAction < 0x70 ||
+            packet.PacketAction >= 0xC0 && packet.PacketAction < 0xC5 ||
+            packet.PacketAction >= 0xB0 && packet.PacketAction < 0xB7)
         {
             P2PModule::Inst()->OnUdpRecv((protocol::Packet const &)packet);
             return;
@@ -656,5 +679,25 @@ namespace p2sp
         }
         
         return bufferring_monitor;
+    }
+
+    void AppModule::RegisterTcpPackets()
+    {
+        tcp_server_.RegisterPacket<protocol::TcpAnnounceRequestPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpAnnounceResponsePacket>();
+        tcp_server_.RegisterPacket<protocol::TcpSubPieceRequestPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpSubPieceResponsePacket>();
+        tcp_server_.RegisterPacket<protocol::TcpReportSpeedPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpErrorPacket>();
+    }
+
+    boost::uint16_t AppModule::GetUpnpPortForTcpUpload()
+    {
+        if (StunModule::Inst()->GetPeerNatType() == protocol::TYPE_PUBLIC)
+        {
+            return GetLocalTcpPort();
+        }
+
+        return upnp_port_;
     }
 }

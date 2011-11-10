@@ -662,6 +662,12 @@ namespace statistic
         P2PDownloadDriverStatisticMap::iterator it = p2p_downloader_statistic_map_.find(rid);
         if (it == p2p_downloader_statistic_map_.end())
         {
+            peer_download_info.IsDownloading = false;
+            peer_download_info.AvgDownload = 0;
+            peer_download_info.AvgUpload = p2sp::P2PModule::Inst()->GetUploadSpeedLimitInKBps();
+            peer_download_info.NowDownload = 0;
+            peer_download_info.NowUpload = GetUploadDataSpeed();
+            peer_download_info.OnlineTime = 0;
             return peer_download_info;
         }
 

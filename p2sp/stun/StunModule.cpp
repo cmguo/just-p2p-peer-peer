@@ -405,7 +405,7 @@ namespace p2sp
 
         AppModule::Inst()->OnUdpRecv(e_p, buf);
         */
-        AppModule::Inst()->OnUdpRecv(connect_packet);
+        AppModule::Inst()->OnPacketRecv(connect_packet);
     }
 
     void StunModule::DoHandShake()

@@ -600,22 +600,6 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
 
-void PEER_API SetMaxUploadCacheSizeInMB(uint32_t nMaxUploadCacheSizeInMB)
-{
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (nMaxUploadCacheSizeInMB == 0)
-    {
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::P2PModule::SetMaxUploadCacheSizeInMB, p2sp::P2PModule::Inst(),
-        nMaxUploadCacheSizeInMB));
-}
-
 // helper
 struct Event
 {
@@ -2115,6 +2099,11 @@ boost::int32_t PEER_API QueryBlockHashFailedByUrl(const char * url)
 #endif
 }
 
+void PEER_API SetUpnpPortForTcpUpload(boost::uint16_t upnp_port)
+{
+    p2sp::AppModule::Inst()->SetUpnpPortForTcpUpload(upnp_port);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // 接口分配函数
 //////////////////////////////////////////////////////////////////////////
@@ -2149,7 +2138,7 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     // version 0, 6
     lpNetInterface->LimitDownloadSpeedInKBpsByUrl = LimitDownloadSpeedInKBpsByUrl;
     // version 0, 7
-    lpNetInterface->SetMaxUploadCacheSizeInMB = SetMaxUploadCacheSizeInMB;
+
     // version 0, 8
     lpNetInterface->QueryDownloadProgress = QueryDownloadProgress;
     lpNetInterface->QueryDownloadSpeed = QueryDownloadSpeed;
@@ -2193,4 +2182,6 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     lpNetInterface->SetDownloadModeByUrl = SetDownloadModeByUrl;
     lpNetInterface->GetCompeletedFilePathByUrl = GetCompeletedFilePathByUrl;
     lpNetInterface->QueryBlockHashFailedByUrl = QueryBlockHashFailedByUrl;
+    // verison 0, 23
+    lpNetInterface->SetUpnpPortForTcpUpload = SetUpnpPortForTcpUpload;
 }

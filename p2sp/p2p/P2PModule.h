@@ -9,6 +9,7 @@
 
 #include <protocol/PeerPacket.h>
 #include <p2sp/bootstrap/BootStrapGeneralConfig.h>
+#include <p2sp/p2p/UploadModule.h>
 
 namespace storage
 {
@@ -23,9 +24,6 @@ namespace p2sp
 
     class LiveP2PDownloader;
     typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
-
-    class UploadManager;
-    typedef boost::shared_ptr<UploadManager> UploadManager__p;
 
     class SessionPeerCache;
     typedef boost::shared_ptr<SessionPeerCache> SessionPeerCache__p;
@@ -52,6 +50,8 @@ namespace p2sp
         void SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed);
 
         boost::int32_t GetUploadSpeedLimitInKBps() const;
+        boost::int32_t GetMaxConnectLimitSize() const;
+        boost::int32_t GetMaxUploadLimitSize() const;
 
         void OnUdpRecv(protocol::Packet const & packet);
         void OnTimerElapsed(framework::timer::Timer * pointer);
@@ -80,10 +80,6 @@ namespace p2sp
         P2PDownloader__p GetP2PDownloader(const RID& rid);
         SessionPeerCache__p GetSessionPeerCache() const {return session_cache_;}
 
-        void SetMaxUploadCacheSizeInMB(uint32_t nMaxUploadCacheSizeInMB);
-
-        UploadManager__p GetUploadManager() const { return upload_manager_; }
-
         // 设置上传开关，用于控制是否启用上传
         void SetUploadSwitch(bool is_disable_upload);
 
@@ -105,7 +101,7 @@ namespace p2sp
         // 变量
         typedef std::map<RID, P2PDownloader__p> RIDIndexerMap;
         RIDIndexerMap rid_indexer_;
-        UploadManager__p upload_manager_;
+        boost::shared_ptr<UploadModule> upload_module_;
         SessionPeerCache__p session_cache_;
         framework::timer::PeriodicTimer p2p_timer_;
         // 状态

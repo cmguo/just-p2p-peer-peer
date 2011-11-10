@@ -279,9 +279,8 @@ namespace p2sp
 
         LoadLocalIPs(real_ips);
 
-        boost::uint16_t local_udp_port;
-
-        local_udp_port = p2sp::AppModule::Inst()->GetLocalUdpPort();
+        boost::uint16_t local_udp_port = p2sp::AppModule::Inst()->GetLocalUdpPort();
+        boost::uint16_t local_tcp_port = p2sp::AppModule::Inst()->GetLocalTcpPort();
 
         boost::int32_t upload_speed_limit_kbs = p2sp::P2PModule::Inst()->GetUploadSpeedLimitInKBps();
         if (upload_speed_limit_kbs < 0)
@@ -308,7 +307,9 @@ namespace p2sp
                 (boost::int32_t)p2sp::P2PModule::Inst()->GetUploadBandWidthInKBytes(),
                 upload_speed_limit_kbs,
                 (boost::int32_t)statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps(),
-                end_point_
+                end_point_,
+                local_tcp_port,
+                p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload()
            );
 
         LOG(__DEBUG, "tracker", "DoReport, TrackerInfo: " << end_point_);

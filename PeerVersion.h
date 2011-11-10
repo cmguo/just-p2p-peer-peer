@@ -5,7 +5,7 @@
 #ifndef PEER_VERSION_H
 #define PEER_VERSION_H
 
-#define PEER_KERNEL_VERSION 2, 2, 0, 0
-#define PEER_KERNEL_VERSION_STR "2, 2, 0, 0"
+#define PEER_KERNEL_VERSION 2, 3, 0, 0
+#define PEER_KERNEL_VERSION_STR "2, 3, 0, 0"
 
 #endif  // PEER_VERSION_H

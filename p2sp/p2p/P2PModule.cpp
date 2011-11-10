@@ -7,7 +7,6 @@
 #include "p2sp/p2p/P2PModule.h"
 #include "p2sp/AppModule.h"
 #include "p2sp/p2p/P2PDownloader.h"
-#include "p2sp/p2p/UploadManager.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "p2sp/p2p/SessionPeerCache.h"
 
@@ -17,10 +16,6 @@
 
 #ifdef DUMP_OBJECT
 #include "count_object_allocate.h"
-#endif
-
-#ifdef COUNT_CPU_TIME
-#include "count_cpu_time.h"
 #endif
 
 #include "storage/Storage.h"
@@ -67,13 +62,9 @@ namespace p2sp
         is_increased_window_size_ = false;
         avg_available_window_size_ = 0;
 
-
-        upload_manager_ = UploadManager::create();
-        upload_manager_->Start(config_path);
-
+        UploadModule::Inst()->Start(config_path);
 
         p2p_timer_.start();
-
 
         session_cache_ = SessionPeerCache::create();
 
@@ -84,10 +75,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-
-        assert(upload_manager_);
-        upload_manager_->Stop();
-
+        UploadModule::Inst()->Stop();
 
         for (std::map<RID, P2PDownloader::p>::iterator iter  = rid_indexer_.begin(); iter != rid_indexer_.end(); iter ++)
         {
@@ -102,22 +90,40 @@ namespace p2sp
         is_running_ = false;
         inst_.reset();
     }
-
-    void P2PModule::SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed)
+	
+	void P2PModule::SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed)
     {
         if (is_running_ == false)
             return;
         // 只是设置一个上限值
-        upload_manager_->SetUploadUserSpeedLimitInKBps(MaxUploadP2PSpeed);
+        UploadModule::Inst()->SetUploadUserSpeedLimitInKBps(MaxUploadP2PSpeed);
     }
 
     boost::int32_t P2PModule::GetUploadSpeedLimitInKBps() const
     {
         if (false == is_running_) return 0;
 
-        if (upload_manager_) return upload_manager_->GetUploadSpeedLimitInKBps();
+        return UploadModule::Inst()->GetUploadSpeedLimitInKBps();
+    }
 
-        return 0;
+    boost::int32_t P2PModule::GetMaxConnectLimitSize() const
+    {
+        if (!is_running_)
+        {
+            return 0;
+        }
+
+        return UploadModule::Inst()->GetMaxConnectLimitSize();
+    }
+
+    boost::int32_t P2PModule::GetMaxUploadLimitSize() const
+    {
+        if (!is_running_)
+        {
+            return 0;
+        }
+
+        return UploadModule::Inst()->GetMaxUploadLimitSize();
     }
 
     P2PDownloader::p P2PModule::CreateP2PDownloader(const RID& rid)
@@ -175,37 +181,22 @@ namespace p2sp
     void P2PModule::OnUdpRecv(protocol::Packet const & packet_)
     {
         if (is_running_ == false) return;
-        // 如果是 Connect(Request) 报文，
-        //        RequestAnnounce 报文，
-        //        RequestSubPiece 报文
-        //     则 下发给 UploadManager 模块
-        // P2P_EVENT("P2PModule::OnUdpRecv 0x" << std::hex << (u_int)packet->GetAction());
-        if (packet_.PacketAction == protocol::RequestSubPiecePacket::Action)
+
+        // Upload Packet
+        if (UploadModule::Inst()->TryHandlePacket(packet_))
         {
-            upload_manager_->OnRequestSubPiecePacket((protocol::RequestSubPiecePacket const &)packet_);
             return;
         }
 
-        if (packet_.PacketAction == protocol::LiveRequestAnnouncePacket::Action)
-        {
-            upload_manager_->OnLiveRequestAnnouncePacket((protocol::LiveRequestAnnouncePacket const &)packet_);
-            return;
-        }
-
-        if (packet_.PacketAction == protocol::LiveRequestSubPiecePacket::Action)
-        {
-            upload_manager_->OnLiveRequestSubPiecePacket((protocol::LiveRequestSubPiecePacket const &)packet_);
-            return ;
-        }
-
+        // Notify Packet
         protocol::VodPeerPacket const & packet = (protocol::VodPeerPacket const &)packet_;
 
+#ifdef NOTIFY_ON
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
             const protocol::ConnectPacket & connect_packet = (const protocol::ConnectPacket &)packet;
             LOGX(__DEBUG, "upload", "P2PModule::OnUdpRecv ConnectPacket connect_packet->IsRequest()" << ((protocol::ConnectPacket&)packet).IsRequest());
 
-#ifdef NOTIFY_ON
             // 如果是特殊RID，Notify处理
             RID spec_rid;
             const string str_rid = "00000000000000000000000000000001";
@@ -215,41 +206,10 @@ namespace p2sp
                 connect_packet.resource_id_ == spec_rid)
             {
                 p2sp::NotifyModule::Inst()->OnUdpRecv(connect_packet);
+                return;
             }
-            else
+        }
 #endif
-            {
-                if (connect_packet.IsRequest())
-                {
-                    upload_manager_->OnConnectPacket(connect_packet);
-                    return;
-                }
-            }
-        }
-        if (packet.PacketAction == protocol::RequestAnnouncePacket::Action)
-        {
-            LOGX(__DEBUG, "upload", "RequestAnnouncePacket Request!");
-            upload_manager_->OnRequestAnnouncePacket((const protocol::RequestAnnouncePacket &)packet);
-            return;
-        }
-        if (packet.PacketAction == protocol::RequestSubPiecePacketOld::Action)
-        {
-            upload_manager_->OnRequestSubPiecePacketOld((protocol::RequestSubPiecePacketOld const &)packet);
-            return;
-        }
-        if (packet.PacketAction == protocol::RIDInfoRequestPacket::Action)
-        {
-            LOGX(__DEBUG, "upload", "OnRIDInfoRequestPacket Request!");
-            upload_manager_->OnRIDInfoRequestPacket((protocol::RIDInfoRequestPacket const &)packet);
-            return;
-        }
-        if (packet.PacketAction == protocol::ReportSpeedPacket::Action)
-        {
-            const protocol::ReportSpeedPacket & speed_packet = (protocol::ReportSpeedPacket const &)packet;
-            LOGX(__DEBUG, "upload", "OnReportSpeedPacket Request! ep:" << speed_packet.end_point << ", speed:" << speed_packet.speed_);
-            upload_manager_->OnReportSpeedPacket(speed_packet);
-            return;
-        }
         // 否则
         //        下发给 RID 对应的 P2PDownloader 模块
         //          但是 如果 找不到 RID 对应的 P2PDownloader 模块
@@ -398,8 +358,7 @@ namespace p2sp
 
 #ifdef DISK_MODE
         // 首先 UploadManager 调用这个
-        assert(upload_manager_);
-        upload_manager_->OnP2PTimer(times);
+        UploadModule::Inst()->OnP2PTimer(times);
 #endif
         // P2PDownloader->OnP2PTimer 所有的
         for (std::map<RID, P2PDownloader::p>::iterator iter  = rid_indexer_.begin(); iter != rid_indexer_.end(); iter ++)
@@ -441,36 +400,15 @@ namespace p2sp
         return P2PDownloader::p();
     }
 
-    void P2PModule::SetMaxUploadCacheSizeInMB(uint32_t nMaxUploadCacheSizeInMB)
-    {
-        if (false == is_running_) {
-            LOGX(__DEBUG, "upload", " Not running");
-            return;
-        }
-        if (nMaxUploadCacheSizeInMB == 0) {
-            LOGX(__DEBUG, "upload", "nMaxUploadCacheSizeInMB = " << nMaxUploadCacheSizeInMB);
-            return;
-        }
-
-        if (upload_manager_)
-        {
-            boost::uint32_t count = (nMaxUploadCacheSizeInMB + 1) / 2;
-            upload_manager_->SetMaxUploadCacheLength(count);
-            LOGX(__DEBUG, "upload", "MaxUploadCacheSizeInMB = " << nMaxUploadCacheSizeInMB << " SetMaxUploadCacheLength = " << count);
-        }
-        // P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH = count;
-        // LOGX(__DEBUG, "upload", "MaxUploadCacheSizeInMB = " << nMaxUploadCacheSizeInMB << " Count = " << P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH);
-    }
-
     // 设置上传开关，用于控制是否启用上传
     void P2PModule::SetUploadSwitch(bool is_disable_upload)
     {
-        upload_manager_->SetUploadSwitch(is_disable_upload);
+        UploadModule::Inst()->SetUploadSwitch(is_disable_upload);
     }
 
     boost::uint32_t P2PModule::GetUploadBandWidthInBytes()
     {
-        return upload_manager_->GetUploadBandWidthInBytes();
+        return UploadModule::Inst()->GetUploadBandWidthInBytes();
     }
 
     boost::uint32_t P2PModule::GetUploadBandWidthInKBytes()
@@ -480,7 +418,7 @@ namespace p2sp
 
     bool P2PModule::NeedUseUploadPingPolicy()
     {
-        return upload_manager_->NeedUseUploadPingPolicy();
+        return UploadModule::Inst()->NeedUseUploadPingPolicy();
     }
 
     LiveP2PDownloader__p P2PModule::CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance)

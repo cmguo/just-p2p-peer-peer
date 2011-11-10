@@ -30,8 +30,8 @@ namespace statistic
         string GetSharedMemoryName();
         uint32_t GetSharedMemorySize();
 
-        void SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::udp::endpoint> uploading_peers_);
-        void SubmitUploadSpeedInfo(boost::asio::ip::udp::endpoint endpoint, uint32_t size);
+        void SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_);
+        void SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size);
 
         static UploadStatisticModule::p Inst()
         {
@@ -50,7 +50,7 @@ namespace statistic
         interprocess::SharedMemory shared_memory_;
         UPLOAD_INFO upload_info_;
 
-        std::map<boost::asio::ip::udp::endpoint, SpeedInfoStatistic> m_upload_map;
+        std::map<boost::asio::ip::address, SpeedInfoStatistic> m_upload_map;
     };
 }
 

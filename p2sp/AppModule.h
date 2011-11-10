@@ -17,6 +17,8 @@
 #include "statistic/UploadStatisticModule.h"
 #include "statistic/StatisticModule.h"
 
+#include "network/tcp/TcpServer.h"
+
 enum PeerState
 {
     PEERSTATE_MAIN_STATE    = 0x00010000,   // 主力形态
@@ -117,6 +119,8 @@ class AppModule: public boost::noncopyable,
 
     void OnUdpRecv(protocol::Packet const & packet);
 
+    void OnPacketRecv(protocol::Packet const & packet);
+
     template<typename type>
     void DoSendPacket(type const & packet);
 
@@ -198,6 +202,23 @@ class AppModule: public boost::noncopyable,
         return udp_server_->GetUdpPort();
     }
 
+    boost::uint16_t GetLocalTcpPort() const
+    {
+        if (!is_running_)
+        {
+            return 0;
+        }
+
+        return tcp_server_.GetTcpPort();
+    }
+
+    void SetUpnpPortForTcpUpload(boost::uint16_t upnp_port)
+    {
+        upnp_port_ = upnp_port;
+    }
+
+    boost::uint16_t GetUpnpPortForTcpUpload();
+
     void DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
 
     // 上传统计信息
@@ -209,6 +230,8 @@ class AppModule: public boost::noncopyable,
     }
     
     void RegisterAllPackets();
+
+    void RegisterTcpPackets();
 
     static protocol::VERSION_INFO GetKernelVersionInfo();
 
@@ -248,6 +271,10 @@ class AppModule: public boost::noncopyable,
 
     boost::shared_ptr<statistic::StatisticsCollectionController> statistics_collection_controller_;
 
+    network::TcpServer tcp_server_;
+
+    boost::uint16_t upnp_port_;
+
     private:
     AppModule();
     static AppModule::p inst_;
@@ -285,13 +312,13 @@ void AppModule::DoSendPacket(type const & packet,
     if (type::Action == protocol::SubPiecePacket::Action)
     {
         protocol::SubPiecePacket const & sub_piece_pack = (protocol::SubPiecePacket const &)packet;
-        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point, packet.length());
+        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), packet.length());
         statistic::StatisticModule::Inst()->SubmitUploadDataBytes(sub_piece_pack.sub_piece_length_);
     }
     else if (type::Action == protocol::LiveSubPiecePacket::Action)
     {
         protocol::LiveSubPiecePacket const & live_sub_piece_pack = (protocol::LiveSubPiecePacket const &)packet;
-        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point, packet.length());
+        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), packet.length());
         statistic::StatisticModule::Inst()->SubmitUploadDataBytes(live_sub_piece_pack.sub_piece_length_);
     }
 

@@ -461,7 +461,7 @@ namespace storage
             {
                 last_filename = store_path_ + (change_str);
             }
-            Storage::Inst_Storage()->CheckPrefixName(last_filename);
+
             file_handle = fopen(last_filename.c_str(), "w+b");
             if (NULL == file_handle)
             {

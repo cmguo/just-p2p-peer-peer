@@ -957,23 +957,21 @@ namespace storage
         OnNotifyHashBlock(block_index, false);
     }
 
-    void Instance::WeUploadSubPiece(uint32_t num)
+    void Instance::UploadOneSubPiece()
     {
-        //        STORAGE_TEST_DEBUG("\n\nwe upload subpiece");
-        LOGX(__DEBUG, "msg", "Num = " << num << ", IsOpenService = " << is_open_service_ << ", FileName = " << (file_name_));
         if (is_open_service_)
         {
-            statistic::DACStatisticModule::Inst()->SubmitP2PUploadBytes(num * 1024, is_push_);
+            statistic::DACStatisticModule::Inst()->SubmitP2PUploadBytes(SUB_PIECE_SIZE, is_push_);
         }
         if (traffic_list_.size() == 0 && TRAFFIC_T0 > 0)
         {
-            traffic_list_.push_back(num);
+            traffic_list_.push_back(1);
             last_push_time_ = 0;
             return;
         }
         else
         {
-            traffic_list_.back() = traffic_list_.back() + num;
+            traffic_list_.back() = traffic_list_.back() + 1;
         }
     }
 
@@ -1276,10 +1274,6 @@ namespace storage
 
             tmp_name = urifile;
         }
-
-#ifdef DISK_MODE
-        Storage::Inst_Storage()->CheckPrefixName(tmp_name);
-#endif  // #ifdef DISK_MODE
 
         this->resource_name_ = tmp_name;
     }

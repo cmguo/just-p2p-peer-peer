@@ -568,6 +568,10 @@ boost::int32_t PEER_API QueryBlockHashFailedByUrl(const char * url);
 typedef
 boost::int32_t (PEER_API * LPQUERYBLOCKHASHFAILEDBYURL)(const char * url);
 
+void PEER_API SetUpnpPortForTcpUpload(boost::uint16_t upnp_port);
+typedef
+void (PEER_API * LPSETUPNPPROTFORTCPUPLOAD)(boost::uint16_t upnp_port);
+
 /**
 * 函数接口
 */
@@ -597,7 +601,7 @@ typedef struct _NETINTERFACE{
     // version 0, 6
     LPLIMITDOWNLOADSPEEDINKBPSBYURL LimitDownloadSpeedInKBpsByUrl;
     // version 0, 7
-    LPSETMAXUPLOADCACHESIZEINMB SetMaxUploadCacheSizeInMB;
+    boost::uint32_t          Reserved3;
     // version 0, 8
     LPQUERYDOWNLOADPROGRESS QueryDownloadProgress;
     LPQUERYDOWNLOADSPEED    QueryDownloadSpeed;
@@ -641,8 +645,9 @@ typedef struct _NETINTERFACE{
     LPSETDOWNLOADMODEBYURL SetDownloadModeByUrl;
     LPGetCompeletedFilePathByUrl GetCompeletedFilePathByUrl;
     LPQUERYBLOCKHASHFAILEDBYURL QueryBlockHashFailedByUrl;
-    // reserve
-    boost::uint32_t                Reserved2[40];
+    // version 0, 23
+    LPSETUPNPPROTFORTCPUPLOAD SetUpnpPortForTcpUpload;
+    boost::uint32_t                Reserved4[39];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)

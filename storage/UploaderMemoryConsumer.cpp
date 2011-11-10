@@ -10,12 +10,12 @@ namespace storage
     MemoryUsageDescription UploaderMemoryConsumer::GetMemoryUsage() const
     {
         MemoryUsageDescription memory_usage;
-        if (!upload_manager_)
+        if (!upload_module_)
         {
             return memory_usage;
         }
 
-        size_t cache_size = upload_manager_->GetCurrentCacheSize();
+        size_t cache_size = upload_module_->GetCurrentCacheSize();
         if (cache_size <= 0)
         {
             return memory_usage;
@@ -29,10 +29,10 @@ namespace storage
 
     void UploaderMemoryConsumer::SetMemoryQuota(const MemoryQuota & quota)
     {
-        if (upload_manager_)
+        if (upload_module_)
         {
             size_t assigned_cache_size = (quota.quota + BlockSizeInBytes - 1)/BlockSizeInBytes;
-            upload_manager_->SetCurrentCacheSize(assigned_cache_size);
+            upload_module_->SetCurrentCacheSize(assigned_cache_size);
         }
     }
 }
