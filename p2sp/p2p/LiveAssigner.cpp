@@ -72,59 +72,71 @@ namespace p2sp
     {
         subpiece_assign_deque_.clear();
 
-        boost::uint32_t total_subpiece_count = 0;
+        boost::uint32_t total_unique_subpiece_count = 0;
 
         for (std::list<protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin();
             iter != p2p_downloader_->GetBlockTasks().end(); ++iter)
         {
-            if (p2p_downloader_->HasSubPieceCount((*iter).GetBlockId()))
+            total_unique_subpiece_count += AssignForMissingSubPieces(iter->GetBlockId(), false);
+
+            if (urgent_ && iter == p2p_downloader_->GetBlockTasks().begin())
             {
-                // 已经知道该片piece有多少个subpiece了
-                // 因此从头到尾依次分配
-                int retry = 1;
-                for (int j = 0; j < retry; j++)
+                boost::uint32_t missing_subpieces = CountMissingSubPieces(iter->GetBlockId());
+                if (missing_subpieces < 30)
                 {
-                    for (boost::uint16_t i=0; i<p2p_downloader_->GetSubPieceCount((*iter).GetBlockId()); i++)
-                    {
-                    
-                        // 构造 subpiece_info
-                        protocol::LiveSubPieceInfo live_subpiece_info((*iter).GetBlockId(), i);
+                    AssignForMissingSubPieces(iter->GetBlockId(), true);
+                }
+            }
+        }
 
-                        if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info) && 
-                            !p2p_downloader_->IsRequesting(live_subpiece_info))
-                        {
-                            if (j == 0)
-                            {
-                                total_subpiece_count++;
-                            }
-                            
-                            subpiece_assign_deque_.push_back(live_subpiece_info);
-                        }
-                    }
+        return total_unique_subpiece_count;
+    }
 
-                    // 第一个Block的没有的subpiece数量<20, 冗余一次
-                    if (urgent_ && subpiece_assign_deque_.size() < 20 && 
-                        iter == p2p_downloader_->GetBlockTasks().begin())
+    boost::uint32_t LiveAssigner::CountMissingSubPieces(boost::uint32_t block_id)
+    {
+        boost::uint32_t missing_subpiece_count_in_block = 0;
+
+        if (p2p_downloader_->HasSubPieceCount(block_id))
+        {
+            for (boost::uint16_t i=0; i<p2p_downloader_->GetSubPieceCount(block_id); i++)
+            {
+                protocol::LiveSubPieceInfo live_subpiece_info(block_id, i);
+
+                if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info))
+                {
+                    missing_subpiece_count_in_block++;
+                }
+            }
+        }
+
+        return missing_subpiece_count_in_block;
+    }
+
+    boost::uint32_t LiveAssigner::AssignForMissingSubPieces(boost::uint32_t block_id, bool igore_requesting_subpieces)
+    {
+        boost::uint32_t missing_subpiece_count_in_block = 0;
+
+        if (p2p_downloader_->HasSubPieceCount(block_id))
+        {
+            // 已经知道该片piece有多少个subpiece了
+            // 因此从头到尾依次分配
+            for (boost::uint16_t i=0; i<p2p_downloader_->GetSubPieceCount(block_id); i++)
+            {
+                // 构造 subpiece_info
+                protocol::LiveSubPieceInfo live_subpiece_info(block_id, i);
+
+                if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info))
+                {
+                    if (igore_requesting_subpieces || !p2p_downloader_->IsRequesting(live_subpiece_info))
                     {
-                        // 冗余
-                        retry = 3;
+                        missing_subpiece_count_in_block++;
+                        subpiece_assign_deque_.push_back(live_subpiece_info);
                     }
                 }
             }
         }
 
-        if (subpiece_assign_deque_.size() <= 30)
-        {
-            std::deque<protocol::LiveSubPieceInfo> subpieces_need_retry = subpiece_assign_deque_;
-
-            for (std::deque<protocol::LiveSubPieceInfo>::const_iterator iter = subpieces_need_retry.begin();
-                iter != subpieces_need_retry.end(); ++iter)
-            {
-                subpiece_assign_deque_.push_back(*iter);
-            }
-        }
-
-        return total_subpiece_count;
+        return missing_subpiece_count_in_block;
     }
 
     void LiveAssigner::CaclPeerConnectionRecvTimeMap()

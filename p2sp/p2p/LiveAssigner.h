@@ -23,8 +23,13 @@ namespace p2sp
 
     private:
         void CalcSubpieceTillCapacity();
+
         boost::uint32_t CaclSubPieceAssignMap();
+        boost::uint32_t AssignForMissingSubPieces(boost::uint32_t block_id, bool igore_requesting_subpieces);
+        boost::uint32_t CountMissingSubPieces(boost::uint32_t block_id);
+
         void CaclPeerConnectionRecvTimeMap();
+
         void AssignerPeers();
 
     private:
