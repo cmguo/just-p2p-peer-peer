@@ -1,11 +1,15 @@
 #include "Common.h"
-#include "TcpConnection.h"
 #include "p2sp/AppModule.h"
 #include "network/HttpRequest.h"
 #include <boost/algorithm/string.hpp>
 
 namespace network
 {
+    void TcpConnection::OnPacketRecv(protocol::Packet const & packet)
+    {
+        p2sp::AppModule::Inst()->OnPacketRecv(packet);
+    }
+
     void TcpConnection::DoRecv()
     {
         string delim = "<policy-file-request/>|\r\n\r\n";

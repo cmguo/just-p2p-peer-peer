@@ -70,7 +70,7 @@ namespace network
 
             packet.tcp_connection_ = shared_from_this();
 
-            p2sp::AppModule::Inst()->OnPacketRecv(packet);
+            OnPacketRecv(packet);
         }
 
     private:
@@ -88,6 +88,8 @@ namespace network
 
         void HandleTcpSend(bool need_close, const boost::system::error_code& ec,
             size_t bytes_transferred);
+
+        void OnPacketRecv(protocol::Packet const & packet);
 
     private:
         boost::asio::ip::tcp::socket socket_;
