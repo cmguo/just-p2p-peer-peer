@@ -165,7 +165,7 @@ namespace p2sp
                 const protocol::LiveSubPieceInfo & subpiece = *subpiece_iter;
                 LivePeerConnection__p peer = (*peer_iter).peer;
 
-                if (peer->HasSubPiece(subpiece))
+                if (peer->HasSubPieceInBitmap(subpiece) && !peer->HasSubPieceInTaskSet(subpiece))
                 {
                     peer->AddAssignedSubPiece(subpiece);
 

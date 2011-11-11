@@ -43,7 +43,8 @@ namespace p2sp
         void OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length);
         void OnSubPieceTimeout();
 
-        bool HasSubPiece(const protocol::LiveSubPieceInfo & subpiece);
+        bool HasSubPieceInBitmap(const protocol::LiveSubPieceInfo & subpiece);
+        bool HasSubPieceInTaskSet(const protocol::LiveSubPieceInfo & subpiece) const;
 
         void EliminateElapsedBlockBitMap(uint32_t block_id);
 
@@ -105,7 +106,7 @@ namespace p2sp
     private:
         LiveP2PDownloader__p p2p_downloader_;
         boost::asio::ip::udp::endpoint end_point_;
-        std::deque<protocol::LiveSubPieceInfo> task_queue_;
+        std::set<protocol::LiveSubPieceInfo> task_set_;
         // 标识对方的bitmap
         // block_bitmap_里面的dynamic_bitset的第一位是1，表示subpiece[0]存在
         // 如果第二位是1，则表示subpiece[1] - subpiece[16] 是否都存在，依此类推

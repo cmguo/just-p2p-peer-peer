@@ -169,12 +169,12 @@ namespace p2sp
 
     void LivePeerConnection::ClearTaskQueue()
     {
-        task_queue_.clear();
+        task_set_.clear();
     }
 
     void LivePeerConnection::AddAssignedSubPiece(const protocol::LiveSubPieceInfo & subpiece_info)
     {
-        task_queue_.push_back(subpiece_info);
+        task_set_.insert(subpiece_info);
     }
 
     void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
@@ -213,7 +213,7 @@ namespace p2sp
 
     void LivePeerConnection::RequestSubPieces(uint32_t block_count, bool need_check)
     {
-        if (block_count == 0 || task_queue_.empty())
+        if (block_count == 0 || task_set_.empty())
         {
             return;
         }
@@ -226,17 +226,17 @@ namespace p2sp
         std::vector<protocol::LiveSubPieceInfo> subpieces;
         for (uint32_t i = 0; i < block_count; ++i)
         {
-            if (task_queue_.empty())
+            if (task_set_.empty())
             {
                 break;
             }
 
-            const protocol::LiveSubPieceInfo & subpiece = task_queue_.front();
+            const protocol::LiveSubPieceInfo & subpiece = *task_set_.begin();
             if (!need_check || !p2p_downloader_->HasSubPiece(subpiece))
             {
                 subpieces.push_back(subpiece);
             }
-            task_queue_.pop_front();
+            task_set_.erase(task_set_.begin());
         }
 
         if (subpieces.size() == 0)
@@ -271,7 +271,7 @@ namespace p2sp
         peer_connection_info_.Sent_Count += packet.sub_piece_infos_.size();
     }
 
-    bool LivePeerConnection::HasSubPiece(const protocol::LiveSubPieceInfo & subpiece)
+    bool LivePeerConnection::HasSubPieceInBitmap(const protocol::LiveSubPieceInfo & subpiece)
     {
         if (block_bitmap_.find(subpiece.GetBlockId()) != block_bitmap_.end())
         {
@@ -296,9 +296,14 @@ namespace p2sp
         return false;
     }
 
+    bool LivePeerConnection::HasSubPieceInTaskSet(const protocol::LiveSubPieceInfo & subpiece) const
+    {
+        return task_set_.find(subpiece) != task_set_.end();
+    }
+
     void LivePeerConnection::RequestTillFullWindow()
     {
-        while (requesting_count_ < window_size_ && !task_queue_.empty())
+        while (requesting_count_ < window_size_ && !task_set_.empty())
         {
             RequestSubPieces(6, false);
         }
@@ -379,7 +384,7 @@ namespace p2sp
         peer_connection_info_.RTT_Max = rtt_max_;
         peer_connection_info_.AverageDeltaTime = avg_delta_time_;
         peer_connection_info_.Requesting_Count = requesting_count_;
-        peer_connection_info_.AssignedSubPieceCount = task_queue_.size();
+        peer_connection_info_.AssignedSubPieceCount = task_set_.size();
 
         if (block_bitmap_.empty())
         {
