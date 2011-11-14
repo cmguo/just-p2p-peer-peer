@@ -214,7 +214,7 @@ namespace p2sp
 
         void SetBlockCountMap(boost::uint32_t block_id, std::vector<boost::uint16_t> subpiece_count);
 
-        std::list<protocol::LiveSubPieceInfo> & GetBlockTasks();
+        std::map<uint32_t,protocol::LiveSubPieceInfo> & GetBlockTasks();
 
         storage::LiveInstance__p GetInstance()
         {
@@ -267,7 +267,7 @@ namespace p2sp
 
         storage::LiveInstance__p live_instance_;
 
-        std::list<protocol::LiveSubPieceInfo> block_tasks_;
+        std::map<uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
         map<uint32_t, uint16_t> block_count_map_;
 
         LiveSubPieceRequestManager live_subpiece_request_manager_;

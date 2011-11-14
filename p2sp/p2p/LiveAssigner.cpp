@@ -74,17 +74,17 @@ namespace p2sp
 
         boost::uint32_t total_unique_subpiece_count = 0;
 
-        for (std::list<protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin();
+        for (std::map<uint32_t,protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin();
             iter != p2p_downloader_->GetBlockTasks().end(); ++iter)
         {
-            total_unique_subpiece_count += AssignForMissingSubPieces(iter->GetBlockId(), false);
+            total_unique_subpiece_count += AssignForMissingSubPieces(iter->first, false);
 
             if (urgent_ && iter == p2p_downloader_->GetBlockTasks().begin())
             {
-                boost::uint32_t missing_subpieces = CountMissingSubPieces(iter->GetBlockId());
+                boost::uint32_t missing_subpieces = CountMissingSubPieces(iter->first);
                 if (missing_subpieces < 30)
                 {
-                    AssignForMissingSubPieces(iter->GetBlockId(), true);
+                    AssignForMissingSubPieces(iter->first, true);
                 }
             }
         }

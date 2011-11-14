@@ -277,31 +277,18 @@ namespace p2sp
     // LiveDownloader
     void LiveP2PDownloader::OnBlockTimeout(boost::uint32_t block_id)
     {
-        std::list<protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
-        for (; iter != block_tasks_.end(); ++iter)
-        {
-            if ((*iter).GetBlockId() == block_id)
-            {
-                block_tasks_.erase(iter);
-                return;
-            }
-        }
+        block_tasks_.erase(block_id);
     }
 
     void LiveP2PDownloader::PutBlockTask(const protocol::LiveSubPieceInfo & live_block)
     {
         LOG(__DEBUG, "live_p2p", __FUNCTION__ << " " << __LINE__  << " " << live_block);
-        std::list<protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
-
-        for (; iter != block_tasks_.end(); ++iter)
+        
+        uint32_t block_id = live_block.GetBlockId();
+        if (block_tasks_.find(block_id) == block_tasks_.end())
         {
-            if (iter->GetBlockId() == live_block.GetBlockId())
-            {
-                return;
-            }
+            block_tasks_.insert(std::make_pair(block_id, live_block));
         }
-
-        block_tasks_.push_back(live_block);
     }
 
     // IP2PControlTarget
@@ -618,13 +605,13 @@ namespace p2sp
     {
         // 检查block是否完成
         std::set<protocol::LiveSubPieceInfo> completed_block_set;
-        for (std::list<protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
-            iter != block_tasks_.end();)
+        for (std::map<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
+            iter != block_tasks_.end();
+            iter++)
         {
-            protocol::LiveSubPieceInfo & live_block = *(iter++);
-            if (live_instance_->HasCompleteBlock(live_block.GetBlockId()))
+            if (live_instance_->HasCompleteBlock(iter->first))
             {
-                completed_block_set.insert(live_block);
+                completed_block_set.insert(iter->second);
             }
         }
 
@@ -655,7 +642,7 @@ namespace p2sp
         }
     }
 
-    std::list<protocol::LiveSubPieceInfo> & LiveP2PDownloader::GetBlockTasks()
+    std::map<uint32_t,protocol::LiveSubPieceInfo> & LiveP2PDownloader::GetBlockTasks()
     {
         return block_tasks_;
     }
