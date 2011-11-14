@@ -369,15 +369,15 @@ namespace p2sp
 
                         if (iter->second.last_data_time.elapsed() >= 3 * 1000)
                         {
-                            accept_uploading_peers_.erase(it);
                             uploading_peers_speed_.erase(*it);
+                            accept_uploading_peers_.erase(it);
                             return false;
                         }
                         else if (true == curr_info.is_open_service && false == iter->second.is_open_service &&
                             (boost::int32_t)now_upload_data_speed + 5 * 1024 > max_speed_limit_in_KBps * 1024)
                         {
-                            accept_uploading_peers_.erase(it);
                             uploading_peers_speed_.erase(*it);
+                            accept_uploading_peers_.erase(it);
                             return false;
                         }
                     }
