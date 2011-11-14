@@ -18,12 +18,18 @@ namespace p2sp
         hl=220.165.14.10@119.167.233.56\r\n \
         usepush=false\r\n \
         uploadpolicy=0\r\n \
-        connectionpolicy=true");
+        connectionpolicy=true\r\n \
+        usecdnpolicy=false\r\n \
+        restplaytime=25\r\n \
+        ratiodelim=200");
 
     BootStrapGeneralConfig::BootStrapGeneralConfig()
         : use_push_(false)
         , upload_policy_(policy_ping)
         , connection_policy_enable_(true)
+        , use_cdn_when_large_upload_(false)
+        , rest_play_time_delim_(25)
+        , ratio_delim_of_upload_speed_to_datarate_(200)
     {
     }
 
@@ -92,7 +98,10 @@ namespace p2sp
                 ("config.dc_servers", po::value<string>())
                 ("config.usepush", po::value<bool>())
                 ("config.uploadpolicy", po::value<uint32_t>())
-                ("config.connectionpolicy", po::value<bool>());
+                ("config.connectionpolicy", po::value<bool>())
+                ("config.usecdnpolicy", po::value<bool>())
+                ("config.restplaytime", po::value<uint32_t>())
+                ("config.ratiodelim", po::value<uint32_t>());
 
             std::istringstream config_stream(config_string);
 
@@ -103,7 +112,10 @@ namespace p2sp
             if (vm.count("config.hl") == 0 ||
                 vm.count("config.usepush") == 0 ||
                 vm.count("config.uploadpolicy") == 0 ||
-                vm.count("config.connectionpolicy") == 0)
+                vm.count("config.connectionpolicy") == 0 ||
+                vm.count("config.usecdnpolicy") == 0 ||
+                vm.count("config.restplaytime") == 0 ||
+                vm.count("config.ratiodelim") == 0)
             {
                 assert(false);
                 return;
@@ -113,6 +125,9 @@ namespace p2sp
             use_push_ = vm["config.usepush"].as<bool>();
             upload_policy_ = (UploadPolicy)(vm["config.uploadpolicy"].as<uint32_t>());
             connection_policy_enable_ = vm["config.connectionpolicy"].as<bool>();
+            use_cdn_when_large_upload_ = vm["config.usecdnpolicy"].as<bool>();
+            rest_play_time_delim_ = vm["config.restplaytime"].as<uint32_t>();
+            ratio_delim_of_upload_speed_to_datarate_ = vm["config.ratiodelim"].as<uint32_t>();
 
             if (vm.count("config.dc_servers") == 0)
             {

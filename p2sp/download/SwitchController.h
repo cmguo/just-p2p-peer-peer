@@ -489,6 +489,8 @@ namespace p2sp
                 :QueryControlMode(controller)
                 , is_started_(true)
                 , rest_play_time_when_switched_(0)
+                , is_http_fast_(true)
+                , changed_to_http_because_of_large_upload_(false)
             {
             }
 
@@ -501,6 +503,8 @@ namespace p2sp
 #endif
             bool is_started_;
             boost::uint32_t rest_play_time_when_switched_;
+            bool is_http_fast_;
+            bool changed_to_http_because_of_large_upload_;
 
         private:
             void ChangeTo3200();
@@ -510,6 +514,7 @@ namespace p2sp
             void CheckState2300();
 
             bool NeedChangeTo2300();
+            bool NeedChangeTo3200();
 
             void PauseHttpDownloader();
             void ResumeHttpDownloader();

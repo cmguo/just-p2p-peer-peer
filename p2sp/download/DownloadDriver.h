@@ -248,6 +248,10 @@ namespace p2sp
 
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
 
+        virtual bool ShouldUseCDNWhenLargeUpload() const { return false; }
+        virtual boost::uint32_t GetRestPlayTimeDelim() const { return 0; }
+        virtual bool IsUploadSpeedLargeEnough() { return true; }
+
     private:
         HttpDownloader__p AddHttpDownloader(const protocol::UrlInfo& url_info, bool is_orginal = false);
 

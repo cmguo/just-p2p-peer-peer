@@ -37,6 +37,20 @@ namespace p2sp
         };
         UploadPolicy GetUploadPolicy() {return upload_policy_;}
         bool IsConnectionPolicyEnable() {return connection_policy_enable_;}
+        bool ShouldUseCDNWhenLargeUpload() const
+        {
+            return use_cdn_when_large_upload_;
+        }
+
+        boost::uint32_t GetRestPlayTimeDelim() const
+        {
+            return rest_play_time_delim_;
+        }
+
+        boost::uint32_t GetRatioDelimOfUploadSpeedToDatarate() const
+        {
+            return ratio_delim_of_upload_speed_to_datarate_;
+        }
 
     private:
         BootStrapGeneralConfig();
@@ -60,6 +74,15 @@ namespace p2sp
         UploadPolicy upload_policy_;
 
         bool connection_policy_enable_;
+
+        // 当上传速度很大，并且正在下比较靠前的块时，切换到cdn下载，让peer充当udpserver来快速分发
+        bool use_cdn_when_large_upload_;
+
+        // 当剩余时间大于这个值时，认为下载的足够靠前，可以用cdn来下载以达到快速分发的目的
+        boost::uint32_t rest_play_time_delim_;
+
+        // 1分钟内的平均上传速度大于码流率的ratio_delim_of_upload_speed_to_datarate_ / 100倍时，认为上传速度足够大
+        boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
     };
 }
 #endif

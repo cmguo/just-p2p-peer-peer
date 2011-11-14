@@ -4,6 +4,7 @@
 
 #include "Common.h"
 #include "p2sp/download/SwitchController.h"
+#include "statistic/StatisticModule.h"
 
 namespace p2sp
 {
@@ -149,31 +150,17 @@ namespace p2sp
 
         boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
-        if (is_started_)
+        if (NeedChangeTo3200())
         {
-            if ((rest_play_time_in_second > 20) ||
-                (time_counter_2300_.elapsed() >= 3 * 60 * 1000) ||
-                (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() >= 10000))
+            if (rest_play_time_in_second > 20)
             {
-                ChangeTo3200();
+                is_http_fast_ = true;
             }
-        }
-        else
-        {
-            // P2P切到http只有可能是剩余时间不够的情况
-            assert(rest_play_time_when_switched_ < 6);
-
-            // 跑了超过20秒之后跟P2P效果一样或者是还不如P2P
-            if (rest_play_time_in_second <= rest_play_time_when_switched_ && time_counter_2300_.elapsed() > 20000)
+            else if (rest_play_time_in_second < 5)
             {
-                ChangeTo3200();
+                is_http_fast_ = false;
             }
-            // 剩余时间足够了或者是跑了很长时间并且剩余时间还可以，再去试试P2P
-            else if ((rest_play_time_in_second > 20)
-                || (time_counter_2300_.elapsed() > 60000 && rest_play_time_in_second > 5))
-            {
-                ChangeTo3200();
-            }
+            ChangeTo3200();
         }
     }
 
@@ -181,8 +168,6 @@ namespace p2sp
     {
         assert(GetHTTPControlTarget());
         assert(GetP2PControlTarget());
-
-        boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
         if (NeedChangeTo2300())
         {
@@ -223,6 +208,7 @@ namespace p2sp
         {
             if (rest_play_time_in_second < 6)
             {
+                changed_to_http_because_of_large_upload_ = false;
                 return true;
             }
         }
@@ -232,6 +218,7 @@ namespace p2sp
         {
             if (rest_play_time_in_second < 5 && time_counter_3200_.elapsed() > 15000)
             {
+                changed_to_http_because_of_large_upload_ = false;
                 return true;
             }
         }
@@ -239,6 +226,71 @@ namespace p2sp
         // 卡了后切过来的
         // P2P同样卡，再切换回去试试
         if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > 30000)
+        {
+            changed_to_http_because_of_large_upload_ = false;
+            return true;
+        }
+
+        if (GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload()
+            && (is_http_fast_ || time_counter_3200_.elapsed() > 180000)
+            && rest_play_time_in_second > GetGlobalDataProvider()->GetRestPlayTimeDelim()
+            && GetGlobalDataProvider()->IsUploadSpeedLargeEnough())
+        {
+            changed_to_http_because_of_large_upload_ = true;
+            return true;
+        }
+
+        return false;
+    }
+
+    bool SwitchController::LiveControlMode::NeedChangeTo3200()
+    {
+        boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
+
+        if (is_started_)
+        {
+            if (GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload()
+                && GetGlobalDataProvider()->IsUploadSpeedLargeEnough()
+                && rest_play_time_in_second > 0)
+            {
+                return false;
+            }
+
+            if ((rest_play_time_in_second > 20) ||
+                (time_counter_2300_.elapsed() >= 3 * 60 * 1000) ||
+                (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() >= 10000))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (!GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload() || changed_to_http_because_of_large_upload_ == false)
+        {
+            // 跑了超过20秒之后跟P2P效果一样或者是还不如P2P
+            if (rest_play_time_in_second <= rest_play_time_when_switched_ && time_counter_2300_.elapsed() > 20000)
+            {
+                return true;
+            }
+
+            // 剩余时间足够了或者是跑了很长时间并且剩余时间还可以，再去试试P2P
+            if ((rest_play_time_in_second > 20)
+                || (time_counter_2300_.elapsed() > 60000 && rest_play_time_in_second > 5))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        if (rest_play_time_in_second < 5 && time_counter_2300_.elapsed() > 10000)
+        {
+            return true;
+        }
+
+        if (!GetGlobalDataProvider()->IsUploadSpeedLargeEnough()
+            && time_counter_2300_.elapsed() > 30000)
         {
             return true;
         }

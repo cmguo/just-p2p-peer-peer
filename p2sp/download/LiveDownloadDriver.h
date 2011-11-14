@@ -13,6 +13,7 @@
 #include "storage/LiveInstance.h"
 #include "p2sp/download/LiveRestTimeTracker.h"
 #include "statistic/LiveDownloadDriverStatistic.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -167,6 +168,7 @@ namespace p2sp
         : public IGlobalControlTarget
         , public ILiveDownloadDriver
         , public boost::enable_shared_from_this<LiveDownloadDriver>
+        , public ConfigUpdateListener
 #ifdef DUMP_OBJECT
         , public count_object_allocate<LiveDownloadDriver>
 #endif
@@ -218,6 +220,8 @@ namespace p2sp
             return live_instance_->GetLiveInterval();
         }
 
+        virtual void OnConfigUpdated();
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();
@@ -257,6 +261,10 @@ namespace p2sp
 
         virtual void ReportUseBakHost() {}
         virtual void ReportBakHostFail() {}
+
+        virtual bool ShouldUseCDNWhenLargeUpload() const;
+        virtual boost::uint32_t GetRestPlayTimeDelim() const;
+        virtual bool IsUploadSpeedLargeEnough();
 
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
@@ -328,6 +336,10 @@ namespace p2sp
 #if ((defined _DEBUG || defined DEBUG) && (defined CHECK_DOWNLOADED_FILE))
         FILE *fp_;
 #endif
+
+        bool use_cdn_when_large_upload_;
+        boost::uint32_t rest_play_time_delim_;
+        boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
 
     private:
         // statistic

@@ -1439,6 +1439,14 @@ namespace statistic
         return upload_speed_meter_.CurrentByteSpeed();
     }
 
+    uint32_t StatisticModule::GetMinuteUploadDataSpeed()
+    {
+        if (false == is_running_)
+            return 0;
+
+        return upload_speed_meter_.RecentMinuteByteSpeed();
+    }
+
     uint32_t StatisticModule::GetUploadDataSpeedInKBps()
     {
         return GetUploadDataSpeed() / 1024;

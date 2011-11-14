@@ -32,6 +32,9 @@ namespace p2sp
         , source_type_(PlayInfo::SOURCE_LIVE_DEFAULT)
         , bwtype_(JBW_NORMAL)
         , elapsed_seconds_since_started_(0)
+        , use_cdn_when_large_upload_(false)
+        , rest_play_time_delim_(25)
+        , ratio_delim_of_upload_speed_to_datarate_(200)
     {
     }
 
@@ -138,6 +141,11 @@ namespace p2sp
         StartBufferringMonitor();
 
         p2sp::TrackerModule::Inst()->DoReport(false);
+
+        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
+
+        // 由于检测到配置文件有修改会发生在LiveDownloadDriver创建之前，所以在此手动调用一次OnConfigUpdated
+        OnConfigUpdated();
     }
 
     void LiveDownloadDriver::Stop()
@@ -175,6 +183,8 @@ namespace p2sp
         statistic::StatisticModule::Inst()->DetachLiveDownloadDriverStatistic(statistic_);
         statistic_->Stop();
 #endif
+
+        BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
     }
 
     IHTTPControlTarget::p LiveDownloadDriver::GetHTTPControlTarget()
@@ -715,5 +725,27 @@ namespace p2sp
         {
             OnDataRateChanged();
         }
+    }
+
+    void LiveDownloadDriver::OnConfigUpdated()
+    {
+        use_cdn_when_large_upload_ = BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload();
+        rest_play_time_delim_ = BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim();
+        ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetRatioDelimOfUploadSpeedToDatarate();
+    }
+
+    bool LiveDownloadDriver::ShouldUseCDNWhenLargeUpload() const
+    {
+        return use_cdn_when_large_upload_;
+    }
+
+    boost::uint32_t LiveDownloadDriver::GetRestPlayTimeDelim() const
+    {
+        return rest_play_time_delim_;
+    }
+
+    bool LiveDownloadDriver::IsUploadSpeedLargeEnough()
+    {
+        return statistic::StatisticModule::Inst()->GetMinuteUploadDataSpeed() > GetDataRate() * ratio_delim_of_upload_speed_to_datarate_ / 100;
     }
 }
