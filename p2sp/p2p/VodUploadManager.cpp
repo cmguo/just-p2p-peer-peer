@@ -358,7 +358,7 @@ namespace p2sp
                 boost::uint32_t now_upload_data_speed = statistic::StatisticModule::Inst()->GetUploadDataSpeed();
 
                 for (std::set<boost::asio::ip::udp::endpoint>::iterator 
-                    it = accept_uploading_peers_.begin(); it != accept_uploading_peers_.end();)
+                    it = accept_uploading_peers_.begin(); it != accept_uploading_peers_.end(); ++it)
                 {
                     std::map<boost::asio::ip::udp::endpoint, PEER_UPLOAD_INFO>::iterator 
                         iter = accept_connecting_peers_.find(*it);
