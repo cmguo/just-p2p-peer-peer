@@ -933,25 +933,21 @@ boost::int32_t         PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszU
 
     string url_str(base::ws2s(std::wstring(lpszURL, nURLLength)));
 
-
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadProgressResult> result(new DownloadProgressResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
 
-    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&DownloadProgressResult::result_handler, result, _1, _2);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
+    boost::int32_t download_progress = 0;
+    boost::int32_t position = 0;
+
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(), url_str, fun)
-   );
+        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(),
+        url_str, pTotalSize, &download_progress, &position, fun));
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << result->download_progress_ << ", total_size = " << result->total_size_);
-    if (NULL != pTotalSize)
-    {
-        *pTotalSize = result->total_size_;
-    }
 
-    return result->download_progress_;
+    return download_progress;
 }
 #else
 // PPBox兼容QueryDownloadProgressByUrl接口
@@ -973,23 +969,20 @@ boost::int32_t PEER_API QueryDownloadProgressByUrl(char const * lpszUrl, boost::
     string url_str(lpszUrl, nUrlLength);
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadProgressResult> result(new DownloadProgressResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
 
-    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&DownloadProgressResult::result_handler, result, _1, _2);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
+    boost::int32_t download_progress = 0;
+    boost::int32_t position = 0;
+
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(), url_str, fun)
-       );
+        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(),
+        url_str, pTotalSize, &download_progress, &position, fun));
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << result->download_progress_ << ", total_size = " << result->total_size_);
-    if (NULL != pTotalSize)
-    {
-        *pTotalSize = result->total_size_;
-    }
 
-    return result->download_progress_;
+    return download_progress;
 }
 #endif
 
@@ -2104,6 +2097,35 @@ void PEER_API SetUpnpPortForTcpUpload(boost::uint16_t upnp_port)
     p2sp::AppModule::Inst()->SetUpnpPortForTcpUpload(upnp_port);
 }
 
+void PEER_API QueryDownloadProgressByUrlNew(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t * file_length,
+                                            boost::int32_t * downloaded_bytes, boost::int32_t * position)
+{
+    if (NULL == lpszUrl || 0 == nUrlLength)
+    {
+        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
+        return;
+    }
+
+    if (!IsProxyModuleStarted())
+    {
+        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        return;
+    }
+
+    string url_str(lpszUrl, nUrlLength);
+
+    Event::p event_wait = Event::Create();
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
+
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
+    global_io_svc().post(
+        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(),
+        url_str, file_length, downloaded_bytes, position, fun));
+
+    event_wait->Wait();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // 接口分配函数
 //////////////////////////////////////////////////////////////////////////
@@ -2184,4 +2206,5 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     lpNetInterface->QueryBlockHashFailedByUrl = QueryBlockHashFailedByUrl;
     // verison 0, 23
     lpNetInterface->SetUpnpPortForTcpUpload = SetUpnpPortForTcpUpload;
+    lpNetInterface->QueryDownloadProgressByUrlNew = QueryDownloadProgressByUrlNew;
 }

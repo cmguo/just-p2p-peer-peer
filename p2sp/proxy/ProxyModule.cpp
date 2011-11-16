@@ -585,32 +585,41 @@ namespace p2sp
         result_handler(downloaded, filelength);
     }
 
-    void ProxyModule::QueryDownloadProgressByUrl(string url, boost::function<void(boost::int32_t , boost::int32_t)> result_handler)
+    void ProxyModule::QueryDownloadProgressByUrl(string url, boost::int32_t * file_length, boost::int32_t * downloaded_bytes,
+        boost::int32_t * position, boost::function<void ()> result_handler)
     {
         if (false == is_running_)
         {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(0, 0);
+            result_handler();
             return;
         }
 
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
-        if (!inst)
+        string filename = ParseOpenServiceFileName(network::Uri(url));
+
+        for (std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
+            it != proxy_connections_.end(); ++it)
         {
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
-                storage::Storage::Inst()->GetInstanceByFileName(ParseOpenServiceFileName(network::Uri(url))));
-            if (!inst)
+            ProxyConnection::p proxy_connection = *it;
+            
+            if (!proxy_connection) 
             {
-                LOGX(__DEBUG, "downloadcenter", "No Such url: " << url);
-                result_handler(0, 0);
-                return;
-            }  
+                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                continue;
+            }
+
+            DownloadDriver::p dd = proxy_connection->GetDownloadDriver();
+
+            if (dd->GetOpenServiceFileName() == filename)
+            {
+                *file_length = dd->GetInstance()->GetFileLength();
+                *downloaded_bytes = dd->GetInstance()->GetDownloadBytes();
+                *position = proxy_connection->GetPlayingPosition();
+            }
         }
 
-        uint32_t filelength = inst->GetFileLength();
-        uint32_t downloaded = inst->GetDownloadBytes();
         LOGX(__DEBUG, "downloadcenter", "Found url: " << url << ", FileLength: " << filelength << ", DownloadedBytes: " << downloaded);
-        result_handler(downloaded, filelength);
+        result_handler();
     }
 
     void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void(boost::int32_t)> result_handler)
