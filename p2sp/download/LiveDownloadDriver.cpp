@@ -280,8 +280,6 @@ namespace p2sp
     {
         if (pointer == &timer_)
         {
-            rest_time_tracker_.UpdateRestTime();
-
             if (playing_position_.GetSubPieceIndex() == 0)
             {
                 JumpOrSwitchIfNeeded();

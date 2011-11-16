@@ -6,6 +6,7 @@ namespace p2sp
     RestTimeTracker::RestTimeTracker()
         : paused_(false)
         , accumulate_pausing_time_in_seconds_(0)
+        , timer_(global_second_timer(), 1000, boost::bind(&RestTimeTracker::UpdatePausingTime, this, &timer_))
     {
 
     }
@@ -14,6 +15,7 @@ namespace p2sp
     {
         live_interval_ = live_interval;
         current_progress_ = Progress(block_id, 0, live_interval_);
+        timer_->start();
         Reset();
     }
 
@@ -25,17 +27,21 @@ namespace p2sp
 
     uint32_t RestTimeTracker::GetRestTimeInSeconds()
     {
+        CalculateRestTime();
         return rest_time_in_seconds_;
     }
 
-    void RestTimeTracker::UpdateRestTime()
+    void RestTimeTracker::UpdatePausingTime(framework::timer::Timer * pointer)
+    {
+        if (pointer == &timer_ && paused_)
+        {
+            ++accumulate_pausing_time_in_seconds_;
+        }
+    }
+
+    void RestTimeTracker::CalculateRestTime()
     {
         uint32_t downloaded_data_in_seconds_since_reset = current_progress_.DistanceInSeconds(last_reset_progress_);
-        
-        if (paused_)
-        {
-            accumulate_pausing_time_in_seconds_++;
-        }
 
         downloaded_data_in_seconds_since_reset += accumulate_pausing_time_in_seconds_;
 

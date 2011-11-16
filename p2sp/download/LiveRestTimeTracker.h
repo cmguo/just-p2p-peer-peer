@@ -1,6 +1,8 @@
 #ifndef _LIVE_REST_TIME_TRACKER_H_
 #define _LIVE_REST_TIME_TRACKER_H_
 
+#include "framework/timer/Timer.h"
+
 namespace p2sp
 {
     class RestTimeTracker
@@ -58,12 +60,13 @@ namespace p2sp
         void Start(uint32_t block_id, uint32_t live_interval);
         void UpdateCurrentProgress(uint32_t current_block_id, uint32_t current_progress_percentage);
         uint32_t GetRestTimeInSeconds();
-        void UpdateRestTime();
         void OnPause(bool pause);
         bool IsPaused();
 
     private:
         void Reset();
+        void UpdatePausingTime(framework::timer::Timer * pointer);
+        void CalculateRestTime();
 
     private:
         framework::timer::TickCounter ticks_since_last_progress_update_;
@@ -74,6 +77,8 @@ namespace p2sp
         bool paused_;
 
         boost::uint32_t accumulate_pausing_time_in_seconds_;
+
+        framework::timer::PeriodicTimer timer_;
     };
 }
 
