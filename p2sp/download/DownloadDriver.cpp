@@ -1213,9 +1213,13 @@ namespace p2sp
         }
         
         // M1: UDP丢包率
-        if (p2p_downloader_)
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
             info.avg_lost_rate = p2p_downloader_->GetStatistic()->GetUDPLostRate();
+        }
+        else
+        {
+            info.avg_lost_rate = 0;
         }
 
         // N1: HTTP平均下载的长度
@@ -1231,7 +1235,7 @@ namespace p2sp
         }
 
         // O1: 冗余率
-        if (p2p_downloader_)
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
             info.retry_rate = p2p_downloader_->GetStatistic()->GetSubPieceRetryRate();
         }
