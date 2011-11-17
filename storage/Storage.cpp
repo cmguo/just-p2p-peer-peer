@@ -2130,24 +2130,29 @@ namespace storage
     {
         boost::gregorian::date today(boost::gregorian::day_clock::local_day());
         boost::filesystem::path invisible_dir(space_manager_->GetHiddenSubPath());
-        for (boost::filesystem::directory_iterator dir_iter(invisible_dir); 
-            dir_iter != boost::filesystem::directory_iterator();)
-        {
-            boost::filesystem::path file_path = * dir_iter++;
-            if (base::filesystem::is_regular_file_nothrow(file_path))
-            {
-                std::time_t last_modified_time;
-                boost::system::error_code ec;
-                base::filesystem::last_write_time_nothrow(file_path, last_modified_time, ec);
-                if (!ec)
-                {
-                    boost::posix_time::ptime last_write_time = boost::posix_time::from_time_t(last_modified_time);
-                    boost::gregorian::date_period write_date_period(last_write_time.date(), today);
-                    if (write_date_period.length().days() > 30)
-                    {
-                        base::filesystem::remove_nothrow(file_path);
-                    }
 
+        boost::system::error_code ec;
+        boost::filesystem::directory_iterator dir_iter(invisible_dir, ec);
+
+        if (!ec)
+        {
+            for (; dir_iter != boost::filesystem::directory_iterator();)
+            {
+                boost::filesystem::path file_path = * dir_iter++;
+                if (base::filesystem::is_regular_file_nothrow(file_path))
+                {
+                    std::time_t last_modified_time;
+                    base::filesystem::last_write_time_nothrow(file_path, last_modified_time, ec);
+                    if (!ec)
+                    {
+                        boost::posix_time::ptime last_write_time = boost::posix_time::from_time_t(last_modified_time);
+                        boost::gregorian::date_period write_date_period(last_write_time.date(), today);
+                        if (write_date_period.length().days() > 30)
+                        {
+                            base::filesystem::remove_nothrow(file_path);
+                        }
+
+                    }
                 }
             }
         }
