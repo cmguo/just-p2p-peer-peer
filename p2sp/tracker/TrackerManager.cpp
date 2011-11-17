@@ -150,7 +150,8 @@ namespace p2sp
     void TrackerManager::SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s,
         bool is_got_tracker_list_from_bs)
     {
-        assert(!is_got_tracker_list_from_bs_);
+        // 去掉这个aassert, 连续2次收到BS回的查询Tracker列表的报文就会触发这个assert.
+        // assert(!is_got_tracker_list_from_bs_);
 
         if (is_got_tracker_list_from_bs)
         {
