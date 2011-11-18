@@ -153,7 +153,8 @@ namespace network
         framework::timer::PeriodicTimer recv_timer_;
         uint32_t recv_timeout_;
         typename IHttpClientListener<protocol::SubPieceBufferImp<ContentType> >::p handler_;
-        bool is_open_;
+        bool is_connecting_;
+        bool is_connected_;
         bool is_requesting_;
         bool is_bogus_accept_range_;
         bool is_chunked_;

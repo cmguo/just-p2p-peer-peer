@@ -47,7 +47,7 @@ namespace network
         , connect_timeout_(4 * 1000)
         , recv_timer_(global_second_timer(), 5 * 1000, boost::bind(&HttpClient::OnTimerElapsed, this, &recv_timer_))
         , recv_timeout_(60 * 1000)
-        , is_open_(false)
+        , is_connecting_(false)
         , is_requesting_(false)
         , is_bogus_accept_range_(false)
         , is_chunked_(false)
@@ -169,7 +169,8 @@ namespace network
     void HttpClient<ContentType>::Close()
     {
         NETHTTP_INFO(shared_from_this());
-        is_open_ = false;
+        is_connecting_ = false;
+        is_connected_ = false;
         is_requesting_ = false;
         boost::system::error_code error;
         socket_.close(error);
@@ -201,9 +202,10 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::Connect()
     {
-        if (true == is_open_)
+        if (true == is_connecting_)
             return;
-        is_open_ = true;
+
+        is_connecting_ = true;
 
         assert(connect_count_ == 0);
         connect_count_++;
@@ -284,7 +286,8 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HandleResolveTimeout()
     {
-        if (false == is_open_)
+        assert(is_connecting_);
+        if (false == is_connecting_)
             return;
         NETHTTP_INFO("Handler = " << handler_);
         if (handler_)
@@ -298,7 +301,8 @@ namespace network
     void HttpClient<ContentType>::HandleResolve(const boost::system::error_code& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
     {
-        if (false == is_open_)
+        assert(is_connecting_);
+        if (false == is_connecting_)
             return;
 
         resolver_timer_.stop();
@@ -355,7 +359,8 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HandleConnectTimeout()
     {
-        if (false == is_open_)
+        assert(is_connecting_);
+        if (false == is_connecting_)
             return;
         if (handler_)
         {
@@ -370,8 +375,10 @@ namespace network
         (const boost::system::error_code& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
     {
-        if (false == is_open_)
+        if (false == is_connecting_)
             return;
+
+        is_connected_ = true;
 
         connect_timer_.stop();
 
@@ -438,7 +445,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HttpGetByString(string request_string)
     {
-        if (is_open_ == false)
+        if (is_connected_ == false)
             return;
 
         request_string_ = request_string;
@@ -451,6 +458,7 @@ namespace network
         assert(is_requesting_ == false);
         if (is_requesting_ == true)
             return;
+
         is_requesting_ = true;
 
         boost::asio::async_write(socket_, boost::asio::buffer(request_string_), boost::bind(
@@ -462,7 +470,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HttpGet()
     {
-        if (is_open_ == false)
+        if (is_connected_ == false)
             return;
 
         assert(get_count_ == 0);
@@ -477,6 +485,7 @@ namespace network
         assert(is_requesting_ == false);
         if (is_requesting_ == true)
             return;
+
         is_requesting_ = true;
 
         boost::asio::async_write(socket_,  request_, boost::bind(
@@ -539,7 +548,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HandleRecvTimeout()
     {
-        if (false == is_open_)
+        if (false == is_connected_)
             return;
         if (recv_time_counter_.running() && recv_time_counter_.elapsed() >= recv_timeout_)
         {
@@ -556,7 +565,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HandleWriteRequest(const boost::system::error_code& err, uint32_t bytes_transferred)
     {
-        if (false == is_open_)
+        if (false == is_connected_)
             return;
         if (!err)
         {
@@ -592,12 +601,13 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HandleReadHttpHeader(const boost::system::error_code& err, uint32_t bytes_transferred)
     {
-        if (false == is_open_)
+        if (false == is_connected_)
             return;
 
         assert(is_requesting_ == true);
         if (is_requesting_ == false)
             return;
+
         is_requesting_ = false;
 
         recv_time_counter_.stop();
@@ -701,7 +711,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HttpRecv(uint32_t length)
     {
-        if (false == is_open_)
+        if (false == is_connected_)
             return;
 
         assert(length <= MaxRecvLength);
@@ -767,6 +777,7 @@ namespace network
             assert(is_requesting_ == false);
             if (is_requesting_ == true)
                 return;
+
             is_requesting_ = true;
 
             NETHTTP_INFO("async_read length= " << length << " network_length=" << network_length << " response.size()=" << buffer_offset);
@@ -797,7 +808,7 @@ namespace network
         uint32_t file_offset, uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, uint32_t buffer_offset)
     {
         NETHTTP_INFO("BytesTransferred = " << bytes_transferred);
-        if (false == is_open_)
+        if (false == is_connected_)
             return;
 
         static uint32_t id = 0;
@@ -805,6 +816,7 @@ namespace network
         assert(is_requesting_ == true);
         if (is_requesting_ == false)
             return;
+
         is_requesting_ = false;
 
         recv_time_counter_.stop();
