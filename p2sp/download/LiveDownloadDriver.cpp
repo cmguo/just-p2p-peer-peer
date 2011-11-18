@@ -146,6 +146,8 @@ namespace p2sp
 
         // 由于检测到配置文件有修改会发生在LiveDownloadDriver创建之前，所以在此手动调用一次OnConfigUpdated
         OnConfigUpdated();
+
+        download_time_.start();
     }
 
     void LiveDownloadDriver::Stop()
@@ -185,6 +187,8 @@ namespace p2sp
 #endif
 
         BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
+
+        download_time_.stop();
     }
 
     IHTTPControlTarget::p LiveDownloadDriver::GetHTTPControlTarget()
@@ -589,6 +593,8 @@ namespace p2sp
         // S: 频道ID
         // T: 从UdpServer下载的字节数
         // U: UdpServer下载最大速度
+        // V: 上传字节数
+        // W: 下载时间
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -624,6 +630,9 @@ namespace p2sp
         info.ChannelID = channel_id_;
 
         info.MaxUdpServerDownloadSpeed = udp_server_max_speed_;
+
+        info.UploadBytes = statistic::StatisticModule::Inst()->GetUploadDataBytes();
+        info.DownloadTime = download_time_.elapsed() / 1000;
 
         std::ostringstream log_stream;
 
@@ -666,6 +675,8 @@ namespace p2sp
         log_stream << "&S=" << info.ChannelID;
         log_stream << "&T=" << info.UdpDownloadBytes;
         log_stream << "&U=" << info.MaxUdpServerDownloadSpeed;
+        log_stream << "&V=" << info.UploadBytes;
+        log_stream << "&W=" << info.DownloadTime;
 
         string log = log_stream.str();
 

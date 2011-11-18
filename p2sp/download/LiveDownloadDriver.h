@@ -64,6 +64,8 @@ namespace p2sp
         RID                     ChannelID;              // 频道ID
         boost::uint32_t         UdpDownloadBytes;       // 从UdpServer下载的字节数
         boost::uint32_t         MaxUdpServerDownloadSpeed;  // 从UdpServer下载的最大速度
+        boost::uint32_t         UploadBytes;            // 上传字节数
+        boost::uint32_t         DownloadTime;           // 下载时间
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -340,6 +342,8 @@ namespace p2sp
         bool use_cdn_when_large_upload_;
         boost::uint32_t rest_play_time_delim_;
         boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
+
+        framework::timer::TickCounter download_time_;
 
     private:
         // statistic

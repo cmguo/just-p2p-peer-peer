@@ -1457,6 +1457,11 @@ namespace statistic
         return upload_speed_meter_.RecentMinuteByteSpeed() / 1024;
     }
 
+    uint32_t StatisticModule::GetUploadDataBytes() const
+    {
+        return upload_speed_meter_.TotalBytes();
+    }
+
     void StatisticModule::QueryBasicPeerInfo(boost::function<void(BASICPEERINFO)> result_handler)
     {
         BASICPEERINFO bpi;

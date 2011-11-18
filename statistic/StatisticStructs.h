@@ -832,7 +832,8 @@ namespace statistic
     {
         boost::uint8_t peer_upload_count;
         boost::uint8_t speed_limit;
-        boost::uint8_t resersed[128];
+        boost::uint32_t upload_speed;
+        boost::uint8_t resersed[124];
         PEER_UPLOAD_INFO peer_upload_info[256];
     };
 

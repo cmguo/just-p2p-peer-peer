@@ -92,6 +92,7 @@ namespace statistic
         uint32_t GetUploadDataSpeedInKBps();
         uint32_t GetRecentMinuteUploadDataSpeedInKBps();
         uint32_t GetMinuteUploadDataSpeed();
+        uint32_t GetUploadDataBytes() const;
 
         //////////////////////////////////////////////////////////////////////////
         // Local Download Info

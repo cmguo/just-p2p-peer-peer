@@ -24,12 +24,15 @@ namespace statistic
         {
             // log
         }
+
+        upload_speed_info_.Start();
     }
 
     void UploadStatisticModule::Stop()
     {
         is_running_ = false;
         inst_.reset();
+        upload_speed_info_.Stop();
     }
 
     void UploadStatisticModule::SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
@@ -70,6 +73,8 @@ namespace statistic
 
     void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size)
     {
+        upload_speed_info_.SubmitUploadedBytes(size);
+
         std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.find(address);
         if (iter != m_upload_map.end())
         {
@@ -97,6 +102,8 @@ namespace statistic
 
     void UploadStatisticModule::OnShareMemoryTimer(uint32_t times)
     {
+        upload_info_.upload_speed = upload_speed_info_.GetSpeedInfo().NowUploadSpeed;
+
         int i = 0;
         for (std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
             iter != m_upload_map.end(); iter++)

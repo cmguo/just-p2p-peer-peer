@@ -51,6 +51,8 @@ namespace statistic
         UPLOAD_INFO upload_info_;
 
         std::map<boost::asio::ip::address, SpeedInfoStatistic> m_upload_map;
+
+        SpeedInfoStatistic upload_speed_info_;
     };
 }
 
