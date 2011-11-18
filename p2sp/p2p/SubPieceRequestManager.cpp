@@ -85,10 +85,9 @@ namespace p2sp
         LOG(__DEBUG, "statistic", "Check HasSubPiece");
         if (false == p2p_downloader_->HasSubPiece(sub_piece))
         {
-            assert(false == p2p_downloader_->GetInstance()->HasSubPiece(sub_piece));
+            //assert(false == p2p_downloader_->GetInstance()->HasSubPiece(sub_piece));
             LOG(__DEBUG, "download", "Recv Subpiece = " << sub_piece);
             p2p_downloader_->NoticeSubPiece(sub_piece);
-            p2p_downloader_->GetStatistic()->SubmitP2PDataBytes(buffer.Length());
 
             if (p2p_downloader_->IsOpenService())
             {
@@ -115,8 +114,8 @@ namespace p2sp
         for (iter = request_tasks_.find(sub_piece); iter != request_tasks_.end() && iter->first == sub_piece;)
         {
             SubPieceRequestTask::p sub_piece_request_task = iter->second;
-            PeerConnection::p peer_connection = sub_piece_request_task->peer_connection_;
-            if (peer_connection->GetGuid() == packet.peer_guid_)
+            boost::shared_ptr<ConnectionBase> peer_connection = sub_piece_request_task->peer_connection_;
+            if (peer_connection->GetEndpoint() == packet.end_point)
             {
                 uint32_t response_time = sub_piece_request_task->request_time_elapse_;
 
@@ -141,7 +140,6 @@ namespace p2sp
                 iter++;
             }
         }
-
     }
 
     void SubPieceRequestManager::OnError(protocol::ErrorPacket const & packet)
@@ -212,7 +210,8 @@ namespace p2sp
         return count;
     }
 
-    void SubPieceRequestManager::Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout, PeerConnection::p peer_connection)
+    void SubPieceRequestManager::Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout,
+        boost::shared_ptr<ConnectionBase> peer_connection)
     {
         if (is_running_ == false) return;
 

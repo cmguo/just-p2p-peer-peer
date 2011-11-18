@@ -210,13 +210,14 @@ namespace p2sp
 
                 P2PDownloader__p p2p_downloader = boost::dynamic_pointer_cast<P2PDownloader>(p2p_downloader_);
 
-                if (p2p_downloader->HasPeer(packet.peer_guid_))
+                if (p2p_downloader->HasPeer(packet.end_point))
                 {
                     return;
                 }
 
                 // 创建PeerConnection
-                PeerConnection::p connect_peer = PeerConnection::create(p2p_downloader);
+
+                PeerConnection::p connect_peer = PeerConnection::create(p2p_downloader, packet.end_point);
 
                 ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;

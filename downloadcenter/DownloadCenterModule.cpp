@@ -439,7 +439,7 @@ namespace downloadcenter
                 res_data.HttpDownloadBytes = statistic->GetTotalHttpDataBytes();
                 res_data.HttpDownloadSpeed = statistic->GetSpeedInfo().AvgDownloadSpeed;
                 res_data.P2PDownloadBytes
-                    = (p2p_downloader && p2p_downloader->GetStatistic() ? (p2p_downloader->GetStatistic()->GetTotalP2PDataBytes())
+                    = (p2p_downloader && p2p_downloader->GetStatistic() ? (p2p_downloader->GetStatistic()->GetTotalP2PPeerDataBytes())
                     : 0);
                ;
                 res_data.P2PDownloadSpeed

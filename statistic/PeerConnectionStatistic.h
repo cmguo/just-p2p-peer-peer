@@ -21,7 +21,7 @@ namespace statistic
 
         typedef boost::shared_ptr<PeerConnectionStatistic> p;
 
-        static p Create(const Guid& peer_id);
+        static p Create(const boost::asio::ip::udp::endpoint& end_point);
 
     public:
 
@@ -103,8 +103,7 @@ namespace statistic
 
         //////////////////////////////////////////////////////////////////////////
         // Peer Guid
-
-        Guid GetPeerGuid() const;
+        const boost::asio::ip::udp::endpoint & PeerConnectionStatistic::GetEndpoint() const;
 
     private:
 
@@ -123,10 +122,11 @@ namespace statistic
 
         measure::CycleBuffer recent_average_rtt_;
 
-        Guid peer_guid_;
+        boost::asio::ip::udp::endpoint end_point_;
+        //Guid peer_guid_;
 
     private:
-        PeerConnectionStatistic(const Guid& peer_id);
+        PeerConnectionStatistic(const boost::asio::ip::udp::endpoint& end_point);
 
     };
 

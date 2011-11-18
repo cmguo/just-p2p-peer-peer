@@ -37,6 +37,8 @@ namespace statistic
         p2p_downloader_statistic_info_.ResourceID = resource_id_;
 
         speed_info_.Start();
+        peer_speed_info_.Start();
+        sn_speed_info_.Start();
 
         if (false == CreateSharedMemory())
         {
@@ -56,6 +58,8 @@ namespace statistic
         }
 
         speed_info_.Stop();
+        peer_speed_info_.Stop();
+        sn_speed_info_.Stop();
 
         Clear();
         shared_memory_.Close();
@@ -67,6 +71,8 @@ namespace statistic
     void P2PDownloaderStatistic::Clear()
     {
         speed_info_.Clear();
+        peer_speed_info_.Clear();
+        sn_speed_info_.Clear();
         p2p_downloader_statistic_info_.Clear();
         DetachAllPeerConnectionStatistic();
     }
@@ -94,6 +100,11 @@ namespace statistic
             return;
         }
 
+        DebugLog("speed sn = %d, bytes = %d\n", p2p_downloader_statistic_info_.SnSpeedInfo.NowDownloadSpeed,
+            p2p_downloader_statistic_info_.TotalP2PSnDataBytes);
+
+        DebugLog("speed p2p = %d\n", p2p_downloader_statistic_info_.SpeedInfo.NowDownloadSpeed);
+
         TakeSnapshot();
 
         P2PDOWNLOADER_STATISTIC_INFO& info = p2p_downloader_statistic_info_;
@@ -113,10 +124,9 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Attach & Detach
 
-    PeerConnectionStatistic::p P2PDownloaderStatistic::AttachPeerConnectionStatistic(const Guid& peer_id)
+    PeerConnectionStatistic::p P2PDownloaderStatistic::AttachPeerConnectionStatistic(
+        const boost::asio::ip::udp::endpoint& end_point)
     {
-        STAT_DEBUG("P2PDownloaderStatistic::AttachPeerConnectionStatistic [IN], peer guid: " << peer_id);
-
         PeerConnectionStatistic::p peer_connection_info_;
 
         if (is_running_ == false)
@@ -134,19 +144,18 @@ namespace statistic
         }
 
 
-        PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.find(peer_id);
+        PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.find(end_point);
 
         // 存在, 返回空
         if (it != peer_connection_statistic_map_.end())
         {
-            STAT_WARN("Peer " << peer_id << " already exists. Return null.");
             return peer_connection_info_;
         }
 
 
         // create and insert
-        peer_connection_info_ = PeerConnectionStatistic::Create(peer_id);
-        peer_connection_statistic_map_[peer_id] = peer_connection_info_;
+        peer_connection_info_ = PeerConnectionStatistic::Create(end_point);
+        peer_connection_statistic_map_[end_point] = peer_connection_info_;
 
 
         // start
@@ -158,17 +167,15 @@ namespace statistic
         return peer_connection_info_;
     }
 
-    bool P2PDownloaderStatistic::DetachPeerConnectionStatistic(const Guid& peer_id)
+    bool P2PDownloaderStatistic::DetachPeerConnectionStatistic(const boost::asio::ip::udp::endpoint& end_point)
     {
-        STAT_DEBUG("P2PDownloaderStatistic::DetachPeerConnectionStatistic [IN], peer guid: " << peer_id);
-
         if (is_running_ == false)
         {
             STAT_WARN("P2PDownloaderStatistic is not running. Return false.");
             return false;
         }
 
-        PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.find(peer_id);
+        PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.find(end_point);
 
         // 不存在, 返回
         if (it == peer_connection_statistic_map_.end())
@@ -179,7 +186,6 @@ namespace statistic
 
         it->second->Stop();
         peer_connection_statistic_map_.erase(it);
-        STAT_DEBUG("Peer Connection " << peer_id << " is stopped and erased.");
 
         STAT_DEBUG("P2PDownloaderStatistic::DetachPeerConnectionStatistic [OUT]");
         return true;
@@ -187,7 +193,7 @@ namespace statistic
 
     bool P2PDownloaderStatistic::DetachPeerConnectionStatistic(const PeerConnectionStatistic::p peer_connection_statistic)
     {
-        return DetachPeerConnectionStatistic(peer_connection_statistic->GetPeerGuid());
+        return DetachPeerConnectionStatistic(peer_connection_statistic->GetEndpoint());
     }
 
     bool P2PDownloaderStatistic::DetachAllPeerConnectionStatistic()
@@ -235,13 +241,51 @@ namespace statistic
         return speed_info_.GetSpeedInfoEx();
     }
 
+    SPEED_INFO P2PDownloaderStatistic::GetPeerSpeedInfo()
+    {
+        if (false == is_running_)
+        {
+            return SPEED_INFO();
+        }
+
+        return peer_speed_info_.GetSpeedInfo();
+    }
+
+    SPEED_INFO_EX P2PDownloaderStatistic::GetPeerSpeedInfoEx()
+    {
+        if (false == is_running_)
+        {
+            return SPEED_INFO_EX();
+        }
+        return peer_speed_info_.GetSpeedInfoEx();
+    }
+
+    SPEED_INFO P2PDownloaderStatistic::GetSnSpeedInfo()
+    {
+        if (false == is_running_)
+        {
+            return SPEED_INFO();
+        }
+
+        return sn_speed_info_.GetSpeedInfo();
+    }
+
+    SPEED_INFO_EX P2PDownloaderStatistic::GetSnSpeedInfoEx()
+    {
+        if (false == is_running_)
+        {
+            return SPEED_INFO_EX();
+        }
+        return sn_speed_info_.GetSpeedInfoEx();
+    }
+
     uint32_t P2PDownloaderStatistic::GetElapsedTimeInMilliSeconds()
     {
         if (false == is_running_)
         {
             return 0;
         }
-        return speed_info_.GetElapsedTimeInMilliSeconds();
+        return peer_speed_info_.GetElapsedTimeInMilliSeconds();
     }
 
     void P2PDownloaderStatistic::UpdateSpeedInfo()
@@ -252,6 +296,8 @@ namespace statistic
         }
 
         p2p_downloader_statistic_info_.SpeedInfo = speed_info_.GetSpeedInfo();
+        p2p_downloader_statistic_info_.PeerSpeedInfo = peer_speed_info_.GetSpeedInfo();
+        p2p_downloader_statistic_info_.SnSpeedInfo = sn_speed_info_.GetSpeedInfo();
     }
 
     //////////////////////////////////////////////////////////////////////////

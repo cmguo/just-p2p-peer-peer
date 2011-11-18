@@ -484,7 +484,7 @@ namespace statistic
         boost::uint16_t SubPieceRetryRate;             // 冗余率: 冗余 / 收到
         boost::uint16_t UDPLostRate;                   // 丢包率: (发出 - 收到) / 发出
 
-        boost::uint32_t TotalP2PDataBytes;             // 当前P2PDownloader下载的有效字节数
+        boost::uint32_t TotalP2PPeerDataBytes;             // 当前P2PDownloader下载的有效字节数
         boost::uint16_t FullBlockPeerCount;            // 在已经连接的Peer中，资源全满的Peer个数
 
         boost::uint32_t TotalUnusedSubPieceCount;      // 冗余的Subpieces数
@@ -497,7 +497,11 @@ namespace statistic
 
         boost::uint32_t empty_subpiece_distance;
 
-        boost::uint8_t Reserved[974 - 4];                  // 保留
+        SPEED_INFO PeerSpeedInfo;
+        SPEED_INFO SnSpeedInfo;
+        boost::uint32_t TotalP2PSnDataBytes;
+
+        boost::uint8_t Reserved[894];                  // 保留
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -529,7 +533,7 @@ namespace statistic
             ar & SubPieceRetryRate;
             ar & UDPLostRate;
 
-            ar & TotalP2PDataBytes;
+            ar & TotalP2PPeerDataBytes;
             ar & FullBlockPeerCount;
 
             ar & TotalUnusedSubPieceCount;
@@ -541,6 +545,10 @@ namespace statistic
             ar & KickCount;
 
             ar & empty_subpiece_distance;
+
+            ar & PeerSpeedInfo;
+            ar & SnSpeedInfo;
+            ar & TotalP2PSnDataBytes;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
             ar & PeerCount;

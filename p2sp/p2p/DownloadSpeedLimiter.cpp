@@ -76,8 +76,9 @@ namespace p2sp
                         sent_count_ += data.piece_count;
                         last_trans_id_ = data.trans_id;
                     }
-                    if (p2p_statistic) {
-                        p2p_statistic->SubmitUploadedBytes(data.packet_len);
+                    if (p2p_statistic) 
+                    {
+                        p2p_statistic->SubmitPeerUploadedBytes(data.packet_len);
                     }
 
                     if (data.is_old_packet)
@@ -126,7 +127,7 @@ namespace p2sp
                     p2p_statistic->SubmitRequestSubPieceCount(packet.subpiece_infos_.size());
                     last_trans_id_ = packet.transaction_id_;
                 }
-                p2p_statistic->SubmitUploadedBytes(packet.length());
+                p2p_statistic->SubmitPeerUploadedBytes(packet.length());
             }
 
             DOWNLIMITER_DEBUG("DoRequestSubPiece < 0");
@@ -149,7 +150,7 @@ namespace p2sp
                         last_trans_id_ = packet.transaction_id_;
                         sent_count_ += packet.subpiece_infos_.size();
                     }
-                    p2p_statistic->SubmitUploadedBytes(packet.length());
+                    p2p_statistic->SubmitPeerUploadedBytes(packet.length());
                 }
 
                 AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);
@@ -193,7 +194,7 @@ namespace p2sp
                     p2p_statistic->SubmitRequestSubPieceCount(packet.subpiece_infos_.size());
                     last_trans_id_ = packet.transaction_id_;
                 }
-                p2p_statistic->SubmitUploadedBytes(packet.length());
+                p2p_statistic->SubmitPeerUploadedBytes(packet.length());
             }
             AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);
 
@@ -213,7 +214,7 @@ namespace p2sp
                         last_trans_id_ = packet.transaction_id_;
                         sent_count_ += packet.subpiece_infos_.size();
                     }
-                    p2p_statistic->SubmitUploadedBytes(packet.length());
+                    p2p_statistic->SubmitPeerUploadedBytes(packet.length());
                 }
 
                 AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);

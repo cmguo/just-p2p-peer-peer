@@ -38,7 +38,7 @@ namespace p2sp
 
 
         assert(p2p_downloader_->GetStatistic());
-        statistic_ = p2p_downloader_->GetStatistic()->AttachPeerConnectionStatistic(reconnect_packet.peer_guid_);
+        statistic_ = p2p_downloader_->GetStatistic()->AttachPeerConnectionStatistic(reconnect_packet.end_point);
         assert(statistic_);
 
         statistic_->SetPeerVersion(reconnect_packet.peer_version_);
@@ -79,13 +79,12 @@ namespace p2sp
 
         requesting_count_ = 0;
         last_receive_time_.reset();
-        avg_delt_time_ = rtt_ + 1;
+        avg_delta_time_ = rtt_ + 1;
 
         window_size_ = P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE;  // connect_rtt_ >= 400 ?  P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE : ((P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE - P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE) * (400 - (float)connect_rtt_) / 400 + P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE);
         window_size_init_ = 0;
         avg_delt_time_init_ = 0;
 
-        requested_size_ = 0;
         curr_delta_size_ = P2SPConfigs::PEERCONNECTION_MIN_DELTA_SIZE;
         // window_size_ = 6 * 1000 / avg_delt_time_;
         // LIMIT_MIN_MAX(window_size_, P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, max(P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE/2));
@@ -100,7 +99,7 @@ namespace p2sp
                 longest_rtt_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_rtt;
                 // window_size_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_window_size;
                 window_size_init_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_window_size;
-                avg_delt_time_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_avg_delt_time;
+                avg_delta_time_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_avg_delt_time;
                 avg_delt_time_init_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_avg_delt_time;
             }
         }
@@ -111,8 +110,6 @@ namespace p2sp
 
         sent_count_ = 0;
         received_count_ = 0;
-
-        assert(task_queue_.size() == 0);
 
         peer_guid_ = reconnect_packet.peer_guid_;
 
@@ -138,6 +135,7 @@ namespace p2sp
 
         // task_queue.clear();
         P2PModule::Inst()->RemoveRequestCount(requesting_count_);
+
         task_queue_.clear();
 
         //
@@ -157,9 +155,9 @@ namespace p2sp
         is_running_ = false;
     }
 
-    bool PeerConnection::RequestTillFullWindow(bool need_check)
+    void PeerConnection::RequestTillFullWindow(bool need_check)
     {
-        if (is_running_ == false) return false;
+        if (is_running_ == false) return;
 
         // P2P_EVENT("PeerConnection::RequestTillFullWindow() task_queue size:" << task_queue_.size() << " requesting count: " << requesting_count_ << " windowsize " << window_size_);
         // while (requesting_count_ < window_size_)
@@ -173,7 +171,6 @@ namespace p2sp
                         << ", RequestTillFullWindow Begin, TaskQueueSize = " << task_queue_.size());*/
 
         uint32_t delta = 0;
-        curr_request_count_ = 0;
         if (false == need_check && window_size_ - requesting_count_ < curr_delta_size_)
         {
             delta = curr_delta_size_ + requesting_count_ - window_size_;
@@ -225,142 +222,12 @@ namespace p2sp
             requesting_count_ -= v;
             P2PModule::Inst()->RemoveRequestCount(v);
         }
-        return true;
     }
 
-
-    void PeerConnection::RequestNextSubpiece()
-    {
-        ++accumulative_subpiece_num;
-        if (accumulative_subpiece_num < 4)
-        {
-            P2P_DEBUG(shared_from_this() << ", accumulative_subpiece_num:" << accumulative_subpiece_num);
-            return;
-        }
-        P2P_DEBUG(shared_from_this() << ", accumulative_subpiece_num:" << accumulative_subpiece_num << ", RequestTillFullWindow");
-        accumulative_subpiece_num = 0;
-        RequestTillFullWindow(true);
-    }
-
-    bool PeerConnection::RequestSubPieces(uint32_t piece_count, uint32_t copy_count, bool need_check)
-    {
-        if (false == is_running_)
-        {
-            return false;
-        }
-
-        if (piece_count == 0 || task_queue_.empty())
-        {
-            return false;
-        }
-
-        if (requesting_count_ == 0)
-        {
-            last_receive_time_.reset();
-        }
-
-        std::vector<protocol::SubPieceInfo> subpieces;
-        for (uint32_t i = 0; i < piece_count; ++i)
-        {
-            if (task_queue_.empty())
-            {
-                break;
-            }
-            const protocol::SubPieceInfo & sp = task_queue_.front();
-            if (!need_check || !p2p_downloader_->HasSubPiece(sp))
-            {
-                subpieces.push_back(sp.GetSubPieceInfoStruct());
-            }
-            task_queue_.pop_front();
-        }
-
-        if (subpieces.size() == 0)
-        {
-            return false;
-        }
-
-        // 检查对方Peer版本，旧版本的只发1个
-        if (peer_version_ >= 0x00000101)
-        {
-            // check copy_count
-            LIMIT_MIN_MAX(copy_count, 1, subpieces.size());
-        }
-        else
-        {
-            copy_count = 1;
-        }
-
-        uint32_t trans_id = protocol::Packet::NewTransactionID();
-
-        if (peer_version_ >= protocol::PEER_VERSION_V4)
-        {
-            // 对方协议是PEER_VERSION_V4以上版本，priority字段必须设置
-            protocol::RequestSubPiecePacket packet(trans_id,
-                p2p_downloader_->GetRid(), subpieces, end_point_, p2p_downloader_->GetDownloadPriority());
-
-            for (uint32_t i = 0; i < copy_count; ++i) 
-            {
-                p2p_downloader_->DoSendPacket(packet, peer_version_);
-            }
-            statistic_->SubmitUploadedBytes(packet.length());    
-        }
-        else if (peer_version_ == protocol::PEER_VERSION_V3)
-        {
-            // 对方协议是0x00000104版本，priority字段必须设置
-            protocol::RequestSubPiecePacket packet(trans_id,
-                p2p_downloader_->GetRid(), subpieces, end_point_, protocol::RequestSubPiecePacket::INVALID_PRIORITY);
-
-            for (uint32_t i = 0; i < copy_count; ++i) {
-                p2p_downloader_->DoSendPacket(packet, peer_version_);
-            }
-            statistic_->SubmitUploadedBytes(copy_count * packet.length());
-        }
-        else
-        {
-            protocol::RequestSubPiecePacketOld packet(trans_id,
-                p2p_downloader_->GetRid(), AppModule::Inst()->GetPeerGuid(), subpieces, end_point_);
-
-            // send multiple packets
-            for (uint32_t i = 0; i < copy_count; ++i) {
-                p2p_downloader_->DoSendPacket(packet, peer_version_);
-            }
-
-            statistic_->SubmitUploadedBytes(copy_count * packet.length());
-        }
-
-        last_request_time_.reset();
-
-        // 打印日志，这是PPLogMonitor请求包的来源
-        if (p2p_downloader_->GetDownloadDrivers().size() != 0)
-        {
-            for (uint32_t i = 0; i < subpieces.size(); ++i)
-            {
-                P2P_EVENT("PeerConnection::RequestSubPiece " << (*(p2p_downloader_->GetDownloadDrivers().begin()))->GetDownloadDriverID() << " " << 0 << " " << 1 << " " << shared_from_this() << " " << protocol::SubPieceInfo(subpieces[i]));
-                P2P_EVENT("PeerConnection::SubpieceTimeOut: " << *(p2p_downloader_->GetDownloadDrivers().begin()) << " " << shared_from_this() << " " << protocol::SubPieceInfo(subpieces[i]) << " " << curr_time_out_);
-            }
-        }
-
-        curr_request_count_ += subpieces.size();
-        requesting_count_ += subpieces.size();
-        sent_count_ += subpieces.size();
-        requested_size_ += subpieces.size();
-
-        for (uint32_t i = 0; i < subpieces.size(); ++i)
-        {
-            P2P_EVENT("bingo Subpiece = " << subpieces[i] << " trans_id = " << trans_id);
-            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, shared_from_this());
-            
-            curr_time_out_ += avg_delt_time_;
-            P2PModule::Inst()->AddRequestCount();
-        }
-
-        return true;
-    }
-
-    bool PeerConnection::RequestSubPiece(const protocol::SubPieceInfo& subpiece_info, bool need_check)
+    void PeerConnection::RequestSubPiece(const protocol::SubPieceInfo& subpiece_info, bool need_check)
     {
         if (is_running_ == false)
-            return false;
+            return;
         assert(statistic_);
         
         if (requesting_count_ == 0)
@@ -369,7 +236,7 @@ namespace p2sp
         // 计算出timeout
         if (need_check && p2p_downloader_->HasSubPiece(subpiece_info))
         {
-            return false;
+            return;
         }
 
         uint32_t trans_id = protocol::Packet::NewTransactionID();
@@ -408,17 +275,19 @@ namespace p2sp
             P2P_EVENT("PeerConnection::SubpieceTimeOut: " << *(p2p_downloader_->GetDownloadDrivers().begin()) << " " << shared_from_this() << " " << subpiece_info << " " << curr_time_out_);
         }
 
-        ++curr_request_count_;
         ++requesting_count_;
         ++sent_count_;
-        ++requested_size_;
+
+        /*
+            LOG(__DEBUG, "timeout", "P2PDownloader = " << p2p_downloader_
+                        << ", Endpoint = " << end_point_ << ", SubPiece = " << subpiece_info
+                        << ", Send, TimeOut = " << curr_time_out_ << ", single");*/
 
         p2p_downloader_->AddRequestingSubpiece(subpiece_info, curr_time_out_, shared_from_this());
-        
-        curr_time_out_ += avg_delt_time_;
-        P2PModule::Inst()->AddRequestCount();
 
-        return true;
+        curr_time_out_ += avg_delta_time_;
+
+        P2PModule::Inst()->AddRequestCount();
     }
 
     void PeerConnection::DoAnnounce()
@@ -549,8 +418,6 @@ namespace p2sp
 
             LIMIT_MIN_MAX(window_size_, P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE);
 
-            statistic_->SetWindowSize(window_size_);
-
             //
             if (GetConnectedTime() <= 3000)
             {
@@ -578,47 +445,8 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            statistic_->SetSentCount(sent_count_);
-            statistic_->SetRequestingCount(requesting_count_);
-            statistic_->SetReceivedCount(received_count_);
+            RecordStatisticInfo();
         }
-    }
-
-    void PeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
-    {
-        if (is_running_ == false)
-            return;
-
-        //
-        last_live_response_time_.reset();
-        // ip可能改变
-        //    end_point_ = end_point;
-        assert(statistic_);
-        statistic_->SubmitDownloadedBytes(buffer_length);
-
-        recent_avg_delt_times_.Push(last_receive_time_.elapsed());
-        avg_delt_time_ = (uint32_t)recent_avg_delt_times_.Average();
-
-        LIMIT_MAX(avg_delt_time_, 1000);
-        last_receive_time_.reset();
-        if (requesting_count_ > 0)
-            requesting_count_--;
-        P2PModule::Inst()->RemoveRequestCount();
-        received_count_++;
-
-        // !
-        // window_size_ = 6 * 1000 / avg_delt_time_;
-        // LIMIT_MIN_MAX(window_size_, 2, P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE);
-
-        // statistic_->SetWindowSize(window_size_);
-        // statistic_->SetWindowSize(request_size_);
-        statistic_->SubmitRTT(subpiece_rtt);
-
-        P2P_EVENT(__FUNCTION__ << " " << shared_from_this() << " RTT = " << subpiece_rtt);
-
-        // window_size_++;
-        RequestNextSubpiece();
-        // window_size_--;
     }
 
     void PeerConnection::OnRIDInfoResponse(protocol::RIDInfoResponsePacket const & packet)
@@ -642,93 +470,14 @@ namespace p2sp
         statistic_->SetIsRidInfoValid(IsRidInfoValid());
     }
 
-    void PeerConnection::OnTimeOut(SubPieceRequestTask::p subpiece_request_task)
+    bool PeerConnection::HasBlock(boost::uint32_t block_index)
     {
-        if (is_running_ == false)
-            return;
-
-        P2P_EVENT("PeerConnection::OnTimeOut " << shared_from_this());
-
-        // requesting_count--;
-        // 更改统计值
-        // Request_Till_Full_Window();
-        if (requesting_count_ > 0)
-            requesting_count_--;
-
-        P2PModule::Inst()->RemoveRequestCount();
-
-        // resend current
-        // task_queue_.push_front(subpiece_request_task->subpiece_info_);
-
-        // P2SPConfigs::PEERCONNECTION_MIN_PACKET_COPY_COUNT++;
-        RequestNextSubpiece();
-        // P2SPConfigs::PEERCONNECTION_MIN_PACKET_COPY_COUNT--;
-
-        // p2p_downloader_->GetAssigner()->RequestNextSubpiece();
+        return block_map_.HasBlock(block_index);
     }
 
-    bool PeerConnection::IsRequesting() const
+    bool PeerConnection::IsBlockFull()
     {
-        if (is_running_ == false) return false;
-
-        return requesting_count_ == 0;
-    }
-
-    boost::uint32_t PeerConnection::GetUsedTime()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t v = avg_delt_time_;
-        if (avg_delt_time_init_ > 0 && v > avg_delt_time_init_)
-        {
-            v = (boost::uint32_t)((avg_delt_time_init_ * 7 + avg_delt_time_ * 3 + 5) / 10);
-        }
-        LIMIT_MIN(v, 10);
-        return v;
-    }
-
-    uint32_t PeerConnection::GetUsedTimeForAssigner()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t t = 0;
-        if (window_size_ < requesting_count_)
-        {
-            t = GetUsedTime();
-            if (t > last_receive_time_.elapsed())
-            {
-                t -= last_receive_time_.elapsed();
-            }
-        }
-        if (statistic_->GetTotalRTTCount() < 3)
-        {
-            t = 10 + statistic_->GetTotalRTTCount() * 30;
-        }
-        return t;
-
-        // return GetTickCount - last_receive_time_ + avg_delt_time;
-        // if (requesting_count_ == 0)
-        //    return avg_delt_time_;
-        // uint32_t recv_time;
-        // if (GetUsedTime() < last_receive_time_.elapsed() || window_size_ > requesting_count_)
-        //    recv_time = 0;
-        // else
-        //    recv_time = GetUsedTime() - last_receive_time_.elapsed();
-        // LIMIT_MAX(recv_time, 10000);
-        // uint32_t value = recv_time + GetUsedTime();
-
-        // LIMIT_MIN_MAX(value, 150, 10000);
-        /*return value;*/
-    }
-
-    boost::uint32_t PeerConnection::GetRequestedCount() const
-    {
-        if (is_running_ == false) return 0;
-
-        // return requesting_count_;
-        return requested_size_;
+        return block_map_.IsFull();
     }
 
     bool PeerConnection::CanKick()
@@ -774,5 +523,71 @@ namespace p2sp
     void PeerConnection::KeepAlive()
     {
         DoReportDownloadSpeed();
+    }
+
+    void PeerConnection::SendPacket(const std::vector<protocol::SubPieceInfo> & subpieces,
+        boost::uint32_t copy_count)
+    {
+        if (peer_version_ >= protocol::PEER_VERSION_V4)
+        {
+            // 对方协议是PEER_VERSION_V4以上版本，priority字段必须设置
+            protocol::RequestSubPiecePacket packet(protocol::Packet::NewTransactionID(),
+            p2p_downloader_->GetRid(), subpieces, endpoint_, p2p_downloader_->GetDownloadPriority());
+
+            for (uint32_t i = 0; i < copy_count; ++i) 
+            {
+            p2p_downloader_->DoSendPacket(packet, peer_version_);
+            }
+            statistic_->SubmitUploadedBytes(packet.length());
+        }
+        else if (peer_version_ == protocol::PEER_VERSION_V3)
+        {
+            // 对方协议是0x00000104版本，priority字段必须设置
+            protocol::RequestSubPiecePacket packet(protocol::Packet::NewTransactionID(),
+            p2p_downloader_->GetRid(), subpieces, endpoint_, protocol::RequestSubPiecePacket::INVALID_PRIORITY);
+
+            for (uint32_t i = 0; i < copy_count; ++i) {
+            p2p_downloader_->DoSendPacket(packet, peer_version_);
+            }
+            statistic_->SubmitUploadedBytes(copy_count * packet.length());
+        }
+        else
+        {
+            protocol::RequestSubPiecePacketOld packet(protocol::Packet::NewTransactionID(),
+            p2p_downloader_->GetRid(), AppModule::Inst()->GetPeerGuid(), subpieces, endpoint_);
+
+            // send multiple packets
+            for (uint32_t i = 0; i < copy_count; ++i) {
+            p2p_downloader_->DoSendPacket(packet, peer_version_);
+            }
+
+            statistic_->SubmitUploadedBytes(copy_count * packet.length());
+        }
+
+        for (uint32_t i = 0; i < subpieces.size(); ++i)
+        {
+            P2P_EVENT("bingo Subpiece = " << subpieces[i] << " trans_id = " << trans_id);
+
+            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, shared_from_this());
+
+            curr_time_out_ += avg_delta_time_;
+            P2PModule::Inst()->AddRequestCount();
+        }
+    }
+
+    void PeerConnection::SubmitDownloadedBytes(boost::uint32_t length)
+    {
+        p2p_downloader_->GetStatistic()->SubmitDownloadedBytes(length);
+        p2p_downloader_->GetStatistic()->SubmitPeerDownloadedBytes(length);
+    }
+
+    void PeerConnection::SubmitP2PDataBytes(boost::uint32_t length)
+    {
+        p2p_downloader_->GetStatistic()->SubmitP2PPeerDataBytes(length);
+    }
+
+    boost::uint32_t PeerConnection::GetConnectRTT() const
+    {
+        return connect_rtt_;
     }
 }

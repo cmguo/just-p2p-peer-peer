@@ -43,9 +43,11 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Attach & Detach
 
-        PeerConnectionStatistic::p AttachPeerConnectionStatistic(const Guid& peer_id);
+        PeerConnectionStatistic::p AttachPeerConnectionStatistic(
+            const boost::asio::ip::udp::endpoint& end_point);
 
-        bool DetachPeerConnectionStatistic(const Guid& peer_id);
+        bool DetachPeerConnectionStatistic(
+            const boost::asio::ip::udp::endpoint& end_point);
 
         bool DetachPeerConnectionStatistic(const PeerConnectionStatistic::p peer_connection_statistic);
 
@@ -55,14 +57,26 @@ namespace statistic
 
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
-
         void SubmitDownloadedBytes(uint32_t downloaded_bytes);
-
         void SubmitUploadedBytes(uint32_t uploaded_bytes);
+
+        void SubmitPeerDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitPeerUploadedBytes(uint32_t uploaded_bytes);
+
+        void SubmitSnDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitSnUploadedBytes(uint32_t uploaded_bytes);
 
         SPEED_INFO GetSpeedInfo();
 
         SPEED_INFO_EX GetSpeedInfoEx();
+
+        SPEED_INFO GetPeerSpeedInfo();
+
+        SPEED_INFO_EX GetPeerSpeedInfoEx();
+
+        SPEED_INFO GetSnSpeedInfo();
+
+        SPEED_INFO_EX GetSnSpeedInfoEx();
 
         uint32_t GetElapsedTimeInMilliSeconds();
 
@@ -126,11 +140,15 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // P2P Data Bytes
 
-        void SubmitP2PDataBytes(uint32_t p2p_data_bytes);
+        void SubmitP2PPeerDataBytes(uint32_t p2p_data_bytes);
+
+        void SubmitP2PSnDataBytes(uint32_t p2p_data_bytes);
 
         void ClearP2PDataBytes();
 
-        uint32_t GetTotalP2PDataBytes();
+        uint32_t GetTotalP2PPeerDataBytes();
+
+        uint32_t GetTotalP2PSnDataBytes();
 
         void SetEmptySubpieceDistance(uint32_t empty_subpiece_distance);
 
@@ -161,7 +179,7 @@ namespace statistic
 
     private:
 
-        typedef std::map<Guid, PeerConnectionStatistic::p> PeerConnectionStatisticMap;
+        typedef std::map<boost::asio::ip::udp::endpoint, PeerConnectionStatistic::p> PeerConnectionStatisticMap;
 
     private:
 
@@ -170,6 +188,8 @@ namespace statistic
         P2PDOWNLOADER_STATISTIC_INFO p2p_downloader_statistic_info_;
 
         SpeedInfoStatistic speed_info_;
+        SpeedInfoStatistic peer_speed_info_;
+        SpeedInfoStatistic sn_speed_info_;
 
         RID resource_id_;
 
@@ -188,19 +208,30 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // P2P Data Bytes
 
-    inline void P2PDownloaderStatistic::SubmitP2PDataBytes(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytes(uint32_t p2p_data_bytes)
     {
-        p2p_downloader_statistic_info_.TotalP2PDataBytes += p2p_data_bytes;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytes += p2p_data_bytes;
+    }
+
+    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytes(uint32_t p2p_data_bytes)
+    {
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytes += p2p_data_bytes;
     }
 
    inline  void P2PDownloaderStatistic::ClearP2PDataBytes()
     {
-        p2p_downloader_statistic_info_.TotalP2PDataBytes = 0;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytes = 0;
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytes = 0;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PDataBytes()
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytes()
     {
-        return p2p_downloader_statistic_info_.TotalP2PDataBytes;
+        return p2p_downloader_statistic_info_.TotalP2PPeerDataBytes;
+    }
+
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytes()
+    {
+        return p2p_downloader_statistic_info_.TotalP2PSnDataBytes;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -228,7 +259,6 @@ namespace statistic
 
     //////////////////////////////////////////////////////////////////////////
     // Speed Info
-
     inline void P2PDownloaderStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
@@ -237,6 +267,26 @@ namespace statistic
     inline void P2PDownloaderStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
+    }
+
+    inline void P2PDownloaderStatistic::SubmitPeerDownloadedBytes(uint32_t downloaded_bytes)
+    {
+        peer_speed_info_.SubmitDownloadedBytes(downloaded_bytes);
+    }
+
+    inline void P2PDownloaderStatistic::SubmitPeerUploadedBytes(uint32_t uploaded_bytes)
+    {
+        peer_speed_info_.SubmitUploadedBytes(uploaded_bytes);
+    }
+
+    inline void P2PDownloaderStatistic::SubmitSnDownloadedBytes(uint32_t downloaded_bytes)
+    {
+        sn_speed_info_.SubmitDownloadedBytes(downloaded_bytes);
+    }
+
+    inline void P2PDownloaderStatistic::SubmitSnUploadedBytes(uint32_t uploaded_bytes)
+    {
+        sn_speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }
 }
 

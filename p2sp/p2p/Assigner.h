@@ -7,13 +7,15 @@
 #ifndef _P2SP_P2P_ASSIGNER_H_
 #define _P2SP_P2P_ASSIGNER_H_
 
+#include "p2sp/p2p/ConnectionBase.h"
+
 namespace p2sp
 {
     class P2PDownloader;
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
 
-    class PeerConnection;
-    typedef boost::shared_ptr<PeerConnection> PeerConnection__p;
+    class ConnectionBase;
+    typedef boost::shared_ptr<ConnectionBase> ConnectionBase__p;
 
     class Assigner
         : public boost::noncopyable
@@ -62,12 +64,12 @@ namespace p2sp
     private:
         struct PEER_RECVTIME
         {
-            PEER_RECVTIME(uint32_t recv_time_, PeerConnection__p peer_)
+            PEER_RECVTIME(uint32_t recv_time_, ConnectionBase__p peer_)
                 : recv_time(recv_time_), peer(peer_) {}
             PEER_RECVTIME(const PEER_RECVTIME & p1)
                 : recv_time(p1.recv_time), peer(p1.peer){}
             uint32_t recv_time;
-            PeerConnection__p peer;
+            ConnectionBase__p peer;
         };
         friend inline bool operator < (PEER_RECVTIME & p1, PEER_RECVTIME & p2);
         // 模块
@@ -88,6 +90,7 @@ namespace p2sp
 
         //
         bool is_end_of_file_;
+
     private:
         // 构造
         Assigner(P2PDownloader__p p2p_downloader)

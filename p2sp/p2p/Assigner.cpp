@@ -75,6 +75,7 @@ namespace p2sp
 #ifdef COUNT_CPU_TIME
         count_cpu_time(__FUNCTION__);
 #endif
+
         if (!is_running_ || times % 2 == 1)
         {
             return;
@@ -112,11 +113,11 @@ namespace p2sp
         // 清空 peer_connection_recvtime_list_ 以便于重新计算 预测收报时间
         peer_connection_recvtime_list_.clear();
 
-        std::map<Guid, PeerConnection::p> ::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter;
         for (iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end(); ++iter)
         {
-            PeerConnection::p peer;
-            peer = iter->second;
+            ConnectionBase__p peer = iter->second;
+            
             P2P_EVENT("Assigner::CaclPeerConnectionRecvTimeMap p2p_downloader:" << p2p_downloader_ << " peer:" << peer << ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
             peer->GetStatistic()->SetAssignedLeftSubPieceCount(peer->GetTaskQueueSize());
             peer->ClearTaskQueue();
@@ -547,8 +548,8 @@ namespace p2sp
         std::deque<protocol::SubPieceInfo>::iterator iter_subpiece;
         std::list<PEER_RECVTIME>::iterator iter_peer;
         uint32_t rcvtime;
-        PeerConnection::p peer;
-        std::map<PeerConnection::p, boost::uint32_t> assigned_peers;
+        ConnectionBase__p peer;
+        std::map<ConnectionBase__p, boost::uint32_t> assigned_peers;
         P2P_DEBUG("Assigner: subpiece_assign_map size = " << subpiece_assign_map_.size());
         for (iter_subpiece = subpiece_assign_map_.begin(); iter_subpiece != subpiece_assign_map_.end(); ++iter_subpiece)
         {
@@ -557,40 +558,43 @@ namespace p2sp
                 rcvtime = iter_peer->recv_time;
                 peer = iter_peer->peer;
 
-                if (peer->HasRidInfo() && peer->IsRidInfoValid() && peer->HasSubPiece(*iter_subpiece))
+                if (!p2p_downloader_->sn_pool_object_.IsSn(peer->GetEndpoint()) || peer->GetTaskQueueSize() < 50)
                 {
-                    peer->AddAssignedSubPiece(*iter_subpiece);
-
-                    if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER + 30)
-                        iter_peer->recv_time =  rcvtime + 6 * peer->GetUsedTime();
-                    else if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER)
-                        iter_peer->recv_time =  rcvtime + 3 * peer->GetUsedTime();
-                    else
-                        iter_peer->recv_time =  rcvtime + peer->GetUsedTime();
-
-                    // 从小到大排序peer_connection_recvtime_list_
-                    std::list<PEER_RECVTIME>::iterator curr_peer = iter_peer++;
-
-                    std::list<PEER_RECVTIME>::iterator i = iter_peer;
-                    for (; i != peer_connection_recvtime_list_.end(); ++i)
+                    if (peer->HasRidInfo() && peer->IsRidInfoValid() && peer->HasSubPiece(*iter_subpiece))
                     {
-                        if (*curr_peer < *i)
+                        peer->AddAssignedSubPiece(*iter_subpiece);
+
+                        if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER + 30)
+                            iter_peer->recv_time =  rcvtime + 6 * peer->GetUsedTime();
+                        else if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER)
+                            iter_peer->recv_time =  rcvtime + 3 * peer->GetUsedTime();
+                        else
+                            iter_peer->recv_time =  rcvtime + peer->GetUsedTime();
+
+                        // 从小到大排序peer_connection_recvtime_list_
+                        std::list<PEER_RECVTIME>::iterator curr_peer = iter_peer++;
+
+                        std::list<PEER_RECVTIME>::iterator i = iter_peer;
+                        for (; i != peer_connection_recvtime_list_.end(); ++i)
                         {
-                            break;
+                            if (*curr_peer < *i)
+                            {
+                                break;
+                            }
                         }
+
+                        peer_connection_recvtime_list_.splice(i, peer_connection_recvtime_list_, curr_peer);
+
+                        break;
                     }
-
-                    peer_connection_recvtime_list_.splice(i, peer_connection_recvtime_list_, curr_peer);
-
-                    break;
                 }
             }
         }
 
         // request all remaining
-        for (std::map<Guid, PeerConnection::p> ::iterator iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end();iter++)
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end();iter++)
         {
-            PeerConnection::p peer;
+            ConnectionBase__p peer;
             peer = iter->second;
             peer->GetStatistic()->SetAverageDeltaTime(peer->GetUsedTime());
             peer->GetStatistic()->SetSortedValue(peer->GetSortedValueForAssigner());
@@ -616,6 +620,11 @@ namespace p2sp
         else
         {
             LIMIT_MIN(capacity_, 200);
+        }
+
+        if (p2p_downloader_->is_sn_enable_)
+        {
+            capacity_ += 200;
         }
 
         P2P_DEBUG(__FUNCTION__ << " AssignCapacity = " << capacity_ << " subpiece_count_ = " << subpiece_count_);

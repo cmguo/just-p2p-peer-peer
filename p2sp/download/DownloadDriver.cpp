@@ -25,6 +25,8 @@
 #include "storage/Instance.h"
 #include "statistic/StatisticModule.h"
 #include "statistic/BufferringMonitor.h"
+#include "p2sp/p2p/SNPool.h"
+#include "p2sp/p2p/SNConnection.h"
 #ifdef NEED_TO_POST_MESSAGE
 #include "WindowsMessage.h"
 #include "base/wsconvert.h"
@@ -124,7 +126,7 @@ namespace p2sp
         , is_got_accelerate_http_speed(false)
         , accelerate_http_speed(0)
         , init_local_data_bytes_(-1)
-        , speed_limit_timer_(global_second_timer(), 1000, boost::bind(&DownloadDriver::OnTimerElapsed, this, &speed_limit_timer_))
+        , second_timer_(global_second_timer(), 1000, boost::bind(&DownloadDriver::OnTimerElapsed, this, &second_timer_))
         , disable_smart_speed_limit_(false)
         , avg_download_speed_before_limit_(-1)
         , avg_http_download_speed_in2300_(-1)
@@ -134,6 +136,7 @@ namespace p2sp
         , bak_host_status_(BAK_HOST_NONE)
         , max_rest_playable_time_(0)
         , tiny_drag_http_status_(0)
+        , is_sn_added_(false)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -151,7 +154,7 @@ namespace p2sp
             return;
 
         // 智能限速定时器
-        speed_limit_timer_.start();
+        second_timer_.start();
 
         is_running_ = true;
 
@@ -325,7 +328,7 @@ namespace p2sp
         is_running_ = true;
 
         // 智能限速定时器
-        speed_limit_timer_.start();
+        second_timer_.start();
 
         // if (!IsPush())
         // {
@@ -578,7 +581,7 @@ namespace p2sp
         is_running_ = true;
 
         // 智能限速定时器
-        speed_limit_timer_.start();
+        second_timer_.start();
 
         // if (!IsPush())
         // {
@@ -1033,7 +1036,7 @@ namespace p2sp
         // J: P2P下载字节数
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
-            info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
+            info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes();
         }
         else
         {
@@ -1247,6 +1250,16 @@ namespace p2sp
         // P1: drag状态码
         info.tiny_drag_http_status = tiny_drag_http_status_;
 
+        // Q1: SN下载字节数
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.total_sn_download_bytes = p2p_downloader_->GetStatistic()->GetTotalP2PSnDataBytes();
+        }
+        else
+        {
+            info.total_sn_download_bytes = 0;
+        }
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1294,6 +1307,7 @@ namespace p2sp
         log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
         log_stream << "&O1=" << (uint32_t)info.retry_rate;
         log_stream << "&P1=" << (uint32_t)info.tiny_drag_http_status;
+        log_stream << "&Q1=" << (uint32_t)info.total_sn_download_bytes;
 
         string log = log_stream.str();
 
@@ -2707,7 +2721,7 @@ namespace p2sp
     
     void DownloadDriver::OnTimerElapsed(framework::timer::Timer * pointer)
     {
-        if (pointer == &speed_limit_timer_)
+        if (pointer == &second_timer_)
         {
             if (is_open_service_)
             {
@@ -2715,11 +2729,15 @@ namespace p2sp
                 SmartLimitSpeed(pointer->times());
             }
 
+            SetSpeedLimitInKBps(30);
+
             for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin();
                 iter != url_indexer_.end(); ++iter)
             {
                 iter->http_downloader_->OnSecondTimer();
             }
+
+            SNStrategy();
         }
     }
 
@@ -2731,7 +2749,7 @@ namespace p2sp
             boost::uint32_t total = 0;
             if (p2p_downloader_ && p2p_downloader_->GetStatistic())
             {
-                total += p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes();
+                total += p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes();
             }
             // HTTP总下载字节数
             total += statistic_->GetTotalHttpDataBytes();
@@ -2774,7 +2792,7 @@ namespace p2sp
                 // P2P下载字节数
                 if (p2p_downloader_ && p2p_downloader_->GetStatistic())
                 {
-                    p2p_download_bytes = (int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PDataBytes());
+                    p2p_download_bytes = (int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes());
                 }
 
                 http_download_bytes = (int32_t)(statistic->GetTotalHttpDataBytes());
@@ -2891,5 +2909,31 @@ namespace p2sp
     void DownloadDriver::ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status)
     {
         tiny_drag_http_status_ = tiny_drag_http_status;
+    }
+
+    void DownloadDriver::SNStrategy()
+    {
+        if (switch_control_mode_ == SwitchController::CONTROL_MODE_VIDEO_OPENSERVICE)
+        {
+            // 观看视频，启动SN
+            if (p2p_downloader_ && !is_sn_added_)
+            {
+                p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
+                is_sn_added_ = true;
+            }
+        }
+
+        if (p2p_downloader_)
+        {
+            if (GetRestPlayableTime() < 20*1000 &&
+                p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())
+            {
+                p2p_downloader_->SetSnEnable(true);
+            }
+            else if (GetRestPlayableTime() > 40*1000)
+            {
+                p2p_downloader_->SetSnEnable(false);
+            }
+        }
     }
 }

@@ -57,6 +57,8 @@ namespace p2sp
 
         void DoQueryBootStrapConfig();
 
+        void DoQuerySnList();
+
         void DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
 
         void OnUdpRecv(protocol::ServerPacket const & packet_header);
@@ -86,6 +88,8 @@ namespace p2sp
 
         void OnQueryBootStrapConfigPacket(protocol::QueryConfigStringPacket const & packet);
 
+        void OnQuerySnListPacket(protocol::QuerySnListPacket const & packet);
+
     protected:
 
         void OnTimerElapsed(
@@ -105,6 +109,8 @@ namespace p2sp
 
         void OnQueryBootStrapConfigTimerElapsed(boost::uint32_t times);
 
+        void OnQuerySnListTimerElapsed(boost::uint32_t times);
+
     private:
         boost::asio::io_service & io_svc_;
         /**
@@ -122,6 +128,7 @@ namespace p2sp
         bool is_have_notify_server_;
         bool is_have_live_tracker_list_;
         bool is_have_bootstrap_config_;
+        bool is_have_sn_list_;
 
         boost::uint8_t interval_time_;
         float upload_pic_probability_;
@@ -135,6 +142,7 @@ namespace p2sp
 #endif
         framework::timer::OnceTimer query_live_tracker_list_timer_;
         framework::timer::OnceTimer query_bootstrap_config_timer_;
+        framework::timer::OnceTimer query_sn_list_timer_;
 
         string query_rid_url_, query_rid_refer_;
         volatile bool is_running_;
@@ -150,6 +158,7 @@ namespace p2sp
 #endif
         uint32_t last_querylivetrackerlist_intervaltimes_;
         uint32_t last_query_bootstrap_config_interval_times_;
+        uint32_t last_query_sn_list_interval_times_;
 
         // Resolver
         network::Resolver::p resolver_;

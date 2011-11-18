@@ -70,6 +70,7 @@ namespace p2sp
         boost::uint32_t       avg_http_download_byte;               // N1: HTTP平均下载的长度
         boost::uint32_t       retry_rate;                           // O1: 冗余率
         boost::uint32_t       tiny_drag_http_status;                // P1: drag状态码
+        boost::uint32_t       total_sn_download_bytes;              // Q1: SN下载字节数
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
@@ -274,6 +275,9 @@ namespace p2sp
 
         bool IsLocalDataEnough(const boost::uint32_t second);
 
+        // SN
+        void SNStrategy();
+
     protected:
         // IDownloadDriver 接口消息
         // 下载完成之后, 生成的RidInfo 消息
@@ -398,7 +402,7 @@ namespace p2sp
 
         bool disable_smart_speed_limit_;
 
-        framework::timer::PeriodicTimer speed_limit_timer_;
+        framework::timer::PeriodicTimer second_timer_;
         int32_t avg_download_speed_before_limit_;
         int32_t avg_http_download_speed_in2300_;
         int32_t drag_http_status_;
@@ -422,6 +426,9 @@ namespace p2sp
             BAK_HOST_GREAT,
             BAK_HOST_USELESS
         } bak_host_status_;
+
+        // SN
+        bool is_sn_added_;
 
     private:
         DownloadDriver(

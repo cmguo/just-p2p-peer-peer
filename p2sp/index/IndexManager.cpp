@@ -10,6 +10,7 @@
 #include "p2sp/stun/StunModule.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "network/Uri.h"
+#include "p2sp/p2p/SNPool.h"
 
 #ifdef NOTIFY_ON
 #include "p2sp/notify/NotifyModule.h"
@@ -44,6 +45,7 @@ namespace p2sp
         , is_have_change_domain_(false)
         , is_resolving_(false)
         , is_firsttime_resolve_(true)
+        , is_have_sn_list_(false)
         , change_domain_resolver_timer_(global_second_timer(), 3000, boost::bind(&IndexManager::OnTimerElapsed, this, &change_domain_resolver_timer_))
         , query_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_tracker_list_timer_))
         , query_stun_server_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_stun_server_list_timer_))
@@ -54,6 +56,8 @@ namespace p2sp
         , query_live_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_live_tracker_list_timer_))
         , query_bootstrap_config_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_bootstrap_config_timer_))
+        , query_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
+            boost::bind(&IndexManager::OnTimerElapsed, this, &query_sn_list_timer_))
         , is_running_(false)
         , failed_times_(0)
         , resolve_times_(0)
@@ -99,6 +103,11 @@ namespace p2sp
             is_firsttime_resolve_ = false;
             // DoQueryNeedReport();
             // DoQueryKeywordList();
+        }
+
+        if (false == is_have_sn_list_)
+        {
+            DoQuerySnList();
         }
     }
 
@@ -148,6 +157,7 @@ namespace p2sp
 #ifdef NOTIFY_ON
             DoQueryNotifyServerList();
 #endif
+            DoQuerySnList();
         }
 
         LOG(__WARN, "index", "IndexManager::OnResolverFailed " << error_code);
@@ -187,6 +197,8 @@ namespace p2sp
         last_query_bootstrap_config_interval_times_ = INITIAL_QUERY_INTERVAL;
         last_querylivetrackerlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
 
+        last_query_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
+
         resolver_ = Resolver::create(io_svc_, domain_, port_, shared_from_this());
         resolver_->DoResolver();
         is_resolving_ = true;
@@ -212,6 +224,11 @@ namespace p2sp
 #endif
 
         change_domain_resolver_timer_.stop();
+
+        query_sn_list_timer_.stop();
+
+        query_live_tracker_list_timer_.stop();
+
         if (resolver_) { resolver_->Close(); resolver_.reset(); }
 
         trans_url_map_.clear();
@@ -260,7 +277,6 @@ namespace p2sp
         LOG(__EVENT, "index", "DoQueryTrackerList");
 
         if (is_running_ == false) return;
-
 
         query_tracker_list_timer_.interval(last_querytrackerlist_intervaltimes_);
         query_tracker_list_timer_.start();
@@ -368,7 +384,6 @@ namespace p2sp
         case protocol::QueryIndexServerListPacket::Action:
             OnQueryIndexServerListPacket((protocol::QueryIndexServerListPacket const &)packet);
             break;
-
 #ifdef NOTIFY_ON
         case protocol::QueryNotifyListPacket::Action:
             {
@@ -383,9 +398,11 @@ namespace p2sp
         case protocol::QueryConfigStringPacket::Action:
             OnQueryBootStrapConfigPacket((protocol::QueryConfigStringPacket const &)packet);
             break;
-
         case protocol::QueryLiveTrackerListPacket::Action:
             OnQueryLiveTrackerListPacket((protocol::QueryLiveTrackerListPacket const &)packet);
+            break;
+        case protocol::QuerySnListPacket::Action:
+            OnQuerySnListPacket((protocol::QuerySnListPacket const &)packet);
             break;
         default:
             assert(0);
@@ -629,9 +646,7 @@ namespace p2sp
         if (is_running_ == false) return;
 
         statistic::StatisticModule::Inst()->SubmitAddUrlRIDResponse();
-
     }
-
 
     void IndexManager::OnTimerElapsed(framework::timer::Timer * pointer)
     {
@@ -700,6 +715,10 @@ namespace p2sp
             {
                 change_domain_resolver_timer_.start();
             }
+        }
+        else if (pointer == &query_sn_list_timer_)
+        {
+            OnQuerySnListTimerElapsed(times);
         }
         else
         {    // 本类中不存在这个定时器
@@ -1039,5 +1058,68 @@ namespace p2sp
             url_tmp = network::Uri(url).getfilerequest();
         }
         return url_tmp;
+    }
+
+    void IndexManager::DoQuerySnList()
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        query_sn_list_timer_.interval(last_query_sn_list_interval_times_);
+        query_sn_list_timer_.start();
+
+        protocol::QuerySnListPacket query_sn_list_packet(protocol::Packet::NewTransactionID(),
+            protocol::PEER_VERSION, server_list_endpoint_);
+        AppModule::Inst()->DoSendPacket(query_sn_list_packet);
+    }
+
+    void IndexManager::OnQuerySnListPacket(protocol::QuerySnListPacket const & packet)
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        // 判断时都出错
+        if (packet.error_code_ == 0)
+        {
+            // 成功收到服务器回复，定时器时间设置为比较长的时间
+            query_sn_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_sn_list_timer_.start();
+            is_have_sn_list_ = true;
+            failed_times_ = 0;
+            resolve_times_ = 0;
+            last_query_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
+
+            SNPool::Inst()->AddSN(packet.response.super_node_infos_);
+        }
+    }
+
+    void IndexManager::OnQuerySnListTimerElapsed(boost::uint32_t times)
+    {
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        // 如果是成功状态
+        // 定时时间4个小时
+        if (is_resolving_)
+        {
+            return;
+        }
+
+        ++failed_times_;
+
+        DoQuerySnList();
+
+        // 指数增长
+        last_query_sn_list_interval_times_ *= 2;
+        if (last_query_sn_list_interval_times_ > DEFAULT_QUERY_INTERVAL)
+        {
+            last_query_sn_list_interval_times_ = DEFAULT_QUERY_INTERVAL;
+        }
     }
 }

@@ -9,17 +9,18 @@
 
 namespace statistic
 {
-    PeerConnectionStatistic::PeerConnectionStatistic(const Guid& peer_id)
+    PeerConnectionStatistic::PeerConnectionStatistic(const boost::asio::ip::udp::endpoint& end_point)
         : is_running_(false)
-        , peer_guid_(peer_id)
+        , end_point_(end_point)
         , recent_average_rtt_(p2sp::P2SPConfigs::PEERCONNECTION_RTT_RANGE_SIZE)
     {
 
     }
 
-    PeerConnectionStatistic::p PeerConnectionStatistic::Create(const Guid& peer_id)
+    PeerConnectionStatistic::p PeerConnectionStatistic::Create(
+        const boost::asio::ip::udp::endpoint& end_point)
     {
-        return p(new PeerConnectionStatistic(peer_id));
+        return p(new PeerConnectionStatistic(end_point));
     }
 
     void PeerConnectionStatistic::Start()
@@ -38,9 +39,6 @@ namespace statistic
         //    p2sp::P2SPConfigs::PEERCONNECTION_RTT_RANGE_SIZE, measure::CYCLE_MAX_VAL);
 
         Clear();
-
-        peer_connection_info_.PeerGuid = peer_guid_;
-        STAT_DEBUG("    PeerGuid: " << peer_guid_);
 
         speed_info_.Start();
 
@@ -263,8 +261,13 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Peer Guid
 
-    Guid PeerConnectionStatistic::GetPeerGuid() const
+    const boost::asio::ip::udp::endpoint & PeerConnectionStatistic::GetEndpoint() const
     {
-        return peer_guid_;
+        return end_point_;
     }
+
+//     Guid PeerConnectionStatistic::GetPeerGuid() const
+//     {
+//         return peer_guid_;
+//     }
 }

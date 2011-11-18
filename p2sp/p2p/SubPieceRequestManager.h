@@ -24,7 +24,10 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<SubPieceRequestTask> p;
-        static p create(uint32_t timeout, p2sp::PeerConnection::p peer_connection) {return p(new SubPieceRequestTask(timeout, peer_connection));}
+        static p create(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
+        {
+            return p(new SubPieceRequestTask(timeout, peer_connection));
+        }
     public:
         bool IsTimeOut() {return request_time_elapse_ > timeout_;}
         framework::timer::TickCounter::count_value_type GetTimeElapsed() const { return request_time_elapse_; }
@@ -33,9 +36,9 @@ namespace p2sp
         uint32_t request_time_elapse_;
         uint32_t timeout_;
         bool dead_;
-        PeerConnection::p peer_connection_;
+        boost::shared_ptr<ConnectionBase> peer_connection_;
     private:
-        SubPieceRequestTask(uint32_t timeout, PeerConnection::p peer_connection)
+        SubPieceRequestTask(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
             : request_time_elapse_(0)
             , timeout_(timeout)
             , dead_(false)
@@ -61,7 +64,8 @@ namespace p2sp
         void Start(P2PDownloader__p p2p_downloader);
         void Stop();
         // 操作
-        void Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout, PeerConnection::p peer_connection);
+        void Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout,
+            boost::shared_ptr<ConnectionBase> peer_connection);
         void CheckExternalTimeout();
         // 消息
         void OnSubPiece(protocol::SubPiecePacket const & packet);
@@ -110,7 +114,7 @@ namespace p2sp
         for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)
         {
             SubPieceRequestTask::p task = it->second;
-            PeerConnection::p peer_conn = task->peer_connection_;
+            boost::shared_ptr<ConnectionBase> peer_conn = task->peer_connection_;
             if (peer_conn->GetConnectedTime() >= 3 * 1000 && peer_conn->GetSentCount() >= 5 && peer_conn->GetReceivedCount() == 0)
             {
 //                 LOG(__DEBUG, "timeout", "WeakPeer! P2PDownloader = " << p2p_downloader_
