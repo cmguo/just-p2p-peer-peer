@@ -610,7 +610,7 @@ namespace p2sp
 
             DownloadDriver::p dd = proxy_connection->GetDownloadDriver();
 
-            if (dd->GetOpenServiceFileName() == filename && dd->GetInstance())
+            if (dd && dd->GetOpenServiceFileName() == filename && dd->GetInstance())
             {
                 *file_length = dd->GetInstance()->GetFileLength();
                 *downloaded_bytes = dd->GetInstance()->GetDownloadBytes();
