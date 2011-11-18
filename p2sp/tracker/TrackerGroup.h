@@ -30,7 +30,7 @@ namespace p2sp
 
         void Stop();
 
-        void DoList(const RID& rid);
+        void DoList(const RID& rid, bool list_for_live_udpserver);
 
         void SetTrackers(boost::uint32_t group_count, const std::set<protocol::TRACKER_INFO>& trackers);
 

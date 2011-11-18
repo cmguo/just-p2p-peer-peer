@@ -17,6 +17,10 @@ namespace p2sp
         , total_all_request_subpiece_count_(0)
         , total_request_subpiece_count_(0)
         , dolist_time_interval_(1000)
+        , dolist_udpserver_times_(0)
+        , dolist_udpserver_time_interval_(1000)
+        , connected_udpserver_count_(0)
+        , should_use_udpserver_(false)
     {
     }
 
@@ -26,6 +30,10 @@ namespace p2sp
         ippool_ = IpPool::create();
         ippool_->Start();
 
+        // UdpServer Pool
+        udpserver_pool_ = IpPool::create();
+        udpserver_pool_->Start();
+
         // Exchange
         exchanger_ = Exchanger::create(shared_from_this(), ippool_);
         exchanger_->Start();
@@ -33,6 +41,10 @@ namespace p2sp
         // PeerConnector
         connector_ = PeerConnector::create(shared_from_this(), ippool_);
         connector_->Start();
+
+        // UdpServer Connector
+        udpserver_connector_ = PeerConnector::create(shared_from_this(), udpserver_pool_);
+        udpserver_connector_->Start();
 
         // Assigner
         live_assigner_.Start(shared_from_this());
@@ -46,6 +58,7 @@ namespace p2sp
         udp_server_subpiece_speed_info_.Start();
 
         last_dolist_time_.start();
+        last_dolist_udpserver_time_.start();
 
         is_running_ = true;
     }
@@ -97,6 +110,11 @@ namespace p2sp
                 connector_->OnP2PTimer(times);
             }
 
+            if (udpserver_connector_)
+            {
+                udpserver_connector_->OnP2PTimer(times);
+            }
+
             LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
             KickPeerConnection(connect_level);
             InitPeerConnection(connect_level);
@@ -129,7 +147,7 @@ namespace p2sp
             }
 
             // 预分配
-            live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH);
+            live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_);
         }
         
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
@@ -137,20 +155,51 @@ namespace p2sp
         {
             iter->second->OnP2PTimer(times);
         }
+
+        if (times % 4 == 0)
+        {
+            if (should_use_udpserver_ == false || use_udpserver_tick_counter_.elapsed() > 60000)
+            {
+                should_use_udpserver_ = ShouldUseUdpServer();
+
+                if (should_use_udpserver_)
+                {
+                    use_udpserver_tick_counter_.reset();
+                }
+                else
+                {
+                    assert(!download_driver_s_.empty());
+
+                    if (connected_udpserver_count_ > 0 && (*download_driver_s_.begin())->GetRestPlayableTime() > 20)
+                    {
+                        udpserver_pool_->DisConnectAll();
+
+                        DeleteAllUdpServer();
+                    }
+                }
+            }
+        }
     }
 
     // 查询到的节点加入IPPool
-    void LiveP2PDownloader::AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers)
+    void LiveP2PDownloader::AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver)
     {
-        if (ippool_->GetPeerCount() == 0)
+        if (is_live_udpserver)
         {
-            ippool_->AddCandidatePeers(peers);
-            LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
-            InitPeerConnection(connect_level);
+            udpserver_pool_->AddCandidatePeers(peers);
         }
         else
         {
-            ippool_->AddCandidatePeers(peers);
+            if (ippool_->GetPeerCount() == 0)
+            {
+                ippool_->AddCandidatePeers(peers);
+                LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
+                InitPeerConnection(connect_level);
+            }
+            else
+            {
+                ippool_->AddCandidatePeers(peers);
+            }
         }
     }
 
@@ -184,6 +233,12 @@ namespace p2sp
             ippool_.reset();
         }
 
+        if (udpserver_pool_)
+        {
+            udpserver_pool_->Stop();
+            udpserver_pool_.reset();
+        }
+
         if (exchanger_)
         {
             exchanger_->Stop();
@@ -194,6 +249,12 @@ namespace p2sp
         {
             connector_->Stop();
             connector_.reset();
+        }
+
+        if (udpserver_connector_)
+        {
+            udpserver_connector_->Stop();
+            udpserver_connector_.reset();
         }
 
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
@@ -369,7 +430,7 @@ namespace p2sp
             return;
         }
 
-        if (!connector_)
+        if (!connector_ && !udpserver_connector_)
         {
             return;
         }
@@ -391,7 +452,7 @@ namespace p2sp
             LIMIT_MIN(connect_count, 1);
         }
 
-        if (connect_count <= 0)
+        if (connect_count <= 0 && !should_use_udpserver_)
         {
             // no need to connect new peers. skip.
             return;
@@ -407,6 +468,21 @@ namespace p2sp
 
             connector_->Connect(candidate_peer_info);
         }
+
+        if (should_use_udpserver_)
+        {
+            for (boost::uint32_t i = connected_udpserver_count_; i < 2 && i < udpserver_pool_->GetPeerCount(); ++i)
+            {
+                protocol::CandidatePeerInfo candidate_peer_info;
+
+                if (false == udpserver_pool_->GetForConnect(candidate_peer_info, true))
+                {
+                    break;
+                }
+
+                udpserver_connector_->Connect(candidate_peer_info);
+            }
+        }
     }
 
     void LiveP2PDownloader::KickPeerConnection(LIVE_CONNECT_LEVEL connect_level)
@@ -418,19 +494,27 @@ namespace p2sp
         {
             if (iter->second->LongTimeNoAnnounceResponse())
             {
+                // 普通的tracker也会返回UdpServer，所以ippool_中可能有UdpServer
                 ippool_->OnDisConnect(iter->first);
+
+                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+                {
+                    udpserver_pool_->OnDisConnect(iter->first);
+                }
+
                 DelPeer((iter++)->second);
             }
             else
-            {   if (connect_level >= MEDIUM)
-                {   
+            {
+                if (connect_level >= MEDIUM)
+                {
                     if (iter->second->GetConnectedTimeInMillseconds() >= 15000)
                     {
                         // only kick peers which are connected longer than 15 seconds
                         peer_kick_map.insert(std::make_pair(KickLiveConnectionIndicator(iter->second), iter->second));
                     }
                 }
-                
+
                 ++iter;
             }
         }
@@ -465,8 +549,16 @@ namespace p2sp
                 {   
                     break;
                 }
-                
-                ippool_->OnDisConnect(iter->second->GetEndpoint());
+
+                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+                {
+                    udpserver_pool_->OnDisConnect(iter->second->GetEndpoint());
+                }
+                else
+                {
+                    ippool_->OnDisConnect(iter->second->GetEndpoint());
+                }
+
                 DelPeer(iter->second);
                 iter++;
             }
@@ -516,7 +608,16 @@ namespace p2sp
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
             // Connect 回包
-            connector_->OnReConectPacket((protocol::ConnectPacket const &)packet);
+            const protocol::ConnectPacket & connect_packet = (const protocol::ConnectPacket &)packet;
+
+            // 考虑到普通的tracker也会返回UdpServer，所以即便现在是UdpServer的回包，也可能是connector去连的
+            connector_->OnReConectPacket(connect_packet);
+
+            if (connect_packet.connect_type_ == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                udpserver_connector_->OnReConectPacket(connect_packet);
+            }
+
             return;
         }
         else if (packet.PacketAction == protocol::PeerExchangePacket::Action)
@@ -570,6 +671,7 @@ namespace p2sp
             {
                 // 还没连上，说明对方没有该资源
                 ippool_->OnConnectFailed(packet.end_point);
+                udpserver_pool_->OnConnectFailed(packet.end_point);
             }
         }
     }
@@ -584,6 +686,10 @@ namespace p2sp
         if (peers_.find(peer_connection->GetEndpoint()) == peers_.end())
         {
             peers_[peer_connection->GetEndpoint()] = peer_connection;
+            if (peer_connection->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                ++connected_udpserver_count_;
+            }
         }
     }
 
@@ -598,6 +704,11 @@ namespace p2sp
         {
             peer_connection->Stop();
             peers_.erase(peer_connection->GetEndpoint());
+            if (peer_connection->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                assert(connected_udpserver_count_ > 0);
+                --connected_udpserver_count_;
+            }
         }
     }
 
@@ -757,7 +868,15 @@ namespace p2sp
             }
 
             last_dolist_time_.reset();
-            p2sp::TrackerModule::Inst()->DoList(GetRid(), false);
+            p2sp::TrackerModule::Inst()->DoList(GetRid(), false, false);
+        }
+
+        if (dolist_udpserver_times_ < 5 && last_dolist_udpserver_time_.elapsed() > dolist_udpserver_time_interval_)
+        {
+            ++dolist_udpserver_times_;
+            dolist_udpserver_time_interval_ *= 2;
+            last_dolist_udpserver_time_.reset();
+            p2sp::TrackerModule::Inst()->DoList(GetRid(), false, true);
         }
     }
 
@@ -812,5 +931,72 @@ namespace p2sp
                 break;
             }
         }
+    }
+
+    bool LiveP2PDownloader::ShouldUseUdpServer() const
+    {
+        if (GetMinRestTimeInSeconds() < 10)
+        {
+            return true;
+        }
+
+        assert(!download_driver_s_.empty());
+        std::set<LiveDownloadDriver::p>::const_iterator download_driver = download_driver_s_.begin();
+
+        if ((*download_driver)->IsUploadSpeedLargeEnough() &&
+            (*download_driver)->GetRestPlayableTime() > (*download_driver)->GetRestPlayTimeDelim() &&
+            IsAheadOfMostPeers())
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    void LiveP2PDownloader::DeleteAllUdpServer()
+    {
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
+            iter != peers_.end();)
+        {
+            if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                assert(connected_udpserver_count_ > 0);
+                --connected_udpserver_count_;
+
+                // 有可能把UdpServer当做普通的peer来连了，所以需要在ippool_中去尝试disconnect
+                ippool_->OnDisConnect(iter->first);
+
+                peers_.erase(iter++);
+            }
+            else
+            {
+                ++iter;
+            }
+        }
+    }
+
+    bool LiveP2PDownloader::IsAheadOfMostPeers() const
+    {
+        boost::uint32_t large_bitmap_peer_count = 0;
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+            {
+                continue;
+            }
+
+            if (iter->second->GetBlockBitmapSize() > 1)
+            {
+                ++large_bitmap_peer_count;
+
+                if (large_bitmap_peer_count >= 2)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

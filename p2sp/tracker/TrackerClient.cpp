@@ -43,8 +43,15 @@ namespace p2sp
         last_response_rid_count_ = rid_count;
     }
 
-    void TrackerClient::DoList(const RID& rid)
+    void TrackerClient::DoList(const RID& rid, bool list_for_live_udpserver)
     {
+        if (list_for_live_udpserver != IsTrackerForLiveUdpServer())
+        {
+            return;
+        }
+
+
+
         last_transaction_id_ = protocol::Packet::NewTransactionID();
         protocol::ListPacket list_request_packet(last_transaction_id_,
                 protocol::PEER_VERSION, rid, p2sp::AppModule::Inst()->GetPeerGuid(),
@@ -70,7 +77,8 @@ namespace p2sp
                 peers[i].UploadPriority++;
             }
         }
-        p2sp::AppModule::Inst()->AddCandidatePeers(packet.response.resource_id_, peers);
+
+        p2sp::AppModule::Inst()->AddCandidatePeers(packet.response.resource_id_, peers, is_tracker_for_live_udpserver_);
 
         // 统计信息
         statistic::StatisticModule::Inst()->SubmitListResponse(tracker_info_, packet.response.peer_infos_.size());
@@ -396,5 +404,10 @@ namespace p2sp
         
         p2sp::AppModule::Inst()->DoSendPacket(leave_packet);
         is_sync_ = false;
+    }
+
+    bool TrackerClient::IsTrackerForLiveUdpServer() const
+    {
+        return is_tracker_for_live_udpserver_;
     }
 }

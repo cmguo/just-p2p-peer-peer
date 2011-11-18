@@ -160,7 +160,7 @@ namespace p2sp
         return downloader;
     }
 
-    void P2PModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers)
+    void P2PModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver)
     {
         if (is_running_ == false)
             return;
@@ -174,7 +174,7 @@ namespace p2sp
         if (live_rid_index_.find(rid) != live_rid_index_.end())
         {
             LiveP2PDownloader::p p2p_downloader = live_rid_index_.find(rid)->second;
-            p2p_downloader->AddCandidatePeers(peers);
+            p2p_downloader->AddCandidatePeers(peers, is_live_udpserver);
         }
     }
 

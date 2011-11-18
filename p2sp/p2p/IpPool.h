@@ -33,7 +33,7 @@ namespace p2sp
         void Stop();
         // 操作
         void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers);
-        bool GetForConnect(protocol::CandidatePeerInfo& peer);
+        bool GetForConnect(protocol::CandidatePeerInfo& peer, bool is_udpserver = false);
         bool GetForExchange(protocol::CandidatePeerInfo& peer);
         uint32_t GetPeerCount() const { return candidate_peers_.size();}
 
@@ -45,6 +45,8 @@ namespace p2sp
         void OnDisConnect(const boost::asio::ip::udp::endpoint& end_point);
 
         boost::int32_t GetNotTriedPeerCount() const { return not_tried_peer_count_;}
+
+        void DisConnectAll();
 
     protected:
         void AddIndex(CandidatePeer::p peer);

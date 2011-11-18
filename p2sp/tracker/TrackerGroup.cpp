@@ -68,13 +68,13 @@ namespace p2sp
         trying_tracker_ = TrackerClient::p();
     }
 
-    void TrackerGroup::DoList(const RID& rid)
+    void TrackerGroup::DoList(const RID& rid, bool list_for_live_udpserver)
     {
         // 遍历所有的 TrackerClient， 对每个TrackerClient DoList
         for (TrackerClientList::iterator it = tracker_list_.begin(),
             eit = tracker_list_.end(); it != eit; it++)
         {
-            (*it)->DoList(rid);
+            (*it)->DoList(rid, list_for_live_udpserver);
         }
     }
 
@@ -154,7 +154,7 @@ namespace p2sp
             else
             {
                 assert (info.Type);  // udp
-                TrackerClient::p tracker_client = TrackerClient::Create(end_point, is_vod_);
+                TrackerClient::p tracker_client = TrackerClient::Create(end_point, is_vod_, info.IsTrackerForLiveUdpServer());
                 tracker_client->SetTrackerInfo(info);
                 tracker_client->SetGroupCount(group_count);
 
@@ -268,21 +268,35 @@ namespace p2sp
         }
         else if (!tracker_list_.empty())  // tracker_list could not be empty
         {
-            if (trying_tracker_iterator_ != tracker_list_.end())
+            boost::uint32_t tryed_times = 0;
+
+            do
             {
-                (*trying_tracker_iterator_)->PPLeave();
-                ++trying_tracker_iterator_;
-            }
-            
-            if (trying_tracker_iterator_ == tracker_list_.end())
+                ++tryed_times;
+
+                if (trying_tracker_iterator_ != tracker_list_.end())
+                {
+                    if (!(*trying_tracker_iterator_)->IsTrackerForLiveUdpServer())
+                    {
+                        (*trying_tracker_iterator_)->PPLeave();
+                    }
+                    ++trying_tracker_iterator_;
+                }
+
+                if (trying_tracker_iterator_ == tracker_list_.end())
+                {
+                    trying_tracker_iterator_ = tracker_list_.begin();
+                }
+            } while ((*trying_tracker_iterator_)->IsTrackerForLiveUdpServer() && tryed_times < tracker_list_.size());
+
+            // 避免向只有UdpServer的那个tracker汇报
+            if (!(*trying_tracker_iterator_)->IsTrackerForLiveUdpServer())
             {
-                trying_tracker_iterator_ = tracker_list_.begin();
+                trying_tracker_ = *trying_tracker_iterator_;
+                is_responsed_ = false;
+                trying_tracker_->SetRidCount(0);  // ! trick，使Submit时清空同步资源，并进行全新Report
+                last_transcation_id_ = trying_tracker_->DoSubmit();
             }
-            
-            trying_tracker_ = *trying_tracker_iterator_;
-            is_responsed_ = false;
-            trying_tracker_->SetRidCount(0);  // ! trick，使Submit时清空同步资源，并进行全新Report
-            last_transcation_id_ = trying_tracker_->DoSubmit();
         }
     }
 

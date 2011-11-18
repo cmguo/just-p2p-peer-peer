@@ -184,12 +184,24 @@ namespace p2sp
 
         // 不光检测了是不是已经连接上(is_connction_)，是不是正在连(is_connecting_)
         // 还检测了是否处于连接的保护时间内
-        bool CanConnect() const
+        bool CanConnect(bool is_udpserver = false) const
         {
-            if (is_connction_ || is_connecting_) return false;
-            if (last_connect_time_ == 0) return true;
-            if (framework::timer::TickCounter::tick_count() - last_connect_time_ < connect_protect_time_)
+            if (is_connction_ || is_connecting_)
+            {
                 return false;
+            }
+            if (last_connect_time_ == 0)
+            {
+                return true;
+            }
+            if (framework::timer::TickCounter::tick_count() - last_connect_time_ < connect_protect_time_)
+            {
+                if (is_udpserver)
+                {
+                    return true;
+                }
+                return false;
+            }
             return true;
         }
         // 操作

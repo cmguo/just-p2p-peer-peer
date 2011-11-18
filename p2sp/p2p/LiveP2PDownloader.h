@@ -155,7 +155,7 @@ namespace p2sp
 
     public:
         void Start();
-        void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers);
+        void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver);
         void OnP2PTimer(boost::uint32_t times);
         void DoRequestSubPiece() {};
         void AddBlockCount(boost::uint32_t);
@@ -249,9 +249,13 @@ namespace p2sp
         void CheckBlockComplete();
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
+        bool ShouldUseUdpServer() const;
 
         storage::LivePosition GetMinPlayingPosition() const;
         void EliminateElapsedBlockCountMap(boost::uint32_t block_id);
+
+        void DeleteAllUdpServer();
+        bool IsAheadOfMostPeers() const;
 
     public:
         bool is_running_;
@@ -275,6 +279,10 @@ namespace p2sp
         framework::timer::TickCounter last_dolist_time_;
         boost::uint32_t dolist_time_interval_;
 
+        framework::timer::TickCounter last_dolist_udpserver_time_;
+        boost::uint32_t dolist_udpserver_time_interval_;
+        boost::uint32_t dolist_udpserver_times_;
+
     private:
         // for statistic
         statistic::SpeedInfoStatistic p2p_speed_info_;
@@ -283,6 +291,12 @@ namespace p2sp
         boost::uint32_t total_request_subpiece_count_;  // 请求的subpiece个数（不包括冗余的）
         statistic::SpeedInfoStatistic udp_server_speed_info_;
         statistic::SpeedInfoStatistic udp_server_subpiece_speed_info_;
+
+        IpPool__p udpserver_pool_;
+        PeerConnector__p udpserver_connector_;
+        boost::uint32_t connected_udpserver_count_;
+        bool should_use_udpserver_;
+        framework::timer::TickCounter use_udpserver_tick_counter_;
 
     };
 

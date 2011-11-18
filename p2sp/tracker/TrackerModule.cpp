@@ -49,7 +49,7 @@ namespace p2sp
         }
     }
 
-    void TrackerModule::DoList(RID rid, bool is_vod)
+    void TrackerModule::DoList(RID rid, bool is_vod, bool list_for_live_udpserver)
     {
         TRACK_INFO("TrackerModule::DoList, RID: " << rid);
 
@@ -61,11 +61,11 @@ namespace p2sp
 
         if (is_vod)
         {
-            vod_tracker_manager_.DoList(rid);
+            vod_tracker_manager_.DoList(rid, false);
         }
         else
         {
-            live_tracker_manager_.DoList(rid);
+            live_tracker_manager_.DoList(rid, list_for_live_udpserver);
         }
     }
 

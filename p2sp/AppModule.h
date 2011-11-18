@@ -152,7 +152,7 @@ class AppModule: public boost::noncopyable,
     /**
     * @brief 给资源RID添加 多个 Peer
     */
-    void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers);
+    void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver);
 
     boost::uint8_t GenUploadPriority();
 

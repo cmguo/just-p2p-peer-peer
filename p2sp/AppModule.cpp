@@ -449,7 +449,7 @@ namespace p2sp
         Storage::Inst()->AttachHttpServerByRid(rid, url_info_s);
     }
 
-    void AppModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers)
+    void AppModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver)
     {
         if (false == is_running_)
         {
@@ -462,7 +462,7 @@ namespace p2sp
         //     如果找不到ppassert(0);
         //     如果找到
         //        Instanse->AddPeers(peers);
-        P2PModule::Inst()->AddCandidatePeers(rid, peers);
+        P2PModule::Inst()->AddCandidatePeers(rid, peers, is_live_udpserver);
     }
 
     void AppModule::OnUdpRecv(protocol::Packet const & packet)

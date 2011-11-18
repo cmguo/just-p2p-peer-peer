@@ -57,7 +57,7 @@ namespace p2sp
         void OnTimerElapsed(framework::timer::Timer * pointer);
         void OnP2PTimer(uint32_t times);
 
-        void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers);
+        void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver);
 
         void OnP2PDownloaderWillStop(P2PDownloader__p p2p_downloader);
 

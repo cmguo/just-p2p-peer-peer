@@ -251,7 +251,7 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::DoList(RID rid)
+    void TrackerManager::DoList(RID rid, bool list_for_live_udpserver)
     {
         TRACK_INFO("TrackerManager::DoList, RID: " << rid);
 
@@ -275,7 +275,7 @@ namespace p2sp
 
         if (tracker_group)
         {
-            tracker_group->DoList(rid);
+            tracker_group->DoList(rid, list_for_live_udpserver);
         }
         else
         {

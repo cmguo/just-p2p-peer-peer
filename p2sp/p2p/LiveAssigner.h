@@ -19,7 +19,7 @@ namespace p2sp
     {
     public:
         void Start(LiveP2PDownloader__p p2p_downloader);
-        void OnP2PTimer(boost::uint32_t times, bool urgent);
+        void OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver);
 
     private:
         void CalcSubpieceTillCapacity();
@@ -31,8 +31,7 @@ namespace p2sp
         bool TryToReassignSubPieces(boost::uint32_t block_task_index, boost::uint32_t block_id);
 
         void CaclPeerConnectionRecvTimeMap();
-
-        void AssignerPeers();
+        void AssignerPeers(bool use_udpserver);
 
     private:
         LiveP2PDownloader__p p2p_downloader_;

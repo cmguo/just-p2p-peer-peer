@@ -36,7 +36,7 @@ namespace p2sp
         void SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s,
             bool is_got_tracker_list_from_bs);
 
-        void DoList(RID rid);
+        void DoList(RID rid, bool list_for_live_udpserver);
 
         void OnUdpRecv(protocol::ServerPacket const &packet);
 

@@ -425,4 +425,9 @@ namespace p2sp
     {
         return statistic::GetTickCountInMilliSecond() - this->GetSpeedInfo().StartTime;
     }
+
+    bool LivePeerConnection::IsUdpServer() const
+    {
+        return connect_type_ == protocol::CONNECT_LIVE_UDPSERVER;
+    }
 }

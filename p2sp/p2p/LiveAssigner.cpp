@@ -12,7 +12,7 @@ namespace p2sp
         urgent_ = false;
     }
 
-    void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent)
+    void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver)
     {
 		// 500ms分配一次
 		if (times % 2 == 0)
@@ -28,7 +28,7 @@ namespace p2sp
 
         CaclPeerConnectionRecvTimeMap();
 
-        AssignerPeers();
+        AssignerPeers(use_udpserver);
     }
 
     // 根据已有的subpiece_cout和需要分配的capacity
@@ -181,7 +181,7 @@ namespace p2sp
         }
     }
 
-    void LiveAssigner::AssignerPeers()
+    void LiveAssigner::AssignerPeers(bool use_udpserver)
     {
         for (std::deque<protocol::LiveSubPieceInfo>::const_iterator subpiece_iter = subpiece_assign_deque_.begin();
             subpiece_iter != subpiece_assign_deque_.end(); ++subpiece_iter)
@@ -191,6 +191,11 @@ namespace p2sp
             {
                 const protocol::LiveSubPieceInfo & subpiece = *subpiece_iter;
                 LivePeerConnection__p peer = (*peer_iter).peer;
+
+                if (!use_udpserver && peer->IsUdpServer())
+                {
+                    continue;
+                }
 
                 if (peer->HasSubPieceInBitmap(subpiece) && !peer->HasSubPieceInTaskSet(subpiece))
                 {

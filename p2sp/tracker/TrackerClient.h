@@ -28,9 +28,10 @@ namespace p2sp
 
         typedef boost::shared_ptr<TrackerClient> p;
 
-        static p Create(boost::asio::ip::udp::endpoint end_point, bool is_vod)
+        static p Create(boost::asio::ip::udp::endpoint end_point, bool is_vod, bool is_tracker_for_live_udpserver)
         {
-            return p(new TrackerClient(end_point, is_vod));
+            assert(!(is_vod && is_tracker_for_live_udpserver));
+            return p(new TrackerClient(end_point, is_vod, is_tracker_for_live_udpserver));
         }
 
     public:
@@ -39,7 +40,7 @@ namespace p2sp
 
         void Stop();
 
-        void DoList(const RID& rid);
+        void DoList(const RID& rid, bool list_for_live_udpserver);
 
         void OnListResponsePacket(protocol::ListPacket const & packet);
 
@@ -70,15 +71,18 @@ namespace p2sp
 
         uint32_t DoReport();
 
+        bool IsTrackerForLiveUdpServer() const;
+
     private:
 
         void UpdateIpStatistic(const protocol::SocketAddr& detected_addr);
 
     private:
         TrackerClient() {}
-        TrackerClient(boost::asio::ip::udp::endpoint end_point, bool is_vod)
+        TrackerClient(boost::asio::ip::udp::endpoint end_point, bool is_vod, bool is_tracker_for_live_udpserver)
             : end_point_(end_point)
             , is_vod_(is_vod)
+            , is_tracker_for_live_udpserver_(is_tracker_for_live_udpserver)
         {}
 
     private:
@@ -114,6 +118,8 @@ namespace p2sp
         std::vector<protocol::REPORT_RESOURCE_STRUCT> last_updates_;
 
         bool is_vod_;
+
+        bool is_tracker_for_live_udpserver_;
 
     private:
         /**
