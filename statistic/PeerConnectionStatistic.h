@@ -103,7 +103,7 @@ namespace statistic
 
         //////////////////////////////////////////////////////////////////////////
         // Peer Guid
-        const boost::asio::ip::udp::endpoint & PeerConnectionStatistic::GetEndpoint() const;
+        boost::asio::ip::udp::endpoint PeerConnectionStatistic::GetEndpoint() const;
 
     private:
 
