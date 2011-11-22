@@ -633,7 +633,7 @@ namespace p2sp
             resolve_times_ = 0;
             last_query_bootstrap_config_interval_times_ = INITIAL_QUERY_INTERVAL;
 
-            BootStrapGeneralConfig::Inst()->SetConfigString(packet.response.config_string_);
+            BootStrapGeneralConfig::Inst()->SetConfigString(packet.response.config_string_, true);
         }
         else
         {

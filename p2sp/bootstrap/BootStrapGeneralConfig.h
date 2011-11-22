@@ -18,7 +18,7 @@ namespace p2sp
         void Start(string const & config_path);
         void Stop();
 
-        void SetConfigString(string const & config_string);
+        void SetConfigString(string const & config_string, bool save_to_disk);
 
         string GetHouServerList() const {return hou_server_list_;}
         bool UsePush() const {return use_push_;}
@@ -32,7 +32,7 @@ namespace p2sp
 
         enum UploadPolicy
         {
-            policy_defalut = 0,
+            policy_default = 0,
             policy_ping
         };
         UploadPolicy GetUploadPolicy() {return upload_policy_;}
