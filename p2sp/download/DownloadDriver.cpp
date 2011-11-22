@@ -2729,8 +2729,6 @@ namespace p2sp
                 SmartLimitSpeed(pointer->times());
             }
 
-            SetSpeedLimitInKBps(30);
-
             for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin();
                 iter != url_indexer_.end(); ++iter)
             {
