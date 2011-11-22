@@ -597,11 +597,27 @@ namespace p2sp
 
         string filename = ParseOpenServiceFileName(network::Uri(url));
 
+        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+        if (!inst)
+        {
+            inst = boost::dynamic_pointer_cast<storage::Instance>(
+                storage::Storage::Inst()->GetInstanceByFileName(filename));
+            if (!inst)
+            {
+                LOGX(__DEBUG, "downloadcenter", "No Such url: " << url);
+                result_handler();
+                return;
+            }  
+        }
+
+        *file_length = inst->GetFileLength();
+        *downloaded_bytes = inst->GetDownloadBytes();
+
         for (std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
             it != proxy_connections_.end(); ++it)
         {
             ProxyConnection::p proxy_connection = *it;
-            
+
             if (!proxy_connection) 
             {
                 LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
@@ -612,13 +628,10 @@ namespace p2sp
 
             if (dd && dd->GetOpenServiceFileName() == filename && dd->GetInstance())
             {
-                *file_length = dd->GetInstance()->GetFileLength();
-                *downloaded_bytes = dd->GetInstance()->GetDownloadBytes();
                 *position = proxy_connection->GetPlayingPosition();
             }
         }
 
-        LOGX(__DEBUG, "downloadcenter", "Found url: " << url << ", FileLength: " << filelength << ", DownloadedBytes: " << downloaded);
         result_handler();
     }
 
