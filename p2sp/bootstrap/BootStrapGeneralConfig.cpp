@@ -14,13 +14,18 @@ namespace p2sp
     boost::shared_ptr<BootStrapGeneralConfig> BootStrapGeneralConfig::inst_(new BootStrapGeneralConfig());
 
     static const string DEFAULT_CONFIG_STRING(
-        "[config]");
+        "[config]\r\n \
+        hl=220.165.14.10@119.167.233.56\r\n \
+        usepush=false\r\n \
+        uploadpolicy=0\r\n \
+        connectionpolicy=true\r\n \
+        usecdnpolicy=false\r\n \
+        restplaytime=25\r\n \
+        ratiodelim=200");
 
     BootStrapGeneralConfig::BootStrapGeneralConfig()
-        : hou_server_list_("220.165.14.10@119.167.233.56")
-        , data_collection_server_list_("")
-        , use_push_(false)
-        , upload_policy_(policy_default)
+        : use_push_(false)
+        , upload_policy_(policy_ping)
         , connection_policy_enable_(true)
         , use_cdn_when_large_upload_(false)
         , rest_play_time_delim_(25)
@@ -30,7 +35,7 @@ namespace p2sp
 
     void BootStrapGeneralConfig::Start(string const & config_path)
     {
-        SetConfigString(DEFAULT_CONFIG_STRING, false);
+        SetConfigString(DEFAULT_CONFIG_STRING);
 
         if (config_path.length() == 0)
         {
@@ -64,7 +69,7 @@ namespace p2sp
             ar >> config_string;
 
             ifs.close();
-            SetConfigString(config_string, false);
+            SetConfigString(config_string);
         }
     }
 
@@ -78,7 +83,7 @@ namespace p2sp
         }
     }
 
-    void BootStrapGeneralConfig::SetConfigString(string const & config_string, bool save_to_disk)
+    void BootStrapGeneralConfig::SetConfigString(string const & config_string)
     {
         try
         {
@@ -89,20 +94,32 @@ namespace p2sp
             //
             po::options_description config_desc("config");
             config_desc.add_options()
-                ("config.hl", po::value<string>()->default_value(hou_server_list_))
-                ("config.dc_servers", po::value<string>()->default_value(""))
-                ("config.usepush", po::value<bool>()->default_value(use_push_))
-                ("config.uploadpolicy", po::value<uint32_t>()->default_value((uint32_t)upload_policy_))
-                ("config.connectionpolicy", po::value<bool>()->default_value(connection_policy_enable_))
-                ("config.usecdnpolicy", po::value<bool>()->default_value(use_cdn_when_large_upload_))
-                ("config.restplaytime", po::value<uint32_t>()->default_value(rest_play_time_delim_))
-                ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_));
+                ("config.hl", po::value<string>())
+                ("config.dc_servers", po::value<string>())
+                ("config.usepush", po::value<bool>())
+                ("config.uploadpolicy", po::value<uint32_t>())
+                ("config.connectionpolicy", po::value<bool>())
+                ("config.usecdnpolicy", po::value<bool>())
+                ("config.restplaytime", po::value<uint32_t>())
+                ("config.ratiodelim", po::value<uint32_t>());
 
             std::istringstream config_stream(config_string);
 
             po::variables_map vm;
             po::store(po::parse_config_file(config_stream, config_desc, true), vm);
             po::notify(vm);
+
+            if (vm.count("config.hl") == 0 ||
+                vm.count("config.usepush") == 0 ||
+                vm.count("config.uploadpolicy") == 0 ||
+                vm.count("config.connectionpolicy") == 0 ||
+                vm.count("config.usecdnpolicy") == 0 ||
+                vm.count("config.restplaytime") == 0 ||
+                vm.count("config.ratiodelim") == 0)
+            {
+                assert(false);
+                return;
+            }
 
             hou_server_list_ = vm["config.hl"].as<string>();
             use_push_ = vm["config.usepush"].as<bool>();
@@ -111,12 +128,17 @@ namespace p2sp
             use_cdn_when_large_upload_ = vm["config.usecdnpolicy"].as<bool>();
             rest_play_time_delim_ = vm["config.restplaytime"].as<uint32_t>();
             ratio_delim_of_upload_speed_to_datarate_ = vm["config.ratiodelim"].as<uint32_t>();
-            data_collection_server_list_ = vm["config.dc_servers"].as<string>();
 
-            if (save_to_disk)
+            if (vm.count("config.dc_servers") == 0)
             {
-                SaveLocalConfig(config_string);
+                data_collection_server_list_.clear();
             }
+            else
+            {
+                data_collection_server_list_ = vm["config.dc_servers"].as<string>();
+            }
+
+            SaveLocalConfig(config_string);
 
             NotifyConfigUpdateEvent();
         }

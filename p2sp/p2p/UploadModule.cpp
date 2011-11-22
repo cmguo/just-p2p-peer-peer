@@ -16,7 +16,7 @@ namespace p2sp
     UploadModule::UploadModule()
         : recent_play_series_(0)
         , is_disable_upload_(false)
-        , upload_policy_(BootStrapGeneralConfig::policy_default)
+        , upload_policy_(BootStrapGeneralConfig::policy_defalut)
     {
 
     }
@@ -256,17 +256,17 @@ namespace p2sp
         BootStrapGeneralConfig::UploadPolicy new_policy = BootStrapGeneralConfig::Inst()->GetUploadPolicy();
         if (new_policy != upload_policy_)
         {
-            if (new_policy == BootStrapGeneralConfig::policy_default)
+            if (new_policy == BootStrapGeneralConfig::policy_defalut)
             {
                 if (upload_policy_ == BootStrapGeneralConfig::policy_ping)
                 {
-                    upload_policy_ = BootStrapGeneralConfig::policy_default;
+                    upload_policy_ = BootStrapGeneralConfig::policy_defalut;
                     network_quality_monitor_->Stop();
                 }
             }
             else if (new_policy == BootStrapGeneralConfig::policy_ping)
             {
-                if (upload_policy_ == BootStrapGeneralConfig::policy_default)
+                if (upload_policy_ == BootStrapGeneralConfig::policy_defalut)
                 {
                     upload_policy_ = BootStrapGeneralConfig::policy_ping;
                     network_quality_monitor_->Start();
