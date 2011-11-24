@@ -27,6 +27,7 @@
 static const std::string PUSH_SERVER = "ppvaps.pplive.com";
 static const boost::uint16_t PUSH_SERVER_PORT = 6900;
 static const std::string PLAY_HISTORY_FILE = "playhistory.dat"; 
+static const boost::uint16_t PUSH_SERVER_PROCESS_NUM = 4;
 
 namespace p2sp
 {
@@ -109,7 +110,8 @@ namespace p2sp
         is_running_ = true;
 
         push_server_domain_ = PUSH_SERVER;
-        push_server_port_ = PUSH_SERVER_PORT;
+        srand(time(0));
+        push_server_port_ = PUSH_SERVER_PORT + rand()%PUSH_SERVER_PROCESS_NUM;
 
         state_.domain_ = push::DOMAIN_NONE;
 
