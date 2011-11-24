@@ -6,7 +6,12 @@
 #define P2SP_PUSH_PUSHMODULE_H
 
 #include "protocol/PushServerPacket.h"
+#include "protocol/PushServerPacketV2.h"
 #include "network/Resolver.h"
+#include "PushDownloadTask.h"
+#include "PlayHistoryManager.h"
+
+#include <deque>
 
 namespace p2sp
 {
@@ -22,47 +27,39 @@ namespace p2sp
         static PushModule::p Inst() { return inst_; }
 
     public:
-        void Start();
+        void Start(const std::string& history_path);
         void Stop();
         bool IsRunning() const { return is_running_; }
         bool IsPushEnabled() const { return is_push_enabled_; }
         void EnablePush(bool enable_push) { is_push_enabled_ = enable_push; }
+        
+        boost::shared_ptr<PlayHistoryManager> GetPlayHistoryManager() { return play_history_mgr_; }
 
         void OnUdpRecv(const protocol::ServerPacket & packet);
-
-        void OnPushTaskResponse(protocol::QueryPushTaskPacket const & packet);
-        void OnReportPushTaskCompleteResponse(protocol::ReportPushTaskCompletedPacket const & packet);
-
+        void OnPushTaskResponse(protocol::QueryPushTaskPacketV2 const & packet);
         void OnTimerElapsed(framework::timer::Timer * timer_ptr);
 
         virtual void OnResolverSucced(uint32_t ip, boost::uint16_t port);
         virtual void OnResolverFailed(uint32_t error_code);
 
-        string GetCurrentTaskUrl() const;
-        protocol::RidInfo GetCurrentTaskRidInfo() const;
-
-        void ReportPushTaskCompete(const protocol::RidInfo & rid_info);
-
         void SetGlobalSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
 
     private:
-        void CheckDiskSpace();
-        void CheckUserState();
         void DoResolvePushServer();
         void DoQueryPushTask();
+        void SendQueryPushTaskPacket();
 
-        void StartCurrentTask();
+        bool IsDownloadingPushTask() const;
+        bool HavePushTask() const;
+        
+        bool ShouldQueryPushServer() const;
+
+        void StartADownloadTask();
         void LimitTaskSpeed();
-
-        uint32_t GetUserState() const;
-
-        void SendReportPushTaskCompletePacket(const protocol::RidInfo & ridinfo);
-        void CheckUsePush();
-
-    private:
-        static PushModule::p inst_;
+        
     private:
         PushModule();
+
     private:
 
         struct State {
@@ -79,8 +76,7 @@ namespace p2sp
 
         uint32_t last_transaction_id_;
         framework::timer::TickCounter last_query_timer_;
-        int32_t query_error_num_;
-        protocol::PushTask push_task_;
+        int32_t query_sum_num_;
 
         boost::asio::ip::udp::endpoint push_server_endpoint_;
 
@@ -88,11 +84,20 @@ namespace p2sp
         boost::uint16_t push_server_port_;
 
         framework::timer::PeriodicTimer timer_;
-        framework::timer::TickCounter task_complete_timer_;
+        
         int32_t task_complete_error_num_;
 
         int32_t global_speed_limit_in_kbps_;
         int32_t push_wait_interval_in_sec_;
+
+        boost::shared_ptr<PushDownloadTask> push_download_task_;
+
+        protocol::PUSH_TASK_PARAM task_param_;
+        std::deque<protocol::PushTaskItem> push_task_deq_;
+
+        boost::shared_ptr<PlayHistoryManager> play_history_mgr_;
+
+        static PushModule::p inst_;
     };
 
 #endif

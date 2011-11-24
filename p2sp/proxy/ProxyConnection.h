@@ -13,6 +13,7 @@
 #include "network/HttpRequest.h"
 #include "network/HttpResponse.h"
 #include "network/HttpServer.h"
+#include "p2sp/push/PlayHistoryManager.h"
 
 namespace p2sp
 {
@@ -289,7 +290,10 @@ namespace p2sp
         SubPieceBufferDeque buf_deque_;
 
         bool is_live_connection_;
-
+#ifdef DISK_MODE
+		//PlayHistoryManager play_history_mgr_;
+		PlayHistoryManager::PlayHistoryItemHandle play_history_item_handle_;
+#endif
     private:
         ProxyConnection(
             boost::asio::io_service & io_svc,

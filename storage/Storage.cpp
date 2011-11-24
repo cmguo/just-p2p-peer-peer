@@ -1546,6 +1546,16 @@ namespace storage
         return filename;
     }
 
+	void Storage::GetAllCompletedFiles(std::vector<std::string>& filename_vec) const
+	{
+		std::set<Instance::p>::const_iterator iter;
+		for (iter = instance_set_.begin(); iter != instance_set_.end(); ++iter) {
+            if ((*iter)->IsComplete()) {
+                filename_vec.push_back((*iter)->GetFileName());
+            }
+		}
+	}
+
     // 根据文件名判重，并返回最终文件名
     void Storage::DoVerifyName(string filename, boost::filesystem::path filepath, string& lastname)
     {

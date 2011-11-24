@@ -24,6 +24,10 @@
 #define PUSH_DEBUG(msg) LOG(__DEBUG, "push", __FUNCTION__ << " " << msg)
 #define PUSH_WARN(msg) LOG(__WARN, "push", __FUNCTION__ << " " << msg)
 
+static const std::string PUSH_SERVER = "ppvaps.pplive.com";
+static const boost::uint16_t PUSH_SERVER_PORT = 6900;
+static const std::string PLAY_HISTORY_FILE = "playhistory.dat"; 
+
 namespace p2sp
 {
 #ifdef DISK_MODE
@@ -40,11 +44,11 @@ namespace p2sp
 
         enum TASK {
             TASK_NONE,
-            TASK_WAIT,               // 当前没有push任务，间隔固定时间重复查询
-            TASK_QUERY,              // 正在查询push任务
-            TASK_QUERY_RETRY,        // 查询push任务失败，等一段时间重试
-            TASK_HAVE,               // 正在下载push任务
-            TASK_COMPELETING,        // 正在汇报push任务完成
+            TASK_WAIT,               
+            TASK_QUERY,             
+            TASK_QUERY_RETRY,
+            TASK_HAVE,               
+            TASK_COMPELETING,
             TASK_DISABLE,
         };
 
@@ -62,13 +66,15 @@ namespace p2sp
 
     //////////////////////////////////////////////////////////////////////////
     // Static
-
     PushModule::p PushModule::inst_(new PushModule());
     static const int32_t QueryPushTaskTimeOutInMs = 5000;
     static const int32_t QueryPushTaskRetryMaxIntervalInSec = 3600;
-    static const int32_t PushWaitIntervalInSec = 3600;
-    static const int32_t ReportPushTaskCompeteTimeOutInMs = 5000;
+    static const int32_t QueryPushTaskWaitIntervalInSec = 1800; //30 minutes
+    static const int32_t FirstTimeQueryPushTaskWaitIntervalInSec = 60;//1 minute
 
+    static const int32_t ReportPushTaskCompeteTimeOutInMs = 5000;
+    static const int32_t MaxDownloadSpeedInKBS = 40;//40K
+    static const int32_t MaxPlayHistoryNum = 16;
     //////////////////////////////////////////////////////////////////////////
     // Methods
 
@@ -85,40 +91,38 @@ namespace p2sp
         , is_push_enabled_(true)
         , timer_(global_second_timer(), 1000, boost::bind(&PushModule::OnTimerElapsed, this, &timer_))
         , last_query_timer_(false)
-        , query_error_num_(0)
+        , query_sum_num_(0)
         , task_complete_error_num_(0)
         , global_speed_limit_in_kbps_(-1)
-        , push_wait_interval_in_sec_(PushWaitIntervalInSec)
+        , push_wait_interval_in_sec_(QueryPushTaskWaitIntervalInSec)
     {
     }
 
-    void PushModule::Start()
+    void PushModule::Start(const std::string& history_path)
     {
         if (true == is_running_) {
             return;
         }
+
         PUSH_DEBUG("Start");
 
         is_running_ = true;
 
-        push_server_domain_ = "ppvaps.pplive.com";
-        push_server_port_ = 6900;
+        push_server_domain_ = PUSH_SERVER;
+        push_server_port_ = PUSH_SERVER_PORT;
 
         state_.domain_ = push::DOMAIN_NONE;
 
-        CheckDiskSpace();
-        CheckUserState();
+        task_param_.ProtectTimeIntervalInSeconds = P2SPConfigs::PUSH_PROTECTION_INTERVAL_IN_SEC;
 
-        // init
-        push_task_.param_.ProtectTimeIntervalInSeconds = P2SPConfigs::PUSH_PROTECTION_INTERVAL_IN_SEC;
+        boost::filesystem::path path(history_path);
+        path /= PLAY_HISTORY_FILE;
 
-        if (push::DISK_YES == state_.disk_) {
-            // timer_ = framework::timer::PeriodicTimer::create(1000, shared_from_this());
-            timer_.start();
-        }
-        else {
-            PUSH_DEBUG("Disk Space Not Enough.");
-        }
+        play_history_mgr_ = PlayHistoryManager::create(path.file_string());
+        play_history_mgr_->LoadFromFile();
+
+        timer_.start();
+        last_query_timer_.start(); 
     }
 
     void PushModule::Stop()
@@ -128,6 +132,17 @@ namespace p2sp
         }
 
         timer_.stop();
+        last_query_timer_.stop();
+
+        if (push_download_task_) {
+            push_download_task_->Stop();
+            push_download_task_.reset();
+        }
+
+        if (play_history_mgr_) {
+            play_history_mgr_->SaveToFile();
+            play_history_mgr_.reset();
+        }
 
         is_running_ = false;
     }
@@ -145,9 +160,7 @@ namespace p2sp
 
         PUSH_DEBUG("ServerEndpoint = " << push_server_endpoint_);
 
-        if (push::TASK_QUERY == state_.task_) {
-            DoQueryPushTask();
-        }
+        DoQueryPushTask();
     }
 
     void PushModule::OnResolverFailed(boost::uint32_t error_code)
@@ -156,8 +169,30 @@ namespace p2sp
             return;
         }
 
-        PUSH_DEBUG("");
+        PUSH_DEBUG("resolve dns failed");
         state_.domain_ = push::DOMAIN_NONE;
+    }
+
+    bool PushModule::IsDownloadingPushTask() const
+    {
+        return push_download_task_;
+    }
+
+    bool PushModule::HavePushTask() const
+    {
+        return push_task_deq_.size() > 0;
+    }
+
+    bool PushModule::ShouldQueryPushServer() const
+    {
+        BOOST_ASSERT(last_query_timer_.running());
+        
+        if (query_sum_num_ == 0) {//first time
+            return last_query_timer_.elapsed() > FirstTimeQueryPushTaskWaitIntervalInSec * 1000;
+        }
+        else {
+            return last_query_timer_.elapsed() > (uint32_t)push_wait_interval_in_sec_ * 1000;
+        }
     }
 
     void PushModule::OnTimerElapsed(framework::timer::Timer * timer_ptr)
@@ -166,116 +201,93 @@ namespace p2sp
             return;
         }
 
-        if (timer_ptr == &timer_) 
-        {
-            // 每次任务完成时, 检查磁盘大小
-            // downloading
-            PUSH_DEBUG("state_.user_=" << state_.user_ << ", state_.task_" << state_.task_ << ", state_.disk_" << state_.disk_ << ", state_.domain_" << state_.domain_);
+        if (timer_ptr != &timer_) 
+            return;
 
-            state_.user_ = GetUserState();
-            CheckUsePush();
+        if (!BootStrapGeneralConfig::Inst()->UsePush()) {
+            return;
+        }
 
-            switch(state_.task_)
-            {
-            case push::TASK_NONE:
-                if (!last_query_timer_.running() || 
-                    last_query_timer_.elapsed() > (uint32_t)push_task_.param_.ProtectTimeIntervalInSeconds * 1000)
-                {            
-                    DoQueryPushTask();
-                }
-                break;
+        if (IsDownloadingPushTask()) {
+            BOOST_ASSERT(push_download_task_);
+            if (p2sp::ProxyModule::Inst()->IsWatchingMovie()) {
+                //if user is watching movie we should pause push download task
+                push_task_deq_.push_front(push_download_task_->GetPushTaskParam());
+                push_download_task_->Stop();
+                push_download_task_.reset();
+                return;
+            }
 
-            case push::TASK_WAIT:
-                assert(last_query_timer_.running());
-                if (last_query_timer_.elapsed() > (uint32_t)push_wait_interval_in_sec_ * 1000)
-                {
-                    DoQueryPushTask();
-                }
-                break;
-
-            case push::TASK_QUERY:
-                if (last_query_timer_.running() && last_query_timer_.elapsed() > QueryPushTaskTimeOutInMs)
-                {
-                    query_error_num_++;
-                    state_.task_ = push::TASK_QUERY_RETRY;
-                }
-                break;
-
-            case push::TASK_QUERY_RETRY:
-                {
-                    boost::uint32_t retry_interval_in_ms = query_error_num_ >= 2 ?
-                        QueryPushTaskRetryMaxIntervalInSec * 1000 : QueryPushTaskTimeOutInMs;
-                    
-                    if (last_query_timer_.elapsed() > retry_interval_in_ms)
-                    {
-                        DoQueryPushTask();
-                    }
-                }                
-                break;
-
-            case push::TASK_HAVE:
+            if (push_download_task_->IsTaskTerminated()) {
+                //current push download task terminate
+                push_download_task_.reset();
+                StartADownloadTask();//try to create a new push task
+            }
+            else {
                 LimitTaskSpeed();
-                break;
+            }
+        }
 
-            case push::TASK_COMPELETING:
-                if (task_complete_timer_.elapsed() > ReportPushTaskCompeteTimeOutInMs)
-                {
-                    ++task_complete_error_num_;
-                    if (task_complete_error_num_ < 3)
-                    {
-                        SendReportPushTaskCompletePacket(push_task_.rid_info_);
-                    }
-                    else
-                    {
-                        // 汇报失败三次以上放弃汇报
-                        // TODO(herain):2011-5-30:是不是应该有另一种途径精确统计push的资源总数
-                        state_.task_ = push::TASK_NONE;
-                    }
-                }
-                break;            
-
-            default:
-                break;
+        if (!IsDownloadingPushTask()) {
+            if (!HavePushTask() && ShouldQueryPushServer()) {
+                //request push task from push server
+                last_query_timer_.reset();   //reset
+                query_sum_num_++;
+                DoQueryPushTask();
+            }
+            else if (HavePushTask() && !p2sp::ProxyModule::Inst()->IsWatchingMovie()){
+                //if there is push task and user is not watching movie, start a push task
+                StartADownloadTask();
             }
         }
     }
 
     void PushModule::DoQueryPushTask()
     {
-        if (false == is_running_) 
-        {
+        if (false == is_running_) {
             return;
         }
 
         state_.task_ = push::TASK_QUERY;
-        if (push::DOMAIN_HAVE == state_.domain_) 
-        {
+        if (push::DOMAIN_HAVE == state_.domain_) {
             PUSH_DEBUG("DOMAIN_HAVE, QueryTask; Server = " << push_server_endpoint_);
-            //
-            last_transaction_id_ = protocol::Packet::NewTransactionID();
-
-            last_query_timer_.start();   // start and reset
-            protocol::QueryPushTaskPacket query_push_task_request(last_transaction_id_, AppModule::Inst()->GetUniqueGuid(), 
-                push_server_endpoint_, 
-                storage::Storage::Inst()->GetUsedDiskSpace(), 
-                P2PModule::Inst()->GetUploadBandWidthInKBytes(), 
-                statistic::StatisticModule::Inst()->GetRecentMinuteUploadDataSpeedInKBps());
-            AppModule::Inst()->DoSendPacket(query_push_task_request);
+            SendQueryPushTaskPacket();
         }
-        else if (push::DOMAIN_NONE == state_.domain_) 
-        {
+        else if (push::DOMAIN_NONE == state_.domain_) {
             // resolve
             PUSH_DEBUG("DOMAIN_NONE, ResolveDomain");
             DoResolvePushServer();
         }
-        else if (push::DOMAIN_RESOLVE == state_.domain_) 
-        {
+        else if (push::DOMAIN_RESOLVE == state_.domain_) {
             PUSH_DEBUG("Push::DOMAIN_RESOLVE");
         }
-        else
-        {
-            assert(!"Invalid Domain State");
+        else {
+            BOOST_ASSERT(!"Invalid Domain State");
         }
+    }
+
+    void PushModule::SendQueryPushTaskPacket()
+    {
+        last_transaction_id_ = protocol::Packet::NewTransactionID();
+
+        protocol::QueryPushTaskPacketV2 query_push_task_request(last_transaction_id_, AppModule::Inst()->GetUniqueGuid(), 
+            push_server_endpoint_, 
+            storage::Storage::Inst()->GetUsedDiskSpace(), 
+            P2PModule::Inst()->GetUploadBandWidthInKBytes(), 
+            statistic::StatisticModule::Inst()->GetRecentMinuteUploadDataSpeedInKBps());
+        
+        //get local play history and convert it to the one server can handle
+        const std::deque<LocalPlayHistoryItem>& play_history_vec = play_history_mgr_->GetPlayHistory();
+        LocalHistoryConverter::Convert(play_history_vec.begin(), play_history_vec.end(), 
+            std::back_inserter(query_push_task_request.request.play_history_vec_));
+        
+        //limit max play history num
+        if (query_push_task_request.request.play_history_vec_.size() > MaxPlayHistoryNum) {
+            query_push_task_request.request.play_history_vec_.resize(MaxPlayHistoryNum);
+        }
+
+        //send it to server
+        AppModule::Inst()->DoSendPacket(query_push_task_request);
     }
 
     void PushModule::DoResolvePushServer()
@@ -291,219 +303,96 @@ namespace p2sp
         resolver->DoResolver();
     }
 
-    void PushModule::OnPushTaskResponse(protocol::QueryPushTaskPacket const & response)
+    void PushModule::OnPushTaskResponse(protocol::QueryPushTaskPacketV2 const & response)
     {
-        if (false == is_running_) 
-        {
+        if (false == is_running_) {
             return;
         }
 
-        query_error_num_ = 0;
-
-        if (response.transaction_id_ == last_transaction_id_) 
-        {
-            query_error_num_ = 0;
+        if (response.transaction_id_ == last_transaction_id_) {
             last_transaction_id_ = 0;
-            assert(state_.task_ == push::TASK_QUERY);
+            BOOST_ASSERT(state_.task_ == push::TASK_QUERY);
 
-            if (response.error_code_ == 0)
-            {
-                push_task_.param_ = response.response.response_push_task_param_;
-                push_task_.refer_url_ = response.response.response_refer_url_;
-                push_task_.rid_info_ = response.response.rid_info_;
-                push_task_.url_ = response.response.response_url_;
-                PUSH_DEBUG("PushTask = " << push_task_);
+            if (response.error_code_ == 0) {
+                BOOST_ASSERT(push_task_deq_.size() == 0);
+                if (push_task_deq_.size() != 0) {
+                    return;
+                }
+                //save control parameter
+                task_param_ = response.response.response_push_task_param_;
 
-                StartCurrentTask();
+                //save push task in push_task_deq_
+                std::copy(response.response.push_task_vec_.begin(), response.response.push_task_vec_.end(), 
+                    std::back_inserter(push_task_deq_));
+                
+                // if user is not watching movie, then start a push task
+                if (!p2sp::ProxyModule::Inst()->IsWatchingMovie()) {
+                    StartADownloadTask();
+                }
             }
-            else if(response.error_code_ == protocol::QueryPushTaskPacket::NO_TASK)
-            {
-                state_.task_ = push::TASK_WAIT;
+            else if(response.error_code_ == protocol::QueryPushTaskPacket::NO_TASK) {
                 push_wait_interval_in_sec_ = response.response.push_wait_interval_in_sec_;
             }
         }
-        else
-        {
+        else {
             PUSH_DEBUG("InvalidTransID From " << response.end_point << ", TransID " << response.transaction_id_);
         }
     }
 
-    void PushModule::CheckDiskSpace()
+    void PushModule::StartADownloadTask()
     {
         if (false == is_running_) {
             return;
         }
-#if DISK_MODE
-        boost::uint64_t free_size = storage::Storage::Inst()->GetFreeSize();
-        boost::uint64_t store_size = storage::Storage::Inst()->GetStoreSize();
-        if (free_size * 2 > store_size) {
-            state_.disk_ = push::DISK_YES;
-        }
-        else {
-            state_.disk_ = push::DISK_NO;
-        }
-#endif
-    }
-
-    void PushModule::CheckUserState()
-    {
-        if (false == is_running_) {
+        
+        if (push_task_deq_.size() == 0) {
             return;
         }
-
-        state_.user_ = GetUserState();
-        PUSH_DEBUG("UserState = " << state_.user_ << " [0=NONE, 1=IDLE, 2=AWAY]");
-    }
-
-    boost::uint32_t PushModule::GetUserState() const
-    {
-        storage::DTType desk_type = storage::Performance::Inst()->GetCurrDesktopType();
-        PUSH_DEBUG("GetCurrDesktopType:" << desk_type);
-        if (storage::DT_SCREEN_SAVER == desk_type || storage::DT_WINLOGON == desk_type) {
-            if (storage::Performance::Inst()->IsIdleInSeconds(P2SPConfigs::PUSH_AWAY_TIME_IN_SEC)) {
-                return push::USER_AWAY;
-            }
-        }
-        else if (storage::Performance::Inst()->IsIdleInSeconds(P2SPConfigs::PUSH_IDLE_TIME_IN_SEC)) {
-            return push::USER_IDLE;
-        }
-
-        return push::USER_NONE;
-    }
-
-    void PushModule::StartCurrentTask()
-    {
-        if (false == is_running_) {
-            return;
-        }
-
-        PUSH_DEBUG("Start Task: " << push_task_.url_);
 
         state_.task_ = push::TASK_HAVE;
 
-        ProxyModule::Inst()->StartDownloadFileByRid(push_task_.rid_info_,
-            protocol::UrlInfo(push_task_.url_, push_task_.refer_url_),
-            (protocol::TASK_TYPE)push_task_.param_.TaskType, true);
+        push_download_task_ = PushDownloadTask::create(global_io_svc(), push_task_deq_[0]);
+        push_task_deq_.pop_front();
+        push_download_task_->Start();
 
         LimitTaskSpeed();
     }
 
     void PushModule::LimitTaskSpeed()
     {
-        if (false == is_running_) 
-        {
+        if (false == is_running_) {
+            return;
+        }
+
+        if (!push_download_task_) {
             return;
         }
 
         uint32_t bandwidth = std::max(statistic::StatisticModule::Inst()->GetBandWidth(), (uint32_t)64 * 1024);
         int speed_limit;
-        if (push::USER_AWAY == state_.user_) 
-        {
-            speed_limit = -1;
-            PUSH_DEBUG(" USER_AWAY, SpeedLimit = " << speed_limit);
-        }
-        else if (push::USER_IDLE == state_.user_) 
-        {
-            
-            // check download drivers
-            speed_limit = 1.0 * bandwidth * push_task_.param_.BandwidthRatioWhenIdle / (255 * 1024);
-            LimitMinMax(speed_limit, push_task_.param_.MinDownloadSpeedInKBps, push_task_.param_.MaxDownloadSpeedInKBpsWhenIdle);
-            PUSH_DEBUG(" USER_IDLE, SpeedLimit = " << speed_limit << ", BandWidth = " << statistic::StatisticModule::Inst()->GetBandWidth());
-        }
-        else
-        {
-            assert(push::USER_NONE == state_.user_);
-            boost::uint32_t bandwidth = (std::max)(statistic::StatisticModule::Inst()->GetBandWidth(), (boost::uint32_t)64 * 1024);
-            speed_limit = 1.0 * bandwidth * push_task_.param_.BandwidthRatioWhenNormal / (255 * 1024);
-            LimitMinMax(speed_limit, push_task_.param_.MinDownloadSpeedInKBps, push_task_.param_.MaxDownloadSpeedInKBpsWhenNormal);
-            PUSH_DEBUG(" USER_NONE, SpeedLimit = " << speed_limit << ", BandWidth = " << statistic::StatisticModule::Inst()->GetBandWidth());
-        }
 
-        // herain:有全局限速的时候受全局限速的限制
-        if (global_speed_limit_in_kbps_ >= 0)
-        {
+        BOOST_ASSERT(push::USER_NONE == state_.user_);
+        speed_limit = 1.0 * bandwidth * task_param_.BandwidthRatioWhenNormal / (255 * 1024);
+        LimitMinMax(speed_limit, task_param_.MinDownloadSpeedInKBps, task_param_.MaxDownloadSpeedInKBpsWhenNormal);
+        PUSH_DEBUG(" USER_NONE, SpeedLimit = " << speed_limit << ", BandWidth = " << statistic::StatisticModule::Inst()->GetBandWidth());
+       
+        if (global_speed_limit_in_kbps_ >= 0) {
             LIMIT_MAX(speed_limit, global_speed_limit_in_kbps_);
         }
 
-        ProxyModule::Inst()->LimitDownloadSpeedInKBps(push_task_.url_, speed_limit);
-    }
-
-    string PushModule::GetCurrentTaskUrl() const
-    {
-        if (false == is_running_) {
-            return string();
-        }
-        string url;
-        if (push::TASK_HAVE == state_.task_) {
-            url = push_task_.url_;
-        }
-        return url;
-    }
-
-    protocol::RidInfo PushModule::GetCurrentTaskRidInfo() const
-    {
-        protocol::RidInfo rid_info;
-        if (false == is_running_) {
-            return rid_info;
-        }
-        if (push::TASK_HAVE == state_.task_) {
-            rid_info = push_task_.rid_info_;
-        }
-        return rid_info;
-    }
-
-    void PushModule::ReportPushTaskCompete(const protocol::RidInfo & rid_info)
-    {
-        if (state_.task_ == push::TASK_HAVE)
-        {
-            // herian:2011-6-22:下面的assert在push开关被频繁关闭打开的情况下是可能被触发的
-            assert(rid_info == push_task_.rid_info_);
-            if (rid_info == push_task_.rid_info_)
-            {
-                state_.task_ = push::TASK_COMPELETING;
-                task_complete_error_num_ = 0;
-            }
-            
-            SendReportPushTaskCompletePacket(rid_info);
-        }
-        else
-        {
-            assert(state_.task_ == push::TASK_DISABLE);
-        }
-    }
-
-    void PushModule::SendReportPushTaskCompletePacket(const protocol::RidInfo & ridinfo)
-    {
-        protocol::ReportPushTaskCompletedPacket report_packet(
-            protocol::Packet::NewTransactionID(), AppModule::Inst()->GetUniqueGuid(), 
-            ridinfo, push_server_endpoint_);
-        AppModule::Inst()->DoSendPacket(report_packet);
-        task_complete_timer_.reset();
+        LIMIT_MAX(speed_limit, MaxDownloadSpeedInKBS);
+        
+        push_download_task_->LimitSpeed(speed_limit);
     }
 
     void PushModule::OnUdpRecv(const protocol::ServerPacket & packet)
     {
-        switch(packet.PacketAction)
-        {
-        case protocol::QueryPushTaskPacket::Action:
-            OnPushTaskResponse((protocol::QueryPushTaskPacket const &)packet);
-            break;
-        case protocol::ReportPushTaskCompletedPacket::Action:
-            OnReportPushTaskCompleteResponse((protocol::ReportPushTaskCompletedPacket const &)packet);
+        switch(packet.PacketAction) {
+        case protocol::QueryPushTaskPacketV2::Action:
+            OnPushTaskResponse((protocol::QueryPushTaskPacketV2 const &)packet);
             break;
         default:
             break;
-        }
-    }
-
-    void PushModule::OnReportPushTaskCompleteResponse(protocol::ReportPushTaskCompletedPacket const & packet)
-    {
-        // herian:2011-6-22:下面两处assert在push开关被频繁关闭打开的情况下是可能被触发的
-        assert(state_.task_ == push::TASK_COMPELETING);
-        assert(packet.response.rid_info_ == push_task_.rid_info_);
-        if (packet.response.rid_info_ == push_task_.rid_info_)
-        {
-            state_.task_ = push::TASK_NONE;
         }
     }
 
@@ -512,19 +401,5 @@ namespace p2sp
         global_speed_limit_in_kbps_ = speed_limit_in_KBps;
     }
 
-    void PushModule::CheckUsePush()
-    {
-        bool use_push = BootStrapGeneralConfig::Inst()->UsePush();
-        if (state_.task_ != push::TASK_DISABLE && !use_push)
-        {
-            state_.task_ = push::TASK_DISABLE;
-            DebugLog("CheckUsePush use push no");
-        }
-        else if (state_.task_ == push::TASK_DISABLE && use_push)
-        {
-            state_.task_ = push::TASK_NONE;
-            DebugLog("CheckUsePush use push yes");
-        }
-    }
 #endif
 }

@@ -244,7 +244,7 @@ namespace p2sp
 #ifdef DISK_MODE
         if (appmodule_start_interface->use_push_) 
         {
-            PushModule::Inst()->Start();
+            PushModule::Inst()->Start(appmodule_start_interface->config_path_);
         }
 #endif  // #ifdef DISK_MODE
 
@@ -661,7 +661,7 @@ namespace p2sp
         register_bootstrap_packet(*udp_server_);
         register_notify_packet(*udp_server_);
         register_live_peer_packet(*udp_server_);
-        register_push_packet(*udp_server_);
+        register_push_packetv2(*udp_server_);
     }
 
     boost::shared_ptr<statistic::BufferringMonitor> AppModule::CreateBufferringMonitor(const RID& rid)

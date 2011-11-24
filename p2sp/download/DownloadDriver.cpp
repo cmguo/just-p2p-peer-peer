@@ -928,13 +928,6 @@ namespace p2sp
             proxy_connection_.reset();
         }
 
-#ifdef DISK_MODE
-        if (IsPush())
-        {
-            PushModule::Inst()->ReportPushTaskCompete(rid_info_);
-        }
-#endif
-
         is_running_ = false;
     }
 
@@ -981,6 +974,9 @@ namespace p2sp
         // M1: UDP丢包率
         // N1: HTTP平均下载的长度
         // O1: 冗余率
+		// P1: tinydrag HTTP 状态码
+
+		// R1: 是否是push任务
 
         DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
 
@@ -1249,7 +1245,7 @@ namespace p2sp
 
         // P1: drag状态码
         info.tiny_drag_http_status = tiny_drag_http_status_;
-
+       
         // Q1: SN下载字节数
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
@@ -1259,6 +1255,8 @@ namespace p2sp
         {
             info.total_sn_download_bytes = 0;
         }
+        // R1: 是否是push
+        info.is_push = is_push_;
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
@@ -1307,7 +1305,10 @@ namespace p2sp
         log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
         log_stream << "&O1=" << (uint32_t)info.retry_rate;
         log_stream << "&P1=" << (uint32_t)info.tiny_drag_http_status;
+
         log_stream << "&Q1=" << (uint32_t)info.total_sn_download_bytes;
+        log_stream << "&R1=" << (uint32_t)info.is_push;
+
 
         string log = log_stream.str();
 

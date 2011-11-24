@@ -203,6 +203,8 @@ namespace storage
 
         string GetFullName(string filename);
 
+		void GetAllCompletedFiles(std::vector<std::string>& filename_vec) const;
+
         virtual SpaceManager::p GetSpaceManager()
         {
             return space_manager_;

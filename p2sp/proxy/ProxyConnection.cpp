@@ -30,6 +30,7 @@
 #include "downloadcenter/DownloadCenterModule.h"
 #include "p2sp/proxy/LiveProxySender.h"
 #include "p2sp/download/LiveDownloadDriver.h"
+#include "p2sp/push/PushModule.h"
 
 #ifdef AUTO_SVN_VERSION
 #include "autopeerversion.hpp"
@@ -74,6 +75,9 @@ namespace p2sp
         , send_count_(0)
         , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
+#ifdef DISK_MODE
+		, play_history_item_handle_(PlayHistoryManager::InvalidHandle())
+#endif
     {
     }
 
@@ -91,6 +95,9 @@ namespace p2sp
         , send_count_(0)
         , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
+#ifdef DISK_MODE
+		, play_history_item_handle_(PlayHistoryManager::InvalidHandle())
+#endif
     {
     }
 
@@ -214,7 +221,12 @@ namespace p2sp
         if (is_running_ == false) return;
 
         LOG(__EVENT, "proxy", "ProxyConnection::WillStop " << shared_from_this());
-
+#ifdef DISK_MODE
+		if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
+			PushModule::Inst()->GetPlayHistoryManager()->StopVideoPlay(play_history_item_handle_);
+            play_history_item_handle_ = PlayHistoryManager::InvalidHandle();
+		}
+#endif
 
         will_stop_ = true;
 
@@ -279,7 +291,15 @@ namespace p2sp
                 << GetPlayingPosition() << " start_possition " << start_position);
             return;
         }
-
+#ifdef DISK_MODE		
+		if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
+            if (download_driver_) {
+                PushModule::Inst()->GetPlayHistoryManager()->SetVideoSize(play_history_item_handle_, download_driver_->GetFileLength());
+                PushModule::Inst()->GetPlayHistoryManager()->SetVideoBitrate(play_history_item_handle_, download_driver_->GetDataRate());
+            }
+			PushModule::Inst()->GetPlayHistoryManager()->SetVideoPlayPosition(play_history_item_handle_, GetPlayingPosition());
+		}
+#endif
         LOG(__WARN, "proxy", "proxy_sender_->OnRecvSubPiece, position = " << start_position
             << ", buffer.size = " << buffers.size());
 
@@ -801,7 +821,10 @@ namespace p2sp
             string filename = ProxyModule::ParseOpenServiceFileName(uri);
             download_driver_->SetOpenServiceFileName(filename);
             string segno = base::util::GetSegno(uri);
-
+#ifdef DISK_MODE			
+			BOOST_ASSERT(play_history_item_handle_ == PlayHistoryManager::InvalidHandle());
+			play_history_item_handle_ = PushModule::Inst()->GetPlayHistoryManager()->StartVideoPlay(filename);
+#endif
             if (false == save_mode_)
             {
                 int lastsegno = ProxyModule::Inst()->GetLastSegno(play_info->GetPlayerId());
