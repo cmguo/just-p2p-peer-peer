@@ -69,7 +69,7 @@ namespace p2sp
     PushModule::p PushModule::inst_(new PushModule());
     static const int32_t QueryPushTaskTimeOutInMs = 5000;
     static const int32_t QueryPushTaskRetryMaxIntervalInSec = 3600;
-    static const int32_t QueryPushTaskWaitIntervalInSec = 1800; //30 minutes
+    static const int32_t QueryPushTaskWaitIntervalInSec = 3600; //60 minutes
     static const int32_t FirstTimeQueryPushTaskWaitIntervalInSec = 60;//1 minute
 
     static const int32_t ReportPushTaskCompeteTimeOutInMs = 5000;
