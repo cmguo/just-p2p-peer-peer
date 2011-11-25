@@ -7,7 +7,7 @@
 
 namespace p2sp
 {
-    const size_t LiveUploadManager::DesirableUploadSpeedPerPeerInKBps = 3;
+    const size_t LiveUploadManager::DesirableUploadSpeedPerPeerInKBps = 2;
 
     bool LiveUploadManager::TryHandlePacket(const protocol::Packet & packet)
     {
