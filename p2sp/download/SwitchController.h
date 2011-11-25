@@ -491,6 +491,7 @@ namespace p2sp
                 , rest_play_time_when_switched_(0)
                 , is_http_fast_(true)
                 , changed_to_http_because_of_large_upload_(false)
+                , blocked_this_time_(false)
             {
             }
 
@@ -505,6 +506,15 @@ namespace p2sp
             boost::uint32_t rest_play_time_when_switched_;
             bool is_http_fast_;
             bool changed_to_http_because_of_large_upload_;
+
+            bool blocked_this_time_;
+
+            enum ChangedToP2PCondition
+            {
+                REST_PLAYABLE_TIME_ENOUGTH = 0,
+                LONG_TIME_USING_CDN = 1,
+                BLOCK = 2,
+            };
 
         private:
             void ChangeTo3200();

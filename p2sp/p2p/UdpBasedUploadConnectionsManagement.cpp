@@ -270,4 +270,21 @@ namespace p2sp
 
         return false;
     }
+
+    void UdpBasedUploadConnectionsManagement::GetUploadingPeersExcludeSameSubnet(std::set<boost::asio::ip::address> & uploading_peers) const
+    {
+        for (std::set<boost::asio::ip::udp::endpoint>::const_iterator iter = accept_uploading_peers_.begin();
+            iter != accept_uploading_peers_.end(); ++iter)
+        {
+            if (!IsPeerFromSameSubnet(*iter))
+            {
+                uploading_peers.insert(iter->address());
+            }
+        }
+    }
+
+    boost::uint32_t UdpBasedUploadConnectionsManagement::GetAcceptUploadingPeersCount() const
+    {
+        return accept_uploading_peers_.size();
+    }
 }

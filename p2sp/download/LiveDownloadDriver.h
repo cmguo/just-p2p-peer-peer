@@ -66,6 +66,21 @@ namespace p2sp
         boost::uint32_t         MaxUdpServerDownloadSpeed;  // 从UdpServer下载的最大速度
         boost::uint32_t         UploadBytes;            // 上传字节数
         boost::uint32_t         DownloadTime;           // 下载时间
+        boost::uint32_t         TimesOfUseCdnBecauseLargeUpload;
+        boost::uint32_t         TimeElapsedUseCdnBecauseLargeUpload;
+        boost::uint32_t         DownloadBytesUseCdnBecauseLargeUpload;
+        boost::uint32_t         TimesOfUseUdpServerBecauseUrgent;
+        boost::uint32_t         TimeElapsedUseUdpServerBecauseUrgent;
+        boost::uint32_t         DownloadBytesUseUdpServerBecauseUrgent;
+        boost::uint32_t         TimesOfUseUdpServerBecauseLargeUpload;
+        boost::uint32_t         TimeElapsedUseUdpServerBecauseLargeUpload;
+        boost::uint32_t         DownloadBytesUseUdpServerBecauseLargeUpload;
+        boost::uint32_t         MaxUploadSpeedIncludeSameSubnet;
+        boost::uint32_t         MaxUploadSpeedExcludeSameSubnet;
+        boost::uint32_t         MaxUnlimitedUploadSpeedInRecord;
+        boost::uint8_t          ChangeToP2PConditionWhenStart;
+        boost::uint32_t         ChangedToHttpTimesWhenUrgent;
+        boost::uint32_t         BlockTimesWhenUseHttpUnderUrgentSituation;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -224,6 +239,11 @@ namespace p2sp
 
         virtual void OnConfigUpdated();
 
+        boost::uint8_t GetLostRate() const;
+        boost::uint8_t GetRedundancyRate() const;
+        boost::uint32_t GetTotalRequestSubPieceCount() const;
+        boost::uint32_t GetTotalRecievedSubPieceCount() const;
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();
@@ -267,6 +287,12 @@ namespace p2sp
         virtual bool ShouldUseCDNWhenLargeUpload() const;
         virtual boost::uint32_t GetRestPlayTimeDelim() const;
         virtual bool IsUploadSpeedLargeEnough();
+
+        virtual void SetUseCdnBecauseOfLargeUpload();
+        virtual void SetUseP2P();
+        virtual void SubmitChangedToP2PCondition(boost::uint8_t condition);
+        virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1);
+        virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1);
 
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
@@ -344,6 +370,19 @@ namespace p2sp
         boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
 
         framework::timer::TickCounter download_time_;
+
+        boost::uint32_t times_of_use_cdn_because_of_large_upload_;
+        boost::uint32_t time_elapsed_use_cdn_because_of_large_upload_;
+        boost::uint32_t download_bytes_use_cdn_because_of_large_upload_;
+
+        framework::timer::TickCounter use_cdn_tick_counter_;
+        boost::uint32_t http_download_bytes_when_changed_to_cdn_;
+
+        bool using_cdn_because_of_large_upload_;
+
+        boost::uint8_t changed_to_p2p_condition_when_start_;
+        boost::uint32_t changed_to_http_times_when_urgent_;
+        boost::uint32_t block_times_when_use_http_under_urgent_situation_;
 
     private:
         // statistic

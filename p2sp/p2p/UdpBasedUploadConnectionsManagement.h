@@ -28,7 +28,16 @@ namespace p2sp
                 uploading_peers.insert(iter->address());
             }
         }
-        
+
+        void GetUploadingPeers(std::set<boost::asio::ip::udp::endpoint> & uploading_peers) const
+        {
+            for (std::set<boost::asio::ip::udp::endpoint>::const_iterator iter = accept_uploading_peers_.begin();
+                iter != accept_uploading_peers_.end(); ++iter)
+            {
+                uploading_peers.insert(*iter);
+            }
+        }
+
         bool IsPeerFromSameSubnet(const boost::asio::ip::udp::endpoint & peer_endpoint) const;
 
         bool IsPeerConnected(const boost::asio::ip::udp::endpoint & peer_endpoint) const
@@ -92,6 +101,10 @@ namespace p2sp
             speed.first = current_speed;
             speed.second.reset();
         }
+
+        void GetUploadingPeersExcludeSameSubnet(std::set<boost::asio::ip::address> & uploading_peers) const;
+
+        boost::uint32_t GetAcceptUploadingPeersCount() const;
 
     private:
         bool KickABadUploadConnection(const PEER_UPLOAD_INFO & potential_new_peer_info);

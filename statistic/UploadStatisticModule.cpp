@@ -112,6 +112,7 @@ namespace statistic
             upload_info_.peer_upload_info[i].ip = ip;
             upload_info_.peer_upload_info[i].port = 0;
             upload_info_.peer_upload_info[i].upload_speed = iter->second.GetSpeedInfo().NowUploadSpeed;
+            upload_info_.peer_upload_info[i].peer_info = upload_peer_info_[iter->first];
             i++;
             LOG(__DEBUG, "ppbug", "IP = " << upload_info_.peer_upload_info[i].ip << " PORT = " << upload_info_.peer_upload_info[i].port);
         }
@@ -130,5 +131,32 @@ namespace statistic
     uint32_t UploadStatisticModule::GetSharedMemorySize()
     {
         return sizeof(upload_info_);
+    }
+
+    boost::uint8_t UploadStatisticModule::GetUploadCount() const
+    {
+        return upload_info_.peer_upload_count;
+    }
+
+    boost::uint32_t UploadStatisticModule::GetUploadSpeed() const
+    {
+        return upload_info_.upload_speed;
+    }
+
+    void UploadStatisticModule::SubmitUploadPeerInfo(const boost::asio::ip::address & address, const statistic::PEER_INFO & peer_info)
+    {
+        upload_peer_info_[address] = peer_info;
+    }
+
+    boost::uint32_t UploadStatisticModule::GetUploadSpeed(const boost::asio::ip::address & address)
+    {
+        std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.find(address);
+
+        if (iter == m_upload_map.end())
+        {
+            return 0;
+        }
+
+        return iter->second.GetSpeedInfo().NowUploadSpeed;
     }
 }

@@ -1963,4 +1963,29 @@ namespace p2sp
 
         return true;
     }
+
+    boost::uint32_t ProxyConnection::GetLiveRestPlayableTime() const
+    {
+        return live_download_driver_ ? live_download_driver_->GetRestPlayableTime() : 0;
+    }
+
+    boost::uint8_t ProxyConnection::GetLostRate() const
+    {
+        return live_download_driver_ ? live_download_driver_->GetLostRate() : 0;
+    }
+
+    boost::uint8_t ProxyConnection::GetRedundancyRate() const
+    {
+        return live_download_driver_ ? live_download_driver_->GetRedundancyRate() : 0;
+    }
+
+    boost::uint32_t ProxyConnection::GetLiveTotalRequestSubPieceCount() const
+    {
+        return live_download_driver_ ? live_download_driver_->GetTotalRequestSubPieceCount() : 0;
+    }
+
+    boost::uint32_t ProxyConnection::GetLiveTotalRecievedSubPieceCount() const
+    {
+        return live_download_driver_ ? live_download_driver_->GetTotalRecievedSubPieceCount() : 0;
+    }
 }

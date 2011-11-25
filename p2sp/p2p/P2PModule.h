@@ -97,6 +97,8 @@ namespace p2sp
 
         bool IsConnectionPolicyEnable();
 
+        boost::uint32_t GetDownloadConnectedCount() const;
+
     private:
         // 变量
         typedef std::map<RID, P2PDownloader__p> RIDIndexerMap;

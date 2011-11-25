@@ -182,6 +182,16 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
+        if (packet_.PacketAction == protocol::PeerInfoPacket::Action)
+        {
+            // 由于PeerInfoPacket中没有传Rid，所以对所有的LiveP2PDownloader都调用OnUdpRecv
+            for (std::map<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.begin();
+                iter != live_rid_index_.end(); ++iter)
+            {
+                iter->second->OnUdpRecv(packet_);
+            }
+        }
+
         // Upload Packet
         if (UploadModule::Inst()->TryHandlePacket(packet_))
         {
@@ -457,5 +467,18 @@ namespace p2sp
     bool P2PModule::IsConnectionPolicyEnable()
     {
         return is_connection_policy_enable_;
+    }
+
+    boost::uint32_t P2PModule::GetDownloadConnectedCount() const
+    {
+        boost::uint32_t connected_count = 0;
+
+        for (std::map<RID, LiveP2PDownloader__p>::const_iterator iter = live_rid_index_.begin();
+            iter != live_rid_index_.end(); ++iter)
+        {
+            connected_count += iter->second->GetConnectedPeersCount();
+        }
+
+        return connected_count;
     }
 }

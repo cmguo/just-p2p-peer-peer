@@ -98,6 +98,10 @@ namespace p2sp
 
         void SetUploadUserSpeedLimitInKBps(boost::int32_t user_speed_in_KBps);
 
+        boost::uint32_t GetMaxUnlimitedUploadSpeedInRecord() const;
+		boost::uint32_t GetMaxUploadSpeedIncludeSameSubnet() const;
+        boost::uint32_t GetMaxUploadSpeedExcludeSameSubnet() const;
+
     private:
         UploadModule();
 
@@ -117,6 +121,8 @@ namespace p2sp
         boost::int32_t CalcUploadSpeedLimitOnPingPolicy(bool is_network_good);
 
         void SubmitUploadInfoStatistic();
+
+        void MeasureLiveMaxUploadSpeedExcludeSameSubnet();
 
     private:
         
@@ -148,6 +154,11 @@ namespace p2sp
         boost::int32_t max_speed_in_KBps_;
 
         UploadSpeedParam upload_speed_param_;
+
+        boost::uint32_t max_upload_speed_include_same_subnet_;
+        boost::shared_ptr<LiveUploadManager> live_upload_manager_;
+        boost::uint32_t live_max_upload_speed_exclude_same_subnet_;
+
     };
 }
 

@@ -10,7 +10,7 @@
 #include "p2sp/p2p/Exchanger.h"
 #include "p2sp/p2p/PeerConnector.h"
 #include "storage/LiveInstance.h"
-
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -104,6 +104,7 @@ namespace p2sp
 #ifdef DUMP_OBJECT
         , public count_object_allocate<LiveP2PDownloader>
 #endif
+        , public ConfigUpdateListener
     {
     public:
         typedef boost::shared_ptr<LiveP2PDownloader> p;
@@ -152,6 +153,9 @@ namespace p2sp
         virtual void SetDownloadPriority(boost::int32_t) {}
         virtual uint32_t GetMaxConnectCount();
         virtual bool IsLive() {return true;}
+
+        // ConfigUpdateListener
+        virtual void OnConfigUpdated();
 
     public:
         void Start();
@@ -245,17 +249,31 @@ namespace p2sp
         boost::uint32_t GetMinRestTimeInSeconds() const;
         boost::uint32_t GetTotalUdpServerDataBytes() const;
 
+        void SubmitUdpServerDownloadBytes(boost::uint32_t bytes);
+
+        boost::uint32_t GetTimesOfUseUdpServerBecauseOfUrgent() const;
+        boost::uint32_t GetTimesOfUseUdpServerBecauseOfLargeUpload() const;
+        boost::uint32_t GetTimeElapsedUseUdpServerBecauseOfUrgent() const;
+        boost::uint32_t GetTimeElapsedUseUdpServerBecauseOfLargeUpload() const;
+        boost::uint32_t GetDownloadBytesUseUdpServerBecauseOfUrgent() const;
+        boost::uint32_t GetDownloadBytesUseUdpServerBecauseOfLargeUpload() const;
+
+        boost::uint8_t GetLostRate() const;
+        boost::uint8_t GetRedundancyRate() const;
+
     private:
         void CheckBlockComplete();
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
-        bool ShouldUseUdpServer() const;
+        bool ShouldUseUdpServer();
 
         storage::LivePosition GetMinPlayingPosition() const;
         void EliminateElapsedBlockCountMap(boost::uint32_t block_id);
 
         void DeleteAllUdpServer();
         bool IsAheadOfMostPeers() const;
+
+        void SendPeerInfo();
 
     public:
         bool is_running_;
@@ -298,6 +316,21 @@ namespace p2sp
         bool should_use_udpserver_;
         framework::timer::TickCounter use_udpserver_tick_counter_;
 
+        enum UseUdpServerReason
+        {
+            NO_USE_UDPSERVER = 0,
+            URGENT = 1,
+            LARGE_UPLOAD = 2,
+        }use_udpserver_reason_;
+
+        boost::uint32_t times_of_use_udpserver_because_of_urgent_;
+        boost::uint32_t times_of_use_udpserver_because_of_large_upload_;
+        boost::uint32_t time_elapsed_use_udpserver_because_of_urgent_;
+        boost::uint32_t time_elapsed_use_udpserver_because_of_large_upload_;
+        boost::uint32_t download_bytes_use_udpserver_because_of_urgent_;
+        boost::uint32_t download_bytes_use_udpserver_because_of_large_upload_;
+
+        boost::uint32_t send_peer_info_packet_interval_in_second_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

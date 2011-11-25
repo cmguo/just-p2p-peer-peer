@@ -255,6 +255,13 @@ namespace p2sp
         virtual boost::uint32_t GetRestPlayTimeDelim() const { return 0; }
         virtual bool IsUploadSpeedLargeEnough() { return true; }
 
+        virtual void SetUseCdnBecauseOfLargeUpload() {};
+        virtual void SetUseP2P() {};
+        virtual void SubmitChangedToP2PCondition(boost::uint8_t condition) {};
+        virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1) {};
+        virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) {};
+
+
     private:
         HttpDownloader__p AddHttpDownloader(const protocol::UrlInfo& url_info, bool is_orginal = false);
 

@@ -381,6 +381,57 @@ namespace statistic
         }
     };
 
+    struct PEER_INFO
+    {
+        boost::uint8_t download_connected_count_;
+        boost::uint8_t upload_connected_count_;
+        boost::uint32_t mine_upload_speed_;
+        boost::uint32_t max_upload_speed_;
+        boost::uint32_t rest_playable_time_;
+        boost::uint8_t lost_rate_;
+        boost::uint8_t redundancy_rate_;
+
+        PEER_INFO()
+        {
+            download_connected_count_ = 0;
+            upload_connected_count_ = 0;
+            mine_upload_speed_ = 0;
+            max_upload_speed_ = 0;
+            rest_playable_time_ = 0;
+            lost_rate_ = 0;
+            redundancy_rate_ = 0;
+        }
+
+        PEER_INFO(boost::uint8_t download_connected_count, boost::uint8_t upload_connected_count, boost::uint32_t mine_upload_speed,
+            boost::uint32_t max_upload_speed, boost::uint32_t rest_playable_time, boost::uint8_t lost_rate, boost::uint8_t redundancy_rate)
+        {
+            download_connected_count_ = download_connected_count;
+            upload_connected_count_ = upload_connected_count;
+            mine_upload_speed_ = mine_upload_speed;
+            max_upload_speed_ = max_upload_speed;
+            rest_playable_time_ = rest_playable_time;
+            lost_rate_ = lost_rate;
+            redundancy_rate_ = redundancy_rate;
+        }
+
+        void Clear()
+        {
+            memset(this, 0, sizeof(PEER_INFO));
+        }
+
+        template <typename Archive>
+        void serialize(Archive & ar)
+        {
+            ar & download_connected_count_;
+            ar & upload_connected_count_;
+            ar & mine_upload_speed_;
+            ar & max_upload_speed_;
+            ar & rest_playable_time_;
+            ar & lost_rate_;
+            ar & redundancy_rate_;
+        }
+    };
+
     //////////////////////////////////////////////////////////////////////////
     // P2PDownloaderStatistic 结构
     // 共享内存名: P2PDOWNLOADER_<PID>_<RID>
@@ -415,7 +466,8 @@ namespace statistic
         boost::uint32_t LastLiveBlockId;            // 对方缓存的最后一个block的ID
         boost::uint32_t FirstLiveBlockId;           // 对方发过来的AnnounceMap中的第一片block的ID
         boost::uint8_t  ConnectType;                // 0 vod, 1 live peer, 2 live udpserver, 3 notify(只区分了1和2, 2011/7/27)
-        boost::uint8_t  Reserved[182];                  //
+        PEER_INFO RealTimePeerInfo;
+        boost::uint8_t  Reserved[166];                  //
 
         P2P_CONNECTION_INFO()
         {
@@ -456,6 +508,7 @@ namespace statistic
             ar & LastLiveBlockId;
             ar & FirstLiveBlockId;
             ar & ConnectType;
+            ar & RealTimePeerInfo;
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
         }
     };
@@ -828,7 +881,8 @@ namespace statistic
         uint32_t ip;
         boost::uint16_t port;
         boost::uint32_t upload_speed;
-        boost::uint8_t resersed[126];
+        PEER_INFO peer_info;
+        boost::uint8_t resersed[110];
 
         void Clear()
         {

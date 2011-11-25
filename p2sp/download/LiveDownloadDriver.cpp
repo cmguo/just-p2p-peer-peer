@@ -35,6 +35,13 @@ namespace p2sp
         , use_cdn_when_large_upload_(false)
         , rest_play_time_delim_(25)
         , ratio_delim_of_upload_speed_to_datarate_(200)
+        , times_of_use_cdn_because_of_large_upload_(0)
+        , time_elapsed_use_cdn_because_of_large_upload_(0)
+        , download_bytes_use_cdn_because_of_large_upload_(0)
+        , http_download_bytes_when_changed_to_cdn_(0)
+        , using_cdn_because_of_large_upload_(false)
+        , changed_to_http_times_when_urgent_(0)
+        , block_times_when_use_http_under_urgent_situation_(0)
     {
     }
 
@@ -154,6 +161,17 @@ namespace p2sp
     {
         timer_->stop();
 
+        if (live_p2p_downloader_)
+        {
+            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
+        }
+
+        if (using_cdn_because_of_large_upload_)
+        {
+            time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
+            download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
+        }
+
         SendDacStopData();
 
         live_instance_->DetachDownloadDriver(shared_from_this());
@@ -163,7 +181,6 @@ namespace p2sp
 
         if (live_p2p_downloader_)
         {
-            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
             live_p2p_downloader_.reset();
         }
 
@@ -595,6 +612,21 @@ namespace p2sp
         // U: UdpServer下载最大速度
         // V: 上传字节数
         // W: 下载时间
+        // X: 因为上传比较大而使用CDN的次数
+        // Y: 因为上传比较大而使用CDN的时间
+        // Z: 因为上传比较大使用CDN时的下载字节数
+        // A1: 因为紧急而使用UdpServer的次数
+        // B1: 因为紧急而使用UdpServer的时间
+        // C1: 因为紧急而使用UdpServer时的下载字节数
+        // D1: 因为上传比较大而使用UdpServer的次数
+        // E1: 因为上传比较大而使用UdpServer的时间
+        // F1: 因为上传比较大而使用UdpServer时的下载字节数
+        // G1: 最大上传速度(包括同一内网)
+        // H1: 最大上传速度(不包括同一内网)
+        // I1: 历史最大上传速度
+        // J1: 启动后切换到P2P的情况(0: 剩余时间足够大，1: 跑的时间足够长，2: 卡了)
+        // K1: 紧急情况下切到Http的次数
+        // L1: 紧急情况下切到Http后卡的次数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -633,6 +665,38 @@ namespace p2sp
 
         info.UploadBytes = statistic::StatisticModule::Inst()->GetUploadDataBytes();
         info.DownloadTime = download_time_.elapsed() / 1000;
+
+        info.TimesOfUseCdnBecauseLargeUpload = times_of_use_cdn_because_of_large_upload_;
+        info.TimeElapsedUseCdnBecauseLargeUpload = time_elapsed_use_cdn_because_of_large_upload_;
+        info.DownloadBytesUseCdnBecauseLargeUpload = download_bytes_use_cdn_because_of_large_upload_;
+
+        if (live_p2p_downloader_)
+        {
+            info.TimesOfUseUdpServerBecauseUrgent = live_p2p_downloader_->GetTimesOfUseUdpServerBecauseOfUrgent();
+            info.TimeElapsedUseUdpServerBecauseUrgent = live_p2p_downloader_->GetTimeElapsedUseUdpServerBecauseOfUrgent();
+            info.DownloadBytesUseUdpServerBecauseUrgent = live_p2p_downloader_->GetDownloadBytesUseUdpServerBecauseOfUrgent();
+            info.TimesOfUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetTimesOfUseUdpServerBecauseOfLargeUpload();
+            info.TimeElapsedUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetTimeElapsedUseUdpServerBecauseOfLargeUpload();
+            info.DownloadBytesUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetDownloadBytesUseUdpServerBecauseOfLargeUpload();
+        }
+        else
+        {
+            info.TimesOfUseUdpServerBecauseUrgent = 0;
+            info.TimeElapsedUseUdpServerBecauseUrgent = 0;
+            info.DownloadBytesUseUdpServerBecauseUrgent = 0;
+            info.TimesOfUseUdpServerBecauseLargeUpload = 0;
+            info.TimeElapsedUseUdpServerBecauseLargeUpload = 0;
+            info.DownloadBytesUseUdpServerBecauseLargeUpload = 0;
+        }
+
+        info.MaxUploadSpeedIncludeSameSubnet = UploadModule::Inst()->GetMaxUploadSpeedIncludeSameSubnet();
+        info.MaxUploadSpeedExcludeSameSubnet = UploadModule::Inst()->GetMaxUploadSpeedExcludeSameSubnet();
+
+        info.MaxUnlimitedUploadSpeedInRecord = UploadModule::Inst()->GetMaxUnlimitedUploadSpeedInRecord();
+
+        info.ChangeToP2PConditionWhenStart = changed_to_p2p_condition_when_start_;
+        info.ChangedToHttpTimesWhenUrgent = changed_to_http_times_when_urgent_;
+        info.BlockTimesWhenUseHttpUnderUrgentSituation = block_times_when_use_http_under_urgent_situation_;
 
         std::ostringstream log_stream;
 
@@ -677,6 +741,21 @@ namespace p2sp
         log_stream << "&U=" << info.MaxUdpServerDownloadSpeed;
         log_stream << "&V=" << info.UploadBytes;
         log_stream << "&W=" << info.DownloadTime;
+        log_stream << "&X=" << info.TimesOfUseCdnBecauseLargeUpload;
+        log_stream << "&Y=" << info.TimeElapsedUseCdnBecauseLargeUpload;
+        log_stream << "&Z=" << info.DownloadBytesUseCdnBecauseLargeUpload;
+        log_stream << "&A1=" << info.TimesOfUseUdpServerBecauseUrgent;
+        log_stream << "&B1=" << info.TimeElapsedUseUdpServerBecauseUrgent;
+        log_stream << "&C1=" << info.DownloadBytesUseUdpServerBecauseUrgent;
+        log_stream << "&D1=" << info.TimesOfUseUdpServerBecauseLargeUpload;
+        log_stream << "&E1=" << info.TimeElapsedUseUdpServerBecauseLargeUpload;
+        log_stream << "&F1=" << info.DownloadBytesUseUdpServerBecauseLargeUpload;
+        log_stream << "&G1=" << info.MaxUploadSpeedIncludeSameSubnet;
+        log_stream << "&H1=" << info.MaxUploadSpeedExcludeSameSubnet;
+        log_stream << "&I1=" << info.MaxUnlimitedUploadSpeedInRecord;
+        log_stream << "&J1=" << info.ChangeToP2PConditionWhenStart;
+        log_stream << "&K1=" << info.ChangedToHttpTimesWhenUrgent;
+        log_stream << "&L1=" << info.BlockTimesWhenUseHttpUnderUrgentSituation;
 
         string log = log_stream.str();
 
@@ -756,5 +835,55 @@ namespace p2sp
     bool LiveDownloadDriver::IsUploadSpeedLargeEnough()
     {
         return statistic::StatisticModule::Inst()->GetMinuteUploadDataSpeed() > GetDataRate() * ratio_delim_of_upload_speed_to_datarate_ / 100;
+    }
+
+    void LiveDownloadDriver::SetUseCdnBecauseOfLargeUpload()
+    {
+        ++times_of_use_cdn_because_of_large_upload_;
+        use_cdn_tick_counter_.reset();
+        http_download_bytes_when_changed_to_cdn_ = live_http_downloader_->GetSpeedInfo().TotalDownloadBytes;
+        using_cdn_because_of_large_upload_ = true;
+    }
+
+    void LiveDownloadDriver::SetUseP2P()
+    {
+        time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
+        download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
+        using_cdn_because_of_large_upload_ = false;
+    }
+
+    void LiveDownloadDriver::SubmitChangedToP2PCondition(boost::uint8_t condition)
+    {
+        changed_to_p2p_condition_when_start_ = condition;
+    }
+
+    void LiveDownloadDriver::SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times)
+    {
+        changed_to_http_times_when_urgent_ += times;
+    }
+
+    void LiveDownloadDriver::SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times)
+    {
+        block_times_when_use_http_under_urgent_situation_ += times;
+    }
+
+    boost::uint8_t LiveDownloadDriver::GetLostRate() const
+    {
+        return live_p2p_downloader_ ? live_p2p_downloader_->GetLostRate() : 0;
+    }
+
+    boost::uint8_t LiveDownloadDriver::GetRedundancyRate() const
+    {
+        return live_p2p_downloader_ ? live_p2p_downloader_->GetRedundancyRate() : 0;
+    }
+
+    boost::uint32_t LiveDownloadDriver::GetTotalRequestSubPieceCount() const
+    {
+        return live_p2p_downloader_ ? live_p2p_downloader_->GetTotalRequestSubPieceCount() : 0;
+    }
+
+    boost::uint32_t LiveDownloadDriver::GetTotalRecievedSubPieceCount() const
+    {
+        return live_p2p_downloader_ ? live_p2p_downloader_->GetTotalRecievedSubPieceCount() : 0;
     }
 }

@@ -80,6 +80,8 @@ namespace p2sp
             return block_bitmap_.size();
         }
 
+        void UpdatePeerInfo(const statistic::PEER_INFO & peer_info);
+
     private:
         // 构造
         LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 
@@ -143,6 +145,8 @@ namespace p2sp
         boost::uint8_t connect_type_;        
 
         uint32_t block_bitmap_empty_tick_count_in_millseconds_;
+
+        statistic::PEER_INFO peer_info_;
     };
 }
 

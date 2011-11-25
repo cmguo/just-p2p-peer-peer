@@ -4,6 +4,7 @@
 #include "statistic/SpeedInfoStatistic.h"
 #include "p2sp/p2p/UploadStruct.h"
 #include "p2sp/p2p/UploadBase.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace p2sp
 {
@@ -12,6 +13,8 @@ namespace p2sp
 
     class LiveUploadManager
         : public UploadBase
+        , public ConfigUpdateListener
+        , public boost::enable_shared_from_this<LiveUploadManager>
     {
         typedef boost::shared_ptr<LiveUploadManager> LiveUploadManager__p;
     public:
@@ -28,9 +31,17 @@ namespace p2sp
 
         static const size_t DesirableUploadSpeedPerPeerInKBps;
 
+        virtual void OnConfigUpdated();
+
+        void Start();
+        void Stop();
+
+        void GetUploadingPeersExcludeSameSubnet(std::set<boost::asio::ip::address> & uploading_peers) const;
+
     private:
         LiveUploadManager(UploadSpeedLimiter__p upload_speed_limiter)
             : UploadBase(upload_speed_limiter)
+            , timer_(global_second_timer(), BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond() * 1000, boost::bind(&LiveUploadManager::OnTimerElapsed, this, &timer_))
         {
 
         }
@@ -38,6 +49,13 @@ namespace p2sp
         void OnConnectPacket(const protocol::ConnectPacket & packet);
         void OnLiveRequestAnnouncePacket(protocol::LiveRequestAnnouncePacket const & packet);
         void OnLiveRequestSubPiecePacket(protocol::LiveRequestSubPiecePacket const & packet);
+        void OnPeerInfoPacket(protocol::PeerInfoPacket const & packet);
+
+        void OnTimerElapsed(framework::timer::Timer * pointer);
+        void SendPeerInfo();
+
+    private:
+        framework::timer::PeriodicTimer timer_;
     };
 }
 

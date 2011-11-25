@@ -214,6 +214,12 @@ namespace p2sp
             return live_download_driver_;
         }
 
+        boost::uint32_t GetLiveRestPlayableTime() const;
+        boost::uint8_t GetLostRate() const;
+        boost::uint8_t GetRedundancyRate() const;
+        boost::uint32_t GetLiveTotalRequestSubPieceCount() const;
+        boost::uint32_t GetLiveTotalRecievedSubPieceCount() const;
+
     protected:
         virtual void initialize();
         virtual void clear();

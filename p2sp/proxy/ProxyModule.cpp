@@ -1688,4 +1688,66 @@ namespace p2sp
             }
         }
     }
+
+    boost::uint32_t ProxyModule::GetLiveRestPlayableTime() const
+    {
+        boost::uint32_t rest_playable_time = 0xffffffff;
+
+        for (std::set<ProxyConnection__p>::const_iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            if (rest_playable_time > (*iter)->GetLiveRestPlayableTime() && (*iter)->GetLiveRestPlayableTime() != 0)
+            {
+                rest_playable_time = (*iter)->GetLiveRestPlayableTime();
+            }
+        }
+
+        // 如果所有的剩余时间都是0，那么把rest_playable_time置为0
+        if (rest_playable_time == 0xffffffff)
+        {
+            rest_playable_time = 0;
+        }
+
+        return rest_playable_time;
+    }
+
+    boost::uint8_t ProxyModule::GetLostRate() const
+    {
+        boost::uint32_t total_lost_rate = 0;
+        boost::uint32_t total_request_subpiece_count = 0;
+
+        for (std::set<ProxyConnection__p>::const_iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            total_request_subpiece_count += (*iter)->GetLiveTotalRequestSubPieceCount();
+            total_lost_rate += (*iter)->GetLostRate() * (*iter)->GetLiveTotalRequestSubPieceCount();
+        }
+
+        if (total_request_subpiece_count == 0)
+        {
+            return 0;
+        }
+
+        return total_lost_rate / total_request_subpiece_count;
+    }
+
+    boost::uint8_t ProxyModule::GetRedundancyRate() const
+    {
+        boost::uint32_t total_redundancy_rate = 0;
+        boost::uint32_t total_received_subpiece_count = 0;
+
+        for (std::set<ProxyConnection__p>::const_iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            total_received_subpiece_count += (*iter)->GetLiveTotalRecievedSubPieceCount();
+            total_redundancy_rate += (*iter)->GetRedundancyRate() * (*iter)->GetLiveTotalRecievedSubPieceCount();
+        }
+
+        if (total_received_subpiece_count == 0)
+        {
+            return 0;
+        }
+
+        return total_redundancy_rate / total_received_subpiece_count;
+    }
 }

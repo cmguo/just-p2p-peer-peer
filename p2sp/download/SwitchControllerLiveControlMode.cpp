@@ -87,6 +87,11 @@ namespace p2sp
 
         time_counter_3200_.reset();
         rest_play_time_when_switched_ = GetGlobalDataProvider()->GetRestPlayableTime();
+
+        if (changed_to_http_because_of_large_upload_)
+        {
+            GetGlobalDataProvider()->SetUseP2P();
+        }
     }
 
     void SwitchController::LiveControlMode::ChangeTo2300()
@@ -97,6 +102,12 @@ namespace p2sp
         time_counter_2300_.reset();
         rest_play_time_when_switched_ = GetGlobalDataProvider()->GetRestPlayableTime();
         is_started_ = false;
+        blocked_this_time_ = false;
+
+        if (changed_to_http_because_of_large_upload_)
+        {
+            GetGlobalDataProvider()->SetUseCdnBecauseOfLargeUpload();
+        }
     }
 
 #ifdef USE_MEMORY_POOL
@@ -208,6 +219,7 @@ namespace p2sp
         {
             if (rest_play_time_in_second < 6)
             {
+                GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                 changed_to_http_because_of_large_upload_ = false;
                 return true;
             }
@@ -218,6 +230,7 @@ namespace p2sp
         {
             if (rest_play_time_in_second < 5 && time_counter_3200_.elapsed() > 15000)
             {
+                GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                 changed_to_http_because_of_large_upload_ = false;
                 return true;
             }
@@ -256,10 +269,21 @@ namespace p2sp
                 return false;
             }
 
-            if ((rest_play_time_in_second > 20) ||
-                (time_counter_2300_.elapsed() >= 3 * 60 * 1000) ||
-                (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() >= 10000))
+            if (rest_play_time_in_second > 20)
             {
+                GetGlobalDataProvider()->SubmitChangedToP2PCondition(REST_PLAYABLE_TIME_ENOUGTH);
+                return true;
+            }
+
+            if (time_counter_2300_.elapsed() >= 3 * 60 * 1000)
+            {
+                GetGlobalDataProvider()->SubmitChangedToP2PCondition(LONG_TIME_USING_CDN);
+                return true;
+            }
+
+            if (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() >= 10000)
+            {
+                GetGlobalDataProvider()->SubmitChangedToP2PCondition(BLOCK);
                 return true;
             }
 
@@ -268,6 +292,15 @@ namespace p2sp
 
         if (!GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload() || changed_to_http_because_of_large_upload_ == false)
         {
+            if (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() <= 10000)
+            {
+                if (blocked_this_time_ == false)
+                {
+                    GetGlobalDataProvider()->SubmitBlockTimesWhenUseHttpUnderUrgentCondition();
+                    blocked_this_time_ = true;
+                }
+            }
+
             // 跑了超过20秒之后跟P2P效果一样或者是还不如P2P
             if (rest_play_time_in_second <= rest_play_time_when_switched_ && time_counter_2300_.elapsed() > 20000)
             {

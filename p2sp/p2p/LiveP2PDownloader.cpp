@@ -21,7 +21,15 @@ namespace p2sp
         , dolist_udpserver_time_interval_(1000)
         , connected_udpserver_count_(0)
         , should_use_udpserver_(false)
+        , use_udpserver_reason_(NO_USE_UDPSERVER)
+        , times_of_use_udpserver_because_of_urgent_(0)
+        , times_of_use_udpserver_because_of_large_upload_(0)
+        , time_elapsed_use_udpserver_because_of_urgent_(0)
+        , time_elapsed_use_udpserver_because_of_large_upload_(0)
+        , download_bytes_use_udpserver_because_of_urgent_(0)
+        , download_bytes_use_udpserver_because_of_large_upload_(0)
     {
+        send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
     }
 
     void LiveP2PDownloader::Start()
@@ -59,6 +67,10 @@ namespace p2sp
 
         last_dolist_time_.start();
         last_dolist_udpserver_time_.start();
+
+        send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
+
+        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
 
         is_running_ = true;
     }
@@ -160,13 +172,45 @@ namespace p2sp
         {
             if (should_use_udpserver_ == false || use_udpserver_tick_counter_.elapsed() > 60000)
             {
-                should_use_udpserver_ = ShouldUseUdpServer();
-
-                if (should_use_udpserver_)
+                // 需要切换
+                if (should_use_udpserver_ != ShouldUseUdpServer())
                 {
-                    use_udpserver_tick_counter_.reset();
+                    should_use_udpserver_ = !should_use_udpserver_;
+
+                    // 由不用改为用
+                    if (should_use_udpserver_ == true)
+                    {
+                        switch (use_udpserver_reason_)
+                        {
+                        case URGENT:
+                            ++times_of_use_udpserver_because_of_urgent_;
+                            break;
+                        case LARGE_UPLOAD:
+                            ++times_of_use_udpserver_because_of_large_upload_;
+                            break;
+                        default:
+                            break;
+                        }
+
+                        use_udpserver_tick_counter_.reset();
+                    }
+                    else
+                    {
+                        switch (use_udpserver_reason_)
+                        {
+                        case URGENT:
+                            time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+                            break;
+                        case LARGE_UPLOAD:
+                            time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+                            break;
+                        default:
+                            break;
+                        }
+                    }
                 }
-                else
+
+                if (should_use_udpserver_ == false)
                 {
                     assert(!download_driver_s_.empty());
 
@@ -178,6 +222,13 @@ namespace p2sp
                     }
                 }
             }
+        }
+
+        assert(send_peer_info_packet_interval_in_second_ != 0);
+
+        if (times % (send_peer_info_packet_interval_in_second_ * 4) == 0)
+        {
+            SendPeerInfo();
         }
     }
 
@@ -269,6 +320,17 @@ namespace p2sp
         {
             live_instance_.reset();
         }
+
+        if (use_udpserver_reason_ == URGENT)
+        {
+            time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+        }
+        else if (use_udpserver_reason_ == LARGE_UPLOAD)
+        {
+            time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+        }
+
+        BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
     }
 
     bool LiveP2PDownloader::IsPausing()
@@ -674,6 +736,19 @@ namespace p2sp
                 udpserver_pool_->OnConnectFailed(packet.end_point);
             }
         }
+        else if (packet.PacketAction == protocol::PeerInfoPacket::Action)
+        {
+            if (peers_.find(packet.end_point) != peers_.end())
+            {
+                const protocol::PeerInfoPacket peer_info_packet = (const protocol::PeerInfoPacket &)packet;
+
+                statistic::PEER_INFO peer_info(peer_info_packet.peer_info_.download_connected_count_, peer_info_packet.peer_info_.upload_connected_count_,
+                    peer_info_packet.peer_info_.upload_speed_, peer_info_packet.peer_info_.max_upload_speed_, peer_info_packet.peer_info_.rest_playable_time_,
+                    peer_info_packet.peer_info_.lost_rate_, peer_info_packet.peer_info_.redundancy_rate_);
+
+                peers_[packet.end_point]->UpdatePeerInfo(peer_info);
+            }
+        }
     }
 
     void LiveP2PDownloader::AddPeer(LivePeerConnection__p peer_connection)
@@ -933,10 +1008,11 @@ namespace p2sp
         }
     }
 
-    bool LiveP2PDownloader::ShouldUseUdpServer() const
+    bool LiveP2PDownloader::ShouldUseUdpServer()
     {
         if (GetMinRestTimeInSeconds() < 10)
         {
+            use_udpserver_reason_ = URGENT;
             return true;
         }
 
@@ -947,6 +1023,7 @@ namespace p2sp
             (*download_driver)->GetRestPlayableTime() > (*download_driver)->GetRestPlayTimeDelim() &&
             IsAheadOfMostPeers())
         {
+            use_udpserver_reason_ = LARGE_UPLOAD;
             return true;
         }
 
@@ -998,5 +1075,113 @@ namespace p2sp
         }
 
         return true;
+    }
+
+    void LiveP2PDownloader::SubmitUdpServerDownloadBytes(boost::uint32_t bytes)
+    {
+        switch (use_udpserver_reason_)
+        {
+        case URGENT:
+            download_bytes_use_udpserver_because_of_urgent_ += bytes;
+            break;
+        case LARGE_UPLOAD:
+            download_bytes_use_udpserver_because_of_large_upload_ += bytes;
+            break;
+        case NO_USE_UDPSERVER:
+            break;
+        default:
+            break;
+        }
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTimesOfUseUdpServerBecauseOfUrgent() const
+    {
+        return times_of_use_udpserver_because_of_urgent_;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTimesOfUseUdpServerBecauseOfLargeUpload() const
+    {
+        return times_of_use_udpserver_because_of_large_upload_;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTimeElapsedUseUdpServerBecauseOfUrgent() const
+    {
+        return time_elapsed_use_udpserver_because_of_urgent_;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTimeElapsedUseUdpServerBecauseOfLargeUpload() const
+    {
+        return time_elapsed_use_udpserver_because_of_large_upload_;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetDownloadBytesUseUdpServerBecauseOfUrgent() const
+    {
+        return download_bytes_use_udpserver_because_of_urgent_;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetDownloadBytesUseUdpServerBecauseOfLargeUpload() const
+    {
+        return download_bytes_use_udpserver_because_of_large_upload_;
+    }
+
+    void LiveP2PDownloader::SendPeerInfo()
+    {
+        assert(!download_driver_s_.empty());
+
+        protocol::PeerInfo peer_info(peers_.size(),
+            statistic::UploadStatisticModule::Inst()->GetUploadCount(),
+            statistic::UploadStatisticModule::Inst()->GetUploadSpeed(),
+            UploadModule::Inst()->GetMaxUploadSpeedIncludeSameSubnet(),
+            (*download_driver_s_.begin())->GetRestPlayableTime(),
+            GetLostRate(),
+            GetRedundancyRate());
+
+        protocol::PeerInfoPacket peer_info_packet(protocol::Packet::NewTransactionID(), protocol::PEER_VERSION, peer_info);
+
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            peer_info_packet.end_point = iter->first;
+            DoSendPacket(peer_info_packet);
+        }
+    }
+
+    boost::uint8_t LiveP2PDownloader::GetLostRate() const
+    {
+        boost::uint32_t total_request = total_request_subpiece_count_;
+        boost::uint32_t total_receive = GetTotalUnusedSubPieceCount();
+        boost::uint32_t requesting_count = 0;
+
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            requesting_count += iter->second->GetPeerConnectionInfo().Requesting_Count;
+        }
+
+        if (total_request_subpiece_count_ <= requesting_count + total_receive)
+        {
+            return 0;
+        }
+
+        return (total_request - requesting_count - total_receive) * 100
+            / (total_request - requesting_count);
+    }
+
+    boost::uint8_t LiveP2PDownloader::GetRedundancyRate() const
+    {
+        boost::uint32_t total_receive = GetTotalUnusedSubPieceCount();
+        boost::uint32_t unique_receive = GetTotalRecievedSubPieceCount();
+
+        if (total_receive == 0)
+        {
+            return 0;
+        }
+
+        return (total_receive - unique_receive) * 100 / total_receive;
+    }
+
+    void LiveP2PDownloader::OnConfigUpdated()
+    {
+        send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
     }
 }

@@ -57,6 +57,11 @@ namespace p2sp
             return limit_upload_speed_for_live2_; 
         }
 
+        boost::uint32_t GetSendPeerInfoPacketIntervalInSecond() const
+        {
+            return send_peer_info_packet_interval_in_second_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -91,6 +96,9 @@ namespace p2sp
 
         // 是否对二代直播上传进行限速
         bool limit_upload_speed_for_live2_;
+
+        // 每隔多久发送一次PeerInfoPacket，用于直播时Peer间信息交换
+        boost::uint32_t send_peer_info_packet_interval_in_second_;
     };
 }
 #endif

@@ -4,6 +4,9 @@
 #include "p2sp/AppModule.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/p2p/PeerHelper.h"
+#include "UploadModule.h"
+#include "P2PModule.h"
+#include "p2sp/proxy/ProxyModule.h"
 
 namespace p2sp
 {
@@ -26,6 +29,9 @@ namespace p2sp
             break;
         case protocol::LiveRequestSubPiecePacket::Action:
             OnLiveRequestSubPiecePacket((const protocol::LiveRequestSubPiecePacket &)packet);
+            break;
+        case protocol::PeerInfoPacket::Action:
+            OnPeerInfoPacket((const protocol::PeerInfoPacket &)packet);
             break;
         default:
             assert(false);
@@ -199,7 +205,8 @@ namespace p2sp
     bool LiveUploadManager::IsValidPacket(const protocol::Packet & packet)
     {
         if (packet.PacketAction == protocol::LiveRequestAnnouncePacket::Action ||
-            packet.PacketAction == protocol::LiveRequestSubPiecePacket::Action)
+            packet.PacketAction == protocol::LiveRequestSubPiecePacket::Action ||
+            packet.PacketAction == protocol::PeerInfoPacket::Action)
         {
             return true;
         }
@@ -222,5 +229,70 @@ namespace p2sp
         }
 
         return false;
+    }
+
+    void LiveUploadManager::OnTimerElapsed(framework::timer::Timer * pointer)
+    {
+        if (pointer == &timer_)
+        {
+            SendPeerInfo();
+        }
+    }
+
+    void LiveUploadManager::SendPeerInfo()
+    {
+        protocol::PeerInfo peer_info(P2PModule::Inst()->GetDownloadConnectedCount(),
+            connections_management_.GetAcceptUploadingPeersCount(),
+            statistic::UploadStatisticModule::Inst()->GetUploadSpeed(),
+            UploadModule::Inst()->GetMaxUploadSpeedIncludeSameSubnet(),
+            ProxyModule::Inst()->GetLiveRestPlayableTime(),
+            ProxyModule::Inst()->GetLostRate(),
+            ProxyModule::Inst()->GetRedundancyRate());
+
+        protocol::PeerInfoPacket peer_info_packet(protocol::Packet::NewTransactionID(), protocol::PEER_VERSION, peer_info);
+
+        std::set<boost::asio::ip::udp::endpoint> accept_uploading_peers;
+        connections_management_.GetUploadingPeers(accept_uploading_peers);
+
+        for (std::set<boost::asio::ip::udp::endpoint>::iterator iter = accept_uploading_peers.begin();
+            iter != accept_uploading_peers.end(); ++iter)
+        {
+            peer_info_packet.end_point = *iter;
+            AppModule::Inst()->DoSendPacket(peer_info_packet, protocol::PEER_VERSION);
+        }
+    }
+
+    void LiveUploadManager::OnPeerInfoPacket(protocol::PeerInfoPacket const & packet)
+    {
+        statistic::PEER_INFO peer_info(packet.peer_info_.download_connected_count_, packet.peer_info_.upload_connected_count_,
+            packet.peer_info_.upload_speed_, packet.peer_info_.max_upload_speed_, packet.peer_info_.rest_playable_time_,
+            packet.peer_info_.lost_rate_, packet.peer_info_.redundancy_rate_);
+
+        statistic::UploadStatisticModule::Inst()->SubmitUploadPeerInfo(packet.end_point.address(), peer_info);
+    }
+
+    void LiveUploadManager::OnConfigUpdated()
+    {
+        if (timer_->interval() != BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond())
+        {
+            timer_->interval(BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond());
+        }
+    }
+
+    void LiveUploadManager::Start()
+    {
+        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
+        timer_->start();
+    }
+
+    void LiveUploadManager::Stop()
+    {
+        timer_->stop();
+        BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
+    }
+
+    void LiveUploadManager::GetUploadingPeersExcludeSameSubnet(std::set<boost::asio::ip::address> & uploading_peers) const
+    {
+        connections_management_.GetUploadingPeersExcludeSameSubnet(uploading_peers);
     }
 }

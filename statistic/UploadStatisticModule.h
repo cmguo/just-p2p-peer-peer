@@ -32,6 +32,7 @@ namespace statistic
 
         void SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_);
         void SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size);
+        void SubmitUploadPeerInfo(const boost::asio::ip::address & address, const statistic::PEER_INFO & peer_info);
 
         static UploadStatisticModule::p Inst()
         {
@@ -42,6 +43,12 @@ namespace statistic
             return inst_;
         }
 
+        boost::uint8_t GetUploadCount() const;
+        boost::uint32_t GetUploadSpeed() const;
+
+        // 由于调用的SpeedInfoStatistic::GetSpeedInfo不能设置为const，所以这个函数也没有设为const
+        boost::uint32_t GetUploadSpeed(const boost::asio::ip::address & address);
+
     private:
         UploadStatisticModule();
 
@@ -51,6 +58,8 @@ namespace statistic
         UPLOAD_INFO upload_info_;
 
         std::map<boost::asio::ip::address, SpeedInfoStatistic> m_upload_map;
+
+        std::map<boost::asio::ip::address, PEER_INFO> upload_peer_info_;
 
         SpeedInfoStatistic upload_speed_info_;
     };

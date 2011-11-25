@@ -17,6 +17,8 @@ namespace p2sp
         : recent_play_series_(0)
         , is_disable_upload_(false)
         , upload_policy_(BootStrapGeneralConfig::policy_default)
+        , max_upload_speed_include_same_subnet_(0)
+        , live_max_upload_speed_exclude_same_subnet_(0)
     {
     }
 
@@ -26,7 +28,9 @@ namespace p2sp
 
         upload_manager_list_.push_back(VodUploadManager::create(upload_limiter_));
 
-        upload_manager_list_.push_back(LiveUploadManager::create(upload_limiter_));
+        live_upload_manager_ = LiveUploadManager::create(upload_limiter_);
+        upload_manager_list_.push_back(live_upload_manager_);
+        live_upload_manager_->Start();
 
         upload_manager_list_.push_back(TcpUploadManager::create(upload_limiter_));
 
@@ -50,6 +54,7 @@ namespace p2sp
     void UploadModule::Stop()
     {
         SaveHistoricalMaxUploadSpeed();
+        live_upload_manager_->Stop();
     }
 
     bool UploadModule::TryHandlePacket(const protocol::Packet & packet)
@@ -77,7 +82,15 @@ namespace p2sp
         {
             boost::uint32_t current_upload_speed = MeasureCurrentUploadSpeed();
             upload_speed_limit_tracker_.ReportUploadSpeed(current_upload_speed);
-        
+
+            boost::uint32_t current_upload_speed_include_same_subnet = statistic::UploadStatisticModule::Inst()->GetUploadSpeed();
+            if (max_upload_speed_include_same_subnet_ < current_upload_speed_include_same_subnet)
+            {
+                max_upload_speed_include_same_subnet_ = current_upload_speed_include_same_subnet;
+            }
+
+            MeasureLiveMaxUploadSpeedExcludeSameSubnet();
+
             for (std::list<boost::shared_ptr<IUploadManager> >::const_iterator
                 iter = upload_manager_list_.begin(); iter != upload_manager_list_.end(); ++iter)
             {
@@ -562,5 +575,39 @@ namespace p2sp
         assert(user_speed_in_KBps >= -1);
         upload_speed_param_.SetUserSpeedInKBps(user_speed_in_KBps);
         upload_limiter_->SetSpeedLimitInKBps(upload_speed_param_.GetMaxSpeedInKBps());
+    }
+
+    boost::uint32_t UploadModule::GetMaxUnlimitedUploadSpeedInRecord() const
+    {
+        return upload_speed_limit_tracker_.GetMaxUnlimitedUploadSpeedInRecord();
+    }
+
+    boost::uint32_t UploadModule::GetMaxUploadSpeedIncludeSameSubnet() const
+    {
+        return max_upload_speed_include_same_subnet_;
+    }
+
+    void UploadModule::MeasureLiveMaxUploadSpeedExcludeSameSubnet()
+    {
+        boost::uint32_t current_upload_speed = 0;
+
+        std::set<boost::asio::ip::address> accept_uploading_peers;
+        live_upload_manager_->GetUploadingPeersExcludeSameSubnet(accept_uploading_peers);
+
+        for (std::set<boost::asio::ip::address>::const_iterator iter = accept_uploading_peers.begin();
+            iter != accept_uploading_peers.end(); ++iter)
+        {
+            current_upload_speed += statistic::UploadStatisticModule::Inst()->GetUploadSpeed(*iter);
+        }
+
+        if (live_max_upload_speed_exclude_same_subnet_ < current_upload_speed)
+        {
+            live_max_upload_speed_exclude_same_subnet_ = current_upload_speed;
+        }
+    }
+
+    boost::uint32_t UploadModule::GetMaxUploadSpeedExcludeSameSubnet() const
+    {
+        return live_max_upload_speed_exclude_same_subnet_;
     }
 }

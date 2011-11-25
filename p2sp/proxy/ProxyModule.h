@@ -131,6 +131,11 @@ namespace p2sp
 
         bool IsWatchingLive();
         void OnLivePause(const RID & channel_id, bool pause, boost::uint32_t unique_id);
+
+        boost::uint32_t GetLiveRestPlayableTime() const;
+        boost::uint8_t GetLostRate() const;
+        boost::uint8_t GetRedundancyRate() const;
+
     private:
         boost::asio::io_service & io_svc_;
 

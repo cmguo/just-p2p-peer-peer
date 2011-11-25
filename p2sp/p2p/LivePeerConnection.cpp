@@ -203,6 +203,11 @@ namespace p2sp
         ++peer_connection_info_.Received_Count;
 
         RequestTillFullWindow();
+
+        if (connect_type_ == protocol::CONNECT_LIVE_UDPSERVER)
+        {
+            p2p_downloader_->SubmitUdpServerDownloadBytes(buffer_length);
+        }
     }
 
     void LivePeerConnection::OnSubPieceTimeout()
@@ -396,6 +401,8 @@ namespace p2sp
             peer_connection_info_.FirstLiveBlockId = block_bitmap_.begin()->first;
             peer_connection_info_.LastLiveBlockId = block_bitmap_.rbegin()->first;
         }
+
+        peer_connection_info_.RealTimePeerInfo = peer_info_;
     }
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()
@@ -429,5 +436,10 @@ namespace p2sp
     bool LivePeerConnection::IsUdpServer() const
     {
         return connect_type_ == protocol::CONNECT_LIVE_UDPSERVER;
+    }
+
+    void LivePeerConnection::UpdatePeerInfo(const statistic::PEER_INFO & peer_info)
+    {
+        peer_info_ = peer_info;
     }
 }
