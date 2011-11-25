@@ -25,6 +25,7 @@ namespace p2sp
         , use_cdn_when_large_upload_(false)
         , rest_play_time_delim_(25)
         , ratio_delim_of_upload_speed_to_datarate_(200)
+        , limit_upload_speed_for_live2_(true)
     {
     }
 
@@ -96,7 +97,8 @@ namespace p2sp
                 ("config.connectionpolicy", po::value<bool>()->default_value(connection_policy_enable_))
                 ("config.usecdnpolicy", po::value<bool>()->default_value(use_cdn_when_large_upload_))
                 ("config.restplaytime", po::value<uint32_t>()->default_value(rest_play_time_delim_))
-                ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_));
+                ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_))
+                ("config.limitlive2upload", po::value<bool>()->default_value(limit_upload_speed_for_live2_));
 
             std::istringstream config_stream(config_string);
 
@@ -112,6 +114,7 @@ namespace p2sp
             rest_play_time_delim_ = vm["config.restplaytime"].as<uint32_t>();
             ratio_delim_of_upload_speed_to_datarate_ = vm["config.ratiodelim"].as<uint32_t>();
             data_collection_server_list_ = vm["config.dc_servers"].as<string>();
+            limit_upload_speed_for_live2_ = vm["config.limitlive2upload"].as<bool>();
 
             if (save_to_disk)
             {

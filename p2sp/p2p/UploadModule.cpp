@@ -18,7 +18,6 @@ namespace p2sp
         , is_disable_upload_(false)
         , upload_policy_(BootStrapGeneralConfig::policy_default)
     {
-
     }
 
     void UploadModule::Start(const string& config_path)
@@ -143,9 +142,8 @@ namespace p2sp
     bool UploadModule::NeedUseUploadPingPolicy()
     {
         bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
-        bool is_watching_live_by_peer = p2sp::ProxyModule::Inst()->IsWatchingLive();
         if (upload_policy_ == BootStrapGeneralConfig::policy_ping
-            && !is_watching_live && !is_watching_live_by_peer
+            && !is_watching_live
             && network_quality_monitor_->IsRunning() && network_quality_monitor_->HasGateWay())
         {
             return true;
@@ -359,12 +357,13 @@ namespace p2sp
         {
             UpdateSpeedLimit(-1);
         }
-        // live
+        // 1G-live
         else if (true == is_watching_live)
         {
             UpdateSpeedLimit(0);
         }
-        else if (true == is_watching_live_by_peer)
+        else if (true == is_watching_live_by_peer && 
+                 false == BootStrapGeneralConfig::Inst()->LimitLive2UploadSpeed())
         {
             UpdateSpeedLimit(-1);
         }
@@ -457,7 +456,9 @@ namespace p2sp
             upload_speed_limit_tracker_.SetUploadWithoutLimit(false);
 
             speed_limit_in_KBps = speed_limit / 1024;
-            max_upload_peers_ = speed_limit_in_KBps / 8;
+            const size_t expected_upload_speed_per_peer = p2sp::ProxyModule::Inst()->IsWatchingLive() ? 
+                LiveUploadManager::DesirableUploadSpeedPerPeerInKBps : VodUploadManager::DesirableUploadSpeedPerPeerInKBps;
+            max_upload_peers_ = speed_limit_in_KBps / expected_upload_speed_per_peer;
 
             LIMIT_MIN_MAX(max_upload_peers_, 1, P2SPConfigs::UPLOAD_MAX_UPLOAD_PEER_COUNT);
         }

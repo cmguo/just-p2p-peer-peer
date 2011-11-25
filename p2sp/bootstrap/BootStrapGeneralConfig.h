@@ -52,6 +52,11 @@ namespace p2sp
             return ratio_delim_of_upload_speed_to_datarate_;
         }
 
+        bool LimitLive2UploadSpeed() const 
+        { 
+            return limit_upload_speed_for_live2_; 
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -83,6 +88,9 @@ namespace p2sp
 
         // 1分钟内的平均上传速度大于码流率的ratio_delim_of_upload_speed_to_datarate_ / 100倍时，认为上传速度足够大
         boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
+
+        // 是否对二代直播上传进行限速
+        bool limit_upload_speed_for_live2_;
     };
 }
 #endif

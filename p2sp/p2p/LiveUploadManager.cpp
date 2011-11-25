@@ -7,6 +7,8 @@
 
 namespace p2sp
 {
+    const size_t LiveUploadManager::DesirableUploadSpeedPerPeerInKBps = 3;
+
     bool LiveUploadManager::TryHandlePacket(const protocol::Packet & packet)
     {
         if (!IsValidPacket(packet))
@@ -34,61 +36,72 @@ namespace p2sp
 
     void LiveUploadManager::AdjustConnections()
     {
-        KickTimeoutConnection();
+        const size_t NewPeerProtectionTimeInSeconds = 20;
+        connections_management_.KickBadConnections(DesirableUploadSpeedPerPeerInKBps, NewPeerProtectionTimeInSeconds);
+        connections_management_.KickTimedOutConnections();
     }
 
     void LiveUploadManager::OnConnectPacket(const protocol::ConnectPacket & packet)
     {
+        if (!connections_management_.IsPeerConnected(packet.end_point) && 
+            !connections_management_.AcceptsNewConnection(packet.ip_pool_size_))
+        {
+            DebugLog("UPLOAD-live: a new connection is refused as we have accepted enough connections.");
+            SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_CONNECT_CONNECTION_FULL);
+            return;
+        }
+
         storage::LiveInstance::p live_inst =
             boost::dynamic_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
 
         if (!live_inst)
         {
+            DebugLog("UPLOAD-live: a new connection is rejected as we don't have the specified resource.");
             SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_CONNECT_NO_RESOURCEID);
+            return;
         }
-        else
+        
+        // ReConnect
+        protocol::ConnectPacket connect_packet(packet.transaction_id_, live_inst->GetRID(),
+            AppModule::Inst()->GetPeerGuid(),  protocol::PEER_VERSION, 0x01, packet.send_off_time_,
+            AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
+            protocol::CONNECT_LIVE_PEER,
+            AppModule::Inst()->GetPeerDownloadInfo(), // global download info
+            packet.end_point);
+
+        AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
+        AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
+
+        // accept
+        if (!connections_management_.IsPeerConnected(packet.end_point))
         {
-            // ReConnect
-            protocol::ConnectPacket connect_packet(packet.transaction_id_, live_inst->GetRID(),
-                AppModule::Inst()->GetPeerGuid(),  protocol::PEER_VERSION, 0x01, packet.send_off_time_,
-                AppModule::Inst()->GetPeerVersion(), AppModule::Inst()->GetCandidatePeerInfo(),
-                protocol::CONNECT_LIVE_PEER,
-                AppModule::Inst()->GetPeerDownloadInfo(), // global download info
-                packet.end_point);
-
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
-            AppModule::Inst()->DoSendPacket(connect_packet, packet.protocol_version_);
-
-            // accept
-            if (accept_connecting_peers_.find(packet.end_point) == accept_connecting_peers_.end())
-            {
-                accept_connecting_peers_[packet.end_point] = PEER_UPLOAD_INFO();
-            }
-
-            PEER_UPLOAD_INFO& peer_upload_info = accept_connecting_peers_[packet.end_point];
-            peer_upload_info.last_talk_time.reset();
-            peer_upload_info.ip_pool_size = packet.ip_pool_size_;
-            peer_upload_info.peer_guid = packet.peer_guid_;
-            peer_upload_info.is_open_service = 0;
-            peer_upload_info.resource_id = packet.resource_id_;
-            peer_upload_info.peer_info = packet.peer_info_;
-            peer_upload_info.is_live = true;  // 标识该连接为直播的连接
-            peer_upload_info.connected_time.reset();
-
-            // IncomingPeersCount
-            statistic::StatisticModule::Inst()->SubmitIncomingPeer();
+            DebugLog("UPLOAD-live: accepting a new connection.");
+            connections_management_.AddConnection(packet.end_point);
         }
+
+        PEER_UPLOAD_INFO& peer_upload_info = connections_management_.GetPeerUploadInfo(packet.end_point);
+        peer_upload_info.last_talk_time.reset();
+        peer_upload_info.ip_pool_size = packet.ip_pool_size_;
+        peer_upload_info.peer_guid = packet.peer_guid_;
+        peer_upload_info.is_open_service = 0;
+        peer_upload_info.resource_id = packet.resource_id_;
+        peer_upload_info.peer_info = packet.peer_info_;
+        peer_upload_info.is_live = true;  // 标识该连接为直播的连接
+        peer_upload_info.connected_time.reset();
+
+        // IncomingPeersCount
+        statistic::StatisticModule::Inst()->SubmitIncomingPeer();
     }
 
     void LiveUploadManager::OnLiveRequestAnnouncePacket(protocol::LiveRequestAnnouncePacket const & packet)
     {
-        if (accept_connecting_peers_.find(packet.end_point) == accept_connecting_peers_.end())
+        if (!connections_management_.IsPeerConnected(packet.end_point))
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
             return;
         }
 
-        accept_connecting_peers_[packet.end_point].last_talk_time.reset();
+        connections_management_.UpdateConnectionHeartbeat(packet.end_point);
 
         storage::LiveInstance::p live_inst = boost::dynamic_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
         if (!live_inst)
@@ -110,21 +123,28 @@ namespace p2sp
 
     void LiveUploadManager::OnLiveRequestSubPiecePacket(protocol::LiveRequestSubPiecePacket const & packet)
     {
-        if (accept_connecting_peers_.find(packet.end_point) == accept_connecting_peers_.end())
+        if (!connections_management_.IsPeerConnected(packet.end_point))
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
             return;
         }
 
-        accept_connecting_peers_[packet.end_point].last_talk_time.reset();
+        connections_management_.UpdateConnectionHeartbeat(packet.end_point);
 
-        if (accept_uploading_peers_.find(packet.end_point) == accept_uploading_peers_.end())
+        if (!connections_management_.IsPeerAcceptedForUpload(packet.end_point))
         {
-            accept_uploading_peers_.insert(packet.end_point);
-            uploading_peers_speed_[packet.end_point] = std::make_pair(0, framework::timer::TickCounter());
+            if (!connections_management_.AcceptsNewUploadConnection(packet.end_point))
+            {
+                DebugLog("UPLOAD-live: rejecting a new upload connection.");
+                SendErrorPacket(packet, protocol::ErrorPacket::PPV_CONNECT_CONNECTION_FULL);
+                return;
+            }
+
+            DebugLog("UPLOAD-live: accepting a new upload connection.");
+            connections_management_.AddUploadConnection(packet.end_point);
         }
 
-        accept_connecting_peers_[packet.end_point].last_data_time.reset();
+        connections_management_.UpdateUploadHeartbeat(packet.end_point);
 
         if (upload_speed_limiter_->GetSpeedLimitInKBps() == 0)
         {
@@ -135,41 +155,43 @@ namespace p2sp
         if (!live_inst)
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);
+            return;
         }
-        else if (!accept_connecting_peers_[packet.end_point].IsInLastDataTransIDs(packet.transaction_id_))
+
+        if (!connections_management_.TryAddUniqueTransactionId(packet.end_point, packet.transaction_id_))
         {
-            accept_connecting_peers_[packet.end_point].UpdateLastDataTransID(packet.transaction_id_);
+            //no-op. ignoring duplicate requests
+            return;
+        }
 
-            for (uint32_t i = 0; i < packet.sub_piece_infos_.size(); ++i)
+        for (uint32_t i = 0; i < packet.sub_piece_infos_.size(); ++i)
+        {
+            const protocol::LiveSubPieceInfo &live_sub_piece_info = packet.sub_piece_infos_[i];
+
+            if (live_inst->HasSubPiece(live_sub_piece_info))
             {
-                const protocol::LiveSubPieceInfo &live_sub_piece_info = packet.sub_piece_infos_[i];
+                protocol::LiveSubPieceBuffer tmp_buf;
 
-                if (live_inst->HasSubPiece(live_sub_piece_info))
-                {
-                    protocol::LiveSubPieceBuffer tmp_buf;
+                live_inst->GetSubPiece(live_sub_piece_info, tmp_buf);
 
-                    live_inst->GetSubPiece(live_sub_piece_info, tmp_buf);
+                protocol::LiveSubPiecePacket live_subpiece_packet(packet.transaction_id_, packet.resource_id_,
+                    live_sub_piece_info, tmp_buf.Length(), tmp_buf, packet.end_point);
 
-                    protocol::LiveSubPiecePacket live_subpiece_packet(packet.transaction_id_, packet.resource_id_,
-                        live_sub_piece_info, tmp_buf.Length(), tmp_buf, packet.end_point);
+                bool ignoreUploadSpeedLimit = connections_management_.IsPeerFromSameSubnet(packet.end_point);
 
-                    bool ignoreUploadSpeedLimit = IsPeerFromSameSubnet(packet.end_point);
+                upload_speed_limiter_->SendPacket(
+                    live_subpiece_packet,
+                    ignoreUploadSpeedLimit,
+                    packet.priority_,
+                    packet.protocol_version_);
 
-                    upload_speed_limiter_->SendPacket(
-                        live_subpiece_packet,
-                        ignoreUploadSpeedLimit,
-                        packet.priority_,
-                        packet.protocol_version_);
+                statistic::DACStatisticModule::Inst()->SubmitLiveP2PUploadBytes(LIVE_SUB_PIECE_SIZE);
 
-                    statistic::DACStatisticModule::Inst()->SubmitLiveP2PUploadBytes(LIVE_SUB_PIECE_SIZE);
-
-                    accept_connecting_peers_[packet.end_point].speed_info.SubmitUploadedBytes(LIVE_SUB_PIECE_SIZE);
-                }
-                else
-                {
-                    SendErrorPacket(packet, protocol::ErrorPacket::PPV_SUBPIECE_SUBPIECE_NOT_FOUND);
-                }
-
+                connections_management_.GetPeerUploadInfo(packet.end_point).speed_info.SubmitUploadedBytes(LIVE_SUB_PIECE_SIZE);
+            }
+            else
+            {
+                SendErrorPacket(packet, protocol::ErrorPacket::PPV_SUBPIECE_SUBPIECE_NOT_FOUND);
             }
         }
     }

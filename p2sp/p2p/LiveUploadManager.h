@@ -26,6 +26,8 @@ namespace p2sp
 
         virtual void AdjustConnections();
 
+        static const size_t DesirableUploadSpeedPerPeerInKBps;
+
     private:
         LiveUploadManager(UploadSpeedLimiter__p upload_speed_limiter)
             : UploadBase(upload_speed_limiter)

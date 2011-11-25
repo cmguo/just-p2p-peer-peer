@@ -32,6 +32,8 @@ namespace p2sp
 
         virtual void AdjustConnections();
 
+        static const size_t DesirableUploadSpeedPerPeerInKBps;
+
     private:
         VodUploadManager(UploadSpeedLimiter__p upload_speed_limiter)
             : UploadBase(upload_speed_limiter)
@@ -55,14 +57,6 @@ namespace p2sp
         void SendAnnouncePacket(const protocol::CommonPeerPacket & packet, storage::Instance::p inst);
 
         void SendRIDInfoPacket(const protocol::CommonPeerPacket & packet, storage::Instance::p inst);
-
-        bool IsConnectionFull(uint32_t ip_pool_size) const;
-
-        bool IsUploadConnectionFull(boost::asio::ip::udp::endpoint const& end_point);
-
-        void KickAllUploadConnections();
-
-        void KickUploadConnections();
     };
 }
 
