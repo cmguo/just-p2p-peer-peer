@@ -882,7 +882,7 @@ namespace statistic
         boost::uint16_t port;
         boost::uint32_t upload_speed;
         PEER_INFO peer_info;
-        boost::uint8_t resersed[110];
+        boost::uint8_t resersed[126 - sizeof(PEER_INFO)];
 
         void Clear()
         {
