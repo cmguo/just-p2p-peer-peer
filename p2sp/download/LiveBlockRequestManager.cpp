@@ -16,7 +16,7 @@ namespace p2sp
 
     bool LiveBlockTask::IsTimeout()
     {
-        return tick_count_.elapsed() > timeout_;
+        return tick_count_.elapsed() > timeout_ || download_->IsPausing();
     }
 
     void LiveBlockTask::Timeout()
