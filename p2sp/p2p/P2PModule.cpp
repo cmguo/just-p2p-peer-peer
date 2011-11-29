@@ -192,12 +192,6 @@ namespace p2sp
             }
         }
 
-        // Upload Packet
-        if (UploadModule::Inst()->TryHandlePacket(packet_))
-        {
-            return;
-        }
-
         // Notify Packet
         protocol::VodPeerPacket const & packet = (protocol::VodPeerPacket const &)packet_;
 
@@ -220,6 +214,13 @@ namespace p2sp
             }
         }
 #endif
+
+        // Upload Packet
+        if (UploadModule::Inst()->TryHandlePacket(packet_))
+        {
+            return;
+        }
+
         // 否则
         //        下发给 RID 对应的 P2PDownloader 模块
         //          但是 如果 找不到 RID 对应的 P2PDownloader 模块
