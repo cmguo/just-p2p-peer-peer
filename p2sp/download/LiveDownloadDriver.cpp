@@ -753,7 +753,7 @@ namespace p2sp
         log_stream << "&G1=" << info.MaxUploadSpeedIncludeSameSubnet;
         log_stream << "&H1=" << info.MaxUploadSpeedExcludeSameSubnet;
         log_stream << "&I1=" << info.MaxUnlimitedUploadSpeedInRecord;
-        log_stream << "&J1=" << info.ChangeToP2PConditionWhenStart;
+        log_stream << "&J1=" << (uint32_t)info.ChangeToP2PConditionWhenStart;
         log_stream << "&K1=" << info.ChangedToHttpTimesWhenUrgent;
         log_stream << "&L1=" << info.BlockTimesWhenUseHttpUnderUrgentSituation;
 
