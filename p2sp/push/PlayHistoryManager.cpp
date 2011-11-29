@@ -146,7 +146,7 @@ void PlayHistoryManager::LoadFromFile()
 
 bool PlayHistoryManager::LoadFromFileImp(const std::string& path_file)
 {
-    std::ifstream ifs(path_file.c_str());
+    std::ifstream ifs(path_file.c_str(), std::ios::in|std::ios::binary);
     util::archive::BinaryIArchive<> bia(ifs);
 
     BOOST_ASSERT(play_history_deq_.size() == 0);
@@ -174,7 +174,7 @@ void PlayHistoryManager::BackupFile(const std::string& from, const std::string& 
 
 void PlayHistoryManager::SaveToFile() const
 {
-    std::ofstream ofs(path_file_.c_str());
+    std::ofstream ofs(path_file_.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
     util::archive::BinaryOArchive<> boa(ofs);
 
     boa & play_history_deq_;

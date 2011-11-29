@@ -312,14 +312,7 @@ namespace p2sp
         }
 
         if (response.transaction_id_ == last_transaction_id_) {
-            last_transaction_id_ = 0;
-            BOOST_ASSERT(state_.task_ == push::TASK_QUERY);
-
             if (response.error_code_ == 0) {
-                BOOST_ASSERT(push_task_deq_.size() == 0);
-                if (push_task_deq_.size() != 0) {
-                    return;
-                }
                 //save control parameter
                 task_param_ = response.response.response_push_task_param_;
 
