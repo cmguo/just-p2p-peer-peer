@@ -101,8 +101,7 @@ namespace p2sp
                 protocol::TRACKER_INFO ti;
                 assert(ia);
 
-                ia >> ti.StationNo;  // = framework::io::BytesToUI16(p_buf); p_buf += 2;
-                ia >> ti.Reserve;
+                ia >> ti.Length;  // = framework::io::BytesToUI16(p_buf); p_buf += 2;
                 ia >> ti.ModNo;  // = framework::io::BytesToUI08(p_buf); p_buf += 1;
                 ia >> ti.IP;  // = framework::io::BytesToUI32(p_buf); p_buf += 4;
                 ia >> ti.Port;  // = framework::io::BytesToUI16(p_buf); p_buf += 2;
