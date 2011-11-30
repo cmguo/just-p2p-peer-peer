@@ -240,6 +240,7 @@ namespace p2sp
         // P2P同样卡，再切换回去试试
         if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > 30000)
         {
+            GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
             changed_to_http_because_of_large_upload_ = false;
             return true;
         }
