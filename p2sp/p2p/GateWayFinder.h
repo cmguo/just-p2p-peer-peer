@@ -26,7 +26,9 @@ namespace p2sp
     private:
         void StartSend();
         void HandleTimeOut(const boost::system::error_code& error);
-        void HandleReceive(unsigned char type, const string & src_ip);
+        void HandleReceive(unsigned char type, const string & src_ip,
+            boost::uint32_t ping_rtt_for_win7 = 65535);
+
         void Reset();
 
     private:

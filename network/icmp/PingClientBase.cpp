@@ -26,17 +26,19 @@ namespace network
         }
     }
 
-    void PingClientBase::AddHandler(uint16_t sequence_num, boost::function<void(unsigned char, string)> handler)
+    void PingClientBase::AddHandler(uint16_t sequence_num, 
+        boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         assert(handler_map_.find(sequence_num) == handler_map_.end());
         handler_map_.insert(std::make_pair(sequence_num, handler));
     }
 
-    void PingClientBase::NotifyHandler(uint16_t sequence_num, unsigned char type, const string & ip)
+    void PingClientBase::NotifyHandler(uint16_t sequence_num, unsigned char type, const string & ip,
+        boost::uint32_t ping_rtt_for_win7)
     {
         if (handler_map_.find(sequence_num) != handler_map_.end())
         {
-            handler_map_[sequence_num](type, ip);
+            handler_map_[sequence_num](type, ip, ping_rtt_for_win7);
             handler_map_.erase(sequence_num);
         }
     }

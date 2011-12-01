@@ -27,7 +27,7 @@ namespace p2sp
         void ClearPingLostRate() {ping_lost_buffer_.Clear();}
 
     private:
-        void OnPingResponse(unsigned char type, const string & src_ip);
+        void OnPingResponse(unsigned char type, const string & src_ip, boost::uint32_t ping_rtt_for_win7 = 65535);
         void OnPingTimerElapsed(framework::timer::Timer * timer);
 
     private:

@@ -74,7 +74,7 @@ namespace p2sp
             {
                 time_sent_ = posix_time::microsec_clock::universal_time();
                 sequence_number_ = ping_client_->AsyncRequest(boost::bind(&GateWayFinder::HandleReceive,
-                    this, _1, _2));
+                    this, _1, _2, _3));
 
                 timer_.expires_at(time_sent_ + posix_time::seconds(10));
                 timer_.async_wait(boost::bind(&GateWayFinder::HandleTimeOut, this, _1));
@@ -98,7 +98,8 @@ namespace p2sp
         }
     }
 
-    void GateWayFinder::HandleReceive(unsigned char type, const string & src_ip)
+    void GateWayFinder::HandleReceive(unsigned char type, const string & src_ip,
+        boost::uint32_t ping_rtt_for_win7)
     {
         if (type == icmp_header::time_exceeded)
         {

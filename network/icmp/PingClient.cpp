@@ -22,7 +22,7 @@ namespace network
     {
     }
 
-    uint16_t PingClient::AsyncRequest(boost::function<void(unsigned char, string)> handler)
+    uint16_t PingClient::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         static string ping_request_body("Hello");
 

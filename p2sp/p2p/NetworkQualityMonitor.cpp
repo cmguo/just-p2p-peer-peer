@@ -76,18 +76,19 @@ namespace p2sp
                 }
             }
 
-            sequence_num_ = ping_client_->AsyncRequest(boost::bind(&NetworkQualityMonitor::OnPingResponse, this, _1, _2));
+            sequence_num_ = ping_client_->AsyncRequest(boost::bind(&NetworkQualityMonitor::OnPingResponse, this, _1, _2, _3));
             ping_counter_.start();
             is_ping_replied_ = false;
         }
     }
 
-    void NetworkQualityMonitor::OnPingResponse(unsigned char type, const string & src_ip)
+    void NetworkQualityMonitor::OnPingResponse(unsigned char type, const string & src_ip,
+        boost::uint32_t ping_rtt_for_win7)
     {
         if (type == icmp_header::echo_reply)
         {
             assert(src_ip == gateway_ip_);
-            ping_delay_buffer_.Push(ping_counter_.elapsed());
+            ping_delay_buffer_.Push(std::min(ping_counter_.elapsed(), ping_rtt_for_win7));
             is_ping_replied_ = true;
         }
         else

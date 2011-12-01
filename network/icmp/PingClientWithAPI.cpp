@@ -37,7 +37,7 @@ namespace network
         free(reply_buffer_);
     }
 
-    uint16_t PingClientWithAPI::AsyncRequest(boost::function<void(unsigned char, string)> handler)
+    uint16_t PingClientWithAPI::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         sequence_num_++;
         assert(ping_body_.length() >= 12);
@@ -95,7 +95,8 @@ namespace network
             global_io_svc().post(boost::bind(&PingClientWithAPI::NotifyHandler, ping_client_with_api_,
                 ping_client_with_api_->sequence_num_,
                 ping_client_with_api_->ip_option_.Ttl == 255 ? IP_SUCCESS : icmp_header::time_exceeded,
-                string(inet_ntoa(ReplyAddr)))
+                string(inet_ntoa(ReplyAddr)),
+                boost::uint32_t(pEchoReply->RoundTripTime))
                 );
         }
         else 
