@@ -1072,7 +1072,7 @@ namespace p2sp
 
         protocol::QuerySnListPacket query_sn_list_packet(protocol::Packet::NewTransactionID(),
             protocol::PEER_VERSION, server_list_endpoint_);
-        //AppModule::Inst()->DoSendPacket(query_sn_list_packet);
+        AppModule::Inst()->DoSendPacket(query_sn_list_packet);
     }
 
     void IndexManager::OnQuerySnListPacket(protocol::QuerySnListPacket const & packet)
