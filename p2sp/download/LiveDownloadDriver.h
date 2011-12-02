@@ -287,6 +287,8 @@ namespace p2sp
         virtual bool ShouldUseCDNWhenLargeUpload() const;
         virtual boost::uint32_t GetRestPlayTimeDelim() const;
         virtual bool IsUploadSpeedLargeEnough();
+        virtual bool IsUploadSpeedSmallEnough();
+        virtual bool GetUsingCdnTimeAtLeastWhenLargeUpload() const;
 
         virtual void SetUseCdnBecauseOfLargeUpload();
         virtual void SetUseP2P();
@@ -368,6 +370,8 @@ namespace p2sp
         bool use_cdn_when_large_upload_;
         boost::uint32_t rest_play_time_delim_;
         boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
+        boost::uint32_t small_ratio_delim_of_upload_speed_to_datarate_;
+        boost::uint32_t using_cdn_time_at_least_when_large_upload_;
 
         framework::timer::TickCounter download_time_;
 

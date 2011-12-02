@@ -265,7 +265,7 @@ namespace p2sp
         void CheckBlockComplete();
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
-        bool ShouldUseUdpServer();
+        void CheckShouldUseUdpServer();
 
         storage::LivePosition GetMinPlayingPosition() const;
         void EliminateElapsedBlockCountMap(boost::uint32_t block_id);
@@ -331,6 +331,15 @@ namespace p2sp
         boost::uint32_t download_bytes_use_udpserver_because_of_large_upload_;
 
         boost::uint32_t send_peer_info_packet_interval_in_second_;
+
+        boost::uint32_t urgent_rest_playable_time_delim_;
+        boost::uint32_t safe_rest_playable_time_delim_;
+        boost::uint32_t safe_enough_rest_playable_time_delim_;
+        boost::uint32_t using_udpserver_time_in_second_delim_;
+        boost::uint32_t using_udpserver_time_at_least_when_large_upload_;
+        boost::uint32_t use_udpserver_count_;
+
+        bool should_connect_udpserver_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

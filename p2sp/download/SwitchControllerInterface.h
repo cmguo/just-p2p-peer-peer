@@ -199,6 +199,8 @@ namespace p2sp
         virtual bool ShouldUseCDNWhenLargeUpload() const = 0;
         virtual boost::uint32_t GetRestPlayTimeDelim() const = 0;
         virtual bool IsUploadSpeedLargeEnough() = 0;
+        virtual bool IsUploadSpeedSmallEnough() = 0;
+        virtual bool GetUsingCdnTimeAtLeastWhenLargeUpload() const = 0;
 
         virtual void SetUseCdnBecauseOfLargeUpload() = 0;
         virtual void SetUseP2P() = 0;

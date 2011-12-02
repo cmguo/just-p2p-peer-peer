@@ -42,6 +42,8 @@ namespace p2sp
         , using_cdn_because_of_large_upload_(false)
         , changed_to_http_times_when_urgent_(0)
         , block_times_when_use_http_under_urgent_situation_(0)
+        , small_ratio_delim_of_upload_speed_to_datarate_(100)
+        , using_cdn_time_at_least_when_large_upload_(30)
     {
     }
 
@@ -820,6 +822,8 @@ namespace p2sp
         use_cdn_when_large_upload_ = BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload();
         rest_play_time_delim_ = BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim();
         ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetRatioDelimOfUploadSpeedToDatarate();
+        small_ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetSmallRatioDelimOfUploadSpeedToDatarate();
+        using_cdn_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
     }
 
     bool LiveDownloadDriver::ShouldUseCDNWhenLargeUpload() const
@@ -835,6 +839,16 @@ namespace p2sp
     bool LiveDownloadDriver::IsUploadSpeedLargeEnough()
     {
         return statistic::StatisticModule::Inst()->GetMinuteUploadDataSpeed() > GetDataRate() * ratio_delim_of_upload_speed_to_datarate_ / 100;
+    }
+
+    bool LiveDownloadDriver::IsUploadSpeedSmallEnough()
+    {
+        return statistic::StatisticModule::Inst()->GetMinuteUploadDataSpeed() < GetDataRate() * small_ratio_delim_of_upload_speed_to_datarate_ / 100;
+    }
+
+    bool LiveDownloadDriver::GetUsingCdnTimeAtLeastWhenLargeUpload() const
+    {
+        return using_cdn_time_at_least_when_large_upload_;
     }
 
     void LiveDownloadDriver::SetUseCdnBecauseOfLargeUpload()

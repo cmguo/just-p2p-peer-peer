@@ -72,6 +72,41 @@ namespace p2sp
             return send_peer_info_packet_interval_in_second_;
         }
 
+        boost::uint32_t GetUrgentRestPlayableTimeDelim() const
+        {
+            return urgent_rest_playable_time_delim_;
+        }
+
+        boost::uint32_t GetSafeRestPlayableTimeDelim() const
+        {
+            return safe_rest_playable_time_delim_;
+        }
+
+        boost::uint32_t GetSafeEnoughRestPlayabelTimeDelim() const
+        {
+            return safe_enough_rest_playable_time_delim_;
+        }
+
+        boost::uint32_t GetUsingUdpServerTimeDelim() const
+        {
+            return using_udpserver_time_in_second_delim_;
+        }
+
+        boost::uint32_t GetUsingCDNOrUdpServerTimeDelim() const
+        {
+            return using_cdn_or_udpserver_time_at_least_when_large_upload_;
+        }
+
+        boost::uint32_t GetSmallRatioDelimOfUploadSpeedToDatarate() const
+        {
+            return small_ratio_delim_of_upload_speed_to_datarate_;
+        }
+
+        boost::uint32_t GetUseUdpserverCount() const
+        {
+            return use_udpserver_count_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -112,6 +147,32 @@ namespace p2sp
 
         // 每隔多久发送一次PeerInfoPacket，用于直播时Peer间信息交换
         boost::uint32_t send_peer_info_packet_interval_in_second_;
+
+        // 当剩余时间小于这个值时，会认为紧急，需要使用UdpServer，在BS配置文件中用rpt1表示(rest playable time)
+        boost::uint32_t urgent_rest_playable_time_delim_;
+
+        // 当剩余时间大于这个值时，会认为安全了，如果已经用了足够长时间的UdpServer，则暂停使用UdpServer
+        // 在BS配置文件中用rpt2表示
+        boost::uint32_t safe_rest_playable_time_delim_;
+
+        // 当剩余时间大于这个值时，会认为足够安全了，停止使用UdpServer并且踢掉UdpServer的连接
+        // 在BS配置文件中用rpt3表示
+        boost::uint32_t safe_enough_rest_playable_time_delim_;
+
+        // 当已经使用UdpServer的时间超过这个值时，会认为用的足够长了
+        // 在BS配置文件中用ut1表示(using time)
+        boost::uint32_t using_udpserver_time_in_second_delim_;
+
+        // 如果因为上传足够大使用CDN或者是UdpServer，最少使用长时间
+        // 在BS配置文件中用ut2表示
+        boost::uint32_t using_cdn_or_udpserver_time_at_least_when_large_upload_;
+
+        // 当上传小于码流率的small_ratio_delim_of_upload_speed_to_datarate_ / 100倍时，认为上传速度不够大，停止使用UdpServer或者CDN
+        // 在BS配置文件中用sr表示(small ratio)
+        boost::uint32_t small_ratio_delim_of_upload_speed_to_datarate_;
+
+        // 同时连接几个UdpServer，在BS配置文件中用uuc来表示(use udpserver count)
+        boost::uint32_t use_udpserver_count_;
     };
 }
 #endif

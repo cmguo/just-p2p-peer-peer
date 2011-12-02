@@ -323,8 +323,8 @@ namespace p2sp
             return true;
         }
 
-        if (!GetGlobalDataProvider()->IsUploadSpeedLargeEnough()
-            && time_counter_2300_.elapsed() > 30000)
+        if (GetGlobalDataProvider()->IsUploadSpeedSmallEnough()
+            && time_counter_2300_.elapsed() > GetGlobalDataProvider()->GetUsingCdnTimeAtLeastWhenLargeUpload() * 1000)
         {
             return true;
         }

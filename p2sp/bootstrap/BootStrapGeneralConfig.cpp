@@ -29,6 +29,13 @@ namespace p2sp
         , ratio_delim_of_upload_speed_to_datarate_(200)
         , limit_upload_speed_for_live2_(true)
         , send_peer_info_packet_interval_in_second_(5)
+        , urgent_rest_playable_time_delim_(10)
+        , safe_rest_playable_time_delim_(15)
+        , safe_enough_rest_playable_time_delim_(20)
+        , using_udpserver_time_in_second_delim_(60)
+        , small_ratio_delim_of_upload_speed_to_datarate_(100)
+        , using_cdn_or_udpserver_time_at_least_when_large_upload_(30)
+        , use_udpserver_count_(3)
     {
     }
 
@@ -104,7 +111,14 @@ namespace p2sp
                 ("config.restplaytime", po::value<uint32_t>()->default_value(rest_play_time_delim_))
                 ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_))
                 ("config.limitlive2upload", po::value<bool>()->default_value(limit_upload_speed_for_live2_))
-                ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_));
+                ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
+                ("config.rpt1", po::value<uint32_t>()->default_value(urgent_rest_playable_time_delim_))
+                ("config.rpt2", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_))
+                ("config.rpt3", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_))
+                ("config.ut1", po::value<uint32_t>()->default_value(using_udpserver_time_in_second_delim_))
+                ("config.ut2", po::value<uint32_t>()->default_value(using_cdn_or_udpserver_time_at_least_when_large_upload_))
+                ("config.sr", po::value<uint32_t>()->default_value(small_ratio_delim_of_upload_speed_to_datarate_))
+                ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_));
 
             std::istringstream config_stream(config_string);
 
@@ -124,6 +138,13 @@ namespace p2sp
             data_collection_server_list_ = vm["config.dc_servers"].as<string>();
             limit_upload_speed_for_live2_ = vm["config.limitlive2upload"].as<bool>();
             send_peer_info_packet_interval_in_second_ = vm["config.peerinfointerval"].as<uint32_t>();
+            urgent_rest_playable_time_delim_ = vm["config.rpt1"].as<uint32_t>();
+            safe_rest_playable_time_delim_ = vm["config.rpt2"].as<uint32_t>();
+            safe_enough_rest_playable_time_delim_ = vm["config.rpt3"].as<uint32_t>();
+            using_udpserver_time_in_second_delim_ = vm["config.ut1"].as<uint32_t>();
+            using_cdn_or_udpserver_time_at_least_when_large_upload_ = vm["config.ut2"].as<uint32_t>();
+            small_ratio_delim_of_upload_speed_to_datarate_ = vm["config.sr"].as<uint32_t>();
+            use_udpserver_count_ = vm["config.uuc"].as<uint32_t>();
 
             if (save_to_disk)
             {

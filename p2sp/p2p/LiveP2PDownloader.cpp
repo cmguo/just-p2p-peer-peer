@@ -28,8 +28,15 @@ namespace p2sp
         , time_elapsed_use_udpserver_because_of_large_upload_(0)
         , download_bytes_use_udpserver_because_of_urgent_(0)
         , download_bytes_use_udpserver_because_of_large_upload_(0)
+        , should_connect_udpserver_(false)
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
+        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
+        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim();
+        safe_enough_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayabelTimeDelim();
+        using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
+        using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
+        use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
     }
 
     void LiveP2PDownloader::Start()
@@ -171,56 +178,58 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            if (should_use_udpserver_ == false || use_udpserver_tick_counter_.elapsed() > 60000)
+            bool tmp_should_use_udpserver = should_use_udpserver_;
+
+            CheckShouldUseUdpServer();
+
+            // 需要切换
+            if (should_use_udpserver_ != tmp_should_use_udpserver)
             {
-                // 需要切换
-                if (should_use_udpserver_ != ShouldUseUdpServer())
+                // 由不用改为用
+                if (should_use_udpserver_ == true)
                 {
-                    should_use_udpserver_ = !should_use_udpserver_;
-
-                    // 由不用改为用
-                    if (should_use_udpserver_ == true)
+                    switch (use_udpserver_reason_)
                     {
-                        switch (use_udpserver_reason_)
-                        {
-                        case URGENT:
-                            ++times_of_use_udpserver_because_of_urgent_;
-                            break;
-                        case LARGE_UPLOAD:
-                            ++times_of_use_udpserver_because_of_large_upload_;
-                            break;
-                        default:
-                            break;
-                        }
+                    case URGENT:
+                        ++times_of_use_udpserver_because_of_urgent_;
+                        break;
+                    case LARGE_UPLOAD:
+                        ++times_of_use_udpserver_because_of_large_upload_;
+                        break;
+                    default:
+                        break;
+                    }
 
-                        use_udpserver_tick_counter_.reset();
-                    }
-                    else
-                    {
-                        switch (use_udpserver_reason_)
-                        {
-                        case URGENT:
-                            time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
-                            break;
-                        case LARGE_UPLOAD:
-                            time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
-                            break;
-                        default:
-                            break;
-                        }
-                    }
+                    use_udpserver_tick_counter_.reset();
                 }
-
-                if (should_use_udpserver_ == false)
+                else
                 {
-                    assert(!download_driver_s_.empty());
-
-                    if (connected_udpserver_count_ > 0 && (*download_driver_s_.begin())->GetRestPlayableTime() > 20)
+                    switch (use_udpserver_reason_)
                     {
-                        udpserver_pool_->DisConnectAll();
-
-                        DeleteAllUdpServer();
+                    case URGENT:
+                        time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+                        break;
+                    case LARGE_UPLOAD:
+                        time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+                        break;
+                    default:
+                        break;
                     }
+
+                    use_udpserver_reason_ = NO_USE_UDPSERVER;
+                }
+            }
+
+            if (should_use_udpserver_ == false)
+            {
+                assert(!download_driver_s_.empty());
+
+                if (connected_udpserver_count_ > 0 &&
+                    (*download_driver_s_.begin())->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
+                {
+                    udpserver_pool_->DisConnectAll();
+
+                    DeleteAllUdpServer();
                 }
             }
         }
@@ -232,7 +241,7 @@ namespace p2sp
             SendPeerInfo();
         }
 
-        if (times % 4*30 == 0)
+        if (times % (4*30) == 0)
         {
             ippool_->KickTrivialCandidatePeers();
             udpserver_pool_->KickTrivialCandidatePeers();
@@ -521,7 +530,7 @@ namespace p2sp
             LIMIT_MIN(connect_count, 1);
         }
 
-        if (connect_count <= 0 && !should_use_udpserver_)
+        if (connect_count <= 0 && !should_connect_udpserver_ && !should_use_udpserver_)
         {
             // no need to connect new peers. skip.
             return;
@@ -538,9 +547,9 @@ namespace p2sp
             connector_->Connect(candidate_peer_info);
         }
 
-        if (should_use_udpserver_)
+        if (should_connect_udpserver_ || should_use_udpserver_)
         {
-            for (boost::uint32_t i = connected_udpserver_count_; i < 2 && i < udpserver_pool_->GetPeerCount(); ++i)
+            for (boost::uint32_t i = connected_udpserver_count_; i < use_udpserver_count_ && i < udpserver_pool_->GetPeerCount(); ++i)
             {
                 protocol::CandidatePeerInfo candidate_peer_info;
 
@@ -1015,26 +1024,64 @@ namespace p2sp
         }
     }
 
-    bool LiveP2PDownloader::ShouldUseUdpServer()
+    void LiveP2PDownloader::CheckShouldUseUdpServer()
     {
-        if (GetMinRestTimeInSeconds() < 10)
+        // 剩余时间小，使用UdpServer来补带宽
+        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_)
         {
             use_udpserver_reason_ = URGENT;
-            return true;
+            should_use_udpserver_ = true;
+            should_connect_udpserver_ = true;
+            return;
+        }
+
+        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2)
+        {
+            should_connect_udpserver_ = true;
+        }
+        else
+        {
+            should_connect_udpserver_ = false;
         }
 
         assert(!download_driver_s_.empty());
         std::set<LiveDownloadDriver::p>::const_iterator download_driver = download_driver_s_.begin();
 
+        // 上传足够大，剩余时间足够大，并且跟视野中的peer相比，跑的足够靠前，使用UdpServer来快速分发
         if ((*download_driver)->IsUploadSpeedLargeEnough() &&
             (*download_driver)->GetRestPlayableTime() > (*download_driver)->GetRestPlayTimeDelim() &&
             IsAheadOfMostPeers())
         {
             use_udpserver_reason_ = LARGE_UPLOAD;
-            return true;
+            should_use_udpserver_ = true;
+            return;
         }
 
-        return false;
+        // 如果是因为上传大而使用UdpServer的，若上传变小并且也使用UdpServer使用了一段时间了，则暂停使用UdpServer
+        if (use_udpserver_reason_ == LARGE_UPLOAD &&
+            (*download_driver)->IsUploadSpeedLargeEnough() &&
+            use_udpserver_tick_counter_.elapsed() > using_udpserver_time_at_least_when_large_upload_ * 1000)
+        {
+            should_use_udpserver_ = false;
+            return;
+        }
+
+        // 如果是因为紧急而使用的UdpServer，若剩余时间足够大了，则暂停使用UdpServer
+        if (use_udpserver_reason_ == URGENT &&
+            (*download_driver)->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
+        {
+            should_use_udpserver_ = false;
+            return;
+        }
+
+        // 如果是因为紧急而使用的UdpServer，若跑了很长时间剩余时间还可以，则暂停使用UdpServer
+        if (use_udpserver_reason_ == URGENT &&
+            use_udpserver_tick_counter_.elapsed() > using_udpserver_time_in_second_delim_ * 1000 &&
+            (*download_driver)->GetRestPlayableTime() > safe_rest_playable_time_delim_)
+        {
+            should_use_udpserver_ = false;
+            return;
+        }
     }
 
     void LiveP2PDownloader::DeleteAllUdpServer()
@@ -1190,5 +1237,11 @@ namespace p2sp
     void LiveP2PDownloader::OnConfigUpdated()
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
+        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
+        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim();
+        safe_enough_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayabelTimeDelim();
+        using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
+        using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
+        use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
     }
 }
