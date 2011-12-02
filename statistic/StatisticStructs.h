@@ -155,6 +155,16 @@ namespace statistic
         boost::uint16_t AddUrlRIDRequestCount;
         boost::uint16_t AddUrlRIDResponseCount;
 
+        STATISTIC_INDEX_INFO()
+        {
+            Clear();
+        }
+
+        void Clear()
+        {
+            memset(this, 0, sizeof(STATISTIC_INDEX_INFO));
+        }
+
         template <typename Archive>
         void serialize(Archive & ar)
         {
@@ -393,13 +403,7 @@ namespace statistic
 
         PEER_INFO()
         {
-            download_connected_count_ = 0;
-            upload_connected_count_ = 0;
-            mine_upload_speed_ = 0;
-            max_upload_speed_ = 0;
-            rest_playable_time_ = 0;
-            lost_rate_ = 0;
-            redundancy_rate_ = 0;
+            Clear();
         }
 
         PEER_INFO(boost::uint8_t download_connected_count, boost::uint8_t upload_connected_count, boost::uint32_t mine_upload_speed,
@@ -710,6 +714,11 @@ namespace statistic
         boost::uint8_t  HttpDownloaderCount;
         HTTP_DOWNLOADER_INFO HttpDownloaders[MAX_HTTP_DOWNLOADER_COUNT];
 
+        DOWNLOADDRIVER_STATISTIC_INFO()
+        {
+            Clear();
+        }
+
         void Clear()
         {
             memset(this, 0, sizeof(DOWNLOADDRIVER_STATISTIC_INFO));
@@ -810,6 +819,11 @@ namespace statistic
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
 
+        LIVE_DOWNLOADDRIVER_STATISTIC_INFO()
+        {
+            Clear();
+        }
+
         void Clear()
         {
             memset(this, 0, sizeof(LIVE_DOWNLOADDRIVER_STATISTIC_INFO));
@@ -878,6 +892,11 @@ namespace statistic
 
     struct PEER_UPLOAD_INFO
     {
+        PEER_UPLOAD_INFO()
+        {
+            Clear();
+        }
+
         uint32_t ip;
         boost::uint16_t port;
         boost::uint32_t upload_speed;
@@ -892,11 +911,21 @@ namespace statistic
 
     struct UPLOAD_INFO
     {
+        UPLOAD_INFO()
+        {
+            Clear();
+        }
+
         boost::uint8_t peer_upload_count;
         boost::uint8_t speed_limit;
         boost::uint32_t upload_speed;
         boost::uint8_t resersed[124];
         PEER_UPLOAD_INFO peer_upload_info[256];
+
+        void Clear()
+        {
+            memset(this, 0, sizeof(UPLOAD_INFO));
+        }
     };
 
     typedef struct _BASICPEERINFO
