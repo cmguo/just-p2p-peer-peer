@@ -1048,16 +1048,35 @@ namespace p2sp
             }
             // LOGX(__DEBUG, "proxy", "IsHttpDownloading: proxy_connection " << proxy_conn);
 
-            DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
-            if (!dd || !dd->IsRunning()) {
-                // LOGX(__DEBUG, "downloadcenter", "DownloadDriver NULL or Not Running or HTTPControlTarget NULL!!");
-                continue;
+            boost::shared_ptr<IGlobalControlTarget> control_target;
+            if (proxy_conn->IsLiveConnection())
+            {
+                LiveDownloadDriver__p live_download_driver = proxy_conn->GetLiveDownloadDriver();
+                if (!live_download_driver)
+                {
+                    continue;
+                }           
+
+                control_target = live_download_driver;
+            }
+            else
+            {
+                DownloadDriver::p vod_download_driver = proxy_conn->GetDownloadDriver();
+                if (!vod_download_driver || !vod_download_driver->IsRunning()) 
+                {
+                    continue;
+                }
+
+                control_target = vod_download_driver;
             }
             // LOGX(__DEBUG, "proxy", "IsHttpDownloading: DownloadDriver " << dd);
 
-            IHTTPControlTarget::p http = dd->GetHTTPControlTarget();
+            assert(control_target);
+            IHTTPControlTarget::p http = control_target->GetHTTPControlTarget();
             if (http && !http->IsPausing())
+            {
                 return true;
+            }
         }
         return false;
     }

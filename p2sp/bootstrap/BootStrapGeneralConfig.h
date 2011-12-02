@@ -42,6 +42,16 @@ namespace p2sp
             return use_cdn_when_large_upload_;
         }
 
+        boost::uint32_t GetDesirableVodIpPoolSize() const 
+        { 
+            return desirable_vod_ippool_size_; 
+        }
+        
+        boost::uint32_t GetDesirableLiveIpPoolSize() const 
+        { 
+            return desirable_live_ippool_size_; 
+        }
+
         boost::uint32_t GetRestPlayTimeDelim() const
         {
             return rest_play_time_delim_;
@@ -84,6 +94,9 @@ namespace p2sp
         UploadPolicy upload_policy_;
 
         bool connection_policy_enable_;
+
+        boost::uint32_t desirable_vod_ippool_size_;
+        boost::uint32_t desirable_live_ippool_size_;
 
         // 当上传速度很大，并且正在下比较靠前的块时，切换到cdn下载，让peer充当udpserver来快速分发
         bool use_cdn_when_large_upload_;

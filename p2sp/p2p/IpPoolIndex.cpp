@@ -12,7 +12,7 @@ namespace p2sp
         key_ = candidate_peer.GetKey();
         next_time_to_connect_ = candidate_peer.last_connect_time_ + candidate_peer.connect_protect_time_;
         is_connecting_ = candidate_peer.is_connecting_;
-        is_connction_ = candidate_peer.is_connction_;
+        is_connected_ = candidate_peer.is_connected_;
         tracker_priority_ = 255 - candidate_peer.TrackerPriority;
     }
 }

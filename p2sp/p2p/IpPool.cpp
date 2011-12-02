@@ -136,7 +136,54 @@ namespace p2sp
             AddPeer(peer);
         }
 
+        KickTrivialCandidatePeers();
+
         //DebugLog("IpPool::AddCandidatePeers not_tried_peer_count_:%d", not_tried_peer_count_);
+    }
+
+    void IpPool::KickTrivialCandidatePeers()
+    {
+        if (!desirable_pool_size_ ||
+            candidate_peers_.empty())
+        {
+            return;
+        }
+            
+        size_t peers_to_delete = 0;
+        if (candidate_peers_.size() > desirable_pool_size_)
+        {
+            peers_to_delete = candidate_peers_.size() - desirable_pool_size_;
+        }
+
+        size_t peers_deleted = 0;
+        size_t max_connection_attempts_allowed = desirable_pool_size_/this->candidate_peers_.size();
+
+        for(std::map<ActiveIndicator, CandidatePeer::p>::iterator iter = active_index_.begin();
+            iter != active_index_.end() && peers_deleted < peers_to_delete;)
+        {
+            CandidatePeer::p peer = iter->second;
+            ++iter;
+
+            if (!peer->is_connected_ && !peer->is_connecting_)
+            {
+                if (peers_deleted < peers_to_delete ||
+                    peer->connections_attempted_ > max_connection_attempts_allowed)
+                {
+                    DeleteIndex(peer);
+                    candidate_peers_.erase(peer->GetKey());
+                    ++peers_deleted;
+                }
+            }
+        }
+
+        if (peers_deleted)
+        {
+            DebugLog("IpPool::KickTrivialCandidatePeers: kicked %d peers.", peers_deleted);
+        }
+
+        assert(candidate_peers_.size() == active_index_.size());
+        assert(candidate_peers_.size() == connect_index_.size());
+        assert(candidate_peers_.size() == exchange_index_.size());
     }
 
     bool IpPool::GetForConnect(protocol::CandidatePeerInfo& peer_info, bool is_udpserver)
@@ -207,7 +254,8 @@ namespace p2sp
 
         IPPoolIndexUpdating updating(peer, shared_from_this());
         peer->is_connecting_ = true;
-        peer->is_connction_ = false;
+        peer->is_connected_ = false;
+        ++(peer->connections_attempted_);
         peer->OnConnectSucceed();
     }
 
@@ -227,7 +275,7 @@ namespace p2sp
 
         IPPoolIndexUpdating updating(peer, shared_from_this());
         peer->is_connecting_ = false;
-        peer->is_connction_ = false;
+        peer->is_connected_ = false;
         peer->OnConnectFailed();
     }
 
@@ -247,7 +295,7 @@ namespace p2sp
 
         IPPoolIndexUpdating updating(peer, shared_from_this());
         peer->is_connecting_ = false;
-        peer->is_connction_ = false;
+        peer->is_connected_ = false;
         peer->OnConnectTimeout();
     }
     void IpPool::OnConnectSucced(const boost::asio::ip::udp::endpoint& end_point)
@@ -267,7 +315,7 @@ namespace p2sp
         IPPoolIndexUpdating updating(peer, shared_from_this());
         peer->last_active_time_ = framework::timer::TickCounter::tick_count();
         peer->is_connecting_ = false;
-        peer->is_connction_ = true;
+        peer->is_connected_ = true;
     }
 
     void IpPool::OnDisConnect(const boost::asio::ip::udp::endpoint& end_point)
@@ -291,7 +339,7 @@ namespace p2sp
         peer->last_connect_time_ = peer->last_active_time_;
 
         peer->is_connecting_ = false;
-        peer->is_connction_ = false;
+        peer->is_connected_ = false;
     }
 
     void IpPool::AddIndex(CandidatePeer::p peer)
@@ -323,7 +371,7 @@ namespace p2sp
             iter->second->last_active_time_ = framework::timer::TickCounter::tick_count();
             iter->second->last_connect_time_ = iter->second->last_active_time_;
             iter->second->is_connecting_ = false;
-            iter->second->is_connction_ = false;
+            iter->second->is_connected_ = false;
         }
     }
 }

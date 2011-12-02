@@ -35,11 +35,12 @@ namespace p2sp
     void LiveP2PDownloader::Start()
     {
         // IPPool
-        ippool_ = IpPool::create();
+        ippool_ = IpPool::create(BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize());
         ippool_->Start();
 
         // UdpServer Pool
-        udpserver_pool_ = IpPool::create();
+        const size_t DesirableUdpServerIpPoolSize = 100;
+        udpserver_pool_ = IpPool::create(DesirableUdpServerIpPoolSize);
         udpserver_pool_->Start();
 
         // Exchange
@@ -229,6 +230,12 @@ namespace p2sp
         if (times % (send_peer_info_packet_interval_in_second_ * 4) == 0)
         {
             SendPeerInfo();
+        }
+
+        if (times % 4*30 == 0)
+        {
+            ippool_->KickTrivialCandidatePeers();
+            udpserver_pool_->KickTrivialCandidatePeers();
         }
     }
 

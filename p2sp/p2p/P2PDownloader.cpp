@@ -96,7 +96,7 @@ namespace p2sp
         statistic_->SetBlockNum(instance_->GetBlockCount());
         statistic_->SetBlockSize(block_size_);
 
-        ippool_ = IpPool::create();
+        ippool_ = IpPool::create(BootStrapGeneralConfig::Inst()->GetDesirableVodIpPoolSize());
         ippool_->Start();
 
         exchanger_ = Exchanger::create(shared_from_this(), ippool_);
@@ -907,6 +907,11 @@ namespace p2sp
                 iter->second->OnP2PTimer(times);
                 iter++;
             }
+        }
+
+        if (times % 4*30 == 0 && ippool_)
+        {
+            ippool_->KickTrivialCandidatePeers();
         }
 
         // 判断 连接状态 是否改变

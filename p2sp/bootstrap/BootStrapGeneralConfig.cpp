@@ -23,6 +23,8 @@ namespace p2sp
         , upload_policy_(policy_default)
         , connection_policy_enable_(true)
         , use_cdn_when_large_upload_(false)
+        , desirable_vod_ippool_size_(500)
+        , desirable_live_ippool_size_(1000)
         , rest_play_time_delim_(25)
         , ratio_delim_of_upload_speed_to_datarate_(200)
         , limit_upload_speed_for_live2_(true)
@@ -97,6 +99,8 @@ namespace p2sp
                 ("config.uploadpolicy", po::value<uint32_t>()->default_value((uint32_t)upload_policy_))
                 ("config.connectionpolicy", po::value<bool>()->default_value(connection_policy_enable_))
                 ("config.usecdnpolicy", po::value<bool>()->default_value(use_cdn_when_large_upload_))
+                ("config.vps", po::value<uint32_t>()->default_value(desirable_vod_ippool_size_))
+                ("config.lps", po::value<uint32_t>()->default_value(desirable_live_ippool_size_))
                 ("config.restplaytime", po::value<uint32_t>()->default_value(rest_play_time_delim_))
                 ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_))
                 ("config.limitlive2upload", po::value<bool>()->default_value(limit_upload_speed_for_live2_))
@@ -113,6 +117,8 @@ namespace p2sp
             upload_policy_ = (UploadPolicy)(vm["config.uploadpolicy"].as<uint32_t>());
             connection_policy_enable_ = vm["config.connectionpolicy"].as<bool>();
             use_cdn_when_large_upload_ = vm["config.usecdnpolicy"].as<bool>();
+            desirable_live_ippool_size_ = vm["config.lps"].as<uint32_t>();
+            desirable_vod_ippool_size_ = vm["config.vps"].as<uint32_t>();
             rest_play_time_delim_ = vm["config.restplaytime"].as<uint32_t>();
             ratio_delim_of_upload_speed_to_datarate_ = vm["config.ratiodelim"].as<uint32_t>();
             data_collection_server_list_ = vm["config.dc_servers"].as<string>();

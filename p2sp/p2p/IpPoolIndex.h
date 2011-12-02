@@ -45,14 +45,14 @@ namespace p2sp
         protocol::SocketAddr key_;
         uint32_t next_time_to_connect_;
         bool is_connecting_;
-        bool is_connction_;
+        bool is_connected_;
 
         uint32_t tracker_priority_;
 
         // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
         {
-            return is_connecting_ == false && is_connction_ == false;
+            return is_connecting_ == false && is_connected_ == false;
         }
 
         ConnectIndicator(const CandidatePeer & candidate_peer);
@@ -121,12 +121,14 @@ namespace p2sp
         bool is_connecting_;
 
         /// 是否正在连接中
-        bool is_connction_;
+        bool is_connected_;
 
         /// 连接包含时间
         uint32_t connect_protect_time_;
         uint32_t connect_protect_time_count_;
         uint32_t connect_protect_time_index_;
+
+        size_t connections_attempted_;
 
     public:
         // 属性
@@ -186,7 +188,7 @@ namespace p2sp
         // 还检测了是否处于连接的保护时间内
         bool CanConnect(bool is_udpserver = false) const
         {
-            if (is_connction_ || is_connecting_)
+            if (is_connected_ || is_connecting_)
             {
                 return false;
             }
@@ -217,6 +219,7 @@ namespace p2sp
             connect_protect_time_ = peer->connect_protect_time_;
             connect_protect_time_count_ = peer->connect_protect_time_count_;
             connect_protect_time_index_ = peer->connect_protect_time_index_;
+            connections_attempted_ = peer->connections_attempted_;
 
             if (UploadPriority != 1)
             {
@@ -232,9 +235,10 @@ namespace p2sp
             , last_connect_time_(0)
             , exchange_times_(0)
             , is_connecting_(false)
-            , is_connction_(false)
+            , is_connected_(false)
             , connect_protect_time_(P2SPConfigs::CONNECT_INITIAL_PROTECT_TIME_IN_MILLISEC)
             , connect_protect_time_count_(0), connect_protect_time_index_(0)
+            , connections_attempted_(0)
         {
         }
     };

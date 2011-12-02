@@ -260,7 +260,10 @@ namespace p2sp
             ((const protocol::RequestSubPiecePacket &)packet).priority_,
             ((const protocol::RequestSubPiecePacket &)packet).protocol_version_);
 
-        connections_management_.GetPeerUploadInfo(packet.end_point).speed_info.SubmitUploadedBytes(SUB_PIECE_SIZE);
+        if (connections_management_.IsPeerConnected(packet.end_point))
+        {
+            connections_management_.GetPeerUploadInfo(packet.end_point).speed_info.SubmitUploadedBytes(SUB_PIECE_SIZE);
+        }
     }
 
     void VodUploadManager::OnAsyncGetSubPieceFailed(const RID& rid, protocol::SubPieceInfo const& subpiece_info,

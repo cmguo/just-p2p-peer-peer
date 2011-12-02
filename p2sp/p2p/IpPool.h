@@ -26,7 +26,7 @@ namespace p2sp
         friend struct IPPoolIndexUpdating;
     public:
         typedef boost::shared_ptr<IpPool> p;
-        static p create() { return p(new IpPool()); }
+        static p create(size_t desirable_pool_size) { return p(new IpPool(desirable_pool_size)); }
     public:
         // 启停
         void Start();
@@ -48,11 +48,14 @@ namespace p2sp
 
         void DisConnectAll();
 
+        void KickTrivialCandidatePeers();
+
     protected:
         void AddIndex(CandidatePeer::p peer);
         void DeleteIndex(CandidatePeer::p peer);
         void AddPeer(CandidatePeer::p peer);
         bool IsSelf(CandidatePeer::p peer);
+
     private:
         // 变量
         std::map<protocol::SocketAddr, CandidatePeer::p> candidate_peers_;
@@ -64,9 +67,12 @@ namespace p2sp
         volatile bool is_running_;
 
         boost::int32_t not_tried_peer_count_;
+
+        size_t desirable_pool_size_;
+
     private:
         // 构造
-        IpPool() : is_running_(false) , not_tried_peer_count_(0) {}
+        IpPool(size_t desirable_pool_size) : is_running_(false) , not_tried_peer_count_(0), desirable_pool_size_(desirable_pool_size) {}
     };
 }
 #endif  // _P2SP_P2P_IPPOOL_H_
