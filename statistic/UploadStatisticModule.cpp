@@ -38,7 +38,7 @@ namespace statistic
     void UploadStatisticModule::SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
     {
         upload_info_.peer_upload_count = uploading_peers_.size();
-        upload_info_.speed_limit = upload_speed_limit;
+        upload_info_.actual_speed_limit = upload_speed_limit;
 
         if (m_upload_map.size() == 0)
         {

@@ -383,7 +383,7 @@ namespace p2sp
 
     void LivePeerConnection::UpdatePeerConnectionInfo()
     {
-        peer_connection_info_.PeerInfo.IP = end_point_.address().to_v4().to_ulong();
+        peer_connection_info_.PeerInfo = candidate_peer_info_;
         peer_connection_info_.WindowSize = window_size_;
         peer_connection_info_.RTT_Average = rtt_avg_;
         peer_connection_info_.RTT_Max = rtt_max_;
