@@ -66,7 +66,9 @@ namespace p2sp
             SendErrorPacket((protocol::CommonPeerPacket const &)packet, protocol::ErrorPacket::PPV_CONNECT_NO_RESOURCEID);
             return;
         }
-        
+
+        ProxyModule::Inst()->SetReceiveConnectPacket(live_inst);
+
         // ReConnect
         protocol::ConnectPacket connect_packet(packet.transaction_id_, live_inst->GetRID(),
             AppModule::Inst()->GetPeerGuid(),  protocol::PEER_VERSION, 0x01, packet.send_off_time_,
@@ -190,6 +192,8 @@ namespace p2sp
                     ignoreUploadSpeedLimit,
                     packet.priority_,
                     packet.protocol_version_);
+
+                ProxyModule::Inst()->SetSendSubPiecePacket(live_inst);
 
                 statistic::DACStatisticModule::Inst()->SubmitLiveP2PUploadBytes(LIVE_SUB_PIECE_SIZE);
 

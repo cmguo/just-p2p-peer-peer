@@ -81,6 +81,11 @@ namespace p2sp
         boost::uint8_t          ChangeToP2PConditionWhenStart;
         boost::uint32_t         ChangedToHttpTimesWhenUrgent;
         boost::uint32_t         BlockTimesWhenUseHttpUnderUrgentSituation;
+        boost::uint32_t         MaxUploadSpeedDuringThisConnection;
+        boost::uint32_t         AverageUploadConnectionCount;
+        boost::uint32_t         TimeOfReceivingFirstConnectRequest;
+        boost::uint32_t         TimeOfSendingFirstSubPiece;
+        boost::uint32_t         TimeOfNonblankUploadConnections;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -244,6 +249,9 @@ namespace p2sp
         boost::uint32_t GetTotalRequestSubPieceCount() const;
         boost::uint32_t GetTotalRecievedSubPieceCount() const;
 
+        void SetReceiveConnectPacket();
+        void SetSendSubPiecePacket();
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();
@@ -387,6 +395,17 @@ namespace p2sp
         boost::uint8_t changed_to_p2p_condition_when_start_;
         boost::uint32_t changed_to_http_times_when_urgent_;
         boost::uint32_t block_times_when_use_http_under_urgent_situation_;
+
+        boost::uint32_t max_upload_speed_during_this_connection_;
+        // 为了计算平均上传连接数引入了总连接数，该值等于在连接存在期间每秒上传连接数之和
+        boost::uint32_t total_upload_connection_count_;
+        boost::uint32_t time_of_receiving_first_connect_request_;
+        boost::uint32_t time_of_sending_first_subpiece_;
+        // 上传连接数不为0的时间
+        boost::uint32_t time_of_nonblank_upload_connections_;
+
+        bool has_received_connect_packet_;
+        bool has_sended_subpiece_packet_;
 
     private:
         // statistic

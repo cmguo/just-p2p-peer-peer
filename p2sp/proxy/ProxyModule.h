@@ -14,6 +14,11 @@
 
 #include <boost/function.hpp>
 
+namespace storage
+{
+    class LiveInstance;
+}
+
 namespace p2sp
 {
     class ProxyConnection;
@@ -135,6 +140,9 @@ namespace p2sp
         boost::uint32_t GetLiveRestPlayableTime() const;
         boost::uint8_t GetLostRate() const;
         boost::uint8_t GetRedundancyRate() const;
+
+        void SetReceiveConnectPacket(boost::shared_ptr<storage::LiveInstance> instance);
+        void SetSendSubPiecePacket(boost::shared_ptr<storage::LiveInstance> instance);
 
     private:
         boost::asio::io_service & io_svc_;

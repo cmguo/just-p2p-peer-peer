@@ -25,6 +25,8 @@
 #include "storage/Instance.h"
 #include "PlayInfo.h"
 
+#include "storage/LiveInstance.h"
+
 namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
@@ -1768,5 +1770,31 @@ namespace p2sp
         }
 
         return total_redundancy_rate / total_received_subpiece_count;
+    }
+
+    void ProxyModule::SetReceiveConnectPacket(boost::shared_ptr<storage::LiveInstance> instance)
+    {
+        for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            if ((*iter)->IsLiveConnection() &&
+                (*iter)->GetLiveDownloadDriver()->GetInstance() == instance)
+            {
+                (*iter)->GetLiveDownloadDriver()->SetReceiveConnectPacket();
+            }
+        }
+    }
+
+    void ProxyModule::SetSendSubPiecePacket(boost::shared_ptr<storage::LiveInstance> instance)
+    {
+        for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            if ((*iter)->IsLiveConnection() &&
+                (*iter)->GetLiveDownloadDriver()->GetInstance() == instance)
+            {
+                (*iter)->GetLiveDownloadDriver()->SetSendSubPiecePacket();
+            }
+        }
     }
 }

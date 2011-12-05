@@ -180,10 +180,6 @@ namespace p2sp
         {
             DebugLog("IpPool::KickTrivialCandidatePeers: kicked %d peers.", peers_deleted);
         }
-
-        assert(candidate_peers_.size() == active_index_.size());
-        assert(candidate_peers_.size() == connect_index_.size());
-        assert(candidate_peers_.size() == exchange_index_.size());
     }
 
     bool IpPool::GetForConnect(protocol::CandidatePeerInfo& peer_info, bool is_udpserver)
