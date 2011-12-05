@@ -93,7 +93,8 @@ namespace p2sp
             , avg_delta_time_(100)
             , is_running_(false)
             , no_response_time_(0)
-            , connect_type_(connect_type)            
+            , connect_type_(connect_type)
+            , request_subpiece_count_(0)
         {
             assert(connect_type < protocol::CONNECT_MAX);
             peer_connection_info_.ConnectType = connect_type;
@@ -111,6 +112,8 @@ namespace p2sp
         void RequestSubPieces(uint32_t block_count, bool need_check = false);
 
         void UpdateBlockBitmapEmptyTickCount();
+
+        boost::uint32_t CalcSupplySubPieceCount();
 
     private:
         LiveP2PDownloader__p p2p_downloader_;
@@ -147,6 +150,11 @@ namespace p2sp
         uint32_t block_bitmap_empty_tick_count_in_millseconds_;
 
         statistic::PEER_INFO peer_info_;
+
+        boost::uint32_t request_subpiece_count_;
+
+        // 记录1秒内分配的task，用于统计当前1秒内分配的SubPiece数
+        std::set<protocol::LiveSubPieceInfo> temp_task_set_;
     };
 }
 

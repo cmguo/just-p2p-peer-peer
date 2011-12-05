@@ -321,7 +321,7 @@ namespace p2sp
         peer->is_connected_ = true;
     }
 
-    void IpPool::OnDisConnect(const boost::asio::ip::udp::endpoint& end_point)
+    void IpPool::OnDisConnect(const boost::asio::ip::udp::endpoint& end_point, bool is_active)
     {
         if (is_running_ == false) return;
 
@@ -343,6 +343,14 @@ namespace p2sp
 
         peer->is_connecting_ = false;
         peer->is_connected_ = false;
+
+        if (is_active)
+        {
+            protocol::CloseSessionPacket packet(protocol::Packet::NewTransactionID(), 
+                protocol::PEER_VERSION, end_point);
+
+            AppModule::Inst()->DoSendPacket(packet, protocol::PEER_VERSION);
+        }
     }
 
     void IpPool::AddIndex(CandidatePeer::p peer)
@@ -370,11 +378,8 @@ namespace p2sp
         for (std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.begin();
             iter != candidate_peers_.end(); ++iter)
         {
-            IPPoolIndexUpdating updating(iter->second, shared_from_this());
-            iter->second->last_active_time_ = framework::timer::TickCounter::tick_count();
-            iter->second->last_connect_time_ = iter->second->last_active_time_;
-            iter->second->is_connecting_ = false;
-            iter->second->is_connected_ = false;
+            boost::asio::ip::udp::endpoint endpoint = framework::network::Endpoint(iter->first.IP, iter->first.Port);
+            OnDisConnect(endpoint, true);
         }
     }
 

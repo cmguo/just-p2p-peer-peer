@@ -163,16 +163,16 @@ namespace p2sp
         return false;
     }
 
-    void UdpBasedUploadConnectionsManagement::KickTimedOutConnections()
+    void UdpBasedUploadConnectionsManagement::KickTimedOutConnections(std::set<boost::asio::ip::udp::endpoint> & kicked_endpoints)
     {
         for (std::map<boost::asio::ip::udp::endpoint, PEER_UPLOAD_INFO>::iterator 
             iter = accept_connecting_peers_.begin(); iter != accept_connecting_peers_.end();)
         {
             if (iter->second.last_talk_time.elapsed() >= 10*1000)
             {
-                accept_uploading_peers_.erase(iter->first);
-                uploading_peers_speed_.erase(iter->first);
-                accept_connecting_peers_.erase(iter++);
+                kicked_endpoints.insert(iter->first);
+
+                KickConnection((iter++)->first);
             }
             else
             {
@@ -224,9 +224,7 @@ namespace p2sp
             const boost::asio::ip::udp::endpoint & ep = iter_kick->second;
             if (accept_connecting_peers_[ep].connected_time.elapsed() >= new_peer_protection_time_in_seconds * 1000)
             {
-                accept_connecting_peers_.erase(ep);
-                accept_uploading_peers_.erase(ep);
-                uploading_peers_speed_.erase(ep);
+                KickConnection(ep);
 
                 ++kicked_count;
             }
@@ -286,5 +284,12 @@ namespace p2sp
     boost::uint32_t UdpBasedUploadConnectionsManagement::GetAcceptUploadingPeersCount() const
     {
         return accept_uploading_peers_.size();
+    }
+
+    void UdpBasedUploadConnectionsManagement::KickConnection(const boost::asio::ip::udp::endpoint & kick_endpoint)
+    {
+        accept_connecting_peers_.erase(kick_endpoint);
+        accept_uploading_peers_.erase(kick_endpoint);
+        uploading_peers_speed_.erase(kick_endpoint);
     }
 }

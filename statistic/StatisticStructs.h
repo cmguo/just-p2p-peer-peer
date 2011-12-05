@@ -471,7 +471,10 @@ namespace statistic
         boost::uint32_t FirstLiveBlockId;           // 对方发过来的AnnounceMap中的第一片block的ID
         boost::uint8_t  ConnectType;                // 0 vod, 1 live peer, 2 live udpserver, 3 notify(只区分了1和2, 2011/7/27)
         PEER_INFO RealTimePeerInfo;
-        boost::uint8_t  Reserved[166];                  //
+        boost::uint32_t ActualAssignedSubPieceCount;  // 当前1秒钟分配的SubPiece数
+        boost::uint32_t RequestSubPieceCount;         // 当前1秒钟发出的SubPiece请求数
+        boost::uint32_t SupplySubPieceCount;          // 可供下载的SubPiece数(我没有但是对方有的SuPiece数)
+        boost::uint8_t  Reserved[154];                  //
 
         P2P_CONNECTION_INFO()
         {
@@ -513,6 +516,9 @@ namespace statistic
             ar & FirstLiveBlockId;
             ar & ConnectType;
             ar & RealTimePeerInfo;
+            ar & ActualAssignedSubPieceCount;
+            ar & RequestSubPieceCount;
+            ar & SupplySubPieceCount;
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
         }
     };

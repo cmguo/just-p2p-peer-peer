@@ -140,7 +140,7 @@ namespace p2sp
 
         //
         IpPool::p ip_pool = p2p_downloader_->GetIpPool();
-        ip_pool->OnDisConnect(end_point_);
+        ip_pool->OnDisConnect(end_point_, false);
 
         //
         assert(p2p_downloader_->GetStatistic());

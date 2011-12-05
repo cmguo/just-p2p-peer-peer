@@ -175,6 +175,7 @@ namespace p2sp
     void LivePeerConnection::AddAssignedSubPiece(const protocol::LiveSubPieceInfo & subpiece_info)
     {
         task_set_.insert(subpiece_info);
+        temp_task_set_.insert(subpiece_info);
     }
 
     void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
@@ -276,6 +277,8 @@ namespace p2sp
         requesting_count_ += subpieces.size();
 
         peer_connection_info_.Sent_Count += packet.sub_piece_infos_.size();
+
+        request_subpiece_count_ += packet.sub_piece_infos_.size();
     }
 
     bool LivePeerConnection::HasSubPieceInBitmap(const protocol::LiveSubPieceInfo & subpiece)
@@ -392,6 +395,9 @@ namespace p2sp
         peer_connection_info_.AverageDeltaTime = avg_delta_time_;
         peer_connection_info_.Requesting_Count = requesting_count_;
         peer_connection_info_.AssignedSubPieceCount = task_set_.size();
+        peer_connection_info_.ActualAssignedSubPieceCount = temp_task_set_.size();
+        peer_connection_info_.RequestSubPieceCount = request_subpiece_count_;
+        peer_connection_info_.SupplySubPieceCount = CalcSupplySubPieceCount();
 
         if (block_bitmap_.empty())
         {
@@ -405,6 +411,9 @@ namespace p2sp
         }
 
         peer_connection_info_.RealTimePeerInfo = peer_info_;
+
+        request_subpiece_count_ = 0;
+        temp_task_set_.clear();
     }
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()
@@ -444,5 +453,39 @@ namespace p2sp
     {
         no_response_time_ = 0;
         peer_info_ = peer_info;
+    }
+
+    boost::uint32_t LivePeerConnection::CalcSupplySubPieceCount()
+    {
+        boost::uint32_t supply_subpiece_count = 0;
+        for (std::map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::const_iterator iter = block_bitmap_.begin();
+            iter != block_bitmap_.end(); ++iter)
+        {
+            if (iter->second.test(0) == 1)
+            {
+                protocol::LiveSubPieceInfo subpiece(iter->first, 0);
+                if (!p2p_downloader_->HasSubPiece(subpiece))
+                {
+                    ++supply_subpiece_count;
+                }
+            }
+
+            for (size_t i = 1; i < iter->second.size(); ++i)
+            {
+                if (iter->second.test(i) == 1)
+                {
+                    for (size_t subpiece_index = (i - 1) * protocol::SUBPIECE_COUNT_IN_ONE_CHECK + 1; subpiece_index <= i * protocol::SUBPIECE_COUNT_IN_ONE_CHECK; ++subpiece_index)
+                    {
+                        protocol::LiveSubPieceInfo subpiece(iter->first, subpiece_index);
+                        if (!p2p_downloader_->HasSubPiece(subpiece))
+                        {
+                            ++supply_subpiece_count;
+                        }
+                    }
+                }
+            }
+        }
+
+        return supply_subpiece_count;
     }
 }

@@ -42,7 +42,7 @@ namespace p2sp
         void OnConnectFailed(const boost::asio::ip::udp::endpoint& end_point);
         void OnConnectSucced(const boost::asio::ip::udp::endpoint& end_point);
         void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point);
-        void OnDisConnect(const boost::asio::ip::udp::endpoint& end_point);
+        void OnDisConnect(const boost::asio::ip::udp::endpoint& end_point, bool is_active);
 
         boost::int32_t GetNotTriedPeerCount() const;
 

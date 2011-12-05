@@ -909,7 +909,7 @@ namespace p2sp
             }
         }
 
-        if (times % 4*30 == 0 && ippool_)
+        if (times % (4*30) == 0 && ippool_)
         {
             ippool_->KickTrivialCandidatePeers();
         }

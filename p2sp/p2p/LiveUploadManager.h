@@ -51,6 +51,7 @@ namespace p2sp
         void OnLiveRequestAnnouncePacket(protocol::LiveRequestAnnouncePacket const & packet);
         void OnLiveRequestSubPiecePacket(protocol::LiveRequestSubPiecePacket const & packet);
         void OnPeerInfoPacket(protocol::PeerInfoPacket const & packet);
+        void OnCloseSessionPacket(protocol::CloseSessionPacket const & packet);
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
         void SendPeerInfo();

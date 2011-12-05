@@ -32,6 +32,9 @@ namespace p2sp
         case protocol::PeerInfoPacket::Action:
             OnPeerInfoPacket((const protocol::PeerInfoPacket &)packet);
             break;
+        case protocol::CloseSessionPacket::Action:
+            OnCloseSessionPacket((const protocol::CloseSessionPacket &)packet);
+            break;
         default:
             assert(false);
         }
@@ -43,7 +46,18 @@ namespace p2sp
     {
         const size_t NewPeerProtectionTimeInSeconds = 20;
         connections_management_.KickBadConnections(DesirableUploadSpeedPerPeerInKBps, NewPeerProtectionTimeInSeconds);
-        connections_management_.KickTimedOutConnections();
+
+        std::set<boost::asio::ip::udp::endpoint> kicked_endpoints;
+        connections_management_.KickTimedOutConnections(kicked_endpoints);
+
+        for (std::set<boost::asio::ip::udp::endpoint>::iterator iter = kicked_endpoints.begin();
+            iter != kicked_endpoints.end(); ++iter)
+        {
+            protocol::CloseSessionPacket packet(protocol::Packet::NewTransactionID(), 
+                protocol::PEER_VERSION, *iter);
+
+            AppModule::Inst()->DoSendPacket(packet, protocol::PEER_VERSION);
+        }
     }
 
     void LiveUploadManager::OnConnectPacket(const protocol::ConnectPacket & packet)
@@ -240,7 +254,8 @@ namespace p2sp
     {
         if (packet.PacketAction == protocol::LiveRequestAnnouncePacket::Action ||
             packet.PacketAction == protocol::LiveRequestSubPiecePacket::Action ||
-            packet.PacketAction == protocol::PeerInfoPacket::Action)
+            packet.PacketAction == protocol::PeerInfoPacket::Action ||
+            packet.PacketAction == protocol::CloseSessionPacket::Action)
         {
             return true;
         }
@@ -328,5 +343,10 @@ namespace p2sp
     void LiveUploadManager::GetUploadingPeersExcludeSameSubnet(std::set<boost::asio::ip::address> & uploading_peers) const
     {
         connections_management_.GetUploadingPeersExcludeSameSubnet(uploading_peers);
+    }
+
+    void LiveUploadManager::OnCloseSessionPacket(protocol::CloseSessionPacket const & packet)
+    {
+        connections_management_.KickConnection(packet.end_point);
     }
 }

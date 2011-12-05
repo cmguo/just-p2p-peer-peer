@@ -19,6 +19,8 @@ namespace p2sp
             return;
         }
 
+        StartAllStation();
+
         is_running_ = true;
     }
 

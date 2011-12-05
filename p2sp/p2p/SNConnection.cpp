@@ -44,7 +44,7 @@ namespace p2sp
 
         if (is_subpiece_requested_)
         {
-            protocol::CloseSNSessionPacket packet(protocol::Packet::NewTransactionID(), 
+            protocol::CloseSessionPacket packet(protocol::Packet::NewTransactionID(), 
                 peer_version_, endpoint_);
             p2p_downloader_->DoSendPacket(packet, peer_version_);
         }

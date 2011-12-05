@@ -52,7 +52,8 @@ namespace p2sp
             connections_management_.KickBadConnections(DesirableUploadSpeedPerPeerInKBps, NewPeerProtectionTimeInSeconds);
         }
 
-        connections_management_.KickTimedOutConnections();
+        std::set<boost::asio::ip::udp::endpoint> kicked_endpoints;
+        connections_management_.KickTimedOutConnections(kicked_endpoints);
     }
 
     void VodUploadManager::OnConnectPacket(const protocol::ConnectPacket & packet)

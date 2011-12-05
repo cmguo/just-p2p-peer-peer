@@ -573,11 +573,11 @@ namespace p2sp
             if (iter->second->LongTimeNoResponse())
             {
                 // 普通的tracker也会返回UdpServer，所以ippool_中可能有UdpServer
-                ippool_->OnDisConnect(iter->first);
+                ippool_->OnDisConnect(iter->first, true);
 
                 if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
                 {
-                    udpserver_pool_->OnDisConnect(iter->first);
+                    udpserver_pool_->OnDisConnect(iter->first, true);
                 }
 
                 DelPeer((iter++)->second);
@@ -630,12 +630,10 @@ namespace p2sp
 
                 if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
                 {
-                    udpserver_pool_->OnDisConnect(iter->second->GetEndpoint());
+                    udpserver_pool_->OnDisConnect(iter->second->GetEndpoint(), true);
                 }
-                else
-                {
-                    ippool_->OnDisConnect(iter->second->GetEndpoint());
-                }
+
+                ippool_->OnDisConnect(iter->second->GetEndpoint(), true);
 
                 DelPeer(iter->second);
                 iter++;
@@ -763,6 +761,25 @@ namespace p2sp
                     peer_info_packet.peer_info_.lost_rate_, peer_info_packet.peer_info_.redundancy_rate_);
 
                 peers_[packet.end_point]->UpdatePeerInfo(peer_info);
+            }
+        }
+        else if (packet.PacketAction == protocol::CloseSessionPacket::Action)
+        {
+            for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
+                iter != peers_.end(); ++iter)
+            {
+                if (iter->first == packet.end_point)
+                {
+                    if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+                    {
+                        udpserver_pool_->OnDisConnect(iter->second->GetEndpoint(), false);
+                    }
+
+                    ippool_->OnDisConnect(iter->second->GetEndpoint(), false);
+
+                    DelPeer(iter->second);
+                    break;
+                }
             }
         }
     }
@@ -1095,7 +1112,7 @@ namespace p2sp
                 --connected_udpserver_count_;
 
                 // 有可能把UdpServer当做普通的peer来连了，所以需要在ippool_中去尝试disconnect
-                ippool_->OnDisConnect(iter->first);
+                ippool_->OnDisConnect(iter->first, true);
 
                 peers_.erase(iter++);
             }

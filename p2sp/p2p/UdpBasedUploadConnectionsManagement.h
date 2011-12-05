@@ -16,9 +16,10 @@ namespace p2sp
         bool AcceptsNewUploadConnection(boost::asio::ip::udp::endpoint const& end_point);
         bool AcceptsNewConnection(size_t ip_pool_size) const;
 
-        void KickTimedOutConnections();
+        void KickTimedOutConnections(std::set<boost::asio::ip::udp::endpoint> & kicked_endpoints);
         void KickAllConnections();
         void KickBadConnections(size_t desirable_upload_speed, size_t new_peer_protection_time_in_seconds);
+        void KickConnection(const boost::asio::ip::udp::endpoint & kick_endpoint);
 
         void GetUploadingPeers(std::set<boost::asio::ip::address> & uploading_peers) const
         {

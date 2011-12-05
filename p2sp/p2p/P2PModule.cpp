@@ -182,9 +182,10 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        if (packet_.PacketAction == protocol::PeerInfoPacket::Action)
+        if (packet_.PacketAction == protocol::PeerInfoPacket::Action ||
+            packet_.PacketAction == protocol::CloseSessionPacket::Action)
         {
-            // 由于PeerInfoPacket中没有传Rid，所以对所有的LiveP2PDownloader都调用OnUdpRecv
+            // 由于PeerInfoPacket和CloseSessionPacket中没有传Rid，所以对所有的LiveP2PDownloader都调用OnUdpRecv
             for (std::map<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.begin();
                 iter != live_rid_index_.end(); ++iter)
             {
