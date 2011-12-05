@@ -107,7 +107,7 @@ namespace p2sp
             return;
         }
 
-        if (sent_count_ <= packet_number_per_tick_)
+        if (sent_count_ < packet_number_per_tick_)
         {
             packet->SendPacket(dest_protocol_version);
             LOG(__DEBUG, "upload", "DoSendSubPiecePacket packet sended");
