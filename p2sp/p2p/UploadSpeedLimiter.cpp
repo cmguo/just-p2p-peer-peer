@@ -6,6 +6,7 @@
 #include "p2sp/AppModule.h"
 #include "p2sp/p2p/UploadSpeedLimiter.h"
 #include "statistic/DACStatisticModule.h"
+#include "p2sp/proxy/ProxyModule.h"
 
 #include <boost/date_time.hpp>
 
@@ -17,6 +18,8 @@ namespace p2sp
 
     UploadSpeedLimiter::UploadSpeedLimiter()
         : speed_limit_in_KBps_(-1)
+        , packet_number_make_up_per_second_(0)
+        , packet_number_make_up_(0)
         , tick_timer_(global_250ms_timer(), 250, boost::bind(&UploadSpeedLimiter::OnTimerElapsed, this, &tick_timer_))
     {
         tick_timer_.start();
@@ -32,12 +35,22 @@ namespace p2sp
     {
         if (pointer == &tick_timer_)
         {
+            uint32_t times = pointer->times();
+            if (times % 4 == 0)
+            {
+                packet_number_make_up_ = packet_number_make_up_per_second_;
+            }
+            else
+            {
+                packet_number_make_up_ = 0;
+            }
+
             framework::timer::TickCounter counter_;
 
             LOG(__DEBUG, "upload", boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time())
                 << ", packet_number_per_tick_ = " << packet_number_per_tick_
                 << ", data_queue_.size()=" << data_queue_.size());
-            std::multiset<EndpointPacketInfo>::iterator iter = data_queue_.begin();
+            std::multiset<EndpointPacketInfo>::iterator iter = data_queue_.begin();            
             sent_count_ = 0;
             while (iter != data_queue_.end())
             {
@@ -47,7 +60,7 @@ namespace p2sp
                     statistic::DACStatisticModule::Inst()->SubmitP2PUploadDisCardBytes(data.packet_->GetPacketSize());
                     data_queue_.erase(iter++);
                 }
-                else if (sent_count_ <= packet_number_per_tick_)
+                else if (sent_count_ < packet_number_per_tick_ + packet_number_make_up_)
                 {
                     data.packet_->SendPacket(data.dest_protocol_version_);
                     ++sent_count_;
@@ -106,8 +119,8 @@ namespace p2sp
             data_queue_.erase(--data_queue_.end());
             return;
         }
-
-        if (sent_count_ < packet_number_per_tick_)
+        
+        if (sent_count_ < packet_number_per_tick_ + packet_number_make_up_)
         {
             packet->SendPacket(dest_protocol_version);
             LOG(__DEBUG, "upload", "DoSendSubPiecePacket packet sended");
@@ -129,7 +142,17 @@ namespace p2sp
 
         speed_limit_in_KBps_ = speed_limit_in_KBps;
 
-        packet_number_per_tick_ = speed_limit_in_KBps_ / 4;
+        if (ProxyModule::Inst()->IsWatchingLive())
+        {
+            // live packet is 1400 bytes; needs to be normalized
+            packet_number_per_tick_ = speed_limit_in_KBps_ / 1.4 / 4;
+            packet_number_make_up_per_second_ = speed_limit_in_KBps_ / 1.4 - packet_number_per_tick_ * 4 + 1;
+        }
+        else        
+        {   
+            packet_number_per_tick_ = speed_limit_in_KBps_ / 4;
+            packet_number_make_up_per_second_ = speed_limit_in_KBps_ - packet_number_per_tick_ * 4;
+        }
 
         UPLIMITER_DEBUG("speed_limit_in_KBps_=" << speed_limit_in_KBps_ << " packet_number_per_tick_=" << packet_number_per_tick_);
     }

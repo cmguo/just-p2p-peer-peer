@@ -136,6 +136,8 @@ namespace p2sp
     private:
         uint32_t speed_limit_in_KBps_;
         uint32_t packet_number_per_tick_;
+        uint32_t packet_number_make_up_per_second_;
+        uint32_t packet_number_make_up_;
         uint32_t sent_count_;
         framework::timer::PeriodicTimer tick_timer_;
         std::multiset<EndpointPacketInfo> data_queue_;
