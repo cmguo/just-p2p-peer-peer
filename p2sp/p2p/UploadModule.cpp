@@ -483,7 +483,10 @@ namespace p2sp
                 LiveUploadManager::DesirableUploadSpeedPerPeerInKBps : VodUploadManager::DesirableUploadSpeedPerPeerInKBps;
             max_upload_peers_ = speed_limit_in_KBps / expected_upload_speed_per_peer;
 
-            LIMIT_MIN_MAX(max_upload_peers_, 1, P2SPConfigs::UPLOAD_MAX_UPLOAD_PEER_COUNT);
+            const size_t UpperLimitForMaxUploadPeersCount = p2sp::ProxyModule::Inst()->IsWatchingLive() ? 
+                255 : P2SPConfigs::UPLOAD_MAX_UPLOAD_PEER_COUNT;
+
+            LIMIT_MIN_MAX(max_upload_peers_, 1, UpperLimitForMaxUploadPeersCount);
         }
 
         if (upload_speed_param_.GetMaxSpeedInKBps() != speed_limit_in_KBps)

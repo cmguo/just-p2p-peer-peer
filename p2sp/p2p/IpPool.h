@@ -44,7 +44,7 @@ namespace p2sp
         void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point);
         void OnDisConnect(const boost::asio::ip::udp::endpoint& end_point);
 
-        boost::int32_t GetNotTriedPeerCount() const { return not_tried_peer_count_;}
+        boost::int32_t GetNotTriedPeerCount() const;
 
         void DisConnectAll();
 
@@ -66,13 +66,13 @@ namespace p2sp
         // 状态
         volatile bool is_running_;
 
-        boost::int32_t not_tried_peer_count_;
-
         size_t desirable_pool_size_;
+
+        std::set<protocol::SocketAddr> black_list_;
 
     private:
         // 构造
-        IpPool(size_t desirable_pool_size) : is_running_(false) , not_tried_peer_count_(0), desirable_pool_size_(desirable_pool_size) {}
+        IpPool(size_t desirable_pool_size) : is_running_(false) , desirable_pool_size_(desirable_pool_size) {}
     };
 }
 #endif  // _P2SP_P2P_IPPOOL_H_

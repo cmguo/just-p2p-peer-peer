@@ -86,13 +86,17 @@ namespace p2sp
 
         // IPPOOL_INFO("UUP = " << *peer);
 
+        if (black_list_.find(peer->GetKey()) !=  black_list_.end())
+        {
+            return;
+        }
+
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(key);
         if (iter == candidate_peers_.end())
         {
             IPPoolIndexUpdating indexUpdating(peer, shared_from_this());
             IPPOOL_INFO("IpPool::AddPeer because CandidatePeer " << *peer << " not found, so insert it");
             candidate_peers_.insert(std::make_pair(key, peer));
-            ++not_tried_peer_count_;
         }
         else
         {
@@ -166,8 +170,16 @@ namespace p2sp
 
             if (!peer->is_connected_ && !peer->is_connecting_)
             {
+                bool too_many_connection_attempts = peer->connections_attempted_ > max_connection_attempts_allowed;
+
+                if (too_many_connection_attempts)
+                {
+                    assert(black_list_.find(peer->GetKey()) ==  black_list_.end());
+                    black_list_.insert(peer->GetKey());
+                }
+
                 if (peers_deleted < peers_to_delete ||
-                    peer->connections_attempted_ > max_connection_attempts_allowed)
+                    too_many_connection_attempts)
                 {
                     DeleteIndex(peer);
                     candidate_peers_.erase(peer->GetKey());
@@ -203,11 +215,6 @@ namespace p2sp
         peer_info = (protocol::CandidatePeerInfo)(*peer);
         IPPoolIndexUpdating indexUpdating(peer, shared_from_this());
         peer->last_connect_time_ = framework::timer::TickCounter::tick_count();
-
-        if (not_tried_peer_count_ > 0)
-        {
-            --not_tried_peer_count_;
-        }
 
         return true;
     }
@@ -369,5 +376,20 @@ namespace p2sp
             iter->second->is_connecting_ = false;
             iter->second->is_connected_ = false;
         }
+    }
+
+    boost::int32_t IpPool::GetNotTriedPeerCount() const 
+    {
+        boost::int32_t count(0);
+        for (std::map<protocol::SocketAddr, CandidatePeer::p>::const_iterator iter = candidate_peers_.begin();
+            iter != candidate_peers_.end(); ++iter)
+        {
+            if (iter->second->last_connect_time_ == 0)
+            {
+                ++count;
+            }
+        }
+
+        return count;
     }
 }

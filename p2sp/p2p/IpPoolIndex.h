@@ -49,6 +49,8 @@ namespace p2sp
 
         uint32_t tracker_priority_;
 
+        uint32_t last_active_time_;
+
         // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
         {
@@ -74,6 +76,11 @@ namespace p2sp
         if (x.tracker_priority_ != y.tracker_priority_)
         {
             return x.tracker_priority_ < y.tracker_priority_;
+        }
+
+        if (x.last_active_time_ != y.last_active_time_)
+        {
+            return x.last_active_time_ > y.last_active_time_;
         }
 
         return x.key_ < y.key_;

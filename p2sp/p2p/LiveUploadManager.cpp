@@ -1,6 +1,5 @@
 #include "Common.h"
 #include "LiveUploadManager.h"
-#include "storage/Storage.h"
 #include "p2sp/AppModule.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/p2p/PeerHelper.h"
@@ -122,11 +121,42 @@ namespace p2sp
 
             live_inst->BuildAnnounceMap(packet.request_block_id_, live_announce_map);
 
-            protocol::LiveAnnouncePacket live_announce_packet(protocol::Packet::NewTransactionID(), live_inst->GetRID(),
+             protocol::LiveAnnouncePacket live_announce_packet(protocol::Packet::NewTransactionID(), live_inst->GetRID(),
                 live_announce_map, packet.end_point);
 
             AppModule::Inst()->DoSendPacket(live_announce_packet, packet.protocol_version_);
+
+            if (ShouldAddPeerAsDownloadCandidate(live_announce_map, live_inst))
+            {
+                std::vector<protocol::CandidatePeerInfo> candidate_peers;
+                candidate_peers.push_back(connections_management_.GetPeerUploadInfo(packet.end_point).peer_info);
+                P2PModule::Inst()->AddCandidatePeers(packet.resource_id_, candidate_peers, false);
+            }
         }
+    }
+
+    bool LiveUploadManager::ShouldAddPeerAsDownloadCandidate(const protocol::LiveAnnounceMap& announce_map_for_peer, storage::LiveInstance::p live_instance) const
+    {
+        if(announce_map_for_peer.block_info_count_ == 0)
+        {
+            if (live_instance->GetCacheSize() == 0)
+            {
+                //I don't have anything yet, assuming I just joined the live show
+                return true;
+            }
+            
+            //he's likely ahead of me, or at least close to me.
+            return live_instance->GetCacheLastBlockId() <= announce_map_for_peer.request_block_id_;
+        }
+        
+        const size_t distance_in_seconds_to_consider_close = 30;
+        size_t distance_in_blocks_to_consider_close = 3;
+        if (announce_map_for_peer.live_interval_ > 0 && announce_map_for_peer.live_interval_ <= 10)
+        {
+            distance_in_blocks_to_consider_close = distance_in_seconds_to_consider_close/announce_map_for_peer.live_interval_;
+        }
+
+        return announce_map_for_peer.block_info_count_ <= distance_in_blocks_to_consider_close;
     }
 
     void LiveUploadManager::OnLiveRequestSubPiecePacket(protocol::LiveRequestSubPiecePacket const & packet)

@@ -5,6 +5,7 @@
 #include "p2sp/p2p/UploadStruct.h"
 #include "p2sp/p2p/UploadBase.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
+#include "storage/Storage.h"
 
 namespace p2sp
 {
@@ -53,6 +54,8 @@ namespace p2sp
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
         void SendPeerInfo();
+
+        bool ShouldAddPeerAsDownloadCandidate(const protocol::LiveAnnounceMap& announce_map_for_peer, storage::LiveInstance::p live_instance) const;
 
     private:
         framework::timer::PeriodicTimer timer_;
