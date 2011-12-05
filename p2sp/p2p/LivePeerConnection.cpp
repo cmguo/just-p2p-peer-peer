@@ -38,7 +38,7 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            no_announce_response_time_ += 1000;
+            no_response_time_ += 1000;
 
             // 请求Announce
             DoAnnounce();
@@ -148,7 +148,7 @@ namespace p2sp
         }
 
         // 收到Announce, 重置
-        no_announce_response_time_ = 0;
+        no_response_time_ = 0;        
     }
 
     uint32_t LivePeerConnection::GetBitmapEmptyTimeInMillseconds()
@@ -178,7 +178,9 @@ namespace p2sp
     }
 
     void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
-    {
+    {   
+        no_response_time_ = 0;        
+
         requesting_count_--;
 
         // 计算最大rtt
@@ -417,10 +419,10 @@ namespace p2sp
         return 500;
     }
 
-    bool LivePeerConnection::LongTimeNoAnnounceResponse()
+    bool LivePeerConnection::LongTimeNoResponse()
     {
-        // 连续 10 秒没有 AnnounceResponse 回包
-        return no_announce_response_time_ > 10*1000;
+        // 连续 10 秒没有收到 AnnounceResponse，或者SubPiece, 或者PeerInfo包
+        return no_response_time_ > 10*1000;
     }
 
     boost::uint8_t LivePeerConnection::GetConnectType() const
@@ -440,6 +442,7 @@ namespace p2sp
 
     void LivePeerConnection::UpdatePeerInfo(const statistic::PEER_INFO & peer_info)
     {
+        no_response_time_ = 0;
         peer_info_ = peer_info;
     }
 }

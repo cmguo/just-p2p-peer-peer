@@ -570,7 +570,7 @@ namespace p2sp
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator 
             iter = peers_.begin(); iter != peers_.end(); )
         {
-            if (iter->second->LongTimeNoAnnounceResponse())
+            if (iter->second->LongTimeNoResponse())
             {
                 // 普通的tracker也会返回UdpServer，所以ippool_中可能有UdpServer
                 ippool_->OnDisConnect(iter->first);

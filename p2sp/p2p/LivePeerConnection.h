@@ -60,7 +60,7 @@ namespace p2sp
 
         const protocol::CandidatePeerInfo & GetCandidatePeerInfo() const {return candidate_peer_info_;}
 
-        bool LongTimeNoAnnounceResponse();
+        bool LongTimeNoResponse();
 
         boost::uint8_t GetConnectType() const;
 
@@ -92,7 +92,7 @@ namespace p2sp
             , rtt_avg_(3000)
             , avg_delta_time_(100)
             , is_running_(false)
-            , no_announce_response_time_(0)
+            , no_response_time_(0)
             , connect_type_(connect_type)            
         {
             assert(connect_type < protocol::CONNECT_MAX);
@@ -131,8 +131,8 @@ namespace p2sp
         // 用于计算avg_delta_time
         framework::timer::TickCounter recv_subpiece_time_counter_;
 
-        // 用于计算多久没有收到 Announce
-        boost::uint32_t no_announce_response_time_;
+        // 用于计算多久从该peer没有收到包
+        boost::uint32_t no_response_time_;
 
         statistic::SpeedInfoStatistic speed_info_;
 
