@@ -102,6 +102,8 @@ namespace p2sp
 		boost::uint32_t GetMaxUploadSpeedIncludeSameSubnet() const;
         boost::uint32_t GetMaxUploadSpeedExcludeSameSubnet() const;
 
+        void ReportRestPlayTime(uint32_t rest_play_time);
+
     private:
         UploadModule();
 
@@ -159,6 +161,7 @@ namespace p2sp
         boost::shared_ptr<LiveUploadManager> live_upload_manager_;
         boost::uint32_t live_max_upload_speed_exclude_same_subnet_;
 
+        bool is_play_urgent_;
     };
 }
 

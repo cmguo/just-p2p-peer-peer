@@ -155,6 +155,8 @@ namespace p2sp
         static uint32_t UPLOAD_BOOL_CONTROL_MODE;
         //
         static uint32_t UPLOAD_SPEED_LIMIT;
+        //
+        static uint32_t UPLOAD_SPEED_LIMIT_WHEN_URGENT;
 
         //
         static uint32_t SWITCH_CONTROLLER_SIMPLE_MAX_P2P_DOWNLOAD_TIME_IN_SEC;

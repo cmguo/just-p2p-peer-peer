@@ -10,6 +10,7 @@ namespace p2sp
 {
     static const int32_t MinUploadSpeedLimitInKbsResidentStatus = 10;
     static const int32_t MinUploadSpeedLimitInKbs = 20;
+    static const int32_t UrgentRestPlayTimeThresholdInMs = 30*1000;
 
     boost::shared_ptr<UploadModule> UploadModule::inst_;
 
@@ -19,6 +20,7 @@ namespace p2sp
         , upload_policy_(BootStrapGeneralConfig::policy_default)
         , max_upload_speed_include_same_subnet_(0)
         , live_max_upload_speed_exclude_same_subnet_(0)
+        , is_play_urgent_(false)
     {
     }
 
@@ -305,6 +307,14 @@ namespace p2sp
             if (P2SPConfigs::UPLOAD_BOOL_CONTROL_MODE)
             {
                 UpdateSpeedLimit(P2SPConfigs::UPLOAD_SPEED_LIMIT);
+                return;
+            }
+
+            if (is_play_urgent_)
+            {
+                DebugLog("upload: is_play_urgent_, limit %d", P2SPConfigs::UPLOAD_SPEED_LIMIT_WHEN_URGENT);
+                UpdateSpeedLimit(P2SPConfigs::UPLOAD_SPEED_LIMIT_WHEN_URGENT);
+                is_play_urgent_ = false;
                 return;
             }
 
@@ -609,5 +619,13 @@ namespace p2sp
     boost::uint32_t UploadModule::GetMaxUploadSpeedExcludeSameSubnet() const
     {
         return live_max_upload_speed_exclude_same_subnet_;
+    }
+
+    void UploadModule::ReportRestPlayTime(uint32_t rest_play_time)
+    {
+        if (rest_play_time < UrgentRestPlayTimeThresholdInMs)
+        {
+            is_play_urgent_ = true;
+        }
     }
 }

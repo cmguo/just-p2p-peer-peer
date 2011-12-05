@@ -147,6 +147,8 @@ namespace p2sp
                             UPLOAD_MIN_UPLOAD_BANDWIDTH = boost::lexical_cast<uint32_t>(value);
                         else if (key == "UPLOAD_SPEED_LIMIT")
                             UPLOAD_SPEED_LIMIT = boost::lexical_cast<uint32_t>(value);
+                        else if (key == "UPLOAD_SPEED_LIMIT_WHEN_URGENT")
+                            UPLOAD_SPEED_LIMIT_WHEN_URGENT = boost::lexical_cast<uint32_t>(value);
                         else if (key == "UPLOAD_BOOL_CONTROL_MODE")
                             UPLOAD_BOOL_CONTROL_MODE = boost::lexical_cast<uint32_t>(value);
 
@@ -318,6 +320,8 @@ namespace p2sp
     uint32_t P2SPConfigs::UPLOAD_BOOL_CONTROL_MODE = 0;
     //
     uint32_t P2SPConfigs::UPLOAD_SPEED_LIMIT = 15 * 1024;
+    //
+    uint32_t P2SPConfigs::UPLOAD_SPEED_LIMIT_WHEN_URGENT = 10 * 1024;
 
     //
     uint32_t P2SPConfigs::SWITCH_CONTROLLER_SIMPLE_MAX_P2P_DOWNLOAD_TIME_IN_SEC = 10 * 60;

@@ -2483,6 +2483,7 @@ namespace p2sp
         rest_play_time_ = rest_play_time;
         rest_play_time_set_counter_.reset();
 
+        UploadModule::Inst()->ReportRestPlayTime(rest_play_time);
         DetectBufferring();
     }
 
