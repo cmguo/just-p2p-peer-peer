@@ -319,11 +319,6 @@ namespace p2sp
                 //save push task in push_task_deq_
                 std::copy(response.response.push_task_vec_.begin(), response.response.push_task_vec_.end(), 
                     std::back_inserter(push_task_deq_));
-                
-                // if user is not watching movie, then start a push task
-                if (!p2sp::ProxyModule::Inst()->IsWatchingMovie()) {
-                    StartADownloadTask();
-                }
             }
             else if(response.error_code_ == protocol::QueryPushTaskPacket::NO_TASK) {
                 push_wait_interval_in_sec_ = response.response.push_wait_interval_in_sec_;
@@ -341,6 +336,10 @@ namespace p2sp
         }
         
         if (push_task_deq_.size() == 0) {
+            return;
+        }
+
+        if (push_download_task_) {
             return;
         }
 
@@ -376,7 +375,6 @@ namespace p2sp
         }
 
         LIMIT_MAX(speed_limit, MaxDownloadSpeedInKBS);
-        
         push_download_task_->LimitSpeed(speed_limit);
     }
 

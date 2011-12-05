@@ -18,7 +18,7 @@ speed_limit_(-1)
 
 PushDownloadTask::~PushDownloadTask()
 {
-
+    Stop();
 }
 
 void PushDownloadTask::Start()
@@ -32,9 +32,7 @@ void PushDownloadTask::Start()
 }
 
 void PushDownloadTask::Stop()
-{
-    BOOST_ASSERT(state_ != TS_IDLE);
-    
+{   
     if (copyright_checker_ptr_) {
         copyright_checker_ptr_->Stop();
         copyright_checker_ptr_.reset();
