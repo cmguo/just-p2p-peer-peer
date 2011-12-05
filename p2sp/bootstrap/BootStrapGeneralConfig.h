@@ -72,6 +72,66 @@ namespace p2sp
             return send_peer_info_packet_interval_in_second_;
         }
 
+        boost::uint32_t GetSafeEnoughRestPlayableTime() const
+        {
+            return safe_enough_rest_playable_time_delim_under_http_;
+        }
+
+        boost::uint32_t GetHttpRunningLongEnoughTimeWhenStart() const
+        {
+            return http_running_long_enough_time_when_start_;
+        }
+
+        boost::uint32_t GetHttpProtectTimeWhenStart() const
+        {
+            return http_protect_time_when_start_;
+        }
+
+        boost::uint32_t GetHttpProtectTimeWhenUrgentSwitched() const
+        {
+            return http_protect_time_when_urgent_switched_;
+        }
+
+        boost::uint32_t GetHttpRunningLongEnoughTimeWhenUrgentSwitched() const
+        {
+            return http_running_long_enough_time_when_urgent_switched_;
+        }
+
+        boost::uint32_t GetSafeRestPlayableTimeDelimWhenUseHttp() const
+        {
+            return safe_rest_playable_time_delim_when_use_http_;
+        }
+
+        boost::uint32_t GetHttpProtectTimeWhenLargeUpload() const
+        {
+            return http_protect_time_when_large_upload_;
+        }
+
+        boost::uint32_t GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime() const
+        {
+            return p2p_rest_playable_time_delim_when_switched_with_large_time_;
+        }
+
+        boost::uint32_t GetP2PRestPlayableTimeDelim() const
+        {
+            return p2p_rest_playable_time_delim_;
+        }
+
+        boost::uint32_t GetP2PProtectTimeWhenSwitchedWithNotEnoughTime() const
+        {
+            return p2p_protect_time_when_switched_with_not_enough_time_;
+        }
+
+        boost::uint32_t GetP2PProtectTimeWhenSwitchedWithBuffering() const
+        {
+            return p2p_protect_time_when_switched_with_buffering_;
+        }
+
+        boost::uint32_t GetTimeToIgnoreHttpBad() const
+        {
+            return time_to_ignore_http_bad_;
+        }
+
         boost::uint32_t GetUrgentRestPlayableTimeDelim() const
         {
             return urgent_rest_playable_time_delim_;
@@ -147,6 +207,45 @@ namespace p2sp
 
         // 每隔多久发送一次PeerInfoPacket，用于直播时Peer间信息交换
         boost::uint32_t send_peer_info_packet_interval_in_second_;
+
+        // Http状态下剩余时间足够，在bs配置文件中用a表示
+        boost::uint32_t safe_enough_rest_playable_time_delim_under_http_;
+
+        // 在启动时http最多跑多长时间，在bs配置文件中用b表示
+        boost::uint32_t http_running_long_enough_time_when_start_;
+
+        // 启动时如果剩余时间不够多，最少跑多长时间然后才去检测有没有卡，如果卡了则切换，在bs配置文件中用c表示
+        boost::uint32_t http_protect_time_when_start_;
+
+        // 在P2P剩余时间不够的情况下切换到Http后，如果没有因为剩余时间足够多切换到P2P的话，Http最少跑多长时间
+        // 在bs配置文件中用d表示
+        boost::uint32_t http_protect_time_when_urgent_switched_;
+
+        // 在P2P剩余时间不够的情况下切换到Http后，如果剩余时间还可以，Http最多跑多长时间，在bs配置文件中用e表示
+        boost::uint32_t http_running_long_enough_time_when_urgent_switched_;
+
+        // 与http_running_long_enough_time_when_urgent_switched_结合起来，在P2P剩余时间不够的情况下切换到Http后，
+        // 如果剩余时间大于safe_rest_playable_time_delim_when_use_http_并且在这个状态持续的时间大于http_running_long_enough_time_when_urgent_switched_
+        // 则切换到P2P，在bs配置文件中用f表示
+        boost::uint32_t safe_rest_playable_time_delim_when_use_http_;
+
+        // 如果是因为上传比较大切换到Http来的，Http最少跑多长时间，在bs配置文件中用g表示
+        boost::uint32_t http_protect_time_when_large_upload_;
+
+        // 如果Http切换到P2P时剩余时间足够多，则P2P切换回Http时剩余时间的判断条件，在bs配置文件中用h表示
+        boost::uint32_t p2p_rest_playable_time_delim_when_switched_with_large_time_;
+
+        // 如果Http切换到P2P时剩余时间不够多，则P2P切换回Http时剩余时间的判断条件，在bs配置文件中用i表示
+        boost::uint32_t p2p_rest_playable_time_delim_;
+
+        // 如果Http切换到P2P时剩余时间不够多，则在P2P状态下最少持续多长时间，在bs配置文件中用j表示
+        boost::uint32_t p2p_protect_time_when_switched_with_not_enough_time_;
+
+        // 如果Http因为卡了才切到P2P的，则在P2P状态下最少持续多长时间，在bs配置文件中用k表示
+        boost::uint32_t p2p_protect_time_when_switched_with_buffering_;
+
+        // 在P2P状态下持续多长时间后可忽略以前Http状态不好的情况，可以再去尝试Http，在bs配置文件中用l表示
+        boost::uint32_t time_to_ignore_http_bad_;
 
         // 当剩余时间小于这个值时，会认为紧急，需要使用UdpServer，在BS配置文件中用rpt1表示(rest playable time)
         boost::uint32_t urgent_rest_playable_time_delim_;

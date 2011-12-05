@@ -5,6 +5,7 @@
 #include "Common.h"
 #include "p2sp/download/SwitchController.h"
 #include "statistic/StatisticModule.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace p2sp
 {
@@ -52,6 +53,8 @@ namespace p2sp
         is_memory_full = false;
 #endif
         time_counter_live_control_mode_.reset();
+
+        settings_.LoadSettings();
 
         OnControlTimer(0);
     }
@@ -215,9 +218,9 @@ namespace p2sp
         boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
         // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
-        if (rest_play_time_when_switched_ > 20)
+        if (rest_play_time_when_switched_ > settings_.GetSafeEnoughRestPlayableTime())
         {
-            if (rest_play_time_in_second < 6)
+            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime())
             {
                 GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                 changed_to_http_because_of_large_upload_ = false;
@@ -228,7 +231,8 @@ namespace p2sp
         // http跑了1分钟或者3分钟剩余时间还不够多但也没有卡时切过来的
         if (rest_play_time_when_switched_ > 0)
         {
-            if (rest_play_time_in_second < 5 && time_counter_3200_.elapsed() > 15000)
+            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim()
+                && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithNotEnoughTime())
             {
                 GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                 changed_to_http_because_of_large_upload_ = false;
@@ -238,7 +242,7 @@ namespace p2sp
 
         // 卡了后切过来的
         // P2P同样卡，再切换回去试试
-        if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > 30000)
+        if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithBuffering())
         {
             GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
             changed_to_http_because_of_large_upload_ = false;
@@ -246,7 +250,7 @@ namespace p2sp
         }
 
         if (GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload()
-            && (is_http_fast_ || time_counter_3200_.elapsed() > 180000)
+            && (is_http_fast_ || time_counter_3200_.elapsed() > settings_.GetTimeToIgnoreHttpBad())
             && rest_play_time_in_second > GetGlobalDataProvider()->GetRestPlayTimeDelim()
             && GetGlobalDataProvider()->IsUploadSpeedLargeEnough())
         {
@@ -270,19 +274,20 @@ namespace p2sp
                 return false;
             }
 
-            if (rest_play_time_in_second > 20)
+            if (rest_play_time_in_second > settings_.GetSafeEnoughRestPlayableTime())
             {
                 GetGlobalDataProvider()->SubmitChangedToP2PCondition(REST_PLAYABLE_TIME_ENOUGTH);
                 return true;
             }
 
-            if (time_counter_2300_.elapsed() >= 3 * 60 * 1000)
+            if (time_counter_2300_.elapsed() >= settings_.GetHttpRunningLongEnoughTimeWhenStart())
             {
                 GetGlobalDataProvider()->SubmitChangedToP2PCondition(LONG_TIME_USING_CDN);
                 return true;
             }
 
-            if (rest_play_time_in_second == 0 && time_counter_2300_.elapsed() >= 10000)
+            if (rest_play_time_in_second == 0 &&
+                time_counter_2300_.elapsed() >= settings_.GetHttpProtectTimeWhenStart())
             {
                 GetGlobalDataProvider()->SubmitChangedToP2PCondition(BLOCK);
                 return true;
@@ -303,14 +308,16 @@ namespace p2sp
             }
 
             // 跑了超过20秒之后跟P2P效果一样或者是还不如P2P
-            if (rest_play_time_in_second <= rest_play_time_when_switched_ && time_counter_2300_.elapsed() > 20000)
+            if (rest_play_time_in_second <= rest_play_time_when_switched_ &&
+                time_counter_2300_.elapsed() > settings_.GetHttpProtectTimeWhenUrgentSwitched())
             {
                 return true;
             }
 
             // 剩余时间足够了或者是跑了很长时间并且剩余时间还可以，再去试试P2P
-            if ((rest_play_time_in_second > 20)
-                || (time_counter_2300_.elapsed() > 60000 && rest_play_time_in_second > 5))
+            if ((rest_play_time_in_second > settings_.GetSafeEnoughRestPlayableTime())
+                || (time_counter_2300_.elapsed() > settings_.GetHttpRunningLongEnoughTimeWhenUrgentSwitched()
+                && rest_play_time_in_second > settings_.GetSafeRestPlayableTimeDelim()))
             {
                 return true;
             }
@@ -318,7 +325,8 @@ namespace p2sp
             return false;
         }
 
-        if (rest_play_time_in_second < 5 && time_counter_2300_.elapsed() > 10000)
+        if (rest_play_time_in_second < settings_.GetSafeRestPlayableTimeDelim()
+            && time_counter_2300_.elapsed() > settings_.GetHttpProtectTimeWhenLargeUpload())
         {
             return true;
         }
@@ -330,5 +338,21 @@ namespace p2sp
         }
 
         return false;
+    }
+
+    void SwitchController::LiveControlMode::LiveControlModeSettings::LoadSettings()
+    {
+        safe_enough_rest_playable_time_delim_under_http_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayableTime();
+        http_running_long_enough_time_when_start_ = BootStrapGeneralConfig::Inst()->GetHttpRunningLongEnoughTimeWhenStart();
+        http_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenStart();
+        http_protect_time_when_urgent_switched_ = BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenUrgentSwitched();
+        http_running_long_enough_time_when_urgent_switched_ = BootStrapGeneralConfig::Inst()->GetHttpRunningLongEnoughTimeWhenUrgentSwitched();
+        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelimWhenUseHttp();
+        http_protect_time_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenLargeUpload();
+        p2p_rest_playable_time_delim_when_switched_with_large_time_ = BootStrapGeneralConfig::Inst()->GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime();
+        p2p_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetP2PRestPlayableTimeDelim();
+        p2p_protect_time_when_switched_with_not_enough_time_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithNotEnoughTime();
+        p2p_protect_time_when_switched_with_buffering_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithBuffering();
+        time_to_ignore_http_bad_ = BootStrapGeneralConfig::Inst()->GetTimeToIgnoreHttpBad();
     }
 }

@@ -29,6 +29,18 @@ namespace p2sp
         , ratio_delim_of_upload_speed_to_datarate_(200)
         , limit_upload_speed_for_live2_(true)
         , send_peer_info_packet_interval_in_second_(5)
+        , safe_enough_rest_playable_time_delim_under_http_(20)
+        , http_running_long_enough_time_when_start_(3 * 60 * 1000)
+        , http_protect_time_when_start_(10 * 1000)
+        , http_protect_time_when_urgent_switched_(20 * 1000)
+        , http_running_long_enough_time_when_urgent_switched_(60 * 1000)
+        , safe_rest_playable_time_delim_when_use_http_(5)
+        , http_protect_time_when_large_upload_(10)
+        , p2p_rest_playable_time_delim_when_switched_with_large_time_(6)
+        , p2p_rest_playable_time_delim_(5)
+        , p2p_protect_time_when_switched_with_not_enough_time_(15 * 1000)
+        , p2p_protect_time_when_switched_with_buffering_(30 * 1000)
+        , time_to_ignore_http_bad_(3 * 60 * 1000)
         , urgent_rest_playable_time_delim_(10)
         , safe_rest_playable_time_delim_(15)
         , safe_enough_rest_playable_time_delim_(20)
@@ -112,6 +124,19 @@ namespace p2sp
                 ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_))
                 ("config.limitlive2upload", po::value<bool>()->default_value(limit_upload_speed_for_live2_))
                 ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
+                ("config.a", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_under_http_))
+                ("config.b", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_start_))
+                ("config.c", po::value<uint32_t>()->default_value(http_protect_time_when_start_))
+                ("config.d", po::value<uint32_t>()->default_value(http_protect_time_when_urgent_switched_))
+                ("config.e", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_urgent_switched_))
+                ("config.f", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_when_use_http_))
+                ("config.g", po::value<uint32_t>()->default_value(http_protect_time_when_large_upload_))
+                ("config.h", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_when_switched_with_large_time_))
+                ("config.i", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_))
+                ("config.j", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_not_enough_time_))
+                ("config.k", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_buffering_))
+                ("config.l", po::value<uint32_t>()->default_value(time_to_ignore_http_bad_))
+                ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
                 ("config.rpt1", po::value<uint32_t>()->default_value(urgent_rest_playable_time_delim_))
                 ("config.rpt2", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_))
                 ("config.rpt3", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_))
@@ -138,6 +163,18 @@ namespace p2sp
             data_collection_server_list_ = vm["config.dc_servers"].as<string>();
             limit_upload_speed_for_live2_ = vm["config.limitlive2upload"].as<bool>();
             send_peer_info_packet_interval_in_second_ = vm["config.peerinfointerval"].as<uint32_t>();
+            safe_enough_rest_playable_time_delim_under_http_ = vm["config.a"].as<uint32_t>();
+            http_running_long_enough_time_when_start_ = vm["config.b"].as<uint32_t>();
+            http_protect_time_when_start_ = vm["config.c"].as<uint32_t>();
+            http_protect_time_when_urgent_switched_ = vm["config.d"].as<uint32_t>();
+            http_running_long_enough_time_when_urgent_switched_ = vm["config.e"].as<uint32_t>();
+            safe_rest_playable_time_delim_when_use_http_ = vm["config.f"].as<uint32_t>();
+            http_protect_time_when_large_upload_ = vm["config.g"].as<uint32_t>();
+            p2p_rest_playable_time_delim_when_switched_with_large_time_ = vm["config.h"].as<uint32_t>();
+            p2p_rest_playable_time_delim_ = vm["config.i"].as<uint32_t>();
+            p2p_protect_time_when_switched_with_not_enough_time_ = vm["config.j"].as<uint32_t>();
+            p2p_protect_time_when_switched_with_buffering_ = vm["config.k"].as<uint32_t>();
+            time_to_ignore_http_bad_ = vm["config.l"].as<uint32_t>();
             urgent_rest_playable_time_delim_ = vm["config.rpt1"].as<uint32_t>();
             safe_rest_playable_time_delim_ = vm["config.rpt2"].as<uint32_t>();
             safe_enough_rest_playable_time_delim_ = vm["config.rpt3"].as<uint32_t>();
