@@ -4,6 +4,7 @@
 
 #include "Common.h"
 #include "p2sp/tracker/TrackerManager.h"
+#include "p2sp/AppModule.h"
 #include <fstream>
 
 namespace p2sp
@@ -48,8 +49,6 @@ namespace p2sp
         
         tracker_list_save_path_ = list_path.file_string();
 
-        group_count_ = 0;
-
         LOG(__EVENT, "tracker", "Tracker Manager has started successfully.");
 
         load_tracker_list_timer_.start();
@@ -78,7 +77,7 @@ namespace p2sp
 
         try
         {
-            std::ifstream ifs(tracker_list_save_path_.c_str(), std::ios_base::in|std::ios_base::binary);
+            std::ifstream ifs(tracker_list_save_path_.c_str());
             if (!ifs)
             {
                 LOGX(__DEBUG, "tracker", " File Read Error");
@@ -117,17 +116,18 @@ namespace p2sp
             return;
         }
 
-        SetTrackerList(save_group_count, save_tracker_info, false);
+        SetTrackerList(save_group_count, save_tracker_info, false,
+            list_mod_indexer_, list_endpoint_indexer_, p2sp::LIST);
     }
 
     void TrackerManager::SaveTrackerList()
     {
         LOGX(__DEBUG, "tracker", "");
-        uint32_t save_group_count = group_count_;
+        uint32_t save_group_count = list_mod_indexer_.size();
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
 
-        for (ModIndexer::iterator it = mod_indexer_.begin();
-            it != mod_indexer_.end(); ++it)
+        for (ModIndexer::iterator it = list_mod_indexer_.begin();
+            it != list_mod_indexer_.end(); ++it)
         {
             std::vector<protocol::TRACKER_INFO> group_tracker_info = it->second->GetTrackers();
             save_tracker_info.insert(save_tracker_info.end(), group_tracker_info.begin(), group_tracker_info.end());
@@ -148,8 +148,25 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s,
-        bool is_got_tracker_list_from_bs)
+    void TrackerManager::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+        bool is_got_tracker_list_from_bs, TrackerType tracker_type)
+    {
+        if (tracker_type == p2sp::LIST)
+        {
+            SetTrackerList(group_count, trackers, is_got_tracker_list_from_bs, list_mod_indexer_,
+                list_endpoint_indexer_, tracker_type);
+        }
+        else
+        {
+            assert(tracker_type == p2sp::REPORT);
+            SetTrackerList(group_count, trackers, is_got_tracker_list_from_bs, report_mod_indexer_,
+                report_endpoint_indexer_, tracker_type);
+        }
+    }
+
+    void TrackerManager::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+        bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
+        TrackerType tracker_type)
     {
         // 去掉这个aassert, 连续2次收到BS回的查询Tracker列表的报文就会触发这个assert.
         // assert(!is_got_tracker_list_from_bs_);
@@ -159,93 +176,70 @@ namespace p2sp
             is_got_tracker_list_from_bs_ = is_got_tracker_list_from_bs;
         }
 
-        // 验证输入
-        if (group_count == 0 && tracker_s.empty())
+        if (trackers.empty()) 
         {
-            LOG(__DEBUG, "tracker", "Group Count is zero and Tracker Infos is empty.");
+            mod_indexer.clear();
+            endpoint_indexer.clear();
             return;
         }
-        else
-        {
-            uint32_t max_count = 0;
-            for (uint32_t i = 0; i < tracker_s.size(); ++i)
-            {
-                uint32_t mod_num = static_cast<uint32_t>(tracker_s[i].ModNo);
-                if (mod_num > max_count)
-                    max_count = mod_num;
-            }
-            LOGX(__DEBUG, "tracker", "max_count = " << max_count);
-            // check
-            if (max_count + 1 != group_count)
-            {
-                LOG(__WARN, "tracker", __FUNCTION__ << " Invalid tracker std::list");
-                return;
-            }
-        }
-        LOGX(__DEBUG, "tracker", "local_group_count = " << group_count_ << ", set_group_count = " << group_count);
 
-        // 发现group数减少了，删除本地多出的group
-        if (group_count < group_count_)
+        std::map<boost::uint32_t, std::set<protocol::TRACKER_INFO> > mod_map;
+
+        for (std::vector<protocol::TRACKER_INFO>::const_iterator iter = trackers.begin();
+            iter != trackers.end(); ++iter)
         {
-            for (ModIndexer::iterator it = mod_indexer_.begin(), eit = mod_indexer_.end(); it != eit;)
+            // 只有当直播 && REPORT类型 && 返回的Tracker用于保存UDP SERVER的Tracker
+            // 不加入列表
+            if (is_vod_ || tracker_type == p2sp::LIST || !iter->IsTrackerForLiveUdpServer())
             {
-                if ((uint32_t)it->first >= group_count) 
-                {
-                    (it->second)->Stop();
-                    mod_indexer_.erase(it++);
-                }
-                else 
-                {
-                    ++it;
-                }
+                mod_map[iter->ModNo].insert(*iter);
             }
         }
 
-        // sort the trackers by their ModNo
-        std::sort(tracker_s.begin(), tracker_s.end(), TrackerInfoSorterByMod());
-
-        // 统计信息
-        statistic::StatisticModule::Inst()->SetTrackerInfo(group_count, tracker_s);
-
-        uint32_t i, j;
-        for (i = 0; i < tracker_s.size(); i = j)
+        for (ModIndexer::iterator iter = mod_indexer.begin(); iter != mod_indexer.end(); )
         {
-            std::set<protocol::TRACKER_INFO> trackers_in_group;
-
-            uint32_t group_key = tracker_s[i].ModNo;
-            for (j = i; j < tracker_s.size() && tracker_s[j].ModNo == group_key; j++)
-                trackers_in_group.insert(tracker_s[j]);
-
-            if (group_key < group_count_)
+            if (mod_map.find(iter->first) == mod_map.end())
             {
-                // group本地已经存在，只需要重新设置Tracker列表
-                ModIndexer::iterator it = mod_indexer_.find(group_key);
-                assert(it != mod_indexer_.end());
-                TrackerGroup::p group = it->second;
-                group->SetTrackers(group_count, trackers_in_group);
+                mod_indexer.erase(iter++);
             }
             else
             {
-                // group本地不存在，创建新Group并start
-                TrackerGroup::p group = TrackerGroup::Create(is_vod_);
-                mod_indexer_[group_key] = group;
-                group->SetTrackers(group_count, trackers_in_group);
-                group->Start();
+                ++iter;
             }
         }
 
-        // endpoint
-        endpoint_indexer_.clear();
-        for (i = 0; i < tracker_s.size(); i++)
+        for (std::map<boost::uint32_t, std::set<protocol::TRACKER_INFO> >::iterator
+            iter = mod_map.begin(); iter != mod_map.end(); ++iter)
         {
-            boost::asio::ip::udp::endpoint end_point =
-                framework::network::Endpoint(tracker_s[i].IP, tracker_s[i].Port);
-            endpoint_indexer_[end_point] = mod_indexer_[tracker_s[i].ModNo];
+            if (mod_indexer.find(iter->first) == mod_indexer.end())
+            {
+                mod_indexer.insert(std::make_pair(iter->first,
+                    boost::shared_ptr<TrackerGroup>(new TrackerGroup(is_vod_))));
+            }
+
+            mod_indexer[iter->first]->SetTrackers(group_count, iter->second);
+            mod_indexer[iter->first]->Start();
         }
 
-        group_count_ = group_count;
+        endpoint_indexer.clear();
 
-        if (is_running_ == true)
+        for (std::vector<protocol::TRACKER_INFO>::const_iterator iter = trackers.begin();
+            iter != trackers.end(); ++iter)
+        {
+            boost::asio::ip::udp::endpoint endpoint = framework::network::Endpoint(iter->IP,
+                iter->Port);
+
+            endpoint_indexer[endpoint] = mod_indexer[iter->ModNo];
+        }
+
+        if (is_vod_ && tracker_type == p2sp::REPORT)
+        {
+            DoReport();
+        }
+
+        statistic::StatisticModule::Inst()->SetTrackerInfo(group_count, trackers);
+
+        if (is_running_ == true && tracker_type == p2sp::LIST)
         {
             LOG(__EVENT, "tracker", "TrackerManager::SetTrackerList    Start All Groups");
             SaveTrackerList();
@@ -254,25 +248,21 @@ namespace p2sp
 
     void TrackerManager::DoList(RID rid, bool list_for_live_udpserver)
     {
-        TRACK_INFO("TrackerManager::DoList, RID: " << rid);
-
         if (is_running_ == false)
         {
-            LOG(__WARN, "tracker", "Tracker Manager is not running. Return.");
             return;
         }
 
-        if (group_count_ == 0)
+        if (list_mod_indexer_.size() == 0)
         {
-            TRACK_WARN("Tracker List is not std::set. Return.");
             return;
         }
 
         // 根据 rid % group_count_ 从 mod_indexer_ 中定位出 TrackerGroup,
         // 然后 该 group 做 DoList
-        uint32_t group_key = base::util::GuidMod(rid, group_count_);
+        uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
         
-        TrackerGroup::p tracker_group = mod_indexer_[group_key];
+        boost::shared_ptr<TrackerGroup> tracker_group = list_mod_indexer_[group_key];
 
         if (tracker_group)
         {
@@ -280,7 +270,6 @@ namespace p2sp
         }
         else
         {
-            LOG(__ERROR, "tracker", "mod indexer data inconsistence");
             assert(0);
         }
     }
@@ -309,9 +298,9 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        if (endpoint_indexer_.count(packet.end_point) != 0)
+        if (report_endpoint_indexer_.count(packet.end_point) != 0)
         {
-            const TrackerGroup::p group = endpoint_indexer_[packet.end_point];  // ! shared_ptr
+            boost::shared_ptr<TrackerGroup> group = report_endpoint_indexer_[packet.end_point];
             group->OnReportResponsePacket(packet);
         }
     }
@@ -328,9 +317,9 @@ namespace p2sp
         // 然后对这个Group调用 OnCommitResponsePacket(end_point, p packet)
         // 如果找不到Group不管
         boost::asio::ip::udp::endpoint end_point = packet.end_point;
-        if (endpoint_indexer_.count(packet.end_point) != 0)
+        if (list_endpoint_indexer_.count(packet.end_point) != 0)
         {
-            const TrackerGroup::p group = endpoint_indexer_[packet.end_point];
+            boost::shared_ptr<TrackerGroup> group = list_endpoint_indexer_[packet.end_point];
             group->OnListResponsePacket(packet);
         }
         else
@@ -342,7 +331,12 @@ namespace p2sp
     void TrackerManager::StopAllGroups()
     {
         LOG(__INFO, "tracker", "Stopping all tracker groups.");
-        for (ModIndexer::iterator it = mod_indexer_.begin(), eit = mod_indexer_.end(); it != eit; it++)
+        for (ModIndexer::iterator it = list_mod_indexer_.begin(); it != list_mod_indexer_.end(); ++it)
+        {
+            it->second->Stop();
+        }
+
+        for (ModIndexer::iterator it = list_mod_indexer_.begin(); it != list_mod_indexer_.end(); ++it)
         {
             it->second->Stop();
         }
@@ -353,9 +347,10 @@ namespace p2sp
     void TrackerManager::ClearAllGroups()
     {
         StopAllGroups();
-        mod_indexer_.clear();
-        endpoint_indexer_.clear();
-        group_count_ = 0;
+        list_endpoint_indexer_.clear();
+        report_mod_indexer_.clear();
+        list_endpoint_indexer_.clear();
+        report_endpoint_indexer_.clear();
     }
 
     void TrackerManager::PPLeave()
@@ -367,9 +362,10 @@ namespace p2sp
 
         LOG(__INFO, "tracker", "Leave");
 
-        for (std::map<int, TrackerGroup::p> ::iterator iter = mod_indexer_.begin(); iter != mod_indexer_.end(); iter++)
+        for (std::map<int, boost::shared_ptr<TrackerGroup> > ::iterator iter = report_mod_indexer_.begin();
+            iter != report_mod_indexer_.end(); ++iter)
         {
-            iter->second->PPLeave();
+            iter->second->DoLeave();
         }
     }
 
@@ -383,9 +379,10 @@ namespace p2sp
 
     void TrackerManager::DoReport()
     {
-        for (ModIndexer::iterator it = mod_indexer_.begin(); it != mod_indexer_.end(); ++it)
+        for (ModIndexer::iterator it = report_mod_indexer_.begin();
+            it != report_mod_indexer_.end(); ++it)
         {
-            it->second->SelectTracker();
+            it->second->DoReport();
         }
     }
 }

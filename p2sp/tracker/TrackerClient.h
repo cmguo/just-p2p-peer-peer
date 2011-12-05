@@ -28,10 +28,10 @@ namespace p2sp
 
         typedef boost::shared_ptr<TrackerClient> p;
 
-        static p Create(boost::asio::ip::udp::endpoint end_point, bool is_vod, bool is_tracker_for_live_udpserver)
+        static p Create(boost::asio::ip::udp::endpoint end_point, bool is_vod, const protocol::TRACKER_INFO& tracker_info)
         {
-            assert(!(is_vod && is_tracker_for_live_udpserver));
-            return p(new TrackerClient(end_point, is_vod, is_tracker_for_live_udpserver));
+            assert(!(is_vod && tracker_info.IsTrackerForLiveUdpServer()));
+            return p(new TrackerClient(end_point, is_vod, tracker_info));
         }
 
     public:
@@ -59,8 +59,6 @@ namespace p2sp
 
     public:
 
-        void SetTrackerInfo(const protocol::TRACKER_INFO& tracker_info);
-
         const protocol::TRACKER_INFO& GetTrackerInfo() const;
 
         void SetGroupCount(uint32_t group_count);
@@ -79,10 +77,12 @@ namespace p2sp
 
     private:
         TrackerClient() {}
-        TrackerClient(boost::asio::ip::udp::endpoint end_point, bool is_vod, bool is_tracker_for_live_udpserver)
+        TrackerClient(boost::asio::ip::udp::endpoint end_point, bool is_vod, 
+            const protocol::TRACKER_INFO& tracker_info)
             : end_point_(end_point)
             , is_vod_(is_vod)
-            , is_tracker_for_live_udpserver_(is_tracker_for_live_udpserver)
+            , tracker_info_(tracker_info)
+            , is_tracker_for_live_udpserver_(tracker_info.IsTrackerForLiveUdpServer())
         {}
 
     private:

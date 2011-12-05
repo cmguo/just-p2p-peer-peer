@@ -13,6 +13,12 @@
 
 namespace p2sp
 {
+    enum TrackerType
+    {
+        LIST = 0,
+        REPORT = 1
+    };
+
     class TrackerManager
         : public boost::noncopyable
 #ifdef DUMP_OBJECT
@@ -20,9 +26,11 @@ namespace p2sp
 #endif
     {
     public:
+        typedef std::map<int, boost::shared_ptr<TrackerGroup> > ModIndexer;
+        typedef std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<TrackerGroup> > EndpointIndexer;
+
         TrackerManager(bool is_vod)
-            : group_count_(0)
-            , is_running_(false)
+            : is_running_(false)
             , is_vod_(is_vod)
             , is_got_tracker_list_from_bs_(false)
             , load_tracker_list_timer_(global_second_timer(), 60*1000, 
@@ -33,8 +41,8 @@ namespace p2sp
 
         void Stop();
 
-        void SetTrackerList(uint32_t group_count, std::vector<protocol::TRACKER_INFO> tracker_s,
-            bool is_got_tracker_list_from_bs);
+        void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+            bool is_got_tracker_list_from_bs, TrackerType tracker_type);
 
         void DoList(RID rid, bool list_for_live_udpserver);
 
@@ -60,34 +68,26 @@ namespace p2sp
 
         void OnLoadTrackerTimer(framework::timer::Timer::pointer timer);
 
-    private:
-        struct TrackerInfoSorterByMod
-        {
-            bool operator() (const protocol::TRACKER_INFO& a, const protocol::TRACKER_INFO& b)
-            {
-                return a.ModNo < b.ModNo;
-            }
-        };
+        void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+            bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
+            TrackerType tracker_type);
+
     private:
         /**
         * @brief 根据 RID 的 模值 对 TrackerGroup进行索引
         *    [Key]   模的余数
         *    [Value] TrackerGroup 智能指针
         */
-        typedef std::map<int, TrackerGroup::p> ModIndexer;
-        ModIndexer mod_indexer_;
+        ModIndexer list_mod_indexer_;
+        ModIndexer report_mod_indexer_;
 
         /**
         * @brief 根据 Tracker 的endpoint 对TrackerGroup 进行索引
         *    [Key]   Tracker的enpoint
         *    [Value] TrackerGroup 智能指针
         */
-        std::map<boost::asio::ip::udp::endpoint, TrackerGroup::p> endpoint_indexer_;
-
-        /**
-        * @brief Group数，也是 RID 模的除数
-        */
-        boost::uint32_t group_count_;
+        EndpointIndexer list_endpoint_indexer_;
+        EndpointIndexer report_endpoint_indexer_;
 
         volatile bool is_running_;
 

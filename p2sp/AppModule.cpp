@@ -488,7 +488,8 @@ namespace p2sp
 
         // IndexServer 相关协议
         if ((packet.PacketAction >= 0x10 && packet.PacketAction  < 0x1A) ||
-            (packet.PacketAction >= 0x20 && packet.PacketAction  < 0x30))
+            (packet.PacketAction >= 0x20 && packet.PacketAction  < 0x30) ||
+            packet.PacketAction >= 0x40 && packet.PacketAction < 0x50)
         {
             IndexManager::Inst()->OnUdpRecv((protocol::ServerPacket const &)packet);
             return;

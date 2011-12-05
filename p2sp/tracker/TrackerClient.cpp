@@ -330,16 +330,6 @@ namespace p2sp
         return last_transaction_id_;
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // Tracker Info
-
-    void TrackerClient::SetTrackerInfo(const protocol::TRACKER_INFO& tracker_info)
-    {
-        TRACK_INFO("TrackerClient::SetTrackerInfo ModNO:" << (uint32_t)tracker_info.ModNo
-            << ", IP:" << framework::network::Endpoint(tracker_info.IP, tracker_info.Port).to_string());
-        tracker_info_ = tracker_info;
-    }
-
     const protocol::TRACKER_INFO& TrackerClient::GetTrackerInfo() const
     {
         return tracker_info_;

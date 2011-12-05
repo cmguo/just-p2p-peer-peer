@@ -37,22 +37,21 @@ namespace p2sp
         inst_.reset();
     }
 
-    void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s, bool is_vod)
+    void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
+        bool is_vod, TrackerType tracker_type)
     {
         if (is_vod)
         {
-            vod_tracker_manager_.SetTrackerList(group_count, tracker_s, true);
+            vod_tracker_manager_.SetTrackerList(group_count, tracker_s, true, tracker_type);
         }
         else
         {
-            live_tracker_manager_.SetTrackerList(group_count, tracker_s, true);
+            live_tracker_manager_.SetTrackerList(group_count, tracker_s, true, tracker_type);
         }
     }
 
     void TrackerModule::DoList(RID rid, bool is_vod, bool list_for_live_udpserver)
     {
-        TRACK_INFO("TrackerModule::DoList, RID: " << rid);
-
         if (is_running_ == false)
         {
             LOG(__WARN, "tracker", "Tracker Manager is not running. Return.");

@@ -43,7 +43,13 @@ namespace p2sp
 
         void DoQueryRidByContent(string url, string refer, MD5 content_md5, uint32_t content_bytes, uint32_t file_length);
 
-        void DoQueryTrackerList();
+        void DoQueryVodListTrackerList();
+
+        void DoQueryVodReportTrackerList();
+
+        void DoQueryLiveListTrackerList();
+
+        void DoQueryLiveReportTrackerList();
 
         void DoQueryStunServerList();
 
@@ -52,8 +58,6 @@ namespace p2sp
 #ifdef NOTIFY_ON
         void DoQueryNotifyServerList();
 #endif
-
-        void DoQueryLiveTrackerList();
 
         void DoQueryBootStrapConfig();
 
@@ -76,15 +80,19 @@ namespace p2sp
 
         void OnQueryHttpServerByRidPacket(protocol::QueryHttpServerByRidPacket const & packet);
 
-        void OnQueryTrackerListPacket(protocol::QueryTrackerListPacket const & packet);
+        void OnQueryVodListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet);
+
+        void OnQueryVodReportTrackerListPacket(protocol::QueryTrackerListPacket const & packet);
+
+        void OnQueryLiveListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet);
+
+        void OnQueryLiveReportTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet);
 
         void OnAddRidUrlPacket(protocol::AddRidUrlPacket const & packet);
 
         void OnQueryStunServerListPacket(protocol::QueryStunServerListPacket const & packet);
 
         void OnQueryIndexServerListPacket(protocol::QueryIndexServerListPacket const & packet);
-
-        void OnQueryLiveTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet);
 
         void OnQueryBootStrapConfigPacket(protocol::QueryConfigStringPacket const & packet);
 
@@ -95,7 +103,13 @@ namespace p2sp
         void OnTimerElapsed(
             framework::timer::Timer * pointer);
 
-        void OnQueryTrackerListTimerElapsed(uint32_t times);
+        void OnQueryVodListTrackerListTimerElapsed(uint32_t times);
+
+        void OnQueryVodReportTrackerListTimerElapsed(uint32_t times);
+
+        void OnQueryLiveListTrackerListTimerElapsed(uint32_t times);
+
+        void OnQueryLiveReportTrackerListTimerElapsed(uint32_t times);
 
         void OnQueryStunServerListTimerElapsed(uint32_t times);
 
@@ -105,8 +119,6 @@ namespace p2sp
 #ifdef NOTIFY_ON
         void OnQueryNotifyServerTimerElapsed(boost::uint32_t times);
 #endif
-        void OnQueryLiveTrackerListTimerElapsed(uint32_t times);
-
         void OnQueryBootStrapConfigTimerElapsed(boost::uint32_t times);
 
         void OnQuerySnListTimerElapsed(boost::uint32_t times);
@@ -118,45 +130,49 @@ namespace p2sp
         */
         std::map<uint32_t, protocol::UrlInfo> trans_url_map_;
 
-        bool is_have_tracker_list_;
+        bool is_have_vod_list_tracker_list_;
+        bool is_have_vod_report_tracker_list_;
+
+        bool is_have_live_list_tracker_list_;
+        bool is_have_live_report_tracker_list_;
+
         bool is_have_stun_server_list_;
         bool is_have_index_server_list_;
-        bool is_have_test_url_list_;
         bool is_have_change_domain_;
         bool is_resolving_;
-        bool is_firsttime_resolve_;
         bool is_have_notify_server_;
-        bool is_have_live_tracker_list_;
+        
         bool is_have_bootstrap_config_;
         bool is_have_sn_list_;
 
-        boost::uint8_t interval_time_;
-        float upload_pic_probability_;
+        framework::timer::OnceTimer query_vod_list_tracker_list_timer_;
+        framework::timer::OnceTimer query_vod_report_tracker_list_timer_;
+
+        framework::timer::OnceTimer query_live_list_tracker_list_timer_;
+        framework::timer::OnceTimer query_live_report_tracker_list_timer_;
 
         framework::timer::OnceTimer change_domain_resolver_timer_;
-        framework::timer::OnceTimer query_tracker_list_timer_;
         framework::timer::OnceTimer query_stun_server_list_timer_;
         framework::timer::OnceTimer query_index_server_list_timer_;
 #ifdef NOTIFY_ON
         framework::timer::OnceTimer query_notify_server_list_timer_;
 #endif
-        framework::timer::OnceTimer query_live_tracker_list_timer_;
         framework::timer::OnceTimer query_bootstrap_config_timer_;
         framework::timer::OnceTimer query_sn_list_timer_;
 
-        string query_rid_url_, query_rid_refer_;
         volatile bool is_running_;
 
         boost::asio::ip::udp::endpoint server_list_endpoint_;
 
-        uint32_t last_querytrackerlist_intervaltimes_;
+        uint32_t last_query_vod_list_tracker_list_interval_;
+        uint32_t last_query_vod_report_tracker_list_interval_;
         uint32_t last_querystunlist_intervaltimes_;
         uint32_t last_queryindexlist_intervaltimes_;
-        uint32_t last_querytesturllist_intervaltimes_;
 #ifdef NOTIFY_ON
         uint32_t last_querynotifyserverlist_intervaltimes_;
 #endif
-        uint32_t last_querylivetrackerlist_intervaltimes_;
+        uint32_t last_query_live_list_tracker_list_interval_;
+        uint32_t last_query_live_report_tracker_list_interval_;
         uint32_t last_query_bootstrap_config_interval_times_;
         uint32_t last_query_sn_list_interval_times_;
 
@@ -164,9 +180,6 @@ namespace p2sp
         network::Resolver::p resolver_;
         std::vector<boost::uint8_t> mod_index_map_;
         std::vector<protocol::INDEX_SERVER_INFO> index_servers_;
-
-        // test url std::list
-        std::vector<string> test_url_list_;
 
         string domain_;
         boost::uint16_t port_;

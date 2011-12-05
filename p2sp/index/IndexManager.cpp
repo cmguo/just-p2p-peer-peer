@@ -33,27 +33,31 @@ namespace p2sp
     IndexManager::IndexManager(
         boost::asio::io_service & io_svc)
         : io_svc_(io_svc)
-        , is_have_tracker_list_(false)
+        , is_have_vod_list_tracker_list_(false)
+        , is_have_vod_report_tracker_list_(false)
+        , is_have_live_list_tracker_list_(false)
+        , is_have_live_report_tracker_list_(false)
+
         , is_have_stun_server_list_(false)
         , is_have_index_server_list_(false)
-        , is_have_test_url_list_(false)
 #ifdef NOTIFY_ON
         , is_have_notify_server_(false)
 #endif
-        , is_have_live_tracker_list_(false)
         , is_have_bootstrap_config_(false)
         , is_have_change_domain_(false)
         , is_resolving_(false)
-        , is_firsttime_resolve_(true)
         , is_have_sn_list_(false)
+
+        , query_vod_list_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_list_tracker_list_timer_))
+        , query_vod_report_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_report_tracker_list_timer_))
+        , query_live_list_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_live_list_tracker_list_timer_))
+        , query_live_report_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_live_report_tracker_list_timer_))
         , change_domain_resolver_timer_(global_second_timer(), 3000, boost::bind(&IndexManager::OnTimerElapsed, this, &change_domain_resolver_timer_))
-        , query_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_tracker_list_timer_))
         , query_stun_server_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_stun_server_list_timer_))
         , query_index_server_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_index_server_list_timer_))
 #ifdef NOTIFY_ON
         , query_notify_server_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_notify_server_list_timer_))
 #endif
-        , query_live_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_live_tracker_list_timer_))
         , query_bootstrap_config_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_bootstrap_config_timer_))
         , query_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
@@ -81,28 +85,26 @@ namespace p2sp
         statistic::StatisticModule::Inst()->SetBsInfo(server_list_endpoint_);
         statistic::StatisticModule::Inst()->SetIndexServerInfo(index_socket);
         is_resolving_ = false;
-        if (false == is_have_tracker_list_) DoQueryTrackerList();
+        if (false == is_have_vod_list_tracker_list_) DoQueryVodListTrackerList();
+        if (false == is_have_vod_report_tracker_list_) DoQueryVodReportTrackerList();
         if (false == is_have_stun_server_list_) DoQueryStunServerList();
         if (false == is_have_index_server_list_) DoQueryIndexServerList();
 #ifdef NOTIFY_ON
         if (false == is_have_notify_server_) DoQueryNotifyServerList();
 #endif
-
-        if (false == is_have_live_tracker_list_)
+        if (false == is_have_live_list_tracker_list_)
         {
-            DoQueryLiveTrackerList();
+            DoQueryLiveListTrackerList();
+        }
+
+        if (false == is_have_live_report_tracker_list_)
+        {
+            DoQueryLiveReportTrackerList();
         }
 
         if (false == is_have_bootstrap_config_)
         {
             DoQueryBootStrapConfig();
-        }
-
-        if (is_firsttime_resolve_)
-        {
-            is_firsttime_resolve_ = false;
-            // DoQueryNeedReport();
-            // DoQueryKeywordList();
         }
 
         if (false == is_have_sn_list_)
@@ -122,7 +124,7 @@ namespace p2sp
         if (false == is_have_change_domain_)
         {
             ++resolve_times_;
-            bool need_change_domain = !(is_have_index_server_list_ || is_have_tracker_list_
+            bool need_change_domain = !(is_have_index_server_list_ || is_have_vod_report_tracker_list_
                 || is_have_stun_server_list_);
             // 解析失败三次并且三个回包一个都没收到，将域名切换至世纪互联，再次解析，不开启定时器
             if (resolve_times_ >= 3 && need_change_domain)
@@ -150,8 +152,10 @@ namespace p2sp
             server_list_endpoint_ = boost::asio::ip::udp::endpoint(addr, boss_port_);
             protocol::SocketAddr index_socket(server_list_endpoint_);
             statistic::StatisticModule::Inst()->SetIndexServerInfo(index_socket);
-            DoQueryTrackerList();
-            DoQueryLiveTrackerList();
+            DoQueryVodListTrackerList();
+            DoQueryVodReportTrackerList();
+            DoQueryLiveListTrackerList();
+            DoQueryLiveReportTrackerList();
             DoQueryStunServerList();
             DoQueryIndexServerList();
 #ifdef NOTIFY_ON
@@ -169,11 +173,13 @@ namespace p2sp
 
         is_running_ = true;
 
-        is_have_tracker_list_ = (false);
-        is_have_stun_server_list_ = (false);
-        is_have_index_server_list_ = (false);
-        is_have_test_url_list_ = (false);
-        is_have_change_domain_ = (false);
+        is_have_vod_list_tracker_list_ = false;
+        is_have_vod_report_tracker_list_ = false;
+        is_have_live_list_tracker_list_ = false;
+        is_have_live_report_tracker_list_ = false;
+        is_have_stun_server_list_ = false;
+        is_have_index_server_list_ = false;
+        is_have_change_domain_ = false;
 #ifdef NOTIFY_ON
         is_have_notify_server_ = false;
 #endif
@@ -186,16 +192,16 @@ namespace p2sp
         domain_ = domain;
         port_ = port;
 
-        last_querytrackerlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
+        last_query_vod_list_tracker_list_interval_= INITIAL_QUERY_INTERVAL;
+        last_query_vod_report_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
         last_querystunlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
-        last_queryindexlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
-        last_querytesturllist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
         last_queryindexlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
 #ifdef NOTIFY_ON
         last_querynotifyserverlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
 #endif
         last_query_bootstrap_config_interval_times_ = INITIAL_QUERY_INTERVAL;
-        last_querylivetrackerlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
+        last_query_live_list_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
+        last_query_live_report_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
         last_query_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
 
@@ -204,7 +210,6 @@ namespace p2sp
         is_resolving_ = true;
         failed_times_ = 0;
 
-        //      change_domain_resolver_timer_ = OnceTimer::create(3000, shared_from_this());
         change_domain_resolver_timer_.start();
 
     }
@@ -216,7 +221,8 @@ namespace p2sp
         if (is_running_ == false) return;
 
         // 停止定时器
-        query_tracker_list_timer_.stop();
+        query_vod_list_tracker_list_timer_.stop();
+        query_vod_report_tracker_list_timer_.stop();
         query_stun_server_list_timer_.stop();
         query_index_server_list_timer_.stop();
 #ifdef NOTIFY_ON
@@ -227,7 +233,8 @@ namespace p2sp
 
         query_sn_list_timer_.stop();
 
-        query_live_tracker_list_timer_.stop();
+        query_live_list_tracker_list_timer_.stop();
+        query_live_report_tracker_list_timer_.stop();
 
         if (resolver_) { resolver_->Close(); resolver_.reset(); }
 
@@ -272,14 +279,50 @@ namespace p2sp
         AppModule::Inst()->DoSendPacket(packet);
     }
 
-    void IndexManager::DoQueryTrackerList()
+    void IndexManager::DoQueryVodListTrackerList()
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        query_vod_list_tracker_list_timer_.interval(last_query_vod_list_tracker_list_interval_);
+        query_vod_list_tracker_list_timer_.start();
+
+        protocol::QueryTrackerForListingPacket packet(
+            protocol::Packet::NewTransactionID(), protocol::PEER_VERSION,
+            protocol::QueryTrackerForListingPacket::VOD_TRACKER_FOR_LISTING,
+            server_list_endpoint_);
+
+        AppModule::Inst()->DoSendPacket(packet);
+    }
+
+    void IndexManager::DoQueryLiveListTrackerList()
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        query_live_list_tracker_list_timer_.interval(last_query_live_list_tracker_list_interval_);
+        query_live_list_tracker_list_timer_.start();
+
+        protocol::QueryTrackerForListingPacket packet(
+            protocol::Packet::NewTransactionID(), protocol::PEER_VERSION,
+            protocol::QueryTrackerForListingPacket::LIVE_TRACKER_FOR_LISTING,
+            server_list_endpoint_);
+
+        AppModule::Inst()->DoSendPacket(packet);
+    }
+
+    void IndexManager::DoQueryVodReportTrackerList()
     {
         LOG(__EVENT, "index", "DoQueryTrackerList");
 
         if (is_running_ == false) return;
 
-        query_tracker_list_timer_.interval(last_querytrackerlist_intervaltimes_);
-        query_tracker_list_timer_.start();
+        query_vod_report_tracker_list_timer_.interval(last_query_vod_report_tracker_list_interval_);
+        query_vod_report_tracker_list_timer_.start();
 
 
         // 直接发送 QueryTrackerListRequestPacket 包
@@ -373,7 +416,7 @@ namespace p2sp
             OnQueryHttpServerByRidPacket((protocol::QueryHttpServerByRidPacket const &)packet);
             break;
         case protocol::QueryTrackerListPacket::Action:
-            OnQueryTrackerListPacket((protocol::QueryTrackerListPacket const &)packet);
+            OnQueryVodReportTrackerListPacket((protocol::QueryTrackerListPacket const &)packet);
             break;
         case protocol::AddRidUrlPacket::Action:
             OnAddRidUrlPacket((protocol::AddRidUrlPacket const &)packet);
@@ -384,6 +427,22 @@ namespace p2sp
         case protocol::QueryIndexServerListPacket::Action:
             OnQueryIndexServerListPacket((protocol::QueryIndexServerListPacket const &)packet);
             break;
+        case protocol::QueryTrackerForListingPacket::Action:
+            {
+                const protocol::QueryTrackerForListingPacket & query_tracket_packet = 
+                    (const protocol::QueryTrackerForListingPacket  &)packet;
+
+                if (query_tracket_packet.tracker_type_ == protocol::QueryTrackerForListingPacket::VOD_TRACKER_FOR_LISTING)
+                {
+                    OnQueryVodListTrackerListPacket(query_tracket_packet);
+                }
+                else
+                {
+                    assert(query_tracket_packet.tracker_type_ == protocol::QueryTrackerForListingPacket::LIVE_TRACKER_FOR_LISTING);
+                    OnQueryLiveListTrackerListPacket(query_tracket_packet);
+                }
+                break;
+            }
 #ifdef NOTIFY_ON
         case protocol::QueryNotifyListPacket::Action:
             {
@@ -399,7 +458,7 @@ namespace p2sp
             OnQueryBootStrapConfigPacket((protocol::QueryConfigStringPacket const &)packet);
             break;
         case protocol::QueryLiveTrackerListPacket::Action:
-            OnQueryLiveTrackerListPacket((protocol::QueryLiveTrackerListPacket const &)packet);
+            OnQueryLiveReportTrackerListPacket((protocol::QueryLiveTrackerListPacket const &)packet);
             break;
         case protocol::QuerySnListPacket::Action:
             OnQuerySnListPacket((protocol::QuerySnListPacket const &)packet);
@@ -541,7 +600,7 @@ namespace p2sp
         }
     }
 
-    void IndexManager::OnQueryTrackerListPacket(protocol::QueryTrackerListPacket const & packet)
+    void IndexManager::OnQueryVodReportTrackerListPacket(protocol::QueryTrackerListPacket const & packet)
     {
         LOG(__INFO, "index", "IndexManager::OnQueryTrackerListPacket");
 
@@ -554,12 +613,12 @@ namespace p2sp
         if (packet.error_code_ == 0)
         {
             // 成功收到服务器回复，定时器时间设置为比较长的时间
-            query_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
-            query_tracker_list_timer_.start();
-            is_have_tracker_list_ = true;
+            query_vod_report_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_vod_report_tracker_list_timer_.start();
+            is_have_vod_report_tracker_list_ = true;
             failed_times_ = 0;
             resolve_times_ = 0;
-            last_querytrackerlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
+            last_query_vod_report_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
             // 根据返回情况调用
             // 从packet中, 解出每个 TrackerInfo 到 tracker_vector
@@ -568,7 +627,7 @@ namespace p2sp
             {
                 LOG(__INFO, "index", "Tracker List :[" << i << "] ModNo:" << packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
             }
-            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true);
+            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true,  p2sp::REPORT);
 
             //    LOG(__ERROR, "user", "QueryTList Succeed, g = " << packet->GetTrackerGroupCount() << ", t = " << packet->GetTrackerCount());
         }
@@ -579,7 +638,7 @@ namespace p2sp
         }
     }
 
-    void IndexManager::OnQueryLiveTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet)
+    void IndexManager::OnQueryLiveReportTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet)
     {
         LOG(__INFO, "index", "IndexManager::OnQueryLiveTrackerListPacket");
 
@@ -592,12 +651,12 @@ namespace p2sp
         if (packet.error_code_ == 0)
         {
             // 成功收到服务器回复，定时器时间设置为比较长的时间
-            query_live_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
-            query_live_tracker_list_timer_.start();
-            is_have_live_tracker_list_ = true;
+            query_live_report_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_live_report_tracker_list_timer_.start();
+            is_have_live_report_tracker_list_ = true;
             failed_times_ = 0;
             resolve_times_ = 0;
-            last_querylivetrackerlist_intervaltimes_ = INITIAL_QUERY_INTERVAL;
+            last_query_live_report_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
             // 根据返回情况调用
             // 从packet中, 解出每个 TrackerInfo 到 tracker_vector
@@ -607,7 +666,7 @@ namespace p2sp
                 LOG(__INFO, "index", "Tracker List :[" << i << "] ModNo:" << packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
             }
 
-            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false);
+            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::REPORT);
         }
         else
         {
@@ -654,9 +713,13 @@ namespace p2sp
         uint32_t times = pointer->times();
         LOG(__WARN, "index", "IndexManager::OnTimerElapsed");
 
-        if (pointer == &query_tracker_list_timer_)
+        if (pointer == &query_vod_list_tracker_list_timer_)
+        {
+            OnQueryVodListTrackerListTimerElapsed(times);
+        }
+        if (pointer == &query_vod_report_tracker_list_timer_)
         {   // QueryTrackerList 定时器出发
-            OnQueryTrackerListTimerElapsed(times);
+            OnQueryVodReportTrackerListTimerElapsed(times);
         }
         else if (pointer == &query_stun_server_list_timer_)
         {   // QueryTrackerList 定时器出发
@@ -672,9 +735,13 @@ namespace p2sp
             OnQueryNotifyServerTimerElapsed(times);
         }
 #endif
-        else if (pointer == &query_live_tracker_list_timer_)
+        else if (pointer == &query_live_list_tracker_list_timer_)
         {
-            OnQueryLiveTrackerListTimerElapsed(times);
+            OnQueryLiveListTrackerListTimerElapsed(times);
+        }
+        else if (pointer == &query_live_report_tracker_list_timer_)
+        {
+            OnQueryLiveReportTrackerListTimerElapsed(times);
         }
         else if (pointer == &query_bootstrap_config_timer_)
         {
@@ -688,7 +755,7 @@ namespace p2sp
             // 收包失败，需要再次解析或者切换域名(如果已经切换域名，则不该有此定时器)
             if (failed_times_ >= 3 && false == is_have_change_domain_)
             {
-                bool need_change_domain = !(is_have_index_server_list_ || is_have_tracker_list_
+                bool need_change_domain = !(is_have_index_server_list_ || is_have_vod_report_tracker_list_
                     || is_have_stun_server_list_);
                 ++resolve_times_;
 
@@ -760,7 +827,28 @@ namespace p2sp
 
     }
 
-    void IndexManager::OnQueryTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryVodListTrackerListTimerElapsed(uint32_t times)
+    {
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        if (is_resolving_)
+        {
+            return;
+        }
+
+        ++failed_times_;
+
+        DoQueryVodListTrackerList();
+
+        last_query_vod_list_tracker_list_interval_ *= 2;
+        if (last_query_vod_list_tracker_list_interval_ > DEFAULT_QUERY_INTERVAL)
+            last_query_vod_list_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
+    }
+
+    void IndexManager::OnQueryVodReportTrackerListTimerElapsed(uint32_t times)
     {
         if (false == is_running_)
             return;
@@ -771,32 +859,38 @@ namespace p2sp
         if (is_resolving_) return;
         ++failed_times_;
 
-        DoQueryTrackerList();
+        DoQueryVodReportTrackerList();
 
         // 指数增长
-        last_querytrackerlist_intervaltimes_ *= 2;
-        if (last_querytrackerlist_intervaltimes_ > DEFAULT_QUERY_INTERVAL)
-            last_querytrackerlist_intervaltimes_ = DEFAULT_QUERY_INTERVAL;
-
-        //         if (true == is_have_tracker_list_/*锟角凤拷锟秸碉拷锟斤拷trackerlist*/)
-        //         {
-        //             LOG(__INFO, "index", "IndexManager::OnQueryTrackerListTimerElapsed is_have_tracker_list_" << is_have_tracker_list_);
-        //             DoQueryTrackerList();
-        //         }
-        //         else
-        //         {
-        //             LOG(__INFO, "index", "IndexManager::OnQueryTrackerListTimerElapsed is_have_tracker_list_" << is_have_tracker_list_);
-        //             DoQueryTrackerList();
-        //             last_querytrackerlist_intervaltimes_ *= 2;
-        //             if (last_querytrackerlist_intervaltimes_ > DEFAULT_QUERY_INTERVAL)
-        //                 last_querytrackerlist_intervaltimes_ = DEFAULT_QUERY_INTERVAL;
-        //         }
-
-        // 如果是失败状态
-        //   指数退避，
+        last_query_vod_report_tracker_list_interval_ *= 2;
+        if (last_query_vod_report_tracker_list_interval_ > DEFAULT_QUERY_INTERVAL)
+            last_query_vod_report_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
     }
 
-    void IndexManager::OnQueryLiveTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryLiveListTrackerListTimerElapsed(uint32_t times)
+    {
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        if (is_resolving_)
+        {
+            return;
+        }
+
+        ++failed_times_;
+
+        DoQueryLiveListTrackerList();
+
+        last_query_live_list_tracker_list_interval_ *= 2;
+        if (last_query_live_list_tracker_list_interval_ > DEFAULT_QUERY_INTERVAL)
+        {
+            last_query_live_list_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
+        }
+    }
+
+    void IndexManager::OnQueryLiveReportTrackerListTimerElapsed(uint32_t times)
     {
         if (false == is_running_)
         {
@@ -813,13 +907,13 @@ namespace p2sp
 
         ++failed_times_;
 
-        DoQueryLiveTrackerList();
+        DoQueryLiveReportTrackerList();
 
         // 指数增长
-        last_querylivetrackerlist_intervaltimes_ *= 2;
-        if (last_querylivetrackerlist_intervaltimes_ > DEFAULT_QUERY_INTERVAL)
+        last_query_live_report_tracker_list_interval_ *= 2;
+        if (last_query_live_report_tracker_list_interval_ > DEFAULT_QUERY_INTERVAL)
         {
-            last_querylivetrackerlist_intervaltimes_ = DEFAULT_QUERY_INTERVAL;
+            last_query_live_report_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
         }
     }
 
@@ -933,7 +1027,7 @@ namespace p2sp
     }
 #endif
 
-    void IndexManager::DoQueryLiveTrackerList()
+    void IndexManager::DoQueryLiveReportTrackerList()
     {
         LOG(__EVENT, "index", "DoQueryLiveTrackerList");
 
@@ -942,8 +1036,8 @@ namespace p2sp
             return;
         }
 
-        query_live_tracker_list_timer_.interval(last_querylivetrackerlist_intervaltimes_);
-        query_live_tracker_list_timer_.start();
+        query_live_report_tracker_list_timer_.interval(last_query_live_report_tracker_list_interval_);
+        query_live_report_tracker_list_timer_.start();
 
         // 直接发送 QueryIndexServerListRequestPacket 包
 
@@ -1120,6 +1214,46 @@ namespace p2sp
         if (last_query_sn_list_interval_times_ > DEFAULT_QUERY_INTERVAL)
         {
             last_query_sn_list_interval_times_ = DEFAULT_QUERY_INTERVAL;
+        }
+    }
+
+    void IndexManager::OnQueryVodListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet)
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        if (packet.error_code_ == 0)
+        {
+            query_vod_list_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_vod_list_tracker_list_timer_.start();
+            is_have_vod_list_tracker_list_ = true;
+            failed_times_ = 0;
+            resolve_times_ = 0;
+            last_query_vod_list_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
+
+            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true,  p2sp::LIST);
+        }
+    }
+
+    void IndexManager::OnQueryLiveListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet)
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        if (packet.error_code_ == 0)
+        {
+            query_live_list_tracker_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_live_list_tracker_list_timer_.start();
+            is_have_live_list_tracker_list_ = true;
+            failed_times_ = 0;
+            resolve_times_ = 0;
+            last_query_live_list_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
+
+            TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::LIST);
         }
     }
 }
