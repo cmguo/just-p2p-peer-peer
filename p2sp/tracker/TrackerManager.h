@@ -13,12 +13,6 @@
 
 namespace p2sp
 {
-    enum TrackerType
-    {
-        LIST = 0,
-        REPORT = 1
-    };
-
     class TrackerManager
         : public boost::noncopyable
 #ifdef DUMP_OBJECT

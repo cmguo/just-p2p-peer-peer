@@ -9,12 +9,19 @@ namespace p2sp
 {
     class TrackerClient;
 
+    enum TrackerType
+    {
+        LIST = 0,
+        REPORT = 1
+    };
+
     class TrackerStation
     {
     public:
-        TrackerStation(bool is_vod)
+        TrackerStation(bool is_vod, TrackerType tracker_type)
             : is_running_(false)
             , is_vod_(is_vod)
+            , tracker_type_(tracker_type)
             , no_report_response_times_(0)
             , is_report_response_(true)
             , report_timer_(global_second_timer(), 1000 * DEFAULT_INTERVAL_IN_SECONDS_, 
@@ -59,6 +66,8 @@ namespace p2sp
         boost::shared_ptr<TrackerClient> trying_report_tracker_;
 
         bool is_vod_;
+
+        TrackerType tracker_type_;
 
         bool is_report_response_;
 

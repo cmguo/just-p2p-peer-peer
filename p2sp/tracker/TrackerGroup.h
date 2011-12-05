@@ -16,8 +16,9 @@ namespace p2sp
 #endif
     {
     public:
-        TrackerGroup(bool is_vod)
+        TrackerGroup(bool is_vod, TrackerType tracker_type)
             : is_vod_(is_vod)
+            , tracker_type_(tracker_type)
             , is_running_(false)
         {}
 
@@ -52,6 +53,8 @@ namespace p2sp
         std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<TrackerStation> > endpoint_station_map_;
 
         bool is_vod_;
+
+        TrackerType tracker_type_;
     };
 }
 

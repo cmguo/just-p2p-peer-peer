@@ -17,7 +17,11 @@ namespace p2sp
 
         StartAllClient();
 
-        report_timer_.start();
+        if (tracker_type_ == p2sp::REPORT)
+        {
+            report_timer_.start();
+        }
+
         trying_tracker_iterator_ = tracker_client_list_.end();
         is_running_ = true;
     }
@@ -165,6 +169,7 @@ namespace p2sp
 
     void TrackerStation::DoReport()
     {
+        assert(tracker_type_ == p2sp::REPORT);
         // 本地没有资源的情况下，不进行report
         // 对点播和直播都有效
         if (tracker_client_map_.empty())

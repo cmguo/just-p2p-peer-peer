@@ -214,7 +214,7 @@ namespace p2sp
             if (mod_indexer.find(iter->first) == mod_indexer.end())
             {
                 mod_indexer.insert(std::make_pair(iter->first,
-                    boost::shared_ptr<TrackerGroup>(new TrackerGroup(is_vod_))));
+                    boost::shared_ptr<TrackerGroup>(new TrackerGroup(is_vod_, tracker_type))));
             }
 
             mod_indexer[iter->first]->SetTrackers(group_count, iter->second);

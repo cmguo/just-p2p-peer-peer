@@ -98,7 +98,7 @@ namespace p2sp
             if (mod_station_map_.find(iter->first) == mod_station_map_.end())
             {
                 mod_station_map_.insert(std::make_pair(iter->first,
-                    boost::shared_ptr<TrackerStation>(new TrackerStation(is_vod_))));
+                    boost::shared_ptr<TrackerStation>(new TrackerStation(is_vod_, tracker_type_))));
             }
 
             mod_station_map_[iter->first]->SetTrackers(group_count, iter->second);
