@@ -19,7 +19,10 @@ namespace p2sp
         void KickTimedOutConnections(std::set<boost::asio::ip::udp::endpoint> & kicked_endpoints);
         void KickAllConnections();
         void KickBadConnections(size_t desirable_upload_speed, size_t new_peer_protection_time_in_seconds);
-        void KickConnection(const boost::asio::ip::udp::endpoint & kick_endpoint);
+
+        //注意，这里kick_endpoint是以by value方式传入是有意为之
+        //不然如果传入是的三个集合中某个的元素的reference，将会出现在KickConnection中发生endpoint的析构而导致问题。
+        void KickConnection(const boost::asio::ip::udp::endpoint kick_endpoint);
 
         void GetUploadingPeers(std::set<boost::asio::ip::address> & uploading_peers) const
         {

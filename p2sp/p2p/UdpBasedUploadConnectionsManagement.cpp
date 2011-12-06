@@ -286,7 +286,7 @@ namespace p2sp
         return accept_uploading_peers_.size();
     }
 
-    void UdpBasedUploadConnectionsManagement::KickConnection(const boost::asio::ip::udp::endpoint & kick_endpoint)
+    void UdpBasedUploadConnectionsManagement::KickConnection(const boost::asio::ip::udp::endpoint kick_endpoint)
     {
         accept_connecting_peers_.erase(kick_endpoint);
         accept_uploading_peers_.erase(kick_endpoint);
