@@ -35,7 +35,7 @@ namespace p2sp
         , http_protect_time_when_urgent_switched_(20 * 1000)
         , http_running_long_enough_time_when_urgent_switched_(60 * 1000)
         , safe_rest_playable_time_delim_when_use_http_(5)
-        , http_protect_time_when_large_upload_(10)
+        , http_protect_time_when_large_upload_(10 * 1000)
         , p2p_rest_playable_time_delim_when_switched_with_large_time_(6)
         , p2p_rest_playable_time_delim_(5)
         , p2p_protect_time_when_switched_with_not_enough_time_(15 * 1000)
