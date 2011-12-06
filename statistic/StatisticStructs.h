@@ -474,7 +474,8 @@ namespace statistic
         boost::uint32_t ActualAssignedSubPieceCount;  // 当前1秒钟分配的SubPiece数
         boost::uint32_t RequestSubPieceCount;         // 当前1秒钟发出的SubPiece请求数
         boost::uint32_t SupplySubPieceCount;          // 可供下载的SubPiece数(我没有但是对方有的SuPiece数)
-        boost::uint8_t  Reserved[154];                  //
+        boost::uint32_t TimeOfNoResponse;                 // 上一次收到该peer的包到现在为止过了多久
+        boost::uint8_t  Reserved[150];                  //
 
         P2P_CONNECTION_INFO()
         {
@@ -519,6 +520,7 @@ namespace statistic
             ar & ActualAssignedSubPieceCount;
             ar & RequestSubPieceCount;
             ar & SupplySubPieceCount;
+            ar & TimeOfNoResponse;
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
         }
     };

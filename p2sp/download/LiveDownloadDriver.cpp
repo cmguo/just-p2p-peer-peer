@@ -51,6 +51,7 @@ namespace p2sp
         , has_sended_subpiece_packet_(false)
         , small_ratio_delim_of_upload_speed_to_datarate_(100)
         , using_cdn_time_at_least_when_large_upload_(30)
+        , http_download_bytes_when_start_(0)
     {
     }
 
@@ -653,6 +654,8 @@ namespace p2sp
         // O1: 连接建立后多久收到Connect请求
         // P1: 连接建立后多久发出第一个SubPiece
         // Q1: 上传连接数非0的时间
+        // R1: NatType
+        // S1: Http启动时下载的字节数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -738,6 +741,8 @@ namespace p2sp
         info.TimeOfReceivingFirstConnectRequest = time_of_receiving_first_connect_request_;
         info.TimeOfSendingFirstSubPiece = time_of_sending_first_subpiece_;
         info.TimeOfNonblankUploadConnections = time_of_nonblank_upload_connections_;
+        info.NatType = AppModule::Inst()->GetCandidatePeerInfo().PeerNatType;
+        info.HttpDownloadBytesWhenStart = http_download_bytes_when_start_;
 
         std::ostringstream log_stream;
 
@@ -802,6 +807,8 @@ namespace p2sp
         log_stream << "&O1=" << info.TimeOfReceivingFirstConnectRequest;
         log_stream << "&P1=" << info.TimeOfSendingFirstSubPiece;
         log_stream << "&Q1=" << info.TimeOfNonblankUploadConnections;
+        log_stream << "&R1=" << (uint32_t)info.NatType;
+        log_stream << "&S1=" << info.HttpDownloadBytesWhenStart;
 
         string log = log_stream.str();
 
@@ -913,6 +920,9 @@ namespace p2sp
     void LiveDownloadDriver::SubmitChangedToP2PCondition(boost::uint8_t condition)
     {
         changed_to_p2p_condition_when_start_ = condition;
+
+        assert(live_http_downloader_);
+        http_download_bytes_when_start_ = live_http_downloader_->GetSpeedInfo().TotalDownloadBytes;
     }
 
     void LiveDownloadDriver::SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times)

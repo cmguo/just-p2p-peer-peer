@@ -411,6 +411,7 @@ namespace p2sp
         }
 
         peer_connection_info_.RealTimePeerInfo = peer_info_;
+        peer_connection_info_.TimeOfNoResponse = no_response_time_;
 
         request_subpiece_count_ = 0;
         temp_task_set_.clear();
