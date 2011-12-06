@@ -5,6 +5,7 @@
 #include "Common.h"
 
 #include "p2sp/proxy/PlayInfo.h"
+#include "p2sp/proxy/RangeInfo.h"
 #include "statistic/StatisticModule.h"
 #include "network/UrlCodec.h"
 
@@ -502,6 +503,8 @@ namespace p2sp
 
             ParseBakHosts(uri, play_info->bak_hosts_);
             LOGX(__DEBUG, "proxy", "Parse BWType = " << play_info->bwtype_);
+
+            play_info->range_info_ = ParseRangeInfo(uri);
         }
         // Download By Url
         // else if (uri.getpath() == "/ppvadownloadbyurl")
@@ -832,5 +835,38 @@ namespace p2sp
         }
         unique_id = 0;
         assert(false);
+    }
+
+    RangeInfo::p PlayInfo::ParseRangeInfo(const network::Uri & uri)
+    {
+        uint32_t range_start;
+        uint32_t range_end;
+        if (!GetValueFromUri(uri, "rangeStart", range_start))
+        {
+            return RangeInfo::p();
+        }
+        else if (GetValueFromUri(uri, "rangeEnd", range_end))
+        {
+            if (range_end == 0)
+                range_end = RangeInfo::npos;
+            return RangeInfo::p(new RangeInfo(range_start, range_end));
+        }
+
+        // rangeEnd missed.
+        assert(false);
+        return RangeInfo::p();
+    }
+
+    bool PlayInfo::GetValueFromUri(const network::Uri & uri, const string & key, uint32_t & value)
+    {
+        string str_value = uri.getparameter(key);
+        if (!str_value.empty() && !framework::string::parse2(str_value, value))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

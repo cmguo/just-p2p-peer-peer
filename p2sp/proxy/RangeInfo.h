@@ -25,14 +25,13 @@ namespace p2sp
 
         static RangeInfo::p Parse(const string& range_property);
 
+        RangeInfo(uint32_t range_begin, uint32_t range_end);
+
         void SetRangeBegin(uint32_t range_begin) { range_begin_ = range_begin; }
         uint32_t GetRangeBegin() const { return range_begin_; }
 
         void SetRangeEnd(uint32_t range_end) { range_end_ = range_end; }
         uint32_t GetRangeEnd() const { return range_end_; }
-
-    protected:
-        RangeInfo();
 
     private:
         uint32_t range_begin_;
