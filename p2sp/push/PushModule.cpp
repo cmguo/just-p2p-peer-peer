@@ -78,7 +78,6 @@ namespace p2sp
     static const int32_t MaxPlayHistoryNum = 16;
     //////////////////////////////////////////////////////////////////////////
     // Methods
-
     PushModule::State::State()
     {
         user_ = push::USER_NONE;
@@ -222,6 +221,7 @@ namespace p2sp
 
             if (push_download_task_->IsTaskTerminated()) {
                 //current push download task terminate
+                push_download_task_->Stop();
                 push_download_task_.reset();
                 StartADownloadTask();//try to create a new push task
             }
