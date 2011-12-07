@@ -729,7 +729,10 @@ namespace p2sp
                 url_info.refer_url_ = url_info_.refer_url_;
             }
 
+            // Request
             network::Uri uri(url_info.url_);
+            // request
+            bool is_openservice_range = false;
             if (false == save_mode_)
             {
                 LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode = false");
@@ -737,17 +740,9 @@ namespace p2sp
                 {
                     P();
                     LOGX(__DEBUG, "proxy", "RangeProxySender::create");
+                    is_openservice_range = true;
                     proxy_sender_ = RangeProxySender::create(http_server_socket_);
                     proxy_sender_->Start(http_request_demo_, shared_from_this());
-                }
-                else if(play_info->GetRangeInfo())
-                {
-                    RangeInfo__p range_info = play_info->GetRangeInfo();
-                    LOGX(__DEBUG, "proxy", "RangeProxySender range:" 
-                        << range_info->GetRangeBegin() << "-" << range_info->GetRangeEnd());
-                    RangeProxySender::p sender = RangeProxySender::create(http_server_socket_);
-                    proxy_sender_ = sender;
-                    sender->Start(range_info, shared_from_this());
                 }
                 else if (start_position == 0)
                 {
@@ -774,6 +769,7 @@ namespace p2sp
             else
             {
                 LOGX(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode = true");
+                is_openservice_range = false;
                 LOGX(__DEBUG, "ppdebug", "is_openservice_range - true, save_mode_ = " << save_mode_);
                 proxy_sender_ = NullProxySender::create(shared_from_this());
                 proxy_sender_->Start();
@@ -784,11 +780,15 @@ namespace p2sp
             if (false == save_mode_ && str_user_agent.find("PPLive-Media-Player") != string::npos)
             {
                 LOGX(__DEBUG, "ppdebug", "user agent - true");
+                is_openservice_range = true;
             }
 
             P();
             // is_drag
             LOG(__DEBUG, "ppdebug", "play_info->GetIsDrag = " << play_info->GetIsDrag());
+            if (play_info->GetIsDrag() != -1) {
+                is_openservice_range = (play_info->GetIsDrag() > 0 ? true : false);
+            }
 
             // 客户端的默认发送限速为2MB
             if (play_info->GetPlayerId() == "")
@@ -807,6 +807,7 @@ namespace p2sp
 
             download_driver_->SetRestPlayTime(play_info->GetRestTime());
             download_driver_->SetIsHeadOnly(play_info->GetHeadOnly());
+            download_driver_->SetOpenServiceRange(is_openservice_range);
             download_driver_->SetSessionID(play_info->GetPlayerId());
             download_driver_->SetOpenServiceStartPosition(start_position);
             download_driver_->SetOpenServiceHeadLength(play_info->GetHeadLength());
@@ -1060,7 +1061,7 @@ namespace p2sp
                     string synacast_xml =
                         "<?xml version=\"1.0\" ?>\n"
                         "<root>\n"
-                        "  <PPVA v=\"" PEER_KERNEL_VERSION_STR "\"/>\n"
+                        "  <!-- PPVA " PEER_KERNEL_VERSION_STR " -->\n"
                         "</root>\n"
                        ;
                     http_server_socket_->HttpSendContent(synacast_xml, "text/xml");

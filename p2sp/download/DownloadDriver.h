@@ -400,6 +400,7 @@ namespace p2sp
         string openservice_file_name_;
         uint32_t init_local_data_bytes_;
         uint32_t source_type_;
+        bool is_openservice_range_;
         string session_id_;
         bool is_head_only_;
         boost::uint32_t rest_play_time_;

@@ -30,7 +30,6 @@ namespace p2sp
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
         virtual void Start(uint32_t start_possition);
-        virtual void Start(RangeInfo__p range_info, ProxyConnection__p proxy_connection);
         virtual void Stop();  // do not stop http_server_socket
     public:
         // 属性
@@ -55,6 +54,7 @@ namespace p2sp
 
     private:
         network::HttpServer::pointer http_server_socket_;
+        network::HttpRequest::p http_request_;
         ProxyConnection__p proxy_connection_;
 
         volatile bool is_running_;
@@ -65,8 +65,7 @@ namespace p2sp
 
     private:
         RangeProxySender(network::HttpServer::pointer http_server_socket)
-            : http_server_socket_(http_server_socket)
-            , is_running_(false), playing_position_(0)
+            : http_server_socket_(http_server_socket), is_running_(false), playing_position_(0)
             , is_response_header_(false), file_length_(0)
         {
         }

@@ -2419,6 +2419,11 @@ namespace p2sp
         }
     }
 
+    void DownloadDriver::SetOpenServiceRange(bool is_openservice_range)
+    {
+        is_openservice_range_ = is_openservice_range;
+    }
+
     void DownloadDriver::OnNoticeFileDownloadComplete()
     {
         if (false == is_running_)

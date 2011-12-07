@@ -27,24 +27,20 @@ namespace p2sp
     {
         if (is_running_ == true) return;
 
-        RangeInfo::p range_info = RangeInfo::Parse(http_request->GetProperty("Range"));
-        Start(range_info, proxy_connection);
-    }
-
-    void RangeProxySender::Start(RangeInfo::p range_info, ProxyConnection__p proxy_connection)
-    {
-        if (is_running_ == true) return;
-
         RANGE_DEBUG("");
+
+        http_request_ = http_request;
         proxy_connection_ = proxy_connection;
-        range_info_ = range_info;
-        if (!range_info_) 
-        {
+        playing_position_ = 0;
+        is_response_header_ = false;
+        file_length_ = 0;
+
+        range_info_ = RangeInfo::Parse(http_request->GetProperty("Range"));
+
+        if (!range_info_) {
             RANGE_DEBUG("RangeInfo Should not be NULL!");
-            assert(false);
         }
-        else
-        {
+        else {
             playing_position_ = (range_info_->GetRangeBegin() / 1024) * 1024;
             RANGE_DEBUG("playing_position = " << playing_position_);
         }
@@ -71,6 +67,10 @@ namespace p2sp
         {
             proxy_connection_.reset();
         }
+        if (http_request_)
+        {
+            http_request_.reset();
+        }
         if (range_info_)
         {
             range_info_.reset();
@@ -84,6 +84,7 @@ namespace p2sp
         if (is_running_ == false) return;
         assert(file_length_ > 0);
         assert(playing_position_ <= file_length_);
+        // assert(playing_position_ == start_position);
 
         if (playing_position_ >= start_position + buffer.Length())
             return;
@@ -135,6 +136,8 @@ namespace p2sp
             RANGE_DEBUG("Send protocol::SubPieceContent to: " << http_server_socket_->GetEndPoint() << " start_possition: " << start_position << " buffer_length: " << buffer.Length());
 
             http_server_socket_->HttpSendBuffer(buffer);
+
+            // playing_position ??????????? buffer.Length()
             playing_position_ += buffer.Length();
         }
 
@@ -154,7 +157,9 @@ namespace p2sp
         }
 
         RANGE_DEBUG("Endpoint = " << http_server_socket_->GetEndPoint() << " content_length: " << content_length);
+
         file_length_ = content_length;
+
         if (range_info_)
         {
             if (range_info_->GetRangeEnd() == RangeInfo::npos)

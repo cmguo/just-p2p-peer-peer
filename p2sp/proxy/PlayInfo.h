@@ -11,8 +11,6 @@
 
 namespace p2sp
 {
-    class RangeInfo;
-
     class PlayInfo
         : public boost::noncopyable
 #ifdef DUMP_OBJECT
@@ -126,9 +124,7 @@ namespace p2sp
 
         bool GetLivePause() const { return live_pause_; }
 
-        boost::uint32_t GetUniqueID() const { return unique_id_; }
-
-        boost::shared_ptr<RangeInfo> GetRangeInfo() const {return range_info_;}
+        boost::uint32_t GetUniqueID() const { return unique_id_; };
 
     public:
 
@@ -176,10 +172,6 @@ namespace p2sp
         static void ParseLivePause(const network::Uri & uri, bool & live_replay);
         // 直播的播放器ID
         static void ParseUniqueID(const network::Uri & uri, boost::uint32_t & unique_id);
-        // flash p2p的range
-        static boost::shared_ptr<RangeInfo> ParseRangeInfo(const network::Uri & uri);
-
-        static bool GetValueFromUri(const network::Uri & uri, const string & key, uint32_t & value);
 
     private:
 
@@ -221,7 +213,6 @@ namespace p2sp
         boost::uint32_t bwtype_;
         boost::int32_t send_speed_limit_;
         std::vector<std::string> bak_hosts_;
-        boost::shared_ptr<RangeInfo> range_info_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid
