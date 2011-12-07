@@ -22,7 +22,6 @@ namespace p2sp
             report_timer_.start();
         }
 
-        trying_tracker_iterator_ = tracker_client_list_.end();
         is_running_ = true;
     }
 
@@ -151,6 +150,8 @@ namespace p2sp
         {
             tracker_client_list_.push_back(*iter);
         }
+
+        trying_tracker_iterator_ = tracker_client_list_.end();
     }
 
     void TrackerStation::DoList(const RID& rid, bool list_for_live_udpserver)
