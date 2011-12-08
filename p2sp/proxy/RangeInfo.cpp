@@ -14,10 +14,9 @@
 namespace p2sp
 {
 
-    RangeInfo::RangeInfo()
+    RangeInfo::RangeInfo(uint32_t range_begin, uint32_t range_end)
+        : range_begin_(range_begin), range_end_(range_end)
     {
-        range_begin_ = 0;
-        range_end_ = 0;
     }
 
     bool RangeInfo::IsSupportedRangeFormat(const string& range_property)
@@ -47,36 +46,29 @@ namespace p2sp
         if (ranges.size() != 2) {
             return RangeInfo::p();
         }
-        RangeInfo::p range_info = RangeInfo::p(new RangeInfo());
-        /*range_info->range_begin_ = boost::lexical_cast<uint32_t>(ranges[0]);
-        if (ranges[1].length() != 0) {
-            range_info->range_end_ = boost::lexical_cast<uint32_t>(ranges[1]);
-        }
-        else {
-            range_info->range_end_ = RangeInfo::npos;
-        }*/
 
-        boost::system::error_code ec = framework::string::parse2(ranges[0], range_info->range_begin_);
+        uint32_t range_begin;
+        uint32_t range_end;
+        boost::system::error_code ec = framework::string::parse2(ranges[0], range_begin);
         if (ec) return RangeInfo::p();
         if (ranges[1].length() != 0) {
-            // range_info->range_end_ = boost::lexical_cast<uint32_t>(ranges[1]);
-            ec = framework::string::parse2(ranges[1], range_info->range_end_);
+            ec = framework::string::parse2(ranges[1], range_end);
             if (ec) return RangeInfo::p();
         }
         else {
-            range_info->range_end_ = RangeInfo::npos;
+            range_end = RangeInfo::npos;
         }
         // check
-        if (range_info->range_begin_ == RangeInfo::npos) {
+        if (range_begin == RangeInfo::npos) {
             return RangeInfo::p();
         }
-        if (range_info->range_end_ != RangeInfo::npos) {
-            if (range_info->range_begin_ > range_info->range_end_) {
+        if (range_end != RangeInfo::npos) {
+            if (range_begin > range_end) {
                 return RangeInfo::p();
             }
         }
         // ok
-        return range_info;
+        return RangeInfo::p(new RangeInfo(range_begin, range_end));
     }
 
 }
