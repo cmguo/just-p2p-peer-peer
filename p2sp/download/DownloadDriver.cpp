@@ -979,6 +979,7 @@ namespace p2sp
 		// R1: 是否是push任务
 
         DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
+        memset(&info, 0, sizeof(DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT));
 
         // C: ResourceID
         info.gResourceID = statistic_->GetResourceID();
@@ -1173,6 +1174,10 @@ namespace p2sp
                 info.http_avg_speed_in_KBps = info.uHttpDownloadBytes / downloading_time_in_seconds / 1024;
             }
         }
+        else
+        {
+            info.http_avg_speed_in_KBps = 0;
+        }
 
         // G1: p2p 平均下载速度
         if (p2p_downloader_)
@@ -1186,6 +1191,10 @@ namespace p2sp
             {
                 info.p2p_avg_speed_in_KBps = info.uP2PDownloadBytes / download_time_in_seconds / 1024;
             }
+        }
+        else
+        {
+            info.p2p_avg_speed_in_KBps = 0;
         }
 
         // J1: p2p连满的时间

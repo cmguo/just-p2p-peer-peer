@@ -30,7 +30,6 @@ namespace p2sp
 {
     typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
     {
-        boost::uint32_t       uSize;                                // 整个结构体大小
         Guid                  gPeerID;                              // B: 华哥ID
         Guid                  gResourceID;                          // C: ResourceID
         boost::uint8_t        aPeerVersion[4];                      // D: 内核版本：major, minor, micro, extra
@@ -72,7 +71,6 @@ namespace p2sp
         boost::uint32_t       tiny_drag_http_status;                // P1: drag状态码
         boost::uint32_t       total_sn_download_bytes;              // Q1: SN下载字节数
         bool                  is_push;                              // Q2: 是否是push任务
-
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
