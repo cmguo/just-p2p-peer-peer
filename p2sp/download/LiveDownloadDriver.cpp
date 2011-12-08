@@ -18,6 +18,8 @@ namespace p2sp
 
     boost::uint32_t LiveDownloadDriver::s_id_ = 0;
 
+    const boost::uint8_t LiveDownloadDriver::InitialChangedToP2PConditionWhenStart = 255;
+
     LiveDownloadDriver::LiveDownloadDriver(boost::asio::io_service &io_svc, p2sp::ProxyConnection__p proxy_connetction)
         : io_svc_(io_svc)
         , proxy_connection_(proxy_connetction)
@@ -52,6 +54,8 @@ namespace p2sp
         , small_ratio_delim_of_upload_speed_to_datarate_(100)
         , using_cdn_time_at_least_when_large_upload_(30)
         , http_download_bytes_when_start_(0)
+        , upload_bytes_when_start_(0)
+        , changed_to_p2p_condition_when_start_(InitialChangedToP2PConditionWhenStart)
     {
     }
 
@@ -165,6 +169,8 @@ namespace p2sp
         OnConfigUpdated();
 
         download_time_.start();
+
+        upload_bytes_when_start_ = statistic::StatisticModule::Inst()->GetUploadDataBytes();
     }
 
     void LiveDownloadDriver::Stop()
@@ -173,7 +179,7 @@ namespace p2sp
 
         if (live_p2p_downloader_)
         {
-            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
+            live_p2p_downloader_->CalcTimeOfUsingUdpServerWhenStop();
         }
 
         if (using_cdn_because_of_large_upload_)
@@ -191,6 +197,7 @@ namespace p2sp
 
         if (live_p2p_downloader_)
         {
+            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
             live_p2p_downloader_.reset();
         }
 
@@ -656,6 +663,7 @@ namespace p2sp
         // Q1: 上传连接数非0的时间
         // R1: NatType
         // S1: Http启动时下载的字节数
+        // T1: 本次连接上传字节数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -742,7 +750,19 @@ namespace p2sp
         info.TimeOfSendingFirstSubPiece = time_of_sending_first_subpiece_;
         info.TimeOfNonblankUploadConnections = time_of_nonblank_upload_connections_;
         info.NatType = AppModule::Inst()->GetCandidatePeerInfo().PeerNatType;
-        info.HttpDownloadBytesWhenStart = http_download_bytes_when_start_;
+
+        if (changed_to_p2p_condition_when_start_ == InitialChangedToP2PConditionWhenStart)
+        {
+            info.HttpDownloadBytesWhenStart = live_http_downloader_ ?
+                live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;
+        }
+        else
+        {
+            info.HttpDownloadBytesWhenStart = http_download_bytes_when_start_;
+        }
+
+        assert(statistic::StatisticModule::Inst()->GetUploadDataBytes() >= upload_bytes_when_start_);
+        info.UploadBytesDuringThisConnection = statistic::StatisticModule::Inst()->GetUploadDataBytes() - upload_bytes_when_start_;
 
         std::ostringstream log_stream;
 
@@ -809,6 +829,7 @@ namespace p2sp
         log_stream << "&Q1=" << info.TimeOfNonblankUploadConnections;
         log_stream << "&R1=" << (uint32_t)info.NatType;
         log_stream << "&S1=" << info.HttpDownloadBytesWhenStart;
+        log_stream << "&T1=" << info.UploadBytesDuringThisConnection;
 
         string log = log_stream.str();
 

@@ -88,6 +88,7 @@ namespace p2sp
         boost::uint32_t         TimeOfNonblankUploadConnections;
         boost::uint8_t          NatType;
         boost::uint32_t         HttpDownloadBytesWhenStart;
+        boost::uint32_t         UploadBytesDuringThisConnection;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -410,6 +411,10 @@ namespace p2sp
         bool has_sended_subpiece_packet_;
 
         boost::uint32_t http_download_bytes_when_start_;
+
+        boost::uint32_t upload_bytes_when_start_;
+
+        static const boost::uint8_t InitialChangedToP2PConditionWhenStart;
 
     private:
         // statistic

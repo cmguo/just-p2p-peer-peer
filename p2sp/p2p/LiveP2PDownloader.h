@@ -261,6 +261,8 @@ namespace p2sp
         boost::uint8_t GetLostRate() const;
         boost::uint8_t GetRedundancyRate() const;
 
+        void CalcTimeOfUsingUdpServerWhenStop();
+
     private:
         void CheckBlockComplete();
         void DoList();

@@ -337,15 +337,6 @@ namespace p2sp
             live_instance_.reset();
         }
 
-        if (use_udpserver_reason_ == URGENT)
-        {
-            time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
-        }
-        else if (use_udpserver_reason_ == LARGE_UPLOAD)
-        {
-            time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
-        }
-
         BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
     }
 
@@ -1260,5 +1251,17 @@ namespace p2sp
         using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
         using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
+    }
+
+    void LiveP2PDownloader::CalcTimeOfUsingUdpServerWhenStop()
+    {
+        if (use_udpserver_reason_ == URGENT)
+        {
+            time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+        }
+        else if (use_udpserver_reason_ == LARGE_UPLOAD)
+        {
+            time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+        }
     }
 }
