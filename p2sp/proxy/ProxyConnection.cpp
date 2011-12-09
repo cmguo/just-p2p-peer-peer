@@ -1059,7 +1059,7 @@ namespace p2sp
                 }
                 else if (boost::algorithm::istarts_with(request_path, "/synacast.xml") == true)
                 {
-                    ostringstream oss;
+                    std::ostringstream oss;
                     oss << "<?xml version=\"1.0\" ?>\n"
                         "<root>\n";
                     oss << "  <PPVA v=\"" PEER_KERNEL_VERSION_STR "\" p=\"" << AppModule::Inst()->GetLocalTcpPort() << "\"/>\n"
