@@ -220,6 +220,8 @@ namespace p2sp
         boost::uint32_t GetLiveTotalRequestSubPieceCount() const;
         boost::uint32_t GetLiveTotalRecievedSubPieceCount() const;
 
+        void StopEstimateIkanRestPlayTime() { need_estimate_ikan_rest_play_time_ = false; }
+
     protected:
         virtual void initialize();
         virtual void clear();
@@ -297,9 +299,13 @@ namespace p2sp
 
         bool is_live_connection_;
 #ifdef DISK_MODE
-		//PlayHistoryManager play_history_mgr_;
-		PlayHistoryManager::PlayHistoryItemHandle play_history_item_handle_;
+        //PlayHistoryManager play_history_mgr_;
+        PlayHistoryManager::PlayHistoryItemHandle play_history_item_handle_;
 #endif
+
+        // TODO(herain):在flash p2p播放器全部上线后可以删掉估算相关的代码
+        // 是否需要估算ikan player的剩余缓冲时间		
+        bool need_estimate_ikan_rest_play_time_;
     private:
         ProxyConnection(
             boost::asio::io_service & io_svc,

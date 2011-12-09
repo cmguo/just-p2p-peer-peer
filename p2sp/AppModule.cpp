@@ -496,7 +496,7 @@ namespace p2sp
         }
 
         // TrackerServer 相关协议
-        if (packet.PacketAction >= 0x30 && packet.PacketAction  < 0x50)
+        if (packet.PacketAction >= 0x30 && packet.PacketAction  < 0x40)
         {
             TrackerModule::Inst()->OnUdpRecv((protocol::ServerPacket const &)packet);
             return;
@@ -505,7 +505,7 @@ namespace p2sp
         // Peer 相关协议
         if (packet.PacketAction  >= 0x50 && packet.PacketAction < 0x70 ||
             packet.PacketAction >= 0xC0 && packet.PacketAction < 0xC5 ||
-            packet.PacketAction >= 0xB0 && packet.PacketAction < 0xB7)
+            packet.PacketAction >= 0xB0 && packet.PacketAction < 0xC0)
         {
             P2PModule::Inst()->OnUdpRecv((protocol::Packet const &)packet);
             return;
@@ -526,6 +526,12 @@ namespace p2sp
             return;
         }
 #endif
+
+        if (packet.PacketAction >= 0xD0 && packet.PacketAction < 0xE0)
+        {
+            ProxyModule::Inst()->OnUdpRecv((protocol::Packet const &)packet);
+            return;
+        }
     }
 
     std::set<RID> AppModule::GetVodResource(uint32_t mod_number, uint32_t group_count)
@@ -690,6 +696,7 @@ namespace p2sp
         tcp_server_.RegisterPacket<protocol::TcpSubPieceResponsePacket>();
         tcp_server_.RegisterPacket<protocol::TcpReportSpeedPacket>();
         tcp_server_.RegisterPacket<protocol::TcpErrorPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpReportStatusPacket>();
     }
 
     boost::uint16_t AppModule::GetUpnpPortForTcpUpload()

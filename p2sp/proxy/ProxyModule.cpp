@@ -26,6 +26,7 @@
 #include "PlayInfo.h"
 
 #include "storage/LiveInstance.h"
+#include "protocol/TcpPeerPacket.h"
 
 namespace p2sp
 {
@@ -773,6 +774,7 @@ namespace p2sp
             if (dd && dd->GetInstance() && dd->GetStatistic() && dd->GetStatistic()->GetResourceID() == rid)
             {
                 dd->SetRestPlayTime(rest_play_time);
+                proxy_conn->StopEstimateIkanRestPlayTime();
             }
         }
     }
@@ -1825,6 +1827,19 @@ namespace p2sp
             {
                 (*iter)->GetLiveDownloadDriver()->SetSendSubPiecePacket();
             }
+        }
+    }
+
+    void ProxyModule::OnUdpRecv(protocol::Packet const & packet)
+    {
+        switch (packet.PacketAction)
+        {
+        case protocol::TcpReportStatusPacket::Action:
+            {
+                protocol::TcpReportStatusPacket const & stauts_pacekt = (protocol::TcpReportStatusPacket const &)packet;
+                SetRestPlayTime(stauts_pacekt.resource_id_, stauts_pacekt.rest_play_time_in_seconds_ * 1000);
+            }
+            break;
         }
     }
 }

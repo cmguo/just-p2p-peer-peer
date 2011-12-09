@@ -76,8 +76,9 @@ namespace p2sp
         , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
 #ifdef DISK_MODE
-		, play_history_item_handle_(PlayHistoryManager::InvalidHandle())
+        , play_history_item_handle_(PlayHistoryManager::InvalidHandle())
 #endif
+        , need_estimate_ikan_rest_play_time_(true)
     {
     }
 
@@ -96,8 +97,9 @@ namespace p2sp
         , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
 #ifdef DISK_MODE
-		, play_history_item_handle_(PlayHistoryManager::InvalidHandle())
+        , play_history_item_handle_(PlayHistoryManager::InvalidHandle())
 #endif
+        , need_estimate_ikan_rest_play_time_(true)
     {
     }
 
@@ -222,10 +224,10 @@ namespace p2sp
 
         LOG(__EVENT, "proxy", "ProxyConnection::WillStop " << shared_from_this());
 #ifdef DISK_MODE
-		if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
-			PushModule::Inst()->GetPlayHistoryManager()->StopVideoPlay(play_history_item_handle_);
+        if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
+            PushModule::Inst()->GetPlayHistoryManager()->StopVideoPlay(play_history_item_handle_);
             play_history_item_handle_ = PlayHistoryManager::InvalidHandle();
-		}
+        }
 #endif
 
         will_stop_ = true;
@@ -279,7 +281,7 @@ namespace p2sp
         silent_time_counter_.reset();
 
         // IKAN智能限速 - 剩余时间估计
-        if (download_driver_ && !download_driver_->IsPPLiveClient())
+        if (need_estimate_ikan_rest_play_time_ && download_driver_ && !download_driver_->IsPPLiveClient())
         {
             rest_time += 1000 * (buffers.size() * 1024) / download_driver_->GetDataRate();
         }
@@ -291,14 +293,14 @@ namespace p2sp
                 << GetPlayingPosition() << " start_possition " << start_position);
             return;
         }
-#ifdef DISK_MODE		
-		if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
+#ifdef DISK_MODE        
+        if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
             if (download_driver_) {
                 PushModule::Inst()->GetPlayHistoryManager()->SetVideoSize(play_history_item_handle_, download_driver_->GetFileLength());
                 PushModule::Inst()->GetPlayHistoryManager()->SetVideoBitrate(play_history_item_handle_, download_driver_->GetDataRate());
             }
-			PushModule::Inst()->GetPlayHistoryManager()->SetVideoPlayPosition(play_history_item_handle_, GetPlayingPosition());
-		}
+            PushModule::Inst()->GetPlayHistoryManager()->SetVideoPlayPosition(play_history_item_handle_, GetPlayingPosition());
+        }
 #endif
         LOG(__WARN, "proxy", "proxy_sender_->OnRecvSubPiece, position = " << start_position
             << ", buffer.size = " << buffers.size());
@@ -820,9 +822,9 @@ namespace p2sp
             string filename = ProxyModule::ParseOpenServiceFileName(uri);
             download_driver_->SetOpenServiceFileName(filename);
             string segno = base::util::GetSegno(uri);
-#ifdef DISK_MODE			
-			BOOST_ASSERT(play_history_item_handle_ == PlayHistoryManager::InvalidHandle());
-			play_history_item_handle_ = PushModule::Inst()->GetPlayHistoryManager()->StartVideoPlay(filename);
+#ifdef DISK_MODE            
+            BOOST_ASSERT(play_history_item_handle_ == PlayHistoryManager::InvalidHandle());
+            play_history_item_handle_ = PushModule::Inst()->GetPlayHistoryManager()->StartVideoPlay(filename);
 #endif
             if (false == save_mode_)
             {
@@ -1057,13 +1059,12 @@ namespace p2sp
                 }
                 else if (boost::algorithm::istarts_with(request_path, "/synacast.xml") == true)
                 {
-                    string synacast_xml =
-                        "<?xml version=\"1.0\" ?>\n"
-                        "<root>\n"
-                        "  <PPVA v=\"" PEER_KERNEL_VERSION_STR "\"/>\n"
-                        "</root>\n"
-                       ;
-                    http_server_socket_->HttpSendContent(synacast_xml, "text/xml");
+                    ostringstream oss;
+                    oss << "<?xml version=\"1.0\" ?>\n"
+                        "<root>\n";
+                    oss << "  <PPVA v=\"" PEER_KERNEL_VERSION_STR "\" p=\"" << AppModule::Inst()->GetLocalTcpPort() << "\"/>\n"
+                        "</root>\n";
+                    http_server_socket_->HttpSendContent(oss.str(), "text/xml");
                 }
                 else
                 {
@@ -1370,7 +1371,7 @@ namespace p2sp
         }
 
         // IKAN预估剩余时间
-        if (download_driver_ && !download_driver_->IsPPLiveClient())
+        if (need_estimate_ikan_rest_play_time_ && download_driver_ && !download_driver_->IsPPLiveClient())
         {
             rest_time -= 1000;
             if (rest_time < 0)

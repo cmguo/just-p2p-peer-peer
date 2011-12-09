@@ -52,6 +52,7 @@ namespace p2sp
         // 定时器
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
         void OnProxyTimer(uint32_t times);
+        void OnUdpRecv(protocol::Packet const & packet);
 
         //
         void StartDownloadFile(const string& url, const string& refer_url, const string& web_url, const string& qualified_file_name);
