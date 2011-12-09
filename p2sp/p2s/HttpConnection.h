@@ -71,8 +71,6 @@ namespace p2sp
 
         bool IsPausing() {return is_pausing_;}
 
-        string GetPragmaClient() const { return pragma_client_; }
-
         void HttpRecvSubPiece();
 
         network::HttpClient<protocol::SubPieceContent>::p GetHttpClient();
@@ -117,7 +115,6 @@ namespace p2sp
         HttpDownloader__p downloader_;
         network::HttpClient<protocol::SubPieceContent>::p http_client_;
         protocol::UrlInfo url_info_;
-        string pragma_client_;
 
         bool is_support_start_;
         bool is_running_;

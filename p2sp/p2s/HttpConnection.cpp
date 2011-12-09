@@ -121,10 +121,6 @@ namespace p2sp
         is_connected_ = false;
 
         is_downloading_ = false;
-        if (is_open_service_)
-        {
-            pragma_client_ = string("PPLiveVA/") + PEER_KERNEL_VERSION_STR;
-        }
 
         retry_count_500_header_ = 0;
 
@@ -201,7 +197,7 @@ namespace p2sp
             }
             http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
             LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " create http_client = " << http_client_);
-            if (is_open_service_) http_client_->AddPragma("Client", pragma_client_);
+
             http_client_->SetHandler(shared_from_this());
             http_client_->Connect();
         }

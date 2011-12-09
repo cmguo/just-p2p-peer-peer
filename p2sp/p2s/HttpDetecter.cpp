@@ -222,8 +222,7 @@ namespace p2sp
     {
         http_client_ = network::HttpClient<protocol::SubPieceContent>::create(
             io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
-        string pragma_client = http_connection_->GetPragmaClient();
-        if (pragma_client.length() != 0) http_client_->AddPragma("Client", pragma_client);
+
         http_client_->SetHandler(shared_from_this());
         http_client_->Connect();
     }
