@@ -75,6 +75,16 @@ namespace p2sp
             upload_bandwidth = (boost::int32_t)p2sp::P2PModule::Inst()->GetUploadBandWidthInKBytes();
         }
 
+        uint32_t announce_copies;
+        if (this->no_response_time_ >= BootStrapGeneralConfig::Inst()->GetEnhancedAnnounceThresholdInMillseconds())
+        {
+            announce_copies = BootStrapGeneralConfig::Inst()->GetEnhancedAnnounceCopies();
+        }
+        else
+        {
+            announce_copies = 1;
+        }
+
         // 每个播放点都进行Announce
         for (std::set<LiveDownloadDriver__p>::const_iterator iter = p2p_downloader_->GetDownloadDriverSet().begin();
             iter != p2p_downloader_->GetDownloadDriverSet().end(); ++iter)
@@ -84,7 +94,10 @@ namespace p2sp
             protocol::LiveRequestAnnouncePacket live_request_annouce_packet(protocol::Packet::NewTransactionID(), 
                 p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
 
-            p2p_downloader_->DoSendPacket(live_request_annouce_packet);
+            for(int32_t i = 0; i < announce_copies; i++)
+            {
+                p2p_downloader_->DoSendPacket(live_request_annouce_packet);
+            }
         }
     }
 

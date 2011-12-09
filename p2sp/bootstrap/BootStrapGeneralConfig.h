@@ -167,6 +167,16 @@ namespace p2sp
             return use_udpserver_count_;
         }
 
+        boost::uint32_t GetEnhancedAnnounceThresholdInMillseconds() const
+        {
+            return enhanced_announce_threshold_in_millseconds_;
+        }
+        
+        boost::uint32_t GetEnhancedAnnounceCopies() const
+        {
+            return enhanced_announce_copies_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -272,6 +282,12 @@ namespace p2sp
 
         // 同时连接几个UdpServer，在BS配置文件中用uuc来表示(use udpserver count)
         boost::uint32_t use_udpserver_count_;
+
+        // 超过这个值peer不回announce包，加速announce
+        boost::uint32_t enhanced_announce_threshold_in_millseconds_;
+
+        // 加速announce模式下，每秒冗余发几个announce包
+        boost::uint32_t enhanced_announce_copies_;
     };
 }
 #endif

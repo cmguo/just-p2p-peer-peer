@@ -48,6 +48,8 @@ namespace p2sp
         , small_ratio_delim_of_upload_speed_to_datarate_(100)
         , using_cdn_or_udpserver_time_at_least_when_large_upload_(30)
         , use_udpserver_count_(3)
+        , enhanced_announce_threshold_in_millseconds_(4000)
+        , enhanced_announce_copies_(4)
     {
     }
 
@@ -143,7 +145,9 @@ namespace p2sp
                 ("config.ut1", po::value<uint32_t>()->default_value(using_udpserver_time_in_second_delim_))
                 ("config.ut2", po::value<uint32_t>()->default_value(using_cdn_or_udpserver_time_at_least_when_large_upload_))
                 ("config.sr", po::value<uint32_t>()->default_value(small_ratio_delim_of_upload_speed_to_datarate_))
-                ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_));
+                ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_))
+                ("config.eat", po::value<uint32_t>()->default_value(enhanced_announce_threshold_in_millseconds_))
+                ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_));
 
             std::istringstream config_stream(config_string);
 
@@ -182,6 +186,8 @@ namespace p2sp
             using_cdn_or_udpserver_time_at_least_when_large_upload_ = vm["config.ut2"].as<uint32_t>();
             small_ratio_delim_of_upload_speed_to_datarate_ = vm["config.sr"].as<uint32_t>();
             use_udpserver_count_ = vm["config.uuc"].as<uint32_t>();
+            enhanced_announce_threshold_in_millseconds_ = vm["config.eat"].as<uint32_t>();
+            enhanced_announce_copies_ = vm["config.eac"].as<uint32_t>();
 
             if (save_to_disk)
             {
