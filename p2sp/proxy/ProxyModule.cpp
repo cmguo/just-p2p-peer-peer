@@ -637,6 +637,36 @@ namespace p2sp
         result_handler();
     }
 
+    void ProxyModule::QueryProgressBitmap(string url, char * bitmap, boost::uint32_t * bitmap_size,
+        boost::function<void ()> result_handler)
+    {
+        if (!is_running_)
+        {
+            result_handler();
+            return;
+        }
+
+        string filename = ParseOpenServiceFileName(network::Uri(url));
+
+        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+
+        if (!inst)
+        {
+            inst = boost::dynamic_pointer_cast<storage::Instance>(
+                storage::Storage::Inst()->GetInstanceByFileName(filename));
+
+            if (!inst)
+            {
+                result_handler();
+                return;
+            }  
+        }
+
+        inst->GetDownloadProgressBitmap(bitmap, bitmap_size);
+
+        result_handler();
+    }
+
     void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void(boost::int32_t)> result_handler)
     {
         if (false == is_running_) {

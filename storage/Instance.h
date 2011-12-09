@@ -258,6 +258,8 @@ namespace storage
         void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length);
         void OnThreadReadSubPieceSucced(const protocol::SubPieceInfo & subpiece_info, protocol::SubPieceBuffer buff);
 
+        void GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size);
+
     protected:
         // 从资源描述, subpiece_manager_中删除block
         // 通知upload_listener获取subpiece失败，通知download_driver，makeblock失败

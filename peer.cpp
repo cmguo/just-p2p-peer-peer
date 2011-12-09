@@ -2126,6 +2126,33 @@ void PEER_API QueryDownloadProgressByUrlNew(char const * lpszUrl, boost::uint32_
     event_wait->Wait();
 }
 
+void PEER_API QueryProgressBitmap(const char * url, boost::uint32_t url_len, 
+                                  char * bitmap, boost::uint32_t * bitmap_size)
+{
+    if (NULL == url || 0 == url_len)
+    {
+        return;
+    }
+
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+
+    string url_str(url, url_len);
+
+    Event::p event_wait = Event::Create();
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
+
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
+    global_io_svc().post(
+        boost::bind(&p2sp::ProxyModule::QueryProgressBitmap, p2sp::ProxyModule::Inst(),
+        url_str, bitmap, bitmap_size, fun));
+
+    event_wait->Wait();
+}
+
 //////////////////////////////////////////////////////////////////////////
 // 接口分配函数
 //////////////////////////////////////////////////////////////////////////
@@ -2207,4 +2234,5 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     // verison 0, 23
     lpNetInterface->SetUpnpPortForTcpUpload = SetUpnpPortForTcpUpload;
     lpNetInterface->QueryDownloadProgressByUrlNew = QueryDownloadProgressByUrlNew;
+    lpNetInterface->QueryProgressBitmap = QueryProgressBitmap;
 }

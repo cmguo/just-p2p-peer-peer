@@ -509,4 +509,34 @@ namespace storage
         }
         return false;
     }
+
+    void SubPieceManager::GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size)
+    {
+        boost::uint32_t offset = 0;
+        for (std::vector<BlockNode::p>::iterator iter = blocks_.begin();
+            iter != blocks_.end(); ++iter)
+        {
+            
+            boost::uint16_t bitmap_in_block = 0;
+
+            if (*iter)
+            {
+                bitmap_in_block = (*iter)->GetBitmap();
+            }
+            
+            if (offset < *bitmap_size)
+            {
+                *(bitmap+offset) = bitmap_in_block / 256;
+                offset++;
+            }
+
+            if (offset < *bitmap_size)
+            {
+                *(bitmap+offset) = bitmap_in_block % 256;
+                offset++;
+            }
+        }
+
+        *bitmap_size = GetFileLength() / PIECE_SIZE;
+    }
 }

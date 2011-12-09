@@ -1832,4 +1832,9 @@ namespace storage
         }
     }
 #endif
+
+    void Instance::GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size)
+    {
+        subpiece_manager_->GetDownloadProgressBitmap(bitmap, bitmap_size);
+    }
 }

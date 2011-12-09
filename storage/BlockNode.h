@@ -82,6 +82,8 @@ namespace storage
         void OnWriteSubPieceFinish(uint32_t subpiece_info);
         void GetBufferForSave (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set);
 
+        boost::uint16_t GetBitmap();
+
     private:
         std::vector<PieceNode::p> piece_nodes_;
         uint32_t total_subpiece_count_;

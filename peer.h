@@ -578,6 +578,12 @@ typedef
 void (PEER_API * LPQUERYDOWNLOADPROGRESSBYURLNEW)(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *total_size,
                                                   boost::int32_t *downloaded_bytes, boost::int32_t * position);
 
+void PEER_API QueryProgressBitmap(const char * url, boost::uint32_t url_len,
+                                  char * bitmap, boost::uint32_t bitmap_len);
+typedef
+void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_len,
+                                        char * bitmap, boost::uint32_t * bitmap_size);
+
 /**
 * 函数接口
 */
@@ -654,8 +660,9 @@ typedef struct _NETINTERFACE{
     // version 0, 23
     LPSETUPNPPROTFORTCPUPLOAD SetUpnpPortForTcpUpload;
     LPQUERYDOWNLOADPROGRESSBYURLNEW QueryDownloadProgressByUrlNew;
-    
-    boost::uint32_t                Reserved4[38];
+    // version 0, 24
+    LPQUERYPROGRESSBITMAP QueryProgressBitmap;
+    boost::uint32_t                Reserved4[37];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)
