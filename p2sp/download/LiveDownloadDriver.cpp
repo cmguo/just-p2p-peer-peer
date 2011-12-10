@@ -417,8 +417,6 @@ namespace p2sp
 
         // 跳跃算法启用时，需要把剩余时间重新计算
         rest_time_tracker_.Start(playing_position_.GetBlockId(), live_instance_->GetLiveInterval());
-
-        ++jump_times_;
     }
 
     void LiveDownloadDriver::OnDataRateChanged()
@@ -864,6 +862,8 @@ namespace p2sp
         // 2. 落后直播点120s
         if (!replay_ && !rest_time_tracker_.IsPaused())
         {
+            bool is_jump = false;
+
             while (playing_position_.GetBlockId() + 120 < live_instance_->GetCurrentLivePoint().GetBlockId())
             {
                 storage::LivePosition new_playing_position = live_p2p_downloader_ ?
@@ -877,6 +877,13 @@ namespace p2sp
                 {
                     JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 90));
                 }
+
+                is_jump = true;
+            }
+
+            if (is_jump)
+            {
+                jump_times_++;
             }
         }
 
