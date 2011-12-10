@@ -864,19 +864,9 @@ namespace p2sp
         {
             bool is_jump = false;
 
-            while (playing_position_.GetBlockId() + 120 < live_instance_->GetCurrentLivePoint().GetBlockId())
+            while (playing_position_.GetBlockId() + 90 < live_instance_->GetCurrentLivePoint().GetBlockId())
             {
-                storage::LivePosition new_playing_position = live_p2p_downloader_ ?
-                    live_p2p_downloader_->Get75PercentPointInBitmap() : 0;
-
-                if (playing_position_ < new_playing_position)
-                {
-                    JumpTo(new_playing_position);
-                }
-                else
-                {
-                    JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 90));
-                }
+                JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 80));
 
                 is_jump = true;
             }
