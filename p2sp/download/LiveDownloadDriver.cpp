@@ -864,9 +864,9 @@ namespace p2sp
         {
             bool is_jump = false;
 
-            while (playing_position_.GetBlockId() + 90 < live_instance_->GetCurrentLivePoint().GetBlockId())
+            if (playing_position_.GetBlockId() + 90 < live_instance_->GetCurrentLivePoint().GetBlockId())
             {
-                JumpTo(storage::LivePosition(playing_position_.GetBlockId() + 80));
+                JumpTo(storage::LivePosition(live_instance_->GetCurrentLivePoint().GetBlockId() - 2 * live_instance_->GetLiveInterval()));
 
                 is_jump = true;
             }
