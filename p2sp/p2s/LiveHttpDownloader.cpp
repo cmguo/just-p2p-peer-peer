@@ -356,6 +356,15 @@ namespace p2sp
 
     void LiveHttpDownloader::RequestSubPiece()
     {
+        assert(!block_tasks_.empty());
+
+        // 当前block 已经完成，无需再使用HTTP下载当前block
+        if (live_download_driver_->GetInstance()->HasCompleteBlock(block_tasks_.begin()->GetBlockId()))
+        {
+            OnComplete();
+            return;
+        }
+
         http_client_->HttpRecvSubPiece();
         LOG(__DEBUG, "", "RequestSubPiece");
     }
