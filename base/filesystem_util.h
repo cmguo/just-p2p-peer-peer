@@ -61,10 +61,27 @@ namespace base
             {
                 return boost::filesystem::is_regular_file(file_path);
             }
-            catch (boost::filesystem::basic_filesystem_error<path> & e)
+            catch (boost::filesystem::basic_filesystem_error<path> &)
             {
                 return false;
             }
+        }
+
+        inline boost::filesystem::directory_iterator directory_iterator_nothrow(
+            const boost::filesystem::path & file_path,
+            boost::system::error_code & ec)
+        {
+            boost::filesystem::directory_iterator directory_iter;
+            try
+            {
+                directory_iter = boost::filesystem::directory_iterator(file_path, ec);
+            }
+            catch (boost::filesystem::basic_filesystem_error<path> & e)
+            {
+                ec = e.code();
+            }
+
+            return directory_iter;
         }
     }
 }

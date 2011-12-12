@@ -2142,7 +2142,8 @@ namespace storage
         boost::filesystem::path invisible_dir(space_manager_->GetHiddenSubPath());
 
         boost::system::error_code ec;
-        boost::filesystem::directory_iterator dir_iter(invisible_dir, ec);
+        boost::filesystem::directory_iterator dir_iter =
+            base::filesystem::directory_iterator_nothrow(invisible_dir, ec);
 
         if (!ec)
         {
@@ -2161,7 +2162,6 @@ namespace storage
                         {
                             base::filesystem::remove_nothrow(file_path);
                         }
-
                     }
                 }
             }
