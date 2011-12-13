@@ -56,6 +56,8 @@ namespace p2sp
         , http_download_bytes_when_start_(0)
         , upload_bytes_when_start_(0)
         , changed_to_p2p_condition_when_start_(InitialChangedToP2PConditionWhenStart)
+        , is_notify_restart_(false)
+        , max_push_data_interval_(0)
     {
     }
 
@@ -101,6 +103,8 @@ namespace p2sp
         unique_id_ = unique_id;
 
         timer_->start();
+
+        tick_count_since_last_recv_subpiece_.start();
 
         rest_time_tracker_.Start(start_position, live_interval);
 
@@ -176,6 +180,8 @@ namespace p2sp
     void LiveDownloadDriver::Stop()
     {
         timer_->stop();
+
+        tick_count_since_last_recv_subpiece_.stop();
 
         if (live_p2p_downloader_)
         {
@@ -261,6 +267,13 @@ namespace p2sp
         LOG(__DEBUG, "live_download", "Recv piece_id " << block_id);
 
         rest_time_tracker_.UpdateCurrentProgress(block_id, progress_percentage);
+
+        if (tick_count_since_last_recv_subpiece_.elapsed() > max_push_data_interval_)
+        {
+            max_push_data_interval_ = tick_count_since_last_recv_subpiece_.elapsed();
+        }
+
+        tick_count_since_last_recv_subpiece_.reset();
 
         // progress_percentage保证当前block数据全部发送完毕
         if (progress_percentage == 100)
@@ -399,6 +412,16 @@ namespace p2sp
             if (statistic::UploadStatisticModule::Inst()->GetUploadCount() != 0)
             {
                 ++time_of_nonblank_upload_connections_;
+            }
+
+            if (tick_count_since_last_recv_subpiece_.elapsed() > 180 * 1000 && !is_notify_restart_)
+            {
+#ifdef PEER_PC_CLIENT
+                WindowsMessage::Inst().PostWindowsMessage(UM_LIVE_RESTART, NULL, NULL);
+                is_notify_restart_ = true;
+
+                max_push_data_interval_ = tick_count_since_last_recv_subpiece_.elapsed();
+#endif
             }
         }
     }
@@ -662,6 +685,8 @@ namespace p2sp
         // R1: NatType
         // S1: Http启动时下载的字节数
         // T1: 本次连接上传字节数
+        // U1: 是否通知客户端重新播放
+        // V1: 最大数据推送间隔
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -762,6 +787,15 @@ namespace p2sp
         assert(statistic::StatisticModule::Inst()->GetUploadDataBytes() >= upload_bytes_when_start_);
         info.UploadBytesDuringThisConnection = statistic::StatisticModule::Inst()->GetUploadDataBytes() - upload_bytes_when_start_;
 
+        info.IsNotifyRestart = (boost::uint32_t)is_notify_restart_;
+
+        if (max_push_data_interval_ < tick_count_since_last_recv_subpiece_.elapsed())
+        {
+            max_push_data_interval_ = tick_count_since_last_recv_subpiece_.elapsed();
+        }
+
+        info.MaxPushDataInterval = max_push_data_interval_;
+
         std::ostringstream log_stream;
 
         log_stream << "C=";
@@ -828,6 +862,8 @@ namespace p2sp
         log_stream << "&R1=" << (uint32_t)info.NatType;
         log_stream << "&S1=" << info.HttpDownloadBytesWhenStart;
         log_stream << "&T1=" << info.UploadBytesDuringThisConnection;
+        log_stream << "&U1=" << info.IsNotifyRestart;
+        log_stream << "&V1=" << info.MaxPushDataInterval;
 
         string log = log_stream.str();
 

@@ -89,6 +89,8 @@ namespace p2sp
         boost::uint8_t          NatType;
         boost::uint32_t         HttpDownloadBytesWhenStart;
         boost::uint32_t         UploadBytesDuringThisConnection;
+        boost::uint32_t         IsNotifyRestart;
+        boost::uint32_t         MaxPushDataInterval;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -427,6 +429,12 @@ namespace p2sp
         boost::uint32_t upload_bytes_when_start_;
 
         static const boost::uint8_t InitialChangedToP2PConditionWhenStart;
+
+        framework::timer::TickCounter tick_count_since_last_recv_subpiece_;
+
+        bool is_notify_restart_;
+
+        boost::uint32_t max_push_data_interval_;
 
         boost::uint32_t p2p_protect_time_when_start_;
 
