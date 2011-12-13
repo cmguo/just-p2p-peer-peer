@@ -81,6 +81,10 @@
 // 参数wParam: 无
 // 参数lParam: Tcp上传的内部监听端口
 
+#define UM_LIVE_RESTART WM_USER + 29
+// 参数wParam: 无
+// 参数lParam: 无
+
 
 typedef struct _NOTIFY_TASK
 {
