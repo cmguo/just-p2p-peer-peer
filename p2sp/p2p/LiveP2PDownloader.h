@@ -276,6 +276,7 @@ namespace p2sp
         bool IsAheadOfMostPeers() const;
 
         void SendPeerInfo();
+        bool IsInUdpServerProtectTimeWhenStart();
 
     public:
         bool is_running_;
@@ -342,6 +343,9 @@ namespace p2sp
         boost::uint32_t use_udpserver_count_;
 
         bool should_connect_udpserver_;
+
+        boost::uint32_t udpserver_protect_time_when_start_;
+        bool should_use_bw_type_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

@@ -542,6 +542,17 @@ namespace p2sp
                 {
                     return time_to_ignore_http_bad_;
                 }
+
+                boost::uint32_t GetP2PProtectTimeWhenStart() const
+                {
+                    return p2p_protect_time_when_start_;
+                }
+
+                bool GetShouldUseBWType() const
+                {
+                    return should_use_bw_type_;
+                }
+
             private:
                 // Http状态下剩余时间足够
                 boost::uint32_t safe_enough_rest_playable_time_delim_under_http_;
@@ -581,6 +592,12 @@ namespace p2sp
 
                 // 在P2P状态下持续多长时间后可忽略以前Http状态不好的情况，可以再去尝试Http
                 boost::uint32_t time_to_ignore_http_bad_;
+
+                // P2P启动时的保护时间
+                boost::uint32_t p2p_protect_time_when_start_;
+
+                // 是否利用BWType
+                bool should_use_bw_type_;
             };
         public:
             typedef boost::shared_ptr<LiveControlMode> p;
@@ -628,6 +645,7 @@ namespace p2sp
 
             void CheckState3200();
             void CheckState2300();
+            void CheckState3300();
 
             bool NeedChangeTo2300();
             bool NeedChangeTo3200();

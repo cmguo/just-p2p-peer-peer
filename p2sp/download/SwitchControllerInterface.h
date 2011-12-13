@@ -207,6 +207,8 @@ namespace p2sp
         virtual void SubmitChangedToP2PCondition(boost::uint8_t condition) = 0;
         virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1) = 0;
         virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) = 0;
+        virtual bool GetReplay() const = 0;
+        virtual boost::uint32_t GetSourceType() const = 0;
     };
 
 }

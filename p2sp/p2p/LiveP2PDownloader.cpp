@@ -4,6 +4,7 @@
 #include "p2sp/p2p/P2PModule.h"
 #include "p2sp/tracker/TrackerModule.h"
 #include "random.h"
+#include "p2sp/proxy/PlayInfo.h"
 
 namespace p2sp
 {
@@ -37,6 +38,8 @@ namespace p2sp
         using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
         using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
+        udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
+        should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
     }
 
     void LiveP2PDownloader::Start()
@@ -1035,7 +1038,7 @@ namespace p2sp
     void LiveP2PDownloader::CheckShouldUseUdpServer()
     {
         // 剩余时间小，使用UdpServer来补带宽
-        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_)
+        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ && !IsInUdpServerProtectTimeWhenStart())
         {
             use_udpserver_reason_ = URGENT;
             should_use_udpserver_ = true;
@@ -1043,7 +1046,7 @@ namespace p2sp
             return;
         }
 
-        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2)
+        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2 && !IsInUdpServerProtectTimeWhenStart())
         {
             should_connect_udpserver_ = true;
         }
@@ -1067,7 +1070,7 @@ namespace p2sp
 
         // 如果是因为上传大而使用UdpServer的，若上传变小并且也使用UdpServer使用了一段时间了，则暂停使用UdpServer
         if (use_udpserver_reason_ == LARGE_UPLOAD &&
-            (*download_driver)->IsUploadSpeedLargeEnough() &&
+            (*download_driver)->IsUploadSpeedSmallEnough() &&
             use_udpserver_tick_counter_.elapsed() > using_udpserver_time_at_least_when_large_upload_ * 1000)
         {
             should_use_udpserver_ = false;
@@ -1251,6 +1254,8 @@ namespace p2sp
         using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
         using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
+        udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
+        should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
     }
 
     void LiveP2PDownloader::CalcTimeOfUsingUdpServerWhenStop()
@@ -1263,5 +1268,17 @@ namespace p2sp
         {
             time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
         }
+    }
+
+    bool LiveP2PDownloader::IsInUdpServerProtectTimeWhenStart()
+    {
+        assert(!download_driver_s_.empty());
+
+        // 在保护时间之内 并且bs开关为开 并且bwtype为0
+        return ((*download_driver_s_.begin())->GetDownloadTime() < udpserver_protect_time_when_start_ &&
+            (*download_driver_s_.begin())->GetBWType() == JBW_NORMAL &&
+            should_use_bw_type_ &&
+            (*download_driver_s_.begin())->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2 &&
+            (*download_driver_s_.begin())->GetReplay() == false);
     }
 }

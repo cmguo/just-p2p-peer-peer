@@ -990,4 +990,9 @@ namespace p2sp
             time_of_sending_first_subpiece_ = download_time_.elapsed() / 1000;
         }
     }
+
+    boost::uint32_t LiveDownloadDriver::GetDownloadTime() const
+    {
+        return download_time_.elapsed();
+    }
 }

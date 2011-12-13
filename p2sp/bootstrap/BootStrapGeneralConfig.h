@@ -167,6 +167,21 @@ namespace p2sp
             return use_udpserver_count_;
         }
 
+        boost::uint32_t GetP2PProtectTimeWhenStart() const
+        {
+            return p2p_protect_time_when_start_;
+        }
+
+        bool GetShouldUseBWType() const
+        {
+            return should_use_bw_type_;
+        }
+
+        boost::uint32_t GetUdpServerProtectTimeWhenStart() const
+        {
+            return udpserver_protect_time_when_start_;
+        }
+
         boost::uint32_t GetEnhancedAnnounceThresholdInMillseconds() const
         {
             return enhanced_announce_threshold_in_millseconds_;
@@ -257,6 +272,9 @@ namespace p2sp
         // 在P2P状态下持续多长时间后可忽略以前Http状态不好的情况，可以再去尝试Http，在bs配置文件中用l表示
         boost::uint32_t time_to_ignore_http_bad_;
 
+        // P2P启动时的保护时间，在bs配置中用m表示
+        boost::uint32_t p2p_protect_time_when_start_;
+
         // 当剩余时间小于这个值时，会认为紧急，需要使用UdpServer，在BS配置文件中用rpt1表示(rest playable time)
         boost::uint32_t urgent_rest_playable_time_delim_;
 
@@ -283,11 +301,17 @@ namespace p2sp
         // 同时连接几个UdpServer，在BS配置文件中用uuc来表示(use udpserver count)
         boost::uint32_t use_udpserver_count_;
 
+        // 是不是应该利用BWTypt，在bs中用n表示
+        bool should_use_bw_type_;
+
         // 超过这个值peer不回announce包，加速announce
         boost::uint32_t enhanced_announce_threshold_in_millseconds_;
 
         // 加速announce模式下，每秒冗余发几个announce包
         boost::uint32_t enhanced_announce_copies_;
+
+        // P2P启动时UdpServer的保护时间，在bs中用o表示
+        boost::uint32_t udpserver_protect_time_when_start_;
     };
 }
 #endif

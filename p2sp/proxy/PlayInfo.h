@@ -40,6 +40,7 @@ namespace p2sp
             SOURCE_PROXY,             // 5
             SOURCE_HOOK,              // 6
             SOURCE_DOWNLOAD_MOVIE,    // 7
+            SOURCE_PPLIVE_LIVE2 = 12,  // 客户端观看二代直播
             SOURCE_LIVE_DEFAULT = 254,
             SOURCE_DEFAULT = 255,
         };

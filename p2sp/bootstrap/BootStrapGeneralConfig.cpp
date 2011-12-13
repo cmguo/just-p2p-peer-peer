@@ -48,8 +48,11 @@ namespace p2sp
         , small_ratio_delim_of_upload_speed_to_datarate_(100)
         , using_cdn_or_udpserver_time_at_least_when_large_upload_(30)
         , use_udpserver_count_(3)
+        , p2p_protect_time_when_start_(30 * 1000)
+        , should_use_bw_type_(true)
         , enhanced_announce_threshold_in_millseconds_(4000)
         , enhanced_announce_copies_(4)
+        , udpserver_protect_time_when_start_(15 * 1000)
     {
     }
 
@@ -138,6 +141,9 @@ namespace p2sp
                 ("config.j", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_not_enough_time_))
                 ("config.k", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_buffering_))
                 ("config.l", po::value<uint32_t>()->default_value(time_to_ignore_http_bad_))
+                ("config.m", po::value<uint32_t>()->default_value(p2p_protect_time_when_start_))
+                ("config.n", po::value<bool>()->default_value(should_use_bw_type_))
+                ("config.o", po::value<uint32_t>()->default_value(udpserver_protect_time_when_start_))
                 ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
                 ("config.rpt1", po::value<uint32_t>()->default_value(urgent_rest_playable_time_delim_))
                 ("config.rpt2", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_))
@@ -179,6 +185,9 @@ namespace p2sp
             p2p_protect_time_when_switched_with_not_enough_time_ = vm["config.j"].as<uint32_t>();
             p2p_protect_time_when_switched_with_buffering_ = vm["config.k"].as<uint32_t>();
             time_to_ignore_http_bad_ = vm["config.l"].as<uint32_t>();
+            p2p_protect_time_when_start_ = vm["config.m"].as<uint32_t>();
+            should_use_bw_type_ = vm["config.n"].as<bool>();
+            udpserver_protect_time_when_start_ = vm["config.o"].as<uint32_t>();
             urgent_rest_playable_time_delim_ = vm["config.rpt1"].as<uint32_t>();
             safe_rest_playable_time_delim_ = vm["config.rpt2"].as<uint32_t>();
             safe_enough_rest_playable_time_delim_ = vm["config.rpt3"].as<uint32_t>();

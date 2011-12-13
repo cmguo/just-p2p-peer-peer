@@ -255,6 +255,8 @@ namespace p2sp
         void SetReceiveConnectPacket();
         void SetSendSubPiecePacket();
 
+        boost::uint32_t GetDownloadTime() const;
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();
@@ -306,6 +308,16 @@ namespace p2sp
         virtual void SubmitChangedToP2PCondition(boost::uint8_t condition);
         virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1);
         virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1);
+
+        virtual bool GetReplay() const
+        {
+            return replay_;
+        }
+
+        virtual boost::uint32_t GetSourceType() const
+        {
+            return source_type_;
+        }
 
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
@@ -415,6 +427,8 @@ namespace p2sp
         boost::uint32_t upload_bytes_when_start_;
 
         static const boost::uint8_t InitialChangedToP2PConditionWhenStart;
+
+        boost::uint32_t p2p_protect_time_when_start_;
 
     private:
         // statistic

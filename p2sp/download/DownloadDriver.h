@@ -183,7 +183,6 @@ namespace p2sp
         string GetOpenServiceFileName() const { return openservice_file_name_; }
 
         void SetSourceType(uint32_t source_type) { source_type_ = source_type; }
-        uint32_t GetSourceType() const { return source_type_; }
 
         void SetIsHeadOnly(bool head_only) { is_head_only_ = head_only; }
 
@@ -261,7 +260,8 @@ namespace p2sp
         virtual void SubmitChangedToP2PCondition(boost::uint8_t condition) {};
         virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1) {};
         virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) {};
-
+        virtual bool GetReplay() const {return false;}
+        virtual uint32_t GetSourceType() const { return source_type_; }
 
     private:
         HttpDownloader__p AddHttpDownloader(const protocol::UrlInfo& url_info, bool is_orginal = false);

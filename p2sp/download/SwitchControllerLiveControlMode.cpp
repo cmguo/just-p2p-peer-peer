@@ -6,6 +6,7 @@
 #include "p2sp/download/SwitchController.h"
 #include "statistic/StatisticModule.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
+#include "p2sp/proxy/PlayInfo.h"
 
 namespace p2sp
 {
@@ -37,17 +38,6 @@ namespace p2sp
         state_.http_ = (GetHTTPControlTarget() ? State::HTTP_PAUSING : State::HTTP_NONE);
         state_.p2p_ = (GetP2PControlTarget() ? State::P2P_PAUSING : State::P2P_NONE);
 
-        // 如果有Http，则用http下载(2300)
-        if (GetHTTPControlTarget())
-        {
-            GetHTTPControlTarget()->Resume();
-            state_.http_ = State::HTTP_DOWNLOADING;
-        }
-        else if (GetP2PControlTarget())
-        {
-            GetP2PControlTarget()->Resume();
-            state_.p2p_ = State::P2P_DOWNLOADING;
-        }
 
 #ifdef USE_MEMORY_POOL
         is_memory_full = false;
@@ -81,6 +71,11 @@ namespace p2sp
         {
             CheckState3200();
         }
+        // 3300
+        else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_PAUSING)
+        {
+            CheckState3300();
+        }
     }
 
     void SwitchController::LiveControlMode::ChangeTo3200()
@@ -104,7 +99,6 @@ namespace p2sp
 
         time_counter_2300_.reset();
         rest_play_time_when_switched_ = GetGlobalDataProvider()->GetRestPlayableTime();
-        is_started_ = false;
         blocked_this_time_ = false;
 
         if (changed_to_http_because_of_large_upload_)
@@ -166,6 +160,8 @@ namespace p2sp
 
         if (NeedChangeTo3200())
         {
+            is_started_ = false;
+
             if (rest_play_time_in_second > 20)
             {
                 is_http_fast_ = true;
@@ -185,6 +181,8 @@ namespace p2sp
 
         if (NeedChangeTo2300())
         {
+            is_started_ = false;
+
             ChangeTo2300();
         }
     }
@@ -217,36 +215,47 @@ namespace p2sp
     {
         boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
-        // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
-        if (rest_play_time_when_switched_ > settings_.GetSafeEnoughRestPlayableTime())
+        if (is_started_)
         {
-            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime())
+            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() &&
+                time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenStart())
+            {
+                return true;
+            }
+        }
+        else
+        {
+            // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
+            if (rest_play_time_when_switched_ > settings_.GetSafeEnoughRestPlayableTime())
+            {
+                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime())
+                {
+                    GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
+                    changed_to_http_because_of_large_upload_ = false;
+                    return true;
+                }
+            }
+
+            // http跑了1分钟或者3分钟剩余时间还不够多但也没有卡时切过来的
+            if (rest_play_time_when_switched_ > 0)
+            {
+                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim()
+                    && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithNotEnoughTime())
+                {
+                    GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
+                    changed_to_http_because_of_large_upload_ = false;
+                    return true;
+                }
+            }
+
+            // 卡了后切过来的
+            // P2P同样卡，再切换回去试试
+            if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithBuffering())
             {
                 GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                 changed_to_http_because_of_large_upload_ = false;
                 return true;
             }
-        }
-
-        // http跑了1分钟或者3分钟剩余时间还不够多但也没有卡时切过来的
-        if (rest_play_time_when_switched_ > 0)
-        {
-            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim()
-                && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithNotEnoughTime())
-            {
-                GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
-                changed_to_http_because_of_large_upload_ = false;
-                return true;
-            }
-        }
-
-        // 卡了后切过来的
-        // P2P同样卡，再切换回去试试
-        if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithBuffering())
-        {
-            GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
-            changed_to_http_because_of_large_upload_ = false;
-            return true;
         }
 
         if (GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload()
@@ -354,5 +363,36 @@ namespace p2sp
         p2p_protect_time_when_switched_with_not_enough_time_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithNotEnoughTime();
         p2p_protect_time_when_switched_with_buffering_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithBuffering();
         time_to_ignore_http_bad_ = BootStrapGeneralConfig::Inst()->GetTimeToIgnoreHttpBad();
+        p2p_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenStart();
+        should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
+    }
+
+    void SwitchController::LiveControlMode::CheckState3300()
+    {
+        if (settings_.GetShouldUseBWType() && GetHTTPControlTarget() && GetP2PControlTarget())
+        {
+            // bwtype = JBW_NORMAL p2p启动
+            if (GetGlobalDataProvider()->GetBWType() == JBW_NORMAL && GetGlobalDataProvider()->GetReplay() == false
+                && GetGlobalDataProvider()->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2)
+            {
+                ChangeTo3200();
+            }
+            else
+            {
+                ChangeTo2300();
+            }
+
+            return;
+        }
+
+        // bs开关为关，只要有Http，则Http启动
+        if (GetHTTPControlTarget())
+        {
+            ResumeHttpDownloader();
+        }
+        else if (GetP2PControlTarget())
+        {
+            ResumeP2PDownloader();
+        }
     }
 }
