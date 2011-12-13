@@ -70,7 +70,8 @@ namespace p2sp
         boost::uint32_t       retry_rate;                           // O1: 冗余率
         boost::uint32_t       tiny_drag_http_status;                // P1: drag状态码
         boost::uint32_t       total_sn_download_bytes;              // Q1: SN下载字节数
-        bool                  is_push;                              // Q2: 是否是push任务
+        bool                  is_push;                              // R1: 是否是push任务
+        bool                  instance_is_push;                     // S1: 是否是push下载的任务，用于判断命中率
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

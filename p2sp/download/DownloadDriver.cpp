@@ -1266,6 +1266,11 @@ namespace p2sp
         }
         // R1: 是否是push
         info.is_push = is_push_;
+        // S1: 是否是push下载完成的任务，如果R1 == false && S1 == true 则表示push下载的任务被命中
+        info.instance_is_push = false;
+        if (instance_ && instance_->IsPush()) {
+            info.instance_is_push = true;
+        }
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
@@ -1317,7 +1322,7 @@ namespace p2sp
 
         log_stream << "&Q1=" << (uint32_t)info.total_sn_download_bytes;
         log_stream << "&R1=" << (uint32_t)info.is_push;
-
+        log_stream << "&S1=" << (uint32_t)info.instance_is_push;
 
         string log = log_stream.str();
 
