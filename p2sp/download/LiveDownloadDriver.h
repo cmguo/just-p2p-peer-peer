@@ -91,6 +91,9 @@ namespace p2sp
         boost::uint32_t         UploadBytesDuringThisConnection;
         boost::uint32_t         IsNotifyRestart;
         boost::uint32_t         MaxPushDataInterval;
+        boost::uint32_t         AverageOfRestPlayableTime;
+        boost::uint32_t         VarianceOfRestPlayableTime;
+        boost::uint32_t         AverageConnectPeersCountInMinute;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -438,6 +441,8 @@ namespace p2sp
 
         boost::uint32_t p2p_protect_time_when_start_;
 
+        std::vector<boost::uint32_t> rest_playable_times_;
+
     private:
         // statistic
 
@@ -452,6 +457,9 @@ namespace p2sp
 #ifndef STATISTIC_OFF
         void UpdateStatisticInfo();
 #endif
+
+        boost::uint32_t CalcAverageOfRestPlayableTime();
+        boost::uint32_t CalcVarianceOfRestPlayableTime(boost::uint32_t average_of_rest_playable_time);
 
 #ifndef STATISTIC_OFF
     public:

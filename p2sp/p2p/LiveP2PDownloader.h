@@ -263,6 +263,8 @@ namespace p2sp
 
         void CalcTimeOfUsingUdpServerWhenStop();
 
+        boost::uint32_t GetTotalConnectPeersCount() const;
+
     private:
         void CheckBlockComplete();
         void DoList();
@@ -346,6 +348,8 @@ namespace p2sp
 
         boost::uint32_t udpserver_protect_time_when_start_;
         bool should_use_bw_type_;
+
+        boost::uint32_t total_connect_peers_count_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

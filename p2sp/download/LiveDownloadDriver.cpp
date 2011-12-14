@@ -414,6 +414,8 @@ namespace p2sp
                 ++time_of_nonblank_upload_connections_;
             }
 
+            rest_playable_times_.push_back(GetRestPlayableTime());
+
             if (tick_count_since_last_recv_subpiece_.elapsed() > 180 * 1000 && !is_notify_restart_)
             {
 #ifdef PEER_PC_CLIENT
@@ -687,6 +689,9 @@ namespace p2sp
         // T1: 本次连接上传字节数
         // U1: 是否通知客户端重新播放
         // V1: 最大数据推送间隔
+        // W1: 剩余时间的平均值
+        // X1: 剩余时间的方差
+        // Y1: 平均1分钟之内发起连接数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -796,6 +801,15 @@ namespace p2sp
 
         info.MaxPushDataInterval = max_push_data_interval_;
 
+        info.AverageOfRestPlayableTime = CalcAverageOfRestPlayableTime();
+        info.VarianceOfRestPlayableTime = CalcVarianceOfRestPlayableTime(info.AverageOfRestPlayableTime);
+
+        info.AverageConnectPeersCountInMinute = 0;
+        if (live_p2p_downloader_)
+        {
+            info.AverageConnectPeersCountInMinute = live_p2p_downloader_->GetTotalConnectPeersCount() * 60 * 1000 / download_time_.elapsed();
+        }
+
         std::ostringstream log_stream;
 
         log_stream << "C=";
@@ -864,6 +878,9 @@ namespace p2sp
         log_stream << "&T1=" << info.UploadBytesDuringThisConnection;
         log_stream << "&U1=" << info.IsNotifyRestart;
         log_stream << "&V1=" << info.MaxPushDataInterval;
+        log_stream << "&W1=" << info.AverageOfRestPlayableTime;
+        log_stream << "&X1=" << info.VarianceOfRestPlayableTime;
+        log_stream << "&Y1=" << info.AverageConnectPeersCountInMinute;
 
         string log = log_stream.str();
 
@@ -1030,5 +1047,37 @@ namespace p2sp
     boost::uint32_t LiveDownloadDriver::GetDownloadTime() const
     {
         return download_time_.elapsed();
+    }
+
+    boost::uint32_t LiveDownloadDriver::CalcAverageOfRestPlayableTime()
+    {
+        if (rest_playable_times_.size() == 0)
+        {
+            return 0;
+        }
+
+        boost::uint32_t sum_of_rest_playable_time = 0;
+        for (size_t i = 0; i < rest_playable_times_.size(); ++i)
+        {
+            sum_of_rest_playable_time += rest_playable_times_[i];
+        }
+
+        return static_cast<boost::uint32_t>((sum_of_rest_playable_time + 0.0) / rest_playable_times_.size() + 0.5);
+    }
+
+    boost::uint32_t LiveDownloadDriver::CalcVarianceOfRestPlayableTime(boost::uint32_t average_of_rest_playable_time)
+    {
+        if (rest_playable_times_.size() == 0)
+        {
+            return 0;
+        }
+
+        boost::uint32_t sum_of_squares = 0;
+        for (size_t i = 0; i < rest_playable_times_.size(); ++i)
+        {
+            sum_of_squares += pow(abs((double)rest_playable_times_[i] - (double)average_of_rest_playable_time), 2);
+        }
+
+        return static_cast<boost::uint32_t>((sum_of_squares + 0.0)/ rest_playable_times_.size() + 0.5);
     }
 }

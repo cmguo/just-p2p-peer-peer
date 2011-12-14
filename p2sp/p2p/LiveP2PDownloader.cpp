@@ -30,6 +30,7 @@ namespace p2sp
         , download_bytes_use_udpserver_because_of_urgent_(0)
         , download_bytes_use_udpserver_because_of_large_upload_(0)
         , should_connect_udpserver_(false)
+        , total_connect_peers_count_(0)
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
         urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
@@ -539,6 +540,8 @@ namespace p2sp
             }
 
             connector_->Connect(candidate_peer_info);
+
+            ++total_connect_peers_count_;
         }
 
         if (should_connect_udpserver_ || should_use_udpserver_)
@@ -1280,5 +1283,10 @@ namespace p2sp
             should_use_bw_type_ &&
             (*download_driver_s_.begin())->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2 &&
             (*download_driver_s_.begin())->GetReplay() == false);
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTotalConnectPeersCount() const
+    {
+        return total_connect_peers_count_;
     }
 }
