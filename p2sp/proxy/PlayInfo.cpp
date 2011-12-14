@@ -369,6 +369,11 @@ namespace p2sp
     bool PlayInfo::ParseBWType(const network::Uri& uri, boost::uint32_t & bwtype)
     {
         string bwtype_str = uri.getparameter("BWType");
+        if (bwtype_str.length() == 0)
+        {
+            bwtype_str = uri.getparameter("bwtype");
+        }
+
         if (bwtype_str.length() > 0)
         {
             boost::system::error_code ec = framework::string::parse2(bwtype_str, bwtype);
@@ -381,6 +386,7 @@ namespace p2sp
                 return false;
             }
         }
+
         return false;
     }
 
