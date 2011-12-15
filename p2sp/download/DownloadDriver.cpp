@@ -431,7 +431,9 @@ namespace p2sp
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, rid_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
-        instance_->SetIsPush(is_push_);
+        if (!instance_->IsComplete()) {
+            instance_->SetIsPush(is_push_);
+        }
 
         if (instance_)
         {
