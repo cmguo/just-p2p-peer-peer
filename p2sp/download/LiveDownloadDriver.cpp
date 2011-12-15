@@ -805,9 +805,9 @@ namespace p2sp
         info.VarianceOfRestPlayableTime = CalcVarianceOfRestPlayableTime(info.AverageOfRestPlayableTime);
 
         info.AverageConnectPeersCountInMinute = 0;
-        if (live_p2p_downloader_)
+        if (live_p2p_downloader_ && download_time_.elapsed() > 2000)
         {
-            info.AverageConnectPeersCountInMinute = live_p2p_downloader_->GetTotalConnectPeersCount() * 60 * 1000 / download_time_.elapsed();
+            info.AverageConnectPeersCountInMinute = live_p2p_downloader_->GetTotalConnectPeersCount() * 60 / (download_time_.elapsed() / 1000);
         }
 
         std::ostringstream log_stream;
