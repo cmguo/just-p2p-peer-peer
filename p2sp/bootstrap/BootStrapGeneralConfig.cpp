@@ -53,6 +53,7 @@ namespace p2sp
         , enhanced_announce_threshold_in_millseconds_(4000)
         , enhanced_announce_copies_(4)
         , udpserver_protect_time_when_start_(15 * 1000)
+        , peer_count_when_use_sn_(100)
     {
     }
 
@@ -153,7 +154,8 @@ namespace p2sp
                 ("config.sr", po::value<uint32_t>()->default_value(small_ratio_delim_of_upload_speed_to_datarate_))
                 ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_))
                 ("config.eat", po::value<uint32_t>()->default_value(enhanced_announce_threshold_in_millseconds_))
-                ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_));
+                ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_))
+                ("config.pc", po::value<uint32_t>()->default_value(peer_count_when_use_sn_));
 
             std::istringstream config_stream(config_string);
 
@@ -197,6 +199,7 @@ namespace p2sp
             use_udpserver_count_ = vm["config.uuc"].as<uint32_t>();
             enhanced_announce_threshold_in_millseconds_ = vm["config.eat"].as<uint32_t>();
             enhanced_announce_copies_ = vm["config.eac"].as<uint32_t>();
+            peer_count_when_use_sn_ = vm["config.pc"].as<uint32_t>();
 
             if (save_to_disk)
             {

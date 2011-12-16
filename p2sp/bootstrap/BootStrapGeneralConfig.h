@@ -192,6 +192,11 @@ namespace p2sp
             return enhanced_announce_copies_;
         }
 
+        boost::uint32_t GetPeerCountWhenUseSn() const
+        {
+            return peer_count_when_use_sn_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -312,6 +317,9 @@ namespace p2sp
 
         // P2P启动时UdpServer的保护时间，在bs中用o表示
         boost::uint32_t udpserver_protect_time_when_start_;
+
+        // 当P2P连接的peer数小于这个值，启用SN
+        boost::uint32_t peer_count_when_use_sn_;
     };
 }
 #endif

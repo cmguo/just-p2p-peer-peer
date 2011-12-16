@@ -2936,14 +2936,17 @@ namespace p2sp
 
         if (p2p_downloader_)
         {
-            if (GetRestPlayableTime() < 20*1000 &&
-                p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())
+            if (p2p_downloader_->GetPooledPeersCount() < BootStrapGeneralConfig::Inst()->GetPeerCountWhenUseSn())
             {
-                p2p_downloader_->SetSnEnable(true);
-            }
-            else if (GetRestPlayableTime() > 40*1000)
-            {
-                p2p_downloader_->SetSnEnable(false);
+                if (GetRestPlayableTime() < 20*1000 &&
+                    p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())
+                {
+                    p2p_downloader_->SetSnEnable(true);
+                }
+                else if (GetRestPlayableTime() > 40*1000)
+                {
+                    p2p_downloader_->SetSnEnable(false);
+                }
             }
         }
     }
