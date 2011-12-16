@@ -94,8 +94,8 @@ namespace p2sp
 
     void SwitchController::LiveControlMode::ChangeTo2300()
     {
-        ResumeHttpDownloader();
         PauseP2PDownloader();
+        ResumeHttpDownloader();
 
         time_counter_2300_.reset();
         rest_play_time_when_switched_ = GetGlobalDataProvider()->GetRestPlayableTime();

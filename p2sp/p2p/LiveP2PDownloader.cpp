@@ -159,11 +159,12 @@ namespace p2sp
             }
         }
 
+        // 检查block是否完成
+        CheckBlockComplete();
+
         if (!is_p2p_pausing_)
         {
             LOG(__DEBUG, "live_p2p", "block_count_map_.size() = " << block_count_map_.size());
-            // 检查block是否完成
-            CheckBlockComplete();
 
             if (times % 4 == 0)
             {
