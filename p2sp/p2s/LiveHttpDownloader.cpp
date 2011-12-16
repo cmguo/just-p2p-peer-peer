@@ -124,7 +124,7 @@ namespace p2sp
     {
         block_tasks_.push_back(live_block);
 
-        if (status_ == closed || status_ == established)
+        if (status_ == closed)
         {
             assert(!block_tasks_.empty());
             DoConnect();
@@ -177,9 +177,6 @@ namespace p2sp
         is_pms_status_good_ = true;
         if (status_ == connecting)
         {
-            status_ = established;
-            // TODO: 二代直播PMS特色请求
-            //http_client_->SetHost(rid_+":"+framework::string::format(port_));
             http_client_->HttpGet();
             status_ = sending_request_head;
         }

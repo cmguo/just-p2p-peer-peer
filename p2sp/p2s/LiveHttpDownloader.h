@@ -41,7 +41,6 @@ namespace p2sp
         {
             closed, 
             connecting, 
-            established, 
             sending_request_head, 
             recving_response_data, 
             sleeping
