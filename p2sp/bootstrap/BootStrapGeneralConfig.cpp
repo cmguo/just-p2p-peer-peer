@@ -54,6 +54,7 @@ namespace p2sp
         , enhanced_announce_copies_(4)
         , udpserver_protect_time_when_start_(15 * 1000)
         , peer_count_when_use_sn_(100)
+        , live_peer_max_connections_(20)
     {
     }
 
@@ -155,7 +156,8 @@ namespace p2sp
                 ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_))
                 ("config.eat", po::value<uint32_t>()->default_value(enhanced_announce_threshold_in_millseconds_))
                 ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_))
-                ("config.pc", po::value<uint32_t>()->default_value(peer_count_when_use_sn_));
+                ("config.pc", po::value<uint32_t>()->default_value(peer_count_when_use_sn_))
+                ("config.lmc", po::value<uint32_t>()->default_value(live_peer_max_connections_));
 
             std::istringstream config_stream(config_string);
 
@@ -200,6 +202,7 @@ namespace p2sp
             enhanced_announce_threshold_in_millseconds_ = vm["config.eat"].as<uint32_t>();
             enhanced_announce_copies_ = vm["config.eac"].as<uint32_t>();
             peer_count_when_use_sn_ = vm["config.pc"].as<uint32_t>();
+            live_peer_max_connections_ = vm["config.lmc"].as<uint32_t>();
 
             if (save_to_disk)
             {

@@ -197,6 +197,11 @@ namespace p2sp
             return peer_count_when_use_sn_;
         }
 
+        boost::uint32_t GetLivePeerMaxConnections() const
+        {
+            return live_peer_max_connections_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -320,6 +325,9 @@ namespace p2sp
 
         // 当P2P连接的peer数小于这个值，启用SN
         boost::uint32_t peer_count_when_use_sn_;
+
+        // 二代直播p2p最大连接数
+        boost::uint32_t live_peer_max_connections_;
     };
 }
 #endif

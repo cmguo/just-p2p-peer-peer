@@ -14,7 +14,6 @@ namespace p2sp
         , live_instance_(live_instance)
         , is_running_(false)
         , is_p2p_pausing_(true)
-        , p2p_max_connect_count_(20)
         , total_all_request_subpiece_count_(0)
         , total_request_subpiece_count_(0)
         , dolist_time_interval_(1000)
@@ -41,6 +40,7 @@ namespace p2sp
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
         udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
+        p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
     }
 
     void LiveP2PDownloader::Start()
@@ -79,10 +79,6 @@ namespace p2sp
 
         last_dolist_time_.start();
         last_dolist_udpserver_time_.start();
-
-        send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
-
-        BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
 
         is_running_ = true;
     }
@@ -341,8 +337,6 @@ namespace p2sp
         {
             live_instance_.reset();
         }
-
-        BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
     }
 
     bool LiveP2PDownloader::IsPausing()
@@ -1247,19 +1241,6 @@ namespace p2sp
         }
 
         return (total_receive - unique_receive) * 100 / total_receive;
-    }
-
-    void LiveP2PDownloader::OnConfigUpdated()
-    {
-        send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
-        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
-        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim();
-        safe_enough_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayabelTimeDelim();
-        using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
-        using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
-        use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
-        udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
-        should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
     }
 
     void LiveP2PDownloader::CalcTimeOfUsingUdpServerWhenStop()

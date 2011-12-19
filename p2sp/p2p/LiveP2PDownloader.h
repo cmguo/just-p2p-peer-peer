@@ -104,7 +104,6 @@ namespace p2sp
 #ifdef DUMP_OBJECT
         , public count_object_allocate<LiveP2PDownloader>
 #endif
-        , public ConfigUpdateListener
     {
     public:
         typedef boost::shared_ptr<LiveP2PDownloader> p;
@@ -153,9 +152,6 @@ namespace p2sp
         virtual void SetDownloadPriority(boost::int32_t) {}
         virtual uint32_t GetMaxConnectCount();
         virtual bool IsLive() {return true;}
-
-        // ConfigUpdateListener
-        virtual void OnConfigUpdated();
 
     public:
         void Start();
