@@ -216,7 +216,8 @@ namespace p2sp
         // 操作
         void BeCopiedTo(const CandidatePeer::p peer)
         {
-            assert(DetectIP == peer->DetectIP && DetectUdpPort == peer->DetectUdpPort);
+            assert(DetectIP == peer->DetectIP);
+            DetectUdpPort = peer->DetectUdpPort;
             IP = peer->IP;
             PeerVersion = peer->PeerVersion;
             UdpPort = peer->UdpPort;
