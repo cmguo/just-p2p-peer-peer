@@ -87,16 +87,32 @@ namespace p2sp
     {
         LIVE_CONNECT_LEVEL level = MEDIUM;
         int32_t rest_time = this->GetMinRestTimeInSeconds();
+        int32_t downloadable_peers_count = this->GetDownloadablePeersCount();
+        int32_t connection_threshold = p2p_max_connect_count_ / 3;
 
         if (rest_time >= 25 && !this->is_p2p_pausing_)
         {
             // enough time; don't need to rush for new connections
             // under http only mode, still try new connection
-            level = LOW;
+            if (downloadable_peers_count >= connection_threshold)
+            {
+                level = LOW;
+            }
+            else
+            {
+                level = MEDIUM;
+            }
         }
         else if (rest_time >= 12)
         {   
-            level = MEDIUM;
+            if (downloadable_peers_count >= connection_threshold)
+            {
+                level = MEDIUM;
+            }
+            else
+            {
+                level = HIGH;
+            }
         }
         else
         {
@@ -104,7 +120,26 @@ namespace p2sp
             level = HIGH;
         }        
 
+        //DebugLog("rest: %d good peers: %d level: %d", rest_time, downloadable_peers_count, level);
+
         return level;
+    }
+
+    int32_t LiveP2PDownloader::GetDownloadablePeersCount() const
+    {
+        int32_t count = 0;
+        for(std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end();
+            iter++)
+        {
+            LivePeerConnection__p conn = iter->second;
+            if (!conn->IsBlockBitmapEmpty())
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     // 250ms 被调用一次
@@ -589,14 +624,13 @@ namespace p2sp
             }
         }
 
+        boost::int32_t kick_count = 0;
         if (connect_level <= LOW)
         {
-            // no more kicking
-            return;
+            // at most kick one
+            kick_count = 1;            
         }
-
-        boost::int32_t kick_count = 0;
-        if (connect_level <= MEDIUM)
+        else if (connect_level <= MEDIUM)
         {
             // make sure to kick at least one "bad" connection
             kick_count = peers_.size() + 1 - p2p_max_connect_count_;

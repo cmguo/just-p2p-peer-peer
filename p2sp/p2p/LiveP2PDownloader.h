@@ -276,6 +276,8 @@ namespace p2sp
         void SendPeerInfo();
         bool IsInUdpServerProtectTimeWhenStart();
 
+        int32_t GetDownloadablePeersCount() const;
+
     public:
         bool is_running_;
         RID rid_;
