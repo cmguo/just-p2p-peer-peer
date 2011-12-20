@@ -403,6 +403,34 @@ namespace p2sp
         return false;
     }
 
+    bool PlayInfo::ParseVip(const network::Uri & uri, boost::uint32_t & is_vip)
+    {
+        is_vip = 0;
+
+        string vip_str = uri.getparameter("vip");
+
+        if (vip_str.length() == 0)
+        {
+            
+            return false;
+        }
+
+        if (vip_str.length() > 0)
+        {
+            boost::system::error_code ec = framework::string::parse2(vip_str, is_vip);
+            if (!ec)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
     PlayInfo::p PlayInfo::Parse(const string& url)
     {
         network::Uri uri(url);
@@ -507,6 +535,9 @@ namespace p2sp
                 play_info->bwtype_ = 0;
             }
 
+            // 解析客户端请求中的vip字段
+            ParseVip(uri, play_info->vip_);
+            
             ParseBakHosts(uri, play_info->bak_hosts_);
             LOGX(__DEBUG, "proxy", "Parse BWType = " << play_info->bwtype_);
 

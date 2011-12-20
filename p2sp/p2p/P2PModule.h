@@ -45,7 +45,7 @@ namespace p2sp
         void Stop();
 
         // 操作
-        P2PDownloader__p CreateP2PDownloader(const RID& rid);
+        P2PDownloader__p CreateP2PDownloader(const RID& rid, boost::uint32_t vip);
         // 消息
         void SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed);
 

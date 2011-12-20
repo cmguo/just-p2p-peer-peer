@@ -72,6 +72,7 @@ namespace p2sp
         boost::uint32_t       total_sn_download_bytes;              // Q1: SN下载字节数
         bool                  is_push;                              // R1: 是否是push任务
         bool                  instance_is_push;                     // S1: 是否是push下载的任务，用于判断命中率
+        boost::uint32_t       vip;                                  // T1: VIP
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
@@ -87,6 +88,12 @@ namespace p2sp
     class HttpDragDownloader;
     typedef boost::shared_ptr<HttpDragDownloader> HttpDragDownloader__p;
 
+    enum VIP_LEVEL
+    {
+        NO_VIP = 0,
+        VIP
+    };
+
     class DownloadDriver
         // : public boost::noncopyable
         : public boost::enable_shared_from_this<DownloadDriver>
@@ -101,7 +108,8 @@ namespace p2sp
         typedef boost::shared_ptr<DownloadDriver> p;
         static p create(
             boost::asio::io_service & io_svc,
-            ProxyConnection__p proxy_connetction) {
+            ProxyConnection__p proxy_connetction)
+        {
             return p(new DownloadDriver(io_svc, proxy_connetction));
         }
         ~DownloadDriver();
@@ -204,6 +212,8 @@ namespace p2sp
 
         void NoticeP2pSpeedLimited();
         void SetBakHosts(const std::vector<std::string> & bak_hosts) {bak_hosts_ = bak_hosts;}
+
+        void SetVipLevel(VIP_LEVEL vip) {vip_level_ = vip;}
 
         void SetRidInfo(const protocol::RidInfo & ridinfo);
         void ReportDragFetchResult(uint32_t drag_fetch_result){ drag_fetch_result_ = drag_fetch_result;}
@@ -438,6 +448,8 @@ namespace p2sp
 
         // SN
         bool is_sn_added_;
+
+        boost::uint32_t vip_level_;
 
     private:
         DownloadDriver(

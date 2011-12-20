@@ -15,6 +15,8 @@
 #include "p2sp/p2p/DownloadSpeedLimiter.h"
 #include "p2sp/AppModule.h"
 
+#include "p2sp/download/DownloadDriver.h"
+
 #include "storage/storage_base.h"
 #include "statistic/P2PDownloaderStatistic.h"
 #include <bitset>
@@ -71,7 +73,7 @@ namespace p2sp
         friend class Assigner;
     public:
         typedef boost::shared_ptr<P2PDownloader> p;
-        static p create(const RID& rid) { return p(new P2PDownloader(rid)); }
+        static p create(const RID& rid, boost::uint32_t vip) { return p(new P2PDownloader(rid, vip)); }
         virtual ~P2PDownloader();
     public:
 
@@ -173,17 +175,21 @@ namespace p2sp
         bool IsOpenService() const { return is_openservice_; }
         void SetIsOpenService(bool openservie) { is_openservice_ = openservie; }
 
+        void SetVipLevel(VIP_LEVEL vip_level) {vip_level_ = vip_level;}
+
         P2PDwonloadMode GetDownloadMode() const { return dl_mode_;}
         boost::uint32_t GetRTTPlus();
 
         boost::uint32_t GetSpeedLimitRestCount();
-        boost::int32_t GetDownloadPriority() const {return download_priority_;}
+        boost::int32_t GetDownloadPriority();
 
         bool NeedKickPeerConnection();
 
         boost::uint32_t GetDownloadingTimeInSeconds() const {return downloading_time_in_seconds_;}
 
         boost::uint32_t GetConnectFullTimeInSeconds() const {return seconds_elapsed_until_connection_full_;}
+
+        boost::uint32_t GetMinRestTimeInMilliSecond();
     public:
         //////////////////////////////////////////////////////////////////////////
         // IP2PControlTarget
@@ -323,8 +329,10 @@ namespace p2sp
 
         string file_name_;
 
+        boost::uint32_t vip_level_;
+
     private:
-        P2PDownloader(const RID& rid);
+        P2PDownloader(const RID& rid, boost::uint32_t vip);
     };
 
     template <typename PacketType>

@@ -110,6 +110,8 @@ namespace p2sp
 
         std::vector<std::string> GetBakHosts() const {return bak_hosts_;}
 
+        boost::uint32_t GetVip() const {return vip_;}
+
         vector<RID> GetLiveRIDs() const {return live_rid_s_;}
 
         uint32_t GetLiveStart() const {return live_start_;}
@@ -160,6 +162,8 @@ namespace p2sp
         static bool ParseSendSpeedLimit(const network::Uri& uri, boost::int32_t& send_speed_limit);
 
         static bool ParseBakHosts(const network::Uri& uri, std::vector<std::string>& bak_hosts);
+
+        static bool ParseVip(const network::Uri & uri, boost::uint32_t & is_vip);
 
         // 解析一个频道所有的rid
         static void ParseLiveRids(const network::Uri& uri, vector<RID> & rid_s);
@@ -223,6 +227,7 @@ namespace p2sp
         boost::int32_t send_speed_limit_;
         std::vector<std::string> bak_hosts_;
         boost::shared_ptr<RangeInfo> range_info_;
+        boost::uint32_t vip_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid

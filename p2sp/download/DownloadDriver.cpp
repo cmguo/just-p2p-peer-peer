@@ -137,6 +137,7 @@ namespace p2sp
         , max_rest_playable_time_(0)
         , tiny_drag_http_status_(0)
         , is_sn_added_(false)
+        , vip_level_(NO_VIP)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -280,7 +281,7 @@ namespace p2sp
 
         if (false == instance_->GetRID().is_empty() && false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID());
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -522,7 +523,7 @@ namespace p2sp
             force_mode != FORCE_MODE_HTTP_ONLY &&
             bwtype_ != p2sp::JBW_HTTP_ONLY)
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID());
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -686,7 +687,7 @@ namespace p2sp
         proxy_connection_->OnNoticeGetContentLength(rid_for_play.GetFileLength(), network::HttpResponse::p());
         if (false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID());
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -1274,6 +1275,9 @@ namespace p2sp
             info.instance_is_push = true;
         }
 
+        // T1: VIP
+        info.vip = vip_level_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1325,6 +1329,7 @@ namespace p2sp
         log_stream << "&Q1=" << (uint32_t)info.total_sn_download_bytes;
         log_stream << "&R1=" << (uint32_t)info.is_push;
         log_stream << "&S1=" << (uint32_t)info.instance_is_push;
+        log_stream << "&T1=" << (uint32_t)info.vip;
 
         string log = log_stream.str();
 
@@ -1703,7 +1708,7 @@ namespace p2sp
         assert(false == instance_->GetRID().is_empty());
         if (false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID());  // ! TODO SwitchController
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);  // ! TODO SwitchController
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -1761,7 +1766,7 @@ namespace p2sp
 
         if (false == instance_->IsComplete() && bwtype_ != JBW_HTTP_ONLY)
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID());  // ! TODO P2PControlTarget
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);  // ! TODO P2PControlTarget
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -2936,7 +2941,7 @@ namespace p2sp
 
         if (p2p_downloader_)
         {
-            if (p2p_downloader_->GetPooledPeersCount() < BootStrapGeneralConfig::Inst()->GetPeerCountWhenUseSn())
+            if (p2p_downloader_->GetPooledPeersCount() < BootStrapGeneralConfig::Inst()->GetPeerCountWhenUseSn() || vip_level_)
             {
                 if (GetRestPlayableTime() < 20*1000 &&
                     p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())

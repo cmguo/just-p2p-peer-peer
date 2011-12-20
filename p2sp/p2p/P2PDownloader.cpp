@@ -32,7 +32,10 @@
 namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
-    P2PDownloader::P2PDownloader(const RID& rid)
+
+    const boost::uint32_t VIP_URGENT_TIME_IN_SECOND = 15*1000;
+
+    P2PDownloader::P2PDownloader(const RID& rid, boost::uint32_t vip_level)
         : rid_(rid)
         , is_connected_(false)
         , start_time_counter_(0)
@@ -54,6 +57,7 @@ namespace p2sp
         , seconds_elapsed_until_connection_full_(0)
         , is_connect_full_(false)
         , is_sn_enable_(false)
+        , vip_level_(vip_level)
     {
     }
 
@@ -1934,5 +1938,30 @@ namespace p2sp
 
             sn_.insert(std::make_pair(sn_connection->GetEndpoint(), sn_connection));
         }
+    }
+
+    boost::int32_t P2PDownloader::GetDownloadPriority()
+    {
+        if (vip_level_ && GetMinRestTimeInMilliSecond() < VIP_URGENT_TIME_IN_SECOND)
+        {
+            return protocol::RequestSubPiecePacket::PRIORITY_VIP;
+        }
+        return download_priority_;
+    }
+
+    boost::uint32_t P2PDownloader::GetMinRestTimeInMilliSecond()
+    {
+        boost::uint32_t min_rest_time = std::numeric_limits<uint32_t>::max();
+        for (std::set<DownloadDriver::p>::iterator iter = download_driver_s_.begin();
+            iter != download_driver_s_.end(); ++iter)
+        {
+            DownloadDriver::p download_driver = *iter;
+            if (download_driver && download_driver->GetRestPlayableTime() < min_rest_time)
+            {
+                min_rest_time = download_driver->GetRestPlayableTime();
+            }
+        }
+
+        return min_rest_time;
     }
 }
