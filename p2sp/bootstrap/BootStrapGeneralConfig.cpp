@@ -54,7 +54,11 @@ namespace p2sp
         , enhanced_announce_copies_(4)
         , udpserver_protect_time_when_start_(15 * 1000)
         , peer_count_when_use_sn_(100)
-        , live_peer_max_connections_(20)
+        , live_peer_max_connections_(25)
+        , live_connect_low_normal_threshold_(25)
+        , live_connect_normal_high_threshold_(15)
+        , live_minimum_window_size_(4)
+        , live_maximum_window_size_(25)
     {
     }
 
@@ -157,7 +161,11 @@ namespace p2sp
                 ("config.eat", po::value<uint32_t>()->default_value(enhanced_announce_threshold_in_millseconds_))
                 ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_))
                 ("config.pc", po::value<uint32_t>()->default_value(peer_count_when_use_sn_))
-                ("config.lmc", po::value<uint32_t>()->default_value(live_peer_max_connections_));
+                ("config.lmc", po::value<uint32_t>()->default_value(live_peer_max_connections_))
+                ("config.lcln", po::value<uint32_t>()->default_value(live_connect_low_normal_threshold_))
+                ("config.lcnh", po::value<uint32_t>()->default_value(live_connect_normal_high_threshold_))
+                ("config.lminw", po::value<uint32_t>()->default_value(live_minimum_window_size_))
+                ("config.lmaxw", po::value<uint32_t>()->default_value(live_maximum_window_size_));
 
             std::istringstream config_stream(config_string);
 
@@ -203,6 +211,10 @@ namespace p2sp
             enhanced_announce_copies_ = vm["config.eac"].as<uint32_t>();
             peer_count_when_use_sn_ = vm["config.pc"].as<uint32_t>();
             live_peer_max_connections_ = vm["config.lmc"].as<uint32_t>();
+            live_connect_low_normal_threshold_ = vm["config.lcln"].as<uint32_t>();
+            live_connect_normal_high_threshold_ = vm["config.lcnh"].as<uint32_t>();
+            live_minimum_window_size_ = vm["config.lminw"].as<uint32_t>();
+            live_maximum_window_size_ = vm["config.lmaxw"].as<uint32_t>();
 
             if (save_to_disk)
             {

@@ -348,6 +348,9 @@ namespace p2sp
         bool should_use_bw_type_;
 
         boost::uint32_t total_connect_peers_count_;
+
+        boost::uint32_t live_connect_low_normal_threshold_;
+        boost::uint32_t live_connect_normal_high_threshold_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

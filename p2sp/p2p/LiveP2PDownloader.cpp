@@ -41,6 +41,8 @@ namespace p2sp
         udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
         p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
+        live_connect_low_normal_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectLowNormalThresHold();
+        live_connect_normal_high_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectNormalHighThresHold();
     }
 
     void LiveP2PDownloader::Start()
@@ -90,7 +92,7 @@ namespace p2sp
         int32_t downloadable_peers_count = this->GetDownloadablePeersCount();
         int32_t connection_threshold = p2p_max_connect_count_ / 3;
 
-        if (rest_time >= 25 && !this->is_p2p_pausing_)
+        if (rest_time >= live_connect_low_normal_threshold_ && !this->is_p2p_pausing_)
         {
             // enough time; don't need to rush for new connections
             // under http only mode, still try new connection
@@ -103,7 +105,7 @@ namespace p2sp
                 level = MEDIUM;
             }
         }
-        else if (rest_time >= 12)
+        else if (rest_time >= live_connect_normal_high_threshold_)
         {   
             if (downloadable_peers_count >= connection_threshold)
             {

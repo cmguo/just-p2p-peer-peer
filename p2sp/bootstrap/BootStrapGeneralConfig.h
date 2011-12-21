@@ -202,6 +202,26 @@ namespace p2sp
             return live_peer_max_connections_;
         }
 
+        boost::uint32_t GetLiveConnectLowNormalThresHold() const
+        {
+            return live_connect_low_normal_threshold_;
+        }
+
+        boost::uint32_t GetLiveConnectNormalHighThresHold() const
+        {
+            return live_connect_normal_high_threshold_;
+        }
+
+        boost::uint32_t GetLiveMinimumWindowSize() const
+        {
+            return live_minimum_window_size_;
+        }
+
+        boost::uint32_t GetLiveMaximumWindowSize() const
+        {
+            return live_maximum_window_size_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -328,6 +348,19 @@ namespace p2sp
 
         // 二代直播p2p最大连接数
         boost::uint32_t live_peer_max_connections_;
+
+        // 二代直播连接策略：多少秒进入不紧急状态
+        boost::uint32_t live_connect_low_normal_threshold_;
+
+        // 二代直播连接策略：多少秒进入紧急状态
+        boost::uint32_t live_connect_normal_high_threshold_;
+
+        // 二代直播最小window size
+        boost::uint32_t live_minimum_window_size_;
+
+        //二代直播最大Window size
+        boost::uint32_t live_maximum_window_size_;
+
     };
 }
 #endif

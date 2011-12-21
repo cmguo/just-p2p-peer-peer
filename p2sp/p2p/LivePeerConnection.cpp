@@ -53,7 +53,7 @@ namespace p2sp
                 window_size_ = (9 * last_window_size + 1 * window_size_) / 10;
             }
 
-            LIMIT_MIN_MAX(window_size_, 4, 25);
+            LIMIT_MIN_MAX(window_size_, live_minimum_window_size_, live_maximum_window_size_);
 
             // 更新共享内存信息
             UpdatePeerConnectionInfo();

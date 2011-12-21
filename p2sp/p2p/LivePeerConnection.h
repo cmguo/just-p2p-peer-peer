@@ -4,6 +4,7 @@
 #include <protocol/PeerPacket.h>
 #include <protocol/LivePeerPacket.h>
 #include <statistic/SpeedInfoStatistic.h>
+#include <p2sp/bootstrap/BootStrapGeneralConfig.h>
 
 namespace p2sp
 {
@@ -99,6 +100,9 @@ namespace p2sp
             assert(connect_type < protocol::CONNECT_MAX);
             peer_connection_info_.ConnectType = connect_type;
             UpdateBlockBitmapEmptyTickCount();
+
+            live_minimum_window_size_ = BootStrapGeneralConfig::Inst()->GetLiveMinimumWindowSize();
+            live_maximum_window_size_ = BootStrapGeneralConfig::Inst()->GetLiveMaximumWindowSize();
         }
 
         void DoAnnounce();
@@ -155,6 +159,11 @@ namespace p2sp
 
         // 记录1秒内分配的task，用于统计当前1秒内分配的SubPiece数
         std::set<protocol::LiveSubPieceInfo> temp_task_set_;
+        
+        boost::uint32_t live_minimum_window_size_;
+
+        boost::uint32_t live_maximum_window_size_;
+
     };
 }
 
