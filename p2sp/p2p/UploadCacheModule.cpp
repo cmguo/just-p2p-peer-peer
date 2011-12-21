@@ -207,6 +207,11 @@ namespace p2sp
 
     void UploadCacheModule::SetCurrentCacheSize(size_t cache_size)
     {
+        if (cache_size == 0)
+        {
+            return;
+        }
+
         if (cache_size > P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH)
         {
             max_upload_cache_len_ = P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH;
