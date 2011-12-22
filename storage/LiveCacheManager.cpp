@@ -260,4 +260,28 @@ namespace storage
         }
         return checksum_failed_times;
     }
+
+    boost::uint32_t LiveCacheManager::GetMissingSubPieceCount(boost::uint32_t block_id) const
+    {
+        std::map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+
+        if (iter == block_nodes_.end())
+        {
+            return 0;
+        }
+
+        return iter->second->GetMissingSubPieceCount();
+    }
+
+    boost::uint32_t LiveCacheManager::GetExistSubPieceCount(boost::uint32_t block_id) const
+    {
+        std::map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+
+        if (iter == block_nodes_.end())
+        {
+            return 0;
+        }
+
+        return iter->second->GetExistSubPieceCount();
+    }
 }

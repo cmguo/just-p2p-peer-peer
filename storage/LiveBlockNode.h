@@ -53,6 +53,9 @@ namespace storage
 
         boost::uint32_t GetChecksumFailedTimes() const;
 
+        boost::uint32_t GetMissingSubPieceCount() const;
+        boost::uint32_t GetExistSubPieceCount() const;
+
     private:
         void CheckHeadSubPiece();
         bool HasHeaderSubPiece() const { return header_subpiece_; }

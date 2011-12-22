@@ -88,6 +88,9 @@ namespace storage
 
         void GetAllPlayPoints(std::vector<LivePosition>& play_points) const;
 
+        boost::uint32_t GetMissingSubPieceCount(boost::uint32_t block_id) const;
+        boost::uint32_t GetExistSubPieceCount(boost::uint32_t block_id) const;
+
     private:
         void PushDataToDownloaderDrivers();
         void PushDataToDownloaderDriver(p2sp::ILiveDownloadDriverPointer download_driver);

@@ -821,8 +821,12 @@ namespace statistic
         SPEED_INFO UdpServerSpeedInfo;                  // UdpServer速度
         boost::uint8_t IsPaused;                        // 是否暂停，0代表播放，1代表暂停
         boost::uint8_t IsReplay;                        // 是否回拖，0代表不回拖，1代表回拖
+        boost::uint32_t MissingSubPieceCountOfFirstBlock;  // 第一个不满的Block中空的SubPiece个数
+        boost::uint32_t ExistSubPieceCountOfFirstBlock;  // 第一个不满的Block中存在的SubPiece个数
+        boost::uint32_t P2PPeerSpeedInSecond;        // P2P Peer一秒的速度
+        boost::uint32_t P2PUdpServerSpeedInSecond;  // UdpServer一秒的速度
 
-        boost::uint8_t Reserved[912];
+        boost::uint8_t Reserved[896];
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -879,6 +883,10 @@ namespace statistic
             ar & UdpServerSpeedInfo;
             ar & IsPaused;
             ar & IsReplay;
+            ar & MissingSubPieceCountOfFirstBlock;
+            ar & ExistSubPieceCountOfFirstBlock;
+            ar & P2PPeerSpeedInSecond;
+            ar & P2PUdpServerSpeedInSecond;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
 

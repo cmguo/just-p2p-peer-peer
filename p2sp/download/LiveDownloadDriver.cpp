@@ -633,6 +633,20 @@ namespace p2sp
 
         // replay
         live_download_driver_statistic_info_.IsReplay = replay_ ? 1 : 0;
+
+        // missing subpiece count of first block
+        live_download_driver_statistic_info_.MissingSubPieceCountOfFirstBlock = live_instance_->GetMissingSubPieceCount(playing_position_.GetBlockId());
+
+        // exist subpiece count of first block
+        live_download_driver_statistic_info_.ExistSubPieceCountOfFirstBlock = live_instance_->GetExistSubPieceCount(playing_position_.GetBlockId());
+
+        // peer 一秒的速度
+        live_download_driver_statistic_info_.P2PPeerSpeedInSecond = live_p2p_downloader_ ?
+            live_p2p_downloader_->GetSubPieceSpeedInfoEx().SecondDownloadSpeed : 0;
+
+        // udpserver 一秒的速度
+        live_download_driver_statistic_info_.P2PUdpServerSpeedInSecond = live_p2p_downloader_ ?
+            live_p2p_downloader_->GetUdpServerSpeedInfoEx().SecondDownloadSpeed : 0;
     }
 #endif
 

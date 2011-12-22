@@ -250,4 +250,14 @@ namespace storage
             play_points.push_back((*iter)->GetPlayingPosition());
         }
     }
+
+    boost::uint32_t LiveInstance::GetMissingSubPieceCount(boost::uint32_t block_id) const
+    {
+        return cache_manager_.GetMissingSubPieceCount(block_id);
+    }
+
+    boost::uint32_t LiveInstance::GetExistSubPieceCount(boost::uint32_t block_id) const
+    {
+        return cache_manager_.GetExistSubPieceCount(block_id);
+    }
 }

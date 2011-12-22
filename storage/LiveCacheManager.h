@@ -66,6 +66,9 @@ namespace storage
 
         boost::uint32_t GetChecksumFailedTimes() const;
 
+        boost::uint32_t GetMissingSubPieceCount(boost::uint32_t block_id) const;
+        boost::uint32_t GetExistSubPieceCount(boost::uint32_t block_id) const;
+
     private:
         void EnsureBlockExists(uint32_t block_id);
 

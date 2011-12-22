@@ -408,4 +408,34 @@ namespace storage
 
         return true;
     }
+
+    boost::uint32_t LiveBlockNode::GetMissingSubPieceCount() const
+    {
+        boost::uint32_t missing_subpiece_count = 0;
+
+        for (size_t i = 0; i < subpieces_.size(); ++i)
+        {
+            if (!subpieces_[i])
+            {
+                ++missing_subpiece_count;
+            }
+        }
+
+        return missing_subpiece_count;
+    }
+
+    boost::uint32_t LiveBlockNode::GetExistSubPieceCount() const
+    {
+        boost::uint32_t exist_subpiece_count = 0;
+
+        for (size_t i = 0; i < subpieces_.size(); ++i)
+        {
+            if (subpieces_[i])
+            {
+                ++exist_subpiece_count;
+            }
+        }
+
+        return exist_subpiece_count;
+    }
 }
