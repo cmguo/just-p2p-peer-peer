@@ -12,9 +12,14 @@ namespace p2sp
         p2p_downloader_ = p2p_downloader;
     }
 
-    void LiveSubPieceRequestManager::Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, LivePeerConnection__p peer_connection)
+    void LiveSubPieceRequestManager::Add(
+        const protocol::LiveSubPieceInfo & subpiece_info, 
+        boost::uint32_t timeout, 
+        LivePeerConnection__p peer_connection,
+        uint32_t transcation_id)
     {
-        LiveSubPieceRequestTask::p live_subpiece_request_task = LiveSubPieceRequestTask::create(timeout, peer_connection);
+        LiveSubPieceRequestTask::p live_subpiece_request_task = 
+            LiveSubPieceRequestTask::create(timeout, peer_connection, transcation_id);
         request_tasks_.insert(std::make_pair(subpiece_info, live_subpiece_request_task));
     }
 
@@ -38,28 +43,48 @@ namespace p2sp
 
     void LiveSubPieceRequestManager::OnSubPiece(const protocol::LiveSubPiecePacket & packet)
     {
-        std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator 
-            iter = request_tasks_.find(packet.sub_piece_info_);
-
         LOG(__DEBUG, "live_p2p", "recvive subpiece " << packet.sub_piece_info_);
 
-        protocol::LiveSubPieceBuffer buffer(packet.sub_piece_content_, packet.sub_piece_length_);
+        std::pair<std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator,
+            std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator> range = 
+            request_tasks_.equal_range(packet.sub_piece_info_);
 
+        protocol::LiveSubPieceBuffer buffer(packet.sub_piece_content_, packet.sub_piece_length_);
         boost::uint8_t connect_type = protocol::CONNECT_LIVE_PEER;
 
-        if (iter != request_tasks_.end())
+        LiveSubPieceRequestTask::p matched_task;
+        std::vector<LiveSubPieceRequestTask::p> unmatched_tasks;
+
+        for (std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator iter=range.first; 
+            iter!= range.second;)
+        {
+            LiveSubPieceRequestTask::p task = iter->second;
+            if (task->peer_connection_->GetEndpoint() == packet.end_point &&
+                task->GetTranscationId() == packet.transaction_id_)
+            {
+                matched_task = task;
+            }
+            else
+            {
+                unmatched_tasks.push_back(task);
+            }
+
+            request_tasks_.erase(iter++);
+        }
+
+        if (matched_task)
         {
             // 找到，删除
-            iter->second->peer_connection_->OnSubPiece(iter->second->GetTimeElapsed(), buffer.Length());
-            connect_type = iter->second->peer_connection_->GetConnectType();
-            request_tasks_.erase(iter);
-            boost::uint32_t peer_ip = packet.end_point.address().to_v4().to_ulong();
-            LOG(__DEBUG, "live_subpiece_request_manager", "receive subpiece from p2p, block id = " << packet.sub_piece_info_.GetBlockId()
-                << ", subpiece index = " << packet.sub_piece_info_.GetSubPieceIndex()
-                << ". ip = " << peer_ip / 256 / 256 / 256
-                << "." << (peer_ip % (256 * 256 * 256)) / 256 / 256
-                << "." << (peer_ip % (256 * 256)) / 256
-                << "." << peer_ip % 256);
+            matched_task->peer_connection_->OnSubPiece(matched_task->GetTimeElapsed(), buffer.Length());
+            connect_type = matched_task->peer_connection_->GetConnectType(); 
+        }
+
+        for(std::vector<LiveSubPieceRequestTask::p>::iterator task_iter = unmatched_tasks.begin();
+            task_iter != unmatched_tasks.end();
+            task_iter++)
+        {   
+            // 冗余任务，立即超时
+            (*task_iter)->peer_connection_->OnSubPieceTimeout();
         }
 
         if (false == p2p_downloader_->HasSubPiece(packet.sub_piece_info_))
@@ -86,12 +111,6 @@ namespace p2sp
     // 每秒执行一次
     void LiveSubPieceRequestManager::OnP2PTimer(uint32_t times)
     {
-        for (std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator iter = request_tasks_.begin();
-            iter != request_tasks_.end(); ++iter)
-        {
-            iter->second->request_time_elapse_ += 1000;
-        }
-
         // 检查超时
         CheckExternalTimeout();
     }

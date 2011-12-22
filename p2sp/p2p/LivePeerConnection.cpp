@@ -284,7 +284,7 @@ namespace p2sp
         {
             LOG(__DEBUG, "live_p2p", "request subpiece " << subpieces[i]);
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], rtt_avg_ + GetTimeoutAdjustment(),
-                shared_from_this());
+                shared_from_this(), packet.transaction_id_);
         }
 
         requesting_count_ += subpieces.size();

@@ -2,6 +2,8 @@
 #define _LIVE_SUBPIECE_REQUEST_MANAGER_H_
 
 #include "protocol/LivePeerPacket.h"
+#include <framework/timer/Timer.h>
+#include <framework/timer/TickCounter.h>
 
 namespace p2sp
 {
@@ -20,32 +22,39 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveSubPieceRequestTask> p;
-        static p create(uint32_t timeout, LivePeerConnection__p peer_connection)
+        static p create(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transcation_id)
         {
-            return p(new LiveSubPieceRequestTask(timeout, peer_connection));
+            return p(new LiveSubPieceRequestTask(timeout, peer_connection, transcation_id));
         }
 
         bool IsTimeout()
         {
-            return request_time_elapse_ > timeout_;
+            return request_time_counter_.elapsed() > timeout_;
         }
 
-        framework::timer::TickCounter::count_value_type GetTimeElapsed() const 
+        boost::uint32_t GetTimeElapsed() const 
         {
-            return request_time_elapse_;
+            return request_time_counter_.elapsed();
+        }
+
+        boost::uint32_t GetTranscationId() const
+        {
+            return transcation_id_;
         }
 
     public:
-        uint32_t request_time_elapse_;
         uint32_t timeout_;
         LivePeerConnection__p peer_connection_;
 
     private:
+        framework::timer::TickCounter request_time_counter_;
+        uint32_t transcation_id_;
+
     private:
-        LiveSubPieceRequestTask(uint32_t timeout, LivePeerConnection__p peer_connection)
-            : request_time_elapse_(0)
-            , timeout_(timeout)
+        LiveSubPieceRequestTask(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transcation_id)
+            : timeout_(timeout)
             , peer_connection_(peer_connection)
+            , transcation_id_(transcation_id)
         {
         }
     };
@@ -66,7 +75,9 @@ namespace p2sp
         }
         // 操作
         void Start(LiveP2PDownloader__p p2p_downloader);
-        void Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, LivePeerConnection__p peer_connection);
+        void Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, 
+            LivePeerConnection__p peer_connection, uint32_t transcation_id);
+
         // 消息
         void OnSubPiece(const protocol::LiveSubPiecePacket & packet);
         // 每秒执行一次

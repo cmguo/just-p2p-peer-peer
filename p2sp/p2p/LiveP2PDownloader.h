@@ -227,7 +227,8 @@ namespace p2sp
 
         bool IsRequesting(const protocol::LiveSubPieceInfo & subpiece_info);
         void AddRequestingSubpiece(const protocol::LiveSubPieceInfo & subpiece_info,
-            boost::uint32_t timeout, LivePeerConnection__p peer_connection);
+            boost::uint32_t timeout, LivePeerConnection__p peer_connection,
+            uint32_t transaction_id);
 
         const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & GetPeerConnectionInfo() const;
 
