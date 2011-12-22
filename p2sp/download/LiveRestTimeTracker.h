@@ -63,6 +63,8 @@ namespace p2sp
         void OnPause(bool pause);
         bool IsPaused();
 
+        void SetRestTimeInSecond(boost::uint32_t rest_time_in_second);
+
     private:
         void Reset();
         void UpdatePausingTime(framework::timer::Timer * pointer);
@@ -75,6 +77,8 @@ namespace p2sp
         uint32_t rest_time_in_seconds_;
         uint32_t live_interval_;
         bool paused_;
+
+        bool need_calculate_rest_time_;
 
         boost::uint32_t accumulate_pausing_time_in_seconds_;
 

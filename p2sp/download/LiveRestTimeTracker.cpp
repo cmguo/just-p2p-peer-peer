@@ -6,6 +6,7 @@ namespace p2sp
     RestTimeTracker::RestTimeTracker()
         : paused_(false)
         , accumulate_pausing_time_in_seconds_(0)
+        , need_calculate_rest_time_(true)
         , timer_(global_second_timer(), 1000, boost::bind(&RestTimeTracker::UpdatePausingTime, this, &timer_))
     {
 
@@ -27,7 +28,11 @@ namespace p2sp
 
     uint32_t RestTimeTracker::GetRestTimeInSeconds()
     {
-        CalculateRestTime();
+        if (need_calculate_rest_time_)
+        {
+            CalculateRestTime();
+        }
+
         return rest_time_in_seconds_;
     }
 
@@ -74,5 +79,11 @@ namespace p2sp
     bool RestTimeTracker::IsPaused()
     {
         return paused_;
+    }
+
+    void RestTimeTracker::SetRestTimeInSecond(boost::uint32_t rest_time_in_second)
+    {
+        need_calculate_rest_time_ = false;
+        rest_time_in_seconds_ = rest_time_in_second;
     }
 }

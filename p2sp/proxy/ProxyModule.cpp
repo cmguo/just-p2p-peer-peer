@@ -799,9 +799,27 @@ namespace p2sp
             }
 
             DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
-            if (dd && dd->GetOpenServiceFileName() == filename)
+            if (dd)
             {
-                dd->SetRestPlayTime(rest_play_time);
+                if (dd->GetOpenServiceFileName() == filename)
+                {
+                    dd->SetRestPlayTime(rest_play_time);
+                }
+            }
+            else
+            {
+                LiveDownloadDriver::p live_download_driver = proxy_conn->GetLiveDownloadDriver();
+                if (live_download_driver)
+                {
+                    PlayInfo::p play_info = PlayInfo::Parse(url);
+
+                    assert(play_info);
+                                        
+                    if (play_info && live_download_driver->GetUniqueID() == play_info->GetUniqueID())
+                    {
+                        live_download_driver->SetRestTimeInSecond(rest_play_time);
+                    }
+                }
             }
         }
     }

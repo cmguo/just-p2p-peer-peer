@@ -262,6 +262,8 @@ namespace p2sp
 
         boost::uint32_t GetDownloadTime() const;
 
+        void SetRestTimeInSecond(boost::uint32_t rest_time_in_second);
+
     public:
         //IGlobalControlTarget
         virtual uint32_t GetBandWidth();

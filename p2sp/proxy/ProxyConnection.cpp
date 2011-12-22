@@ -1938,6 +1938,11 @@ namespace p2sp
         live_download_driver_->Start(play_info->GetUrlInfo(), play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
             play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID());
+
+        if (play_info->GetRestTime() > 0)
+        {
+            live_download_driver_->SetRestTimeInSecond(play_info->GetRestTime());
+        }
     }
 
     void ProxyConnection::OnLivePause(const RID & rid, bool pause, boost::uint32_t unique_id)

@@ -1094,4 +1094,9 @@ namespace p2sp
 
         return static_cast<boost::uint32_t>((sum_of_squares + 0.0)/ rest_playable_times_.size() + 0.5);
     }
+
+    void LiveDownloadDriver::SetRestTimeInSecond(boost::uint32_t rest_time_in_second)
+    {
+        rest_time_tracker_.SetRestTimeInSecond(rest_time_in_second);
+    }
 }
