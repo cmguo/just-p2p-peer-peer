@@ -77,6 +77,7 @@ namespace p2sp
     boost::uint32_t LiveAssigner::CaclSubPieceAssignMap()
     {
         subpiece_assign_deque_.clear();
+        subpiece_reassign_set_.clear();
 
         boost::uint32_t total_unique_subpiece_count = 0;
         boost::uint32_t block_task_index = 0;
@@ -158,6 +159,11 @@ namespace p2sp
                     {
                         missing_subpiece_count_in_block++;
                         subpiece_assign_deque_.push_back(live_subpiece_info);
+
+                        if (igore_requesting_subpieces)
+                        {
+                            subpiece_reassign_set_.insert(live_subpiece_info);
+                        }
                     }
                 }
             }
@@ -186,39 +192,70 @@ namespace p2sp
         for (std::deque<protocol::LiveSubPieceInfo>::const_iterator subpiece_iter = subpiece_assign_deque_.begin();
             subpiece_iter != subpiece_assign_deque_.end(); ++subpiece_iter)
         {
-            for (std::list<PEER_RECVTIME>::iterator peer_iter = peer_connection_recvtime_list_.begin();
-                peer_iter != peer_connection_recvtime_list_.end(); ++peer_iter)
+            const protocol::LiveSubPieceInfo & subpiece = *subpiece_iter;
+            std::list<PEER_RECVTIME>::iterator peer_iter;
+
+            bool is_assign = false;
+
+            if (use_udpserver && subpiece_reassign_set_.find(subpiece) != subpiece_reassign_set_.end())
             {
-                const protocol::LiveSubPieceInfo & subpiece = *subpiece_iter;
-                LivePeerConnection__p peer = (*peer_iter).peer;
-
-                if (!use_udpserver && peer->IsUdpServer())
+                for (peer_iter = peer_connection_recvtime_list_.begin();
+                    peer_iter != peer_connection_recvtime_list_.end(); ++peer_iter)
                 {
-                    continue;
-                }
+                    LivePeerConnection__p peer = peer_iter->peer;
 
-                if (peer->HasSubPieceInBitmap(subpiece) && !peer->HasSubPieceInTaskSet(subpiece))
-                {
-                    peer->AddAssignedSubPiece(subpiece);
-
-                    peer_iter->recv_time += peer->GetAvgDeltaTime();
-
-                    // 从小到大排序peer_connection_recvtime_list_
-                    std::list<PEER_RECVTIME>::iterator curr_peer = peer_iter++;
-
-                    std::list<PEER_RECVTIME>::iterator i = peer_iter;
-                    for (; i != peer_connection_recvtime_list_.end(); ++i)
+                    if (peer->IsUdpServer())
                     {
-                        if (*curr_peer < *i)
+                        if (peer->HasSubPieceInBitmap(subpiece) && !peer->HasSubPieceInTaskSet(subpiece))
                         {
+                            is_assign = true;
                             break;
                         }
                     }
-
-                    peer_connection_recvtime_list_.splice(i, peer_connection_recvtime_list_, curr_peer);
-
-                    break;
                 }
+                
+                subpiece_reassign_set_.erase(subpiece);
+            }
+            
+            if (!is_assign)
+            {
+                for (peer_iter = peer_connection_recvtime_list_.begin();
+                    peer_iter != peer_connection_recvtime_list_.end(); ++peer_iter)
+                {
+                    LivePeerConnection__p peer = peer_iter->peer;
+
+                    if (!use_udpserver && peer->IsUdpServer())
+                    {
+                        continue;
+                    }
+
+                    if (peer->HasSubPieceInBitmap(subpiece) && !peer->HasSubPieceInTaskSet(subpiece))
+                    {
+                        is_assign = true;
+                        break;
+                    }
+                }
+            }
+
+            if (is_assign)
+            {
+                peer_iter->peer->AddAssignedSubPiece(subpiece);
+                 
+                peer_iter->recv_time += peer_iter->peer->GetAvgDeltaTime();
+
+                // 从小到大排序peer_connection_recvtime_list_
+                std::list<PEER_RECVTIME>::iterator curr_peer = peer_iter++;
+
+                std::list<PEER_RECVTIME>::iterator i = peer_iter;
+                for (; i != peer_connection_recvtime_list_.end(); ++i)
+                {
+                    if (*curr_peer < *i)
+                    {
+                        break;
+                    }
+                }
+
+                peer_connection_recvtime_list_.splice(i, peer_connection_recvtime_list_, curr_peer);
             }
         }
     }

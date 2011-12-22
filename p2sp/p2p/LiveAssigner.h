@@ -40,6 +40,8 @@ namespace p2sp
 
         std::deque<protocol::LiveSubPieceInfo> subpiece_assign_deque_;
 
+        std::set<protocol::LiveSubPieceInfo> subpiece_reassign_set_;
+
         struct PEER_RECVTIME
         {
             PEER_RECVTIME(uint32_t recv_time_, LivePeerConnection__p peer_)
