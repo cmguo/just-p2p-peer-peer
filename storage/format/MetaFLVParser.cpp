@@ -70,12 +70,12 @@ namespace storage
         return properties_;
     }
 
-    void MetaFLVParser::Parse(const boost::uint8_t* buffer, int length)
+    void MetaFLVParser::Parse(const boost::uint8_t* buffer, boost::uint32_t length)
     {
         if (buffer == NULL) return;
         properties_.clear();
 
-        int offset = 0;
+        boost::uint32_t offset = 0;
         // const FLVHeader* header = (const FLVHeader*) (buffer + offset);
         offset += sizeof(FLVHeader); if (offset >= length) return;
 
@@ -104,7 +104,7 @@ namespace storage
                 offset += 1; if (offset >= length) return;
                 const ScriptDataString* name = (const ScriptDataString*) (buffer + offset);
                 offset += sizeof(name->Length);  if (offset >= length) return;
-                if (offset + GetUINT16((const boost::uint8_t*)(&(name->Length))) >= (uint32_t)length) return;
+                if (offset + GetUINT16((const boost::uint8_t*)(&(name->Length))) >= length) return;
                 string dataName((const char*)(name->Value), GetUINT16((const boost::uint8_t*)(&(name->Length))));
                 offset += GetUINT16((const boost::uint8_t*)(&(name->Length))); if (offset >= length) return;
                 if (dataName == "onMetaData")
@@ -124,7 +124,7 @@ namespace storage
                             // read properties
                             const ScriptDataString* pVariableName = (const ScriptDataString*) (buffer + offset);
                             offset += sizeof(pVariableName->Length); if (offset >= length) return;
-                            if (offset + GetUINT16((const boost::uint8_t*)(&(pVariableName->Length))) >= (uint32_t)length) return;
+                            if (offset + GetUINT16((const boost::uint8_t*)(&(pVariableName->Length))) >= length) return;
                             string variableName((const char*)(pVariableName->Value), GetUINT16((const boost::uint8_t*)(&(pVariableName->Length))));
                             offset += GetUINT16((const boost::uint8_t*)(&(pVariableName->Length))); if (offset >= length) return;
                             // variable data
@@ -150,7 +150,7 @@ namespace storage
                                 {
                                     const ScriptDataString* pData = (const ScriptDataString*) (buffer + offset);
                                     offset += sizeof (pData->Length); if (offset >= length) return;
-                                    if (offset + GetUINT16((const boost::uint8_t*)(&(pData->Length))) >= (uint32_t)length) return;
+                                    if (offset + GetUINT16((const boost::uint8_t*)(&(pData->Length))) >= length) return;
                                     string vData((const char*)(pData->Value), GetUINT16((const boost::uint8_t*)(&(pData->Length))));
                                     offset += GetUINT16((const boost::uint8_t*)(&(pData->Length))); if (offset >= length) return;
                                     properties_[variableName] = boost::any(vData);
@@ -170,7 +170,7 @@ namespace storage
                                 {
                                     const ScriptDataLongString* pData = (const ScriptDataLongString*) (buffer + offset);
                                     offset += sizeof (pData->Length); if (offset >= length) return;
-                                    if (offset + GetUINT16((const boost::uint8_t*)(&(pData->Length))) >= (uint32_t)length) return;
+                                    if (offset + GetUINT32((const boost::uint8_t*)(&(pData->Length))) >= length) return;
                                     string vData((const char*)(pData->Value), GetUINT32((const boost::uint8_t*)(&(pData->Length))));
                                     offset += GetUINT32((const boost::uint8_t*)(&(pData->Length))); if (offset >= length) return;
                                     properties_[variableName] = boost::any(vData);

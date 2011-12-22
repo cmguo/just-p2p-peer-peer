@@ -167,7 +167,7 @@ namespace storage
 
     public:
 
-        void Parse(const boost::uint8_t* buffer, int length);
+        void Parse(const boost::uint8_t* buffer, boost::uint32_t length);
 
         boost::any GetProperty(const string& name) const;
 
