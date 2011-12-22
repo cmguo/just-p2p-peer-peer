@@ -307,7 +307,7 @@ namespace p2sp
     //
     uint32_t P2SPConfigs::UPLOAD_LIMITER_MAX_PACKET_LIFE_TIME_IN_MILLISEC = 2500;
     //
-    uint32_t P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH = 20;
+    uint32_t P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH = 10;
     //
     uint32_t P2SPConfigs::UPLOAD_CACHE_BLOCK_EXPIRE_TIME_IN_MILLISEC = 30 * 1000;
     //
