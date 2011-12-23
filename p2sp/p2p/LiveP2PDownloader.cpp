@@ -915,6 +915,11 @@ namespace p2sp
         return live_subpiece_request_manager_.IsRequesting(subpiece_info);
     }
 
+    uint32_t LiveP2PDownloader::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info)
+    {
+        return live_subpiece_request_manager_.GetRequestingCount(subpiece_info);
+    }
+
     void LiveP2PDownloader::AddRequestingSubpiece(const protocol::LiveSubPieceInfo & subpiece_info,
         boost::uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
     {

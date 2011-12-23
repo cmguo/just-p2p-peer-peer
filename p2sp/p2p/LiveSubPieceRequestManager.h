@@ -22,9 +22,9 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveSubPieceRequestTask> p;
-        static p create(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transcation_id)
+        static p create(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
         {
-            return p(new LiveSubPieceRequestTask(timeout, peer_connection, transcation_id));
+            return p(new LiveSubPieceRequestTask(timeout, peer_connection, transaction_id));
         }
 
         bool IsTimeout()
@@ -37,9 +37,9 @@ namespace p2sp
             return request_time_counter_.elapsed();
         }
 
-        boost::uint32_t GetTranscationId() const
+        boost::uint32_t GetTransactionId() const
         {
-            return transcation_id_;
+            return transaction_id_;
         }
 
     public:
@@ -48,13 +48,13 @@ namespace p2sp
 
     private:
         framework::timer::TickCounter request_time_counter_;
-        uint32_t transcation_id_;
+        uint32_t transaction_id_;
 
     private:
-        LiveSubPieceRequestTask(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transcation_id)
+        LiveSubPieceRequestTask(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
             : timeout_(timeout)
             , peer_connection_(peer_connection)
-            , transcation_id_(transcation_id)
+            , transaction_id_(transaction_id)
         {
         }
     };
@@ -76,7 +76,7 @@ namespace p2sp
         // 操作
         void Start(LiveP2PDownloader__p p2p_downloader);
         void Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, 
-            LivePeerConnection__p peer_connection, uint32_t transcation_id);
+            LivePeerConnection__p peer_connection, uint32_t transaction_id);
 
         // 消息
         void OnSubPiece(const protocol::LiveSubPiecePacket & packet);
@@ -91,8 +91,11 @@ namespace p2sp
         boost::uint32_t GetTotalP2PDataBytes() const;
         boost::uint32_t GetTotalUdpServerDataBytes() const;
 
+        uint32_t GetRequestingCount( const protocol::LiveSubPieceInfo & subpiece_info ) const;
+
     private:
         void CheckExternalTimeout();
+        
     private:
         // 模块
         LiveP2PDownloader__p p2p_downloader_;

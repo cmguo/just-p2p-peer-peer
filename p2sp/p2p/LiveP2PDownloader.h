@@ -264,6 +264,8 @@ namespace p2sp
 
         boost::uint32_t GetTotalConnectPeersCount() const;
 
+        uint32_t GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info);
+
     private:
         void CheckBlockComplete();
         void DoList();

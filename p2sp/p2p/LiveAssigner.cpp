@@ -82,42 +82,43 @@ namespace p2sp
         boost::uint32_t total_unique_subpiece_count = 0;
         boost::uint32_t block_task_index = 0;
 
-        bool continue_reassign = true;
+        bool first_block_urgent_reassign = false;        
 
         for (std::map<uint32_t,protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin(); 
             iter != p2p_downloader_->GetBlockTasks().end(); ++iter, ++block_task_index)
         {
-            total_unique_subpiece_count += AssignForMissingSubPieces(iter->first, false);
+            uint32_t block_id = iter->first;
+            total_unique_subpiece_count += AssignForMissingSubPieces(block_id, false);
 
-            if (urgent_ && continue_reassign)
+            uint32_t missing_subpieces = CountMissingSubPieces(block_id);
+            bool reassign = false;
+
+            if (urgent_)
             {
-                continue_reassign = TryToReassignSubPieces(block_task_index, iter->first);
+                if (block_task_index == 0 && missing_subpieces < 32)
+                {
+                    first_block_urgent_reassign = true;
+                    reassign = true;
+                }
+                else if (first_block_urgent_reassign && block_task_index == 1 && missing_subpieces < 16)
+                {
+                    reassign = true;
+                }
+            } 
+            
+            if ((block_task_index == 0 && missing_subpieces <= 2) ||
+                (block_task_index == 1 && missing_subpieces <= 1))
+            {
+                reassign = true;
+            }
+
+            if (reassign)
+            {
+                AssignForMissingSubPieces(block_id, true);
             }
         }
 
         return total_unique_subpiece_count;
-    }
-
-    bool LiveAssigner::TryToReassignSubPieces(boost::uint32_t block_task_index, boost::uint32_t block_id)
-    {
-        if (block_task_index == 0)
-        {
-            if (CountMissingSubPieces(block_id) < 32)
-            {
-                AssignForMissingSubPieces(block_id, true);
-                return true;
-            }
-        }
-        else if (block_task_index == 1)
-        {
-            if (CountMissingSubPieces(block_id) < 16)
-            {
-                AssignForMissingSubPieces(block_id, true);
-                return true;
-            }
-        }
-
-        return false;
     }
 
     boost::uint32_t LiveAssigner::CountMissingSubPieces(boost::uint32_t block_id)
@@ -140,7 +141,7 @@ namespace p2sp
         return missing_subpiece_count_in_block;
     }
 
-    boost::uint32_t LiveAssigner::AssignForMissingSubPieces(boost::uint32_t block_id, bool igore_requesting_subpieces)
+    boost::uint32_t LiveAssigner::AssignForMissingSubPieces(boost::uint32_t block_id, bool ignore_requesting_subpieces)
     {
         boost::uint32_t missing_subpiece_count_in_block = 0;
 
@@ -155,12 +156,23 @@ namespace p2sp
 
                 if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info))
                 {
-                    if (igore_requesting_subpieces || !p2p_downloader_->IsRequesting(live_subpiece_info))
+                    bool assign = false;
+                    uint32_t requesting = p2p_downloader_->GetRequestingCount(live_subpiece_info);
+                    if (requesting == 0)
+                    {
+                        assign = true;
+                    }
+                    else if (ignore_requesting_subpieces && requesting < 3)
+                    {
+                        assign = true;
+                    }
+
+                    if (assign)
                     {
                         missing_subpiece_count_in_block++;
                         subpiece_assign_deque_.push_back(live_subpiece_info);
 
-                        if (igore_requesting_subpieces)
+                        if (ignore_requesting_subpieces)
                         {
                             subpiece_reassign_set_.insert(live_subpiece_info);
                         }

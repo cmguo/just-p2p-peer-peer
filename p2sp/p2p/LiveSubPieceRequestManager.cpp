@@ -16,10 +16,10 @@ namespace p2sp
         const protocol::LiveSubPieceInfo & subpiece_info, 
         boost::uint32_t timeout, 
         LivePeerConnection__p peer_connection,
-        uint32_t transcation_id)
+        uint32_t transaction_id)
     {
         LiveSubPieceRequestTask::p live_subpiece_request_task = 
-            LiveSubPieceRequestTask::create(timeout, peer_connection, transcation_id);
+            LiveSubPieceRequestTask::create(timeout, peer_connection, transaction_id);
         request_tasks_.insert(std::make_pair(subpiece_info, live_subpiece_request_task));
     }
 
@@ -60,7 +60,7 @@ namespace p2sp
         {
             LiveSubPieceRequestTask::p task = iter->second;
             if (task->peer_connection_->GetEndpoint() == packet.end_point &&
-                task->GetTranscationId() == packet.transaction_id_)
+                task->GetTransactionId() == packet.transaction_id_)
             {
                 matched_task = task;
             }
@@ -147,5 +147,10 @@ namespace p2sp
     boost::uint32_t LiveSubPieceRequestManager::GetTotalUdpServerDataBytes() const
     {
         return total_udpserver_data_bytes_;
+    }
+
+    uint32_t LiveSubPieceRequestManager::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info) const
+    {
+        return request_tasks_.count(subpiece_info);
     }
 }
