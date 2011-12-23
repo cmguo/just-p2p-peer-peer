@@ -159,4 +159,9 @@ namespace statistic
 
         return iter->second.GetSpeedInfo().NowUploadSpeed;
     }
+
+    void UploadStatisticModule::SubmitUploadOneSubPiece()
+    {
+        ++upload_info_.upload_subpiece_count;
+    }
 }
