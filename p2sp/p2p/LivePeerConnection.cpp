@@ -362,9 +362,14 @@ namespace p2sp
         return avg_delta_time_;
     }
 
-    statistic::SPEED_INFO LivePeerConnection::GetSpeedInfo()
+    const statistic::SPEED_INFO & LivePeerConnection::GetSpeedInfo()
     {
         return speed_info_.GetSpeedInfo();
+    }
+
+    const statistic::SPEED_INFO_EX & LivePeerConnection::GetSpeedInfoEx()
+    {
+        return speed_info_.GetSpeedInfoEx();
     }
 
     uint32_t LivePeerConnection::Get75PercentPointInBitmap(uint32_t live_interval)

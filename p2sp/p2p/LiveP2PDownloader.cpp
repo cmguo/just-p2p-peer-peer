@@ -43,6 +43,11 @@ namespace p2sp
         p2p_max_connect_count_ = default_connection_limit_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
         live_connect_low_normal_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectLowNormalThresHold();
         live_connect_normal_high_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectNormalHighThresHold();
+        live_exchange_large_upload_ability_delim_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadAbilityDelim();
+        live_exchange_large_upload_ability_max_count_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadAbilityMaxCount();
+        live_exchange_large_upload_to_me_delim_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadToMeDelim();
+        live_exchange_large_upload_to_me_max_count_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadToMeMaxCount();
+        live_exchange_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeIntervalInSecond();
         live_extended_connections_ = BootStrapGeneralConfig::Inst()->GetLiveExtendedConnections();
     }
 
@@ -58,7 +63,7 @@ namespace p2sp
         udpserver_pool_->Start();
 
         // Exchange
-        exchanger_ = Exchanger::create(shared_from_this(), ippool_);
+        exchanger_ = Exchanger::create(shared_from_this(), ippool_, true);
         exchanger_->Start();
 
         // PeerConnector
@@ -82,6 +87,8 @@ namespace p2sp
 
         last_dolist_time_.start();
         last_dolist_udpserver_time_.start();
+
+        live_exchange_tick_counter_.start();
 
         is_running_ = true;
     }
@@ -153,11 +160,21 @@ namespace p2sp
         {
             if (exchanger_)
             {
+                if (GetConnectLevel() == HIGH && live_exchange_tick_counter_.elapsed() > live_exchange_interval_in_second_ * 1000)
+                {
+                    protocol::CandidatePeerInfo candidate_peer_info;
+                    if (ippool_->GetForExchange(candidate_peer_info))
+                    {
+                        exchanger_->DoPeerExchange(candidate_peer_info);
+                        live_exchange_tick_counter_.reset();
+                    }
+                }
+
                 exchanger_->OnP2PTimer(times);
             }
 
             DoList();
-        }        
+        }
 
         // 每秒
         // 驱动一次发起连接和断开连接
@@ -311,19 +328,19 @@ namespace p2sp
     {
         if (is_live_udpserver)
         {
-            udpserver_pool_->AddCandidatePeers(peers);
+            udpserver_pool_->AddCandidatePeers(peers, false);
         }
         else
         {
             if (ippool_->GetPeerCount() == 0)
             {
-                ippool_->AddCandidatePeers(peers);
+                ippool_->AddCandidatePeers(peers, false);
                 LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
                 InitPeerConnection(connect_level);
             }
             else
             {
-                ippool_->AddCandidatePeers(peers);
+                ippool_->AddCandidatePeers(peers, false);
             }
         }
     }
@@ -528,25 +545,22 @@ namespace p2sp
         }
 
         assert(candidate_peers.size() == 0);
-        uint32_t peer_left = peers_.size();
-        uint32_t candidates_left = P2SPConfigs::P2P_MAX_EXCHANGE_PEER_COUNT;
-        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter;
-        for (iter = peers_.begin(); iter != peers_.end();iter++)
+
+        std::set<protocol::CandidatePeerInfo> selected_peers;
+        GetCandidatePeerInfosBasedOnUploadAbility(selected_peers);
+        GetCandidatePeerInfosBasedOnUploadSpeed(selected_peers);
+
+        for (std::set<protocol::CandidatePeerInfo>::const_iterator iter = selected_peers.begin();
+            iter != selected_peers.end(); ++iter)
         {
-            Random random;
-            if ((uint32_t)random.Next(peer_left) < candidates_left)
-            {
-                candidate_peers.push_back(iter->second->GetCandidatePeerInfo());
-                candidates_left--;
-            }
-            peer_left--;
+            candidate_peers.push_back(*iter);
         }
     }
 
-     uint32_t LiveP2PDownloader::GetMaxConnectCount()
-     {
-         return p2p_max_connect_count_;
-     }
+    uint32_t LiveP2PDownloader::GetMaxConnectCount()
+    {
+        return p2p_max_connect_count_;
+    }
 
     void LiveP2PDownloader::InitPeerConnection(LIVE_CONNECT_LEVEL connect_level)
     {
@@ -1331,5 +1345,94 @@ namespace p2sp
     boost::uint32_t LiveP2PDownloader::GetTotalConnectPeersCount() const
     {
         return total_connect_peers_count_;
+    }
+
+    void LiveP2PDownloader::GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & selected_peers)
+    {
+        std::vector<boost::shared_ptr<LivePeerConnection> > large_upload_ability_peers;
+        for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> >::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            if (iter->second->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_ >=
+                iter->second->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_ + live_exchange_large_upload_ability_delim_)
+            {
+                large_upload_ability_peers.push_back(iter->second);
+            }
+        }
+
+        if (large_upload_ability_peers.size() > live_exchange_large_upload_ability_max_count_)
+        {
+            std::sort(large_upload_ability_peers.begin(), large_upload_ability_peers.end(), &LiveP2PDownloader::CompareBasedOnUploadAbility);
+        }
+
+        SelectPeers(selected_peers, large_upload_ability_peers, live_exchange_large_upload_ability_max_count_);
+    }
+
+    void LiveP2PDownloader::GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & selected_peers)
+    {
+        std::vector<boost::shared_ptr<LivePeerConnection> > large_upload_peers;
+
+        for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> >::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            if (iter->second->GetSpeedInfoEx().RecentDownloadSpeed >= live_exchange_large_upload_to_me_delim_)
+            {
+                large_upload_peers.push_back(iter->second);
+            }
+        }
+
+        if (large_upload_peers.size() > live_exchange_large_upload_to_me_max_count_)
+        {
+            std::sort(large_upload_peers.begin(), large_upload_peers.end(), &LiveP2PDownloader::CompareBasedOnUploadSpeed);
+        }
+
+        SelectPeers(selected_peers, large_upload_peers, live_exchange_large_upload_to_me_max_count_);
+    }
+
+    void LiveP2PDownloader::SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,
+        const std::vector<boost::shared_ptr<LivePeerConnection> > & sorted_peers, boost::uint32_t to_select_peers_count)
+    {
+        boost::uint32_t selected_peers_count = 0;
+        for (size_t i = 0; i < sorted_peers.size(); ++i)
+        {
+            if (selected_peers_count == to_select_peers_count)
+            {
+                break;
+            }
+
+            if (selected_peers.find(sorted_peers[i]->GetCandidatePeerInfo()) == selected_peers.end())
+            {
+                ++selected_peers_count;
+                selected_peers.insert(sorted_peers[i]->GetCandidatePeerInfo());
+            }
+        }
+    }
+
+    bool LiveP2PDownloader::CompareBasedOnUploadAbility(boost::shared_ptr<LivePeerConnection> const & lhs,
+        boost::shared_ptr<LivePeerConnection> const & rhs)
+    {
+        boost::int32_t lhs_upload_ability = lhs->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_
+            - lhs->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_;
+
+        boost::int32_t rhs_upload_ability = rhs->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_
+            - rhs->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_;
+
+        if (lhs_upload_ability != rhs_upload_ability)
+        {
+            return lhs_upload_ability > rhs_upload_ability;
+        }
+
+        return lhs < rhs;
+    }
+
+    bool LiveP2PDownloader::CompareBasedOnUploadSpeed(boost::shared_ptr<LivePeerConnection> const & lhs,
+        boost::shared_ptr<LivePeerConnection> const & rhs)
+    {
+        if (lhs->GetSpeedInfoEx().RecentDownloadSpeed != rhs->GetSpeedInfoEx().RecentDownloadSpeed)
+        {
+            return lhs->GetSpeedInfoEx().RecentDownloadSpeed > rhs->GetSpeedInfoEx().RecentDownloadSpeed;
+        }
+
+        return lhs < rhs;
     }
 }

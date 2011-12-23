@@ -26,7 +26,10 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<Exchanger> p;
-        static p create(IP2PControlTarget::p p2p_downloader, IpPool__p ip_pool) { return p(new Exchanger(p2p_downloader, ip_pool)); }
+        static p create(IP2PControlTarget::p p2p_downloader, IpPool__p ip_pool, bool is_live)
+        {
+            return p(new Exchanger(p2p_downloader, ip_pool, is_live));
+        }
     public:
         // 启停
         void Start();
@@ -42,12 +45,15 @@ namespace p2sp
         // 状态
         bool is_running_;
         IpPool__p ip_pool_;
+
+        bool is_live_;
     private:
         // 构造
-        Exchanger(IP2PControlTarget::p p2p_downloader, IpPool__p ip_pool)
+        Exchanger(IP2PControlTarget::p p2p_downloader, IpPool__p ip_pool, bool is_live)
             : p2p_downloader_(p2p_downloader)
             , is_running_(false)
             , ip_pool_(ip_pool)
+            , is_live_(is_live)
         {}
     };
 }

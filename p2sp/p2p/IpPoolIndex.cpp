@@ -15,5 +15,6 @@ namespace p2sp
         is_connected_ = candidate_peer.is_connected_;
         last_active_time_ = candidate_peer.last_active_time_;
         tracker_priority_ = 255 - candidate_peer.TrackerPriority;
+        should_use_firstly_ = candidate_peer.should_use_firstly_;
     }
 }

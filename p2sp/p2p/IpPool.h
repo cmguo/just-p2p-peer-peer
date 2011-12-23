@@ -32,7 +32,7 @@ namespace p2sp
         void Start();
         void Stop();
         // 操作
-        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers);
+        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly);
         bool GetForConnect(protocol::CandidatePeerInfo& peer, bool is_udpserver = false);
         bool GetForExchange(protocol::CandidatePeerInfo& peer);
         uint32_t GetPeerCount() const { return candidate_peers_.size();}
@@ -69,6 +69,8 @@ namespace p2sp
         size_t desirable_pool_size_;
 
         std::set<protocol::SocketAddr> black_list_;
+
+        bool should_use_exchange_peers_firstly_;
 
     private:
         // 构造

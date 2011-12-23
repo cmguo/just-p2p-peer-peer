@@ -59,6 +59,12 @@ namespace p2sp
         , live_connect_normal_high_threshold_(15)
         , live_minimum_window_size_(4)
         , live_maximum_window_size_(25)
+        , live_exchange_large_upload_ability_delim_(20 * 1024)
+        , live_exchange_large_upload_ability_max_count_(10)
+        , live_exchange_large_upload_to_me_delim_(5 * 1024)
+        , live_exchange_large_upload_to_me_max_count_(10)
+        , should_use_exchange_peers_firstly_(false)
+        , live_exchange_interval_in_second_(10)
         , live_extended_connections_(0)
     {
     }
@@ -167,6 +173,12 @@ namespace p2sp
                 ("config.lcnh", po::value<uint32_t>()->default_value(live_connect_normal_high_threshold_))
                 ("config.lminw", po::value<uint32_t>()->default_value(live_minimum_window_size_))
                 ("config.lmaxw", po::value<uint32_t>()->default_value(live_maximum_window_size_))
+                ("config.leuad", po::value<uint32_t>()->default_value(live_exchange_large_upload_ability_delim_))
+                ("config.leuac", po::value<uint32_t>()->default_value(live_exchange_large_upload_ability_max_count_))
+                ("config.leumd", po::value<uint32_t>()->default_value(live_exchange_large_upload_to_me_delim_))
+                ("config.leumc", po::value<uint32_t>()->default_value(live_exchange_large_upload_to_me_max_count_))
+                ("config.epf", po::value<bool>()->default_value(should_use_exchange_peers_firstly_))
+                ("config.lei", po::value<uint32_t>()->default_value(live_exchange_interval_in_second_))
                 ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_));
 
             std::istringstream config_stream(config_string);
@@ -217,6 +229,12 @@ namespace p2sp
             live_connect_normal_high_threshold_ = vm["config.lcnh"].as<uint32_t>();
             live_minimum_window_size_ = vm["config.lminw"].as<uint32_t>();
             live_maximum_window_size_ = vm["config.lmaxw"].as<uint32_t>();
+            live_exchange_large_upload_ability_delim_ = vm["config.leuad"].as<uint32_t>();
+            live_exchange_large_upload_ability_max_count_ = vm["config.leuac"].as<uint32_t>();
+            live_exchange_large_upload_to_me_delim_ = vm["config.leumd"].as<uint32_t>();
+            live_exchange_large_upload_to_me_max_count_ = vm["config.leumc"].as<uint32_t>();
+            should_use_exchange_peers_firstly_ = vm["config.epf"].as<bool>();
+            live_exchange_interval_in_second_ = vm["config.lei"].as<uint32_t>();
             live_extended_connections_ = vm["config.lec"].as<uint32_t>();
 
             if (save_to_disk)

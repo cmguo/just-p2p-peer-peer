@@ -283,6 +283,18 @@ namespace p2sp
 
         int32_t GetDownloadablePeersCount() const;
 
+        void GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & candidate_peers);
+        void GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & candidate_peers);
+
+        static bool CompareBasedOnUploadAbility(boost::shared_ptr<LivePeerConnection> const & lhs,
+            boost::shared_ptr<LivePeerConnection> const & rhs);
+
+        static bool CompareBasedOnUploadSpeed(boost::shared_ptr<LivePeerConnection> const & lhs,
+            boost::shared_ptr<LivePeerConnection> const & rhs);
+
+        void SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,
+            const std::vector<boost::shared_ptr<LivePeerConnection> > & sorted_peers, boost::uint32_t to_select_peers_count);
+
     public:
         bool is_running_;
         RID rid_;
@@ -356,6 +368,14 @@ namespace p2sp
 
         boost::uint32_t live_connect_low_normal_threshold_;
         boost::uint32_t live_connect_normal_high_threshold_;
+
+        boost::uint32_t live_exchange_large_upload_ability_delim_;
+        boost::uint32_t live_exchange_large_upload_ability_max_count_;
+        boost::uint32_t live_exchange_large_upload_to_me_delim_;
+        boost::uint32_t live_exchange_large_upload_to_me_max_count_;
+        boost::uint32_t live_exchange_interval_in_second_;
+
+        framework::timer::TickCounter live_exchange_tick_counter_;
 
         uint32_t default_connection_limit_;
         uint32_t live_extended_connections_;

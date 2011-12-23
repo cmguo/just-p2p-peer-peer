@@ -103,7 +103,7 @@ namespace p2sp
         ippool_ = IpPool::create(BootStrapGeneralConfig::Inst()->GetDesirableVodIpPoolSize());
         ippool_->Start();
 
-        exchanger_ = Exchanger::create(shared_from_this(), ippool_);
+        exchanger_ = Exchanger::create(shared_from_this(), ippool_, false);
         exchanger_->Start();
 
         connector_ = PeerConnector::create(shared_from_this(), ippool_);
@@ -999,12 +999,12 @@ namespace p2sp
 
         if (ippool_->GetPeerCount() == 0)
         {
-            ippool_->AddCandidatePeers(peers);
+            ippool_->AddCandidatePeers(peers, false);
             InitPeerConnection();
         }
         else
         {
-            ippool_->AddCandidatePeers(peers);
+            ippool_->AddCandidatePeers(peers, false);
         }
     }
 

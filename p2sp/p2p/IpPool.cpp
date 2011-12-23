@@ -62,6 +62,8 @@ namespace p2sp
         is_running_ = true;
 
         srand((unsigned)time(NULL));
+
+        should_use_exchange_peers_firstly_ = BootStrapGeneralConfig::Inst()->ShouldUseExchangePeersFirstly();
     }
 
     void IpPool::Stop()
@@ -122,14 +124,14 @@ namespace p2sp
         return false;
     }
 
-    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers)
+    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly)
     {
         if (is_running_ == false) return;
 
         // 遍历要添加的所有的 CandidatePeer
         for (std::vector<protocol::CandidatePeerInfo>::const_iterator iter = peers.begin(); iter != peers.end(); iter ++)
         {
-            CandidatePeer::p peer = CandidatePeer::create(*iter);
+            CandidatePeer::p peer = CandidatePeer::create(*iter, should_use_firstly && should_use_exchange_peers_firstly_);
 
             if (true == IsSelf(peer))
             {

@@ -51,6 +51,8 @@ namespace p2sp
 
         uint32_t last_active_time_;
 
+        bool should_use_firstly_;
+
         // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
         {
@@ -71,6 +73,11 @@ namespace p2sp
         if (x.next_time_to_connect_ != y.next_time_to_connect_)
         {
             return x.next_time_to_connect_ < y.next_time_to_connect_;
+        }
+
+        if (x.should_use_firstly_ != y.should_use_firstly_)
+        {
+            return x.should_use_firstly_ < y.should_use_firstly_;
         }
 
         if (x.tracker_priority_ != y.tracker_priority_)
@@ -110,7 +117,10 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<CandidatePeer> p;
-        static p create(const protocol::CandidatePeerInfo& peer) { return p(new CandidatePeer(peer)); }
+        static p create(const protocol::CandidatePeerInfo& peer, bool should_use_firstly)
+        {
+            return p(new CandidatePeer(peer, should_use_firstly));
+        }
     public:
         /// 上一次活跃时间
         uint32_t last_active_time_;
@@ -136,6 +146,8 @@ namespace p2sp
         uint32_t connect_protect_time_index_;
 
         size_t connections_attempted_;
+
+        bool should_use_firstly_;
 
     public:
         // 属性
@@ -228,6 +240,7 @@ namespace p2sp
             connect_protect_time_count_ = peer->connect_protect_time_count_;
             connect_protect_time_index_ = peer->connect_protect_time_index_;
             connections_attempted_ = peer->connections_attempted_;
+            should_use_firstly_ = peer->should_use_firstly_;
 
             if (UploadPriority != 1)
             {
@@ -236,7 +249,7 @@ namespace p2sp
         }
 
     private:
-        CandidatePeer(const protocol::CandidatePeerInfo& peer)
+        CandidatePeer(const protocol::CandidatePeerInfo& peer, bool should_use_firstly)
             : protocol::CandidatePeerInfo(peer)
             , last_active_time_(framework::timer::TickCounter::tick_count())
             , last_exchage_time_(0)
@@ -247,6 +260,7 @@ namespace p2sp
             , connect_protect_time_(P2SPConfigs::CONNECT_INITIAL_PROTECT_TIME_IN_MILLISEC)
             , connect_protect_time_count_(0), connect_protect_time_index_(0)
             , connections_attempted_(0)
+            , should_use_firstly_(should_use_firstly)
         {
         }
     };

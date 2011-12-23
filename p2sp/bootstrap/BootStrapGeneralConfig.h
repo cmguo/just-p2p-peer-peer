@@ -222,6 +222,36 @@ namespace p2sp
             return live_maximum_window_size_;
         }
 
+        boost::uint32_t GetLiveExchangeLargeUploadAbilityDelim() const
+        {
+            return live_exchange_large_upload_ability_delim_;
+        }
+
+        boost::uint32_t GetLiveExchangeLargeUploadAbilityMaxCount() const
+        {
+            return live_exchange_large_upload_ability_max_count_;
+        }
+
+        boost::uint32_t GetLiveExchangeLargeUploadToMeDelim() const
+        {
+            return live_exchange_large_upload_to_me_delim_;
+        }
+
+        boost::uint32_t GetLiveExchangeLargeUploadToMeMaxCount() const
+        {
+            return live_exchange_large_upload_to_me_max_count_;
+        }
+
+        bool ShouldUseExchangePeersFirstly() const
+        {
+            return should_use_exchange_peers_firstly_;
+        }
+
+        boost::uint32_t GetLiveExchangeIntervalInSecond() const
+        {
+            return live_exchange_interval_in_second_;
+        }
+
         boost::uint32_t GetLiveExtendedConnections() const
         {
             return live_extended_connections_;
@@ -365,6 +395,24 @@ namespace p2sp
 
         //二代直播最大Window size
         boost::uint32_t live_maximum_window_size_;
+
+        // 二代直播中用于判断剩余上传能力大小的分界值，在配置文件中用leuad(live exchange upload ability delim)表示
+        boost::uint32_t live_exchange_large_upload_ability_delim_;
+
+        // 二代直播中PeerExchange中包含的剩余上传大的节点数目，在配置文件中用leuac(live exchange upload ability count)表示
+        boost::uint32_t live_exchange_large_upload_ability_max_count_;
+
+        // 二代直播中用于判断给我上传速度大小的分界值，在配置文件中用leumd(live exchange upload to me delim)表示
+        boost::uint32_t live_exchange_large_upload_to_me_delim_;
+
+        // 二代直播中PeerExchange中包含的给我上传速度大的节点数目，在配置文件中用leumc(live exchange upload to me count)表示
+        boost::uint32_t live_exchange_large_upload_to_me_max_count_;
+
+        // 是否应该优先连接exchange到的节点
+        bool should_use_exchange_peers_firstly_;
+
+        // 二代直播中由于速度不够好而PeerExchange的最小间隔
+        boost::uint32_t live_exchange_interval_in_second_;
 
         //二代直播紧急时增加peer连接
         boost::uint32_t live_extended_connections_;

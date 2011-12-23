@@ -79,7 +79,7 @@ namespace p2sp
 
     void Exchanger::OnPeerExchangePacket(const protocol::PeerExchangePacket & packet)
     {
-        ip_pool_->AddCandidatePeers(packet.peer_info_);
+        ip_pool_->AddCandidatePeers(packet.peer_info_, is_live_ && !packet.IsRequest());
 
         if (packet.IsRequest())
         {

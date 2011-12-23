@@ -53,7 +53,9 @@ namespace p2sp
 
         const statistic::P2P_CONNECTION_INFO & GetPeerConnectionInfo();
 
-        statistic::SPEED_INFO GetSpeedInfo();
+        const statistic::SPEED_INFO & GetSpeedInfo();
+
+        const statistic::SPEED_INFO_EX & GetSpeedInfoEx();
 
         uint32_t Get75PercentPointInBitmap(uint32_t live_interval);
 
