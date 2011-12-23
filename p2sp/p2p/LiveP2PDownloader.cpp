@@ -40,9 +40,10 @@ namespace p2sp
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
         udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
-        p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
+        p2p_max_connect_count_ = default_connection_limit_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
         live_connect_low_normal_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectLowNormalThresHold();
         live_connect_normal_high_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectNormalHighThresHold();
+        live_extended_connections_ = BootStrapGeneralConfig::Inst()->GetLiveExtendedConnections();
     }
 
     void LiveP2PDownloader::Start()
@@ -170,6 +171,25 @@ namespace p2sp
             if (udpserver_connector_)
             {
                 udpserver_connector_->OnP2PTimer(times);
+            }
+
+            if (this->GetMinRestTimeInSeconds() >= 20)
+            {
+                urgent_tick_counter_.reset();
+            }
+            else
+            {
+                safe_tick_counter_.reset();
+            }
+
+            if (urgent_tick_counter_.elapsed() > 30 * 1000)
+            {
+                p2p_max_connect_count_ = default_connection_limit_ + live_extended_connections_;
+            }
+
+            if (safe_tick_counter_.elapsed() > 30 * 1000)
+            {
+                p2p_max_connect_count_ = default_connection_limit_;
             }
 
             LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();

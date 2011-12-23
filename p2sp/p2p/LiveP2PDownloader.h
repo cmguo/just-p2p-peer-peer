@@ -356,6 +356,11 @@ namespace p2sp
 
         boost::uint32_t live_connect_low_normal_threshold_;
         boost::uint32_t live_connect_normal_high_threshold_;
+
+        uint32_t default_connection_limit_;
+        uint32_t live_extended_connections_;
+        framework::timer::TickCounter urgent_tick_counter_;
+        framework::timer::TickCounter safe_tick_counter_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()

@@ -222,6 +222,11 @@ namespace p2sp
             return live_maximum_window_size_;
         }
 
+        boost::uint32_t GetLiveExtendedConnections() const
+        {
+            return live_extended_connections_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -360,6 +365,9 @@ namespace p2sp
 
         //二代直播最大Window size
         boost::uint32_t live_maximum_window_size_;
+
+        //二代直播紧急时增加peer连接
+        boost::uint32_t live_extended_connections_;
 
     };
 }

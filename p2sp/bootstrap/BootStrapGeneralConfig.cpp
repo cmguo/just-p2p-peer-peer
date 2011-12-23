@@ -59,6 +59,7 @@ namespace p2sp
         , live_connect_normal_high_threshold_(15)
         , live_minimum_window_size_(4)
         , live_maximum_window_size_(25)
+        , live_extended_connections_(0)
     {
     }
 
@@ -165,7 +166,8 @@ namespace p2sp
                 ("config.lcln", po::value<uint32_t>()->default_value(live_connect_low_normal_threshold_))
                 ("config.lcnh", po::value<uint32_t>()->default_value(live_connect_normal_high_threshold_))
                 ("config.lminw", po::value<uint32_t>()->default_value(live_minimum_window_size_))
-                ("config.lmaxw", po::value<uint32_t>()->default_value(live_maximum_window_size_));
+                ("config.lmaxw", po::value<uint32_t>()->default_value(live_maximum_window_size_))
+                ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_));
 
             std::istringstream config_stream(config_string);
 
@@ -215,6 +217,7 @@ namespace p2sp
             live_connect_normal_high_threshold_ = vm["config.lcnh"].as<uint32_t>();
             live_minimum_window_size_ = vm["config.lminw"].as<uint32_t>();
             live_maximum_window_size_ = vm["config.lmaxw"].as<uint32_t>();
+            live_extended_connections_ = vm["config.lec"].as<uint32_t>();
 
             if (save_to_disk)
             {
