@@ -87,6 +87,8 @@ namespace p2sp
     public:
         virtual void OnBlockTimeout(boost::uint32_t block_id) = 0;
         virtual void PutBlockTask(const protocol::LiveSubPieceInfo & live_block) = 0;
+
+        virtual bool IsP2PDownloader() = 0;
     };
 }
 

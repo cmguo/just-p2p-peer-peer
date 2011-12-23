@@ -14,9 +14,10 @@ namespace p2sp
         tick_count_.reset();
     }
 
-    bool LiveBlockTask::IsTimeout()
+    bool LiveBlockTask::IsTimeout(const LiveDownloader__p & request_download)
     {
-        return tick_count_.elapsed() > timeout_ || download_->IsPausing();
+        return (download_->IsP2PDownloader() != request_download->IsP2PDownloader() && 
+            (tick_count_.elapsed() > timeout_ || download_->IsPausing()));
     }
 
     void LiveBlockTask::Timeout()
@@ -64,7 +65,7 @@ namespace p2sp
             else
             {
                 // Block正在请求
-                if (IsTimeout(live_block.GetBlockId()))
+                if (IsTimeout(live_block.GetBlockId(), download))
                 {
                     // 超时了
                     LOG(__DEBUG, "live_block_request_manager", "Requesting & timeout Add id = " << live_block.GetBlockId());
@@ -130,12 +131,12 @@ namespace p2sp
     }
 
     // 判断标识为block_id的任务是否超时
-    bool LiveBlockRequestManager::IsTimeout(const boost::uint32_t block_id)
+    bool LiveBlockRequestManager::IsTimeout(const boost::uint32_t block_id, const LiveDownloader__p & request_download)
     {
         std::map<boost::uint32_t, LiveBlockTask__p>::iterator iter = live_block_requesting_map_.find(block_id);
         if (iter != live_block_requesting_map_.end())
         {
-            return iter->second->IsTimeout();
+            return iter->second->IsTimeout(request_download);
         }
 
         return false;

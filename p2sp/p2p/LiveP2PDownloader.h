@@ -135,6 +135,8 @@ namespace p2sp
         virtual void OnBlockTimeout(boost::uint32_t block_id);
         virtual void PutBlockTask(const protocol::LiveSubPieceInfo & live_block);
 
+        virtual bool IsP2PDownloader() {return true;}
+
         // IP2PControlTarget
         virtual void SetAssignPeerCountLimit(uint32_t assign_peer_count_limit); // 0: no limit
         virtual void NoticeHttpBad(bool is_http_bad);

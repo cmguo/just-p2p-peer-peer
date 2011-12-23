@@ -27,7 +27,7 @@ namespace p2sp
         bool IsRequesting(const boost::uint32_t block_id);
 
         // 判断LiveBlockInfoEx是否超时
-        bool IsTimeout(const boost::uint32_t block_id);
+        bool IsTimeout(const boost::uint32_t block_id, const LiveDownloader__p & request_download);
 
     private:
         LiveDownloadDriver__p live_download_driver_;
@@ -48,7 +48,7 @@ namespace p2sp
             return p(new LiveBlockTask(live_block, download, timeout));
         }
 
-        bool IsTimeout();
+        bool IsTimeout(const LiveDownloader__p & request_download);
         void Timeout();
 
     private:
