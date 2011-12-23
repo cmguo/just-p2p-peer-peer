@@ -17,6 +17,18 @@ const boost::uint32_t MAX_CONTENT_LENGTH = 1024;
 
 namespace p2sp
 {
+    enum NOTIFY_TASK_TYPE
+    {
+        TEXT = 0,// 文本
+        LIVE = 1,// 直播
+        VIDEO = 2,//视频
+        PIC = 3,// 图文
+        VIP_MESSAGE = 4,// 小喇叭
+        EXE = 5, // 快速下发EXE
+        SUBSCRIPTION_MESSAGE = 6, // 订阅通知
+        INVALID_TYPE
+    };
+
     struct PEER_TASK_STATUS
     {
         bool is_notify_;
@@ -49,7 +61,7 @@ namespace p2sp
         boost::uint32_t finish_num_;
         bool   is_my_finish_;
         boost::uint16_t duration_;
-        boost::uint16_t task_type_;
+        NOTIFY_TASK_TYPE task_type_;
         boost::uint16_t buffer_len_;
         boost::uint32_t task_delay_time_;
         char buf[MAX_CONTENT_LENGTH];

@@ -416,7 +416,7 @@ namespace p2sp
                     task_info.rest_time_ = notify_request_packet.rest_time_;
                     task_info.finish_num_ = 0;
                     task_info.duration_ = notify_request_packet.duration_;
-                    task_info.task_type_ = notify_request_packet.task_type_;
+                    task_info.task_type_ = (NOTIFY_TASK_TYPE)notify_request_packet.task_type_;
                     task_info.buffer_len_ = notify_request_packet.buffer_.length();
                     task_info.task_delay_time_ = 0;
                     task_info.is_my_finish_ = false;
@@ -425,9 +425,15 @@ namespace p2sp
 
                     task_map_.insert(std::make_pair(notify_request_packet.task_id_, task_info));
 
-                    if (notify_request_packet.task_type_ == 0 || notify_request_packet.task_type_ == 4)
+                    assert(notify_request_packet.task_type_ < INVALID_TYPE);
+
+                    if (notify_request_packet.task_type_ == TEXT ||
+                        notify_request_packet.task_type_ == LIVE ||
+                        notify_request_packet.task_type_ == VIP_MESSAGE ||
+                        notify_request_packet.task_type_ == EXE ||
+                        notify_request_packet.task_type_ == SUBSCRIPTION_MESSAGE)
                     {
-                        // 不用下载资源的任务（文本 or 直播 etc）
+                        // 不用下载资源的任务(文本,直播,小喇叭,EXE,订阅通知等等)
                         // 并发送给PPTV
 
                         NOTIFY_TASK* notify_task = MessageBufferManager::Inst()->NewStruct<NOTIFY_TASK>();
