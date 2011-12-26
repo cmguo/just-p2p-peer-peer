@@ -195,8 +195,10 @@ namespace p2sp
             LivePeerConnection__p peer = iter->second;
             peer->ClearTaskQueue();
             
-            peer_connection_recvtime_list_.push_back(PEER_RECVTIME(0, peer));
+            peer_connection_recvtime_list_.push_back(PEER_RECVTIME(peer->GetAvgDeltaTime(), peer));
         }
+
+        peer_connection_recvtime_list_.sort();
     }
 
     void LiveAssigner::AssignerPeers(bool use_udpserver)
