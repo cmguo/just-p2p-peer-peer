@@ -66,6 +66,7 @@ namespace p2sp
         , should_use_exchange_peers_firstly_(false)
         , live_exchange_interval_in_second_(10)
         , live_extended_connections_(0)
+        , live_lost_prejudge_(false)
     {
     }
 
@@ -179,7 +180,8 @@ namespace p2sp
                 ("config.leumc", po::value<uint32_t>()->default_value(live_exchange_large_upload_to_me_max_count_))
                 ("config.epf", po::value<bool>()->default_value(should_use_exchange_peers_firstly_))
                 ("config.lei", po::value<uint32_t>()->default_value(live_exchange_interval_in_second_))
-                ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_));
+                ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_))
+                ("config.llp", po::value<bool>()->default_value(live_lost_prejudge_));
 
             std::istringstream config_stream(config_string);
 
@@ -236,6 +238,7 @@ namespace p2sp
             should_use_exchange_peers_firstly_ = vm["config.epf"].as<bool>();
             live_exchange_interval_in_second_ = vm["config.lei"].as<uint32_t>();
             live_extended_connections_ = vm["config.lec"].as<uint32_t>();
+            live_lost_prejudge_ = vm["config.llp"].as<bool>();
 
             if (save_to_disk)
             {

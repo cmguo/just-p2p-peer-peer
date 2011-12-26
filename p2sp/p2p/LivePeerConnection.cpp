@@ -191,8 +191,16 @@ namespace p2sp
         temp_task_set_.insert(subpiece_info);
     }
 
+    void LivePeerConnection::UpdateLastReceived(uint32_t transaction_id)
+    {
+        if (transaction_id > last_received_packet_)
+        {
+            last_received_packet_ = transaction_id;
+        }
+    }
+
     void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
-    {   
+    {
         no_response_time_ = 0;        
 
         requesting_count_--;
@@ -224,6 +232,23 @@ namespace p2sp
         {
             p2p_downloader_->SubmitUdpServerDownloadBytes(buffer_length);
         }
+    }
+
+    void LivePeerConnection::DeleteLostPackets(uint32_t transaction_id, std::multimap<uint32_t, protocol::LiveSubPieceInfo>& to_delete)
+    {
+        for(std::multimap<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = request_map_.begin();
+            iter != request_map_.end();)
+        {
+            uint32_t current_id = iter->first;
+            if (current_id >= transaction_id)
+            {
+                return;
+            }
+
+            to_delete.insert(std::make_pair(current_id, iter->second));
+            request_map_.erase(iter++);
+        }
+
     }
 
     void LivePeerConnection::OnSubPieceTimeout()
@@ -275,6 +300,16 @@ namespace p2sp
         for (boost::uint32_t i=0; i < copy_count; i++)
         {
             p2p_downloader_->DoSendPacket(packet);
+        }
+
+        if (p2sp::BootStrapGeneralConfig::Inst()->IsLiveLostPrejudgeEnable())
+        {
+            for(std::vector<protocol::LiveSubPieceInfo>::iterator sp_iter = subpieces.begin();
+                sp_iter != subpieces.end();
+                sp_iter++)
+            {
+                request_map_.insert(std::make_pair(packet.transaction_id_, *sp_iter));
+            }
         }
 
         p2p_downloader_->SubmitAllRequestSubPieceCount(copy_count * packet.sub_piece_infos_.size());

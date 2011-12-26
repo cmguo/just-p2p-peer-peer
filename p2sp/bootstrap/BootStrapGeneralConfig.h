@@ -257,6 +257,11 @@ namespace p2sp
             return live_extended_connections_;
         }
 
+        bool IsLiveLostPrejudgeEnable() const
+        {
+            return live_lost_prejudge_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -416,6 +421,9 @@ namespace p2sp
 
         //二代直播紧急时增加peer连接
         boost::uint32_t live_extended_connections_;
+
+        // 二代直播，丢包预判策略
+        bool live_lost_prejudge_;
 
     };
 }

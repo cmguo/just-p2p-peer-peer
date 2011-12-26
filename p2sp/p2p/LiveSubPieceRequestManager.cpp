@@ -72,11 +72,14 @@ namespace p2sp
             request_tasks_.erase(iter++);
         }
 
+        std::multimap<uint32_t, protocol::LiveSubPieceInfo> to_delete;
         if (matched_task)
         {
+            matched_task->peer_connection_->DeleteLostPackets(packet.transaction_id_, to_delete);
             // 找到，删除
             matched_task->peer_connection_->OnSubPiece(matched_task->GetTimeElapsed(), buffer.Length());
             connect_type = matched_task->peer_connection_->GetConnectType(); 
+            matched_task->peer_connection_->UpdateLastReceived(packet.transaction_id_);
         }
 
         for(std::vector<LiveSubPieceRequestTask::p>::iterator task_iter = unmatched_tasks.begin();
@@ -85,6 +88,37 @@ namespace p2sp
         {   
             // 冗余任务，立即超时
             (*task_iter)->peer_connection_->OnSubPieceTimeout();
+        }
+
+        uint32_t loss_count = 0;
+
+        for(std::multimap<uint32_t, protocol::LiveSubPieceInfo>::iterator lost_iter = to_delete.begin();
+            lost_iter != to_delete.end(); ++lost_iter)
+        {
+            std::pair<std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator,
+                std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator> range2 = 
+                request_tasks_.equal_range(lost_iter->second);
+
+            for (std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator iter2=range2.first; 
+                iter2!= range2.second;)
+            {
+                LiveSubPieceRequestTask::p task2 = iter2->second;
+                if (task2->GetTransactionId() == lost_iter->first)
+                {
+                    request_tasks_.erase(iter2++);
+                    loss_count++;
+                    break;
+                }
+                else
+                {
+                    iter2++;
+                }
+            }
+        }
+
+        for(uint32_t k = 0; k < loss_count; k++)
+        {
+            matched_task->peer_connection_->OnSubPieceTimeout();
         }
 
         if (false == p2p_downloader_->HasSubPiece(packet.sub_piece_info_))
