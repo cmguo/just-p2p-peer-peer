@@ -579,7 +579,7 @@ void (PEER_API * LPQUERYDOWNLOADPROGRESSBYURLNEW)(char const * lpszUrl, boost::u
                                                   boost::int32_t *downloaded_bytes, boost::int32_t * position);
 
 void PEER_API QueryProgressBitmap(const char * url, boost::uint32_t url_len,
-                                  char * bitmap, boost::uint32_t bitmap_len);
+                                  char * bitmap, boost::uint32_t * bitmap_size);
 typedef
 void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_len,
                                         char * bitmap, boost::uint32_t * bitmap_size);

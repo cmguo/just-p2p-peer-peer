@@ -616,23 +616,15 @@ namespace p2sp
         *file_length = inst->GetFileLength();
         *downloaded_bytes = inst->GetDownloadBytes();
 
-        for (std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
-            it != proxy_connections_.end(); ++it)
+        protocol::PieceInfoEx piece_info;
+        if (inst->GetNextPieceForDownload(0, piece_info))
         {
-            ProxyConnection::p proxy_connection = *it;
-
-            if (!proxy_connection) 
-            {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
-                continue;
-            }
-
-            DownloadDriver::p dd = proxy_connection->GetDownloadDriver();
-
-            if (dd && dd->GetOpenServiceFileName() == filename && dd->GetInstance())
-            {
-                *position = proxy_connection->GetPlayingPosition();
-            }
+            boost::uint32_t block_size = inst->GetBlockSize();
+            *position = piece_info.GetPosition(block_size);
+        }
+        else
+        {
+            *position = *file_length;
         }
 
         result_handler();
