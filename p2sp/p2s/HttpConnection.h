@@ -8,6 +8,7 @@
 #define _P2SP_P2S_HTTPCONNECTION_H_
 
 #include "network/HttpClient.h"
+#include "GzipDecompresser.h"
 
 namespace p2sp
 {
@@ -27,6 +28,7 @@ namespace p2sp
         : public boost::noncopyable
         , public boost::enable_shared_from_this<HttpConnection>
         , public network::IHttpClientListener<protocol::SubPieceBuffer>
+        , public p2sp::IDecompressListener
 #ifdef DUMP_OBJECT
         , public count_object_allocate<HttpConnection>
 #endif
@@ -36,9 +38,10 @@ namespace p2sp
         static p Create(
             boost::asio::io_service & io_svc,
             HttpDownloader__p downloader,
-            protocol::UrlInfo url_info)
+            protocol::UrlInfo url_info,
+            bool is_head_only)
         {
-            return p(new HttpConnection(io_svc, downloader, url_info));
+            return p(new HttpConnection(io_svc, downloader, url_info, is_head_only));
         }
 
         static p Create(
@@ -46,9 +49,10 @@ namespace p2sp
             const network::HttpRequest::p http_request_demo,
             HttpDownloader__p downloader,
             protocol::UrlInfo url_info,
-            bool is_to_get_header = false)
+            bool is_to_get_header,
+            bool is_head_only)
         {
-            return p(new HttpConnection(io_svc, http_request_demo, downloader, url_info, is_to_get_header));
+            return p(new HttpConnection(io_svc, http_request_demo, downloader, url_info, is_to_get_header, is_head_only));
         }
 
     public:
@@ -77,6 +81,7 @@ namespace p2sp
 
         void PieceTimeout();
         boost::int32_t GetPieceTaskNum();
+
     private:
         void DoConnect();
 
@@ -94,7 +99,7 @@ namespace p2sp
 
 
         virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
+        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
         virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
         virtual void OnRecvHttpDataFailed(uint32_t error_code);
         virtual void OnRecvTimeout();
@@ -103,6 +108,10 @@ namespace p2sp
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
         boost::uint32_t  GetDownloadByteInConnection() const {return download_bytes_;}
+
+        void RecvHttpData(const protocol::SubPieceBuffer & buffer, const protocol::SubPieceInfo & sub_piece_info);
+
+        virtual void OnDecompressComplete(std::deque<boost::shared_ptr<protocol::SubPieceBuffer> > & sub_piece_buffer_deque);
 
     private:
         boost::uint32_t GetTaskRangeEnd(boost::uint32_t block_size);
@@ -152,18 +161,24 @@ namespace p2sp
 
         boost::uint32_t download_bytes_;
 
+        bool is_head_only_;
+
+        GzipDecompresser gzip_decompresser_;
+
     private:
         HttpConnection(
             boost::asio::io_service & io_svc,
             HttpDownloader__p downloader,
-            protocol::UrlInfo url_info);
+            protocol::UrlInfo url_info,
+            bool is_head_only);
 
         HttpConnection(
             boost::asio::io_service & io_svc,
             const network::HttpRequest::p http_request_demo,
             HttpDownloader__p downloader,
             protocol::UrlInfo url_info,
-            bool is_to_get_header);
+            bool is_to_get_header,
+            bool is_head_only);
 
         void Redirect( network::HttpResponse::p http_response );
     };

@@ -35,17 +35,19 @@ namespace p2sp
     public:
         typedef boost::shared_ptr<HttpDownloader> p;
         static p Create(
-            boost::asio::io_service & io_svc,
-            const protocol::UrlInfo& url_info, DownloadDriver__p download_driver, bool is_open_service = false)
+            boost::asio::io_service & io_svc, const protocol::UrlInfo& url_info,
+            DownloadDriver__p download_driver, bool is_open_service, bool is_head_only)
         {
-            return p(new HttpDownloader(io_svc, url_info, download_driver, is_open_service));
+            return p(new HttpDownloader(io_svc, url_info, download_driver, is_open_service, is_head_only));
         }
 
         static p Create(
-            boost::asio::io_service & io_svc,
-            const network::HttpRequest::p http_request_demo, const protocol::UrlInfo& url_info, DownloadDriver__p download_driver, bool is_to_get_header, bool is_open_service = false)
+            boost::asio::io_service & io_svc, const network::HttpRequest::p http_request_demo,
+            const protocol::UrlInfo& url_info, DownloadDriver__p download_driver,
+            bool is_to_get_header, bool is_open_service, bool is_head_only)
         {
-            return p(new HttpDownloader(io_svc, http_request_demo, url_info, download_driver, is_to_get_header, is_open_service));
+            return p(new HttpDownloader(io_svc, http_request_demo, url_info, download_driver,
+                is_to_get_header, is_open_service, is_head_only));
         }
 
         virtual void Start(bool is_support_start);
@@ -140,13 +142,16 @@ namespace p2sp
 
         std::deque<boost::uint32_t> http_download_bytes_deque_;
 
+        bool is_head_only_;
+
     protected:
 
         HttpDownloader(
             boost::asio::io_service & io_svc,
             const protocol::UrlInfo& url_info,
             DownloadDriver__p download_driver,
-            bool is_open_service);
+            bool is_open_service,
+            bool is_head_only);
 
         HttpDownloader(
             boost::asio::io_service & io_svc,
@@ -154,7 +159,8 @@ namespace p2sp
             const protocol::UrlInfo& url_info,
             DownloadDriver__p download_driver,
             bool is_to_get_header,
-            bool is_open_service);
+            bool is_open_service,
+            bool is_head_only);
 
     };
 }

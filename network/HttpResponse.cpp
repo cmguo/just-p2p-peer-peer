@@ -238,7 +238,7 @@ namespace network
         string content_length_string = GetProperty("Content-Length");
 
         // uint32_t content_length = boost::lexical_cast<uint32_t>(content_length_string);
-        uint32_t content_length;
+        uint32_t content_length = std::numeric_limits<uint32_t>::max();
         boost::system::error_code ec = framework::string::parse2(content_length_string, content_length);
         if (ec)
             return 0;
@@ -302,5 +302,10 @@ namespace network
         }
         out << "\r\n";
         return out;
+    }
+
+    bool HttpResponse::IsGzip()
+    {
+        return GetProperty("Content-Encoding") == "gzip";
     }
 }

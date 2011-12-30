@@ -220,7 +220,7 @@ namespace network
     {
         assert(handler_);
         socket_.io_service().post(boost::bind(
-            &IHttpClientListener<protocol::SubPieceBuffer>::OnRecvHttpDataSucced, handler_, content_buffer_, 0, 0));
+            &IHttpClientListener<protocol::SubPieceBuffer>::OnRecvHttpDataSucced, handler_, content_buffer_, 0, 0, false));
     }
 
     void HttpClientOverUdpProxy::HandleRecvTimeOut(framework::timer::Timer * pointer)

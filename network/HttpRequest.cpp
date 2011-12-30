@@ -226,6 +226,11 @@ namespace network
         if (!http_request_demo_)
         {
             sstr << "Accept: */*\r\n";
+            if (is_accept_gzip_)
+            {
+                sstr << "Accept-Encoding: gzip,deflate\r\n";
+            }
+
             if (refer_url_ != "")
                 sstr << "Referer: " << refer_url_ << "\r\n";
             sstr << "x-flash-version: 9,0,28,0\r\n";

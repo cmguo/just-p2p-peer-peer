@@ -36,7 +36,8 @@ namespace network
         string request,
         string refer_url,
         uint32_t range_begin,
-        uint32_t range_end)
+        uint32_t range_end,
+        bool is_accept_gzip)
         : socket_(io_svc)
         , resolver_(io_svc)
         , file_offset_(0)
@@ -54,6 +55,7 @@ namespace network
         , connect_count_(0)
         , get_count_(0)
         , recv_time_counter_(false)
+        , is_accept_gzip_(is_accept_gzip)
     {
         request_info_.domain_ = domain;
         if (port == 80)
@@ -65,6 +67,7 @@ namespace network
         request_info_.refer_url_ = refer_url;
         request_info_.range_begin_ = range_begin;
         request_info_.range_end_ = range_end;
+        request_info_.is_accept_gzip_ = is_accept_gzip_;
         // target
         target_host_ = domain;
         target_port_ = port;
@@ -76,7 +79,8 @@ namespace network
         string url,
         string refer_url,
         uint32_t range_begin,
-        uint32_t range_end)
+        uint32_t range_end,
+        bool is_accept_gzip)
     {
         Uri uri(url);
         string host = uri.getdomain();
@@ -89,7 +93,7 @@ namespace network
         }
 
         string path = uri.getrequest();
-        return boost::shared_ptr<HttpClient<ContentType> >(new HttpClient<ContentType>(io_svc, host, port, path, refer_url, range_begin, range_end));
+        return boost::shared_ptr<HttpClient<ContentType> >(new HttpClient<ContentType>(io_svc, host, port, path, refer_url, range_begin, range_end, is_accept_gzip));
     }
 
     template <typename ContentType>
@@ -99,16 +103,17 @@ namespace network
         string url,
         string refer_url,
         uint32_t range_begin,
-        uint32_t range_end)
+        uint32_t range_end,
+        bool is_accept_gzip)
     {
         if (!http_request_demo)
         {
-            return create(io_svc, url, refer_url, range_begin, range_end);
+            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip);
         }
         // check Pragma: Proxy = host:port
         if (false == http_request_demo->HasPragma("Proxy"))
         {
-            return create(io_svc, url, refer_url, range_begin, range_end);
+            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip);
         }
         // parse Proxy
         string hostport = http_request_demo->GetPragma("Proxy");
@@ -117,7 +122,7 @@ namespace network
         {
             // invalid proxy string, remove it!
             http_request_demo->RemovePragma("Proxy");
-            return create(io_svc, url, refer_url, range_begin, range_end);
+            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip);
         }
         // target host:port
         boost::system::error_code error;
@@ -127,7 +132,7 @@ namespace network
         {
             // invalid proxy string, remove it!
             http_request_demo->RemovePragma("Proxy");
-            return create(io_svc, url, refer_url, range_begin, range_end);
+            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip);
         }
         if (target_port == 0)
         {
@@ -144,7 +149,7 @@ namespace network
             port = 80;
         }
         boost::shared_ptr<HttpClient<ContentType> > http_client = 
-            create(io_svc, host, port, url, refer_url, range_begin, range_end);
+            create(io_svc, host, port, url, refer_url, range_begin, range_end, is_accept_gzip);
         http_client->target_host_ = target_host;
         http_client->target_port_ = target_port;
         // save local
@@ -159,10 +164,11 @@ namespace network
         string request,
         string refer_url,
         uint32_t range_begin,
-        uint32_t range_end)
+        uint32_t range_end,
+        bool is_accept_gzip)
     {
         return boost::shared_ptr<HttpClient<ContentType> >
-            (new HttpClient<ContentType>(io_svc, domain, port, request, refer_url, range_begin, range_end));
+            (new HttpClient<ContentType>(io_svc, domain, port, request, refer_url, range_begin, range_end, is_accept_gzip));
     }
 
     template <typename ContentType>
@@ -512,8 +518,11 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HttpGet(uint32_t range_begin, uint32_t range_end)
     {
-        request_info_.range_begin_ = range_begin;
-        request_info_.range_end_ = range_end;
+        if (!is_accept_gzip_)
+        {
+            request_info_.range_begin_ = range_begin;
+            request_info_.range_end_ = range_end;
+        }
         HttpGet();
     }
 
@@ -521,8 +530,11 @@ namespace network
     void HttpClient<ContentType>::HttpGet(string refer_url, uint32_t range_begin, uint32_t range_end)
     {
         request_info_.refer_url_ = refer_url;
-        request_info_.range_begin_ = range_begin;
-        request_info_.range_end_ = range_end;
+        if (!is_accept_gzip_)
+        {
+            request_info_.range_begin_ = range_begin;
+            request_info_.range_end_ = range_end;
+        }
         HttpGet();
     }
 
@@ -758,7 +770,9 @@ namespace network
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataSucced, handler_, buffer, file_offset_,
                 //    content_offset_));
                 NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset_ << " " << content_offset_);
-                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset);
+                
+                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset,
+                    http_response_->IsGzip());
             }
         }
         else
@@ -774,7 +788,10 @@ namespace network
 
             buffer.Length(buffer_offset);
 
-            assert(is_requesting_ == false);
+            // 这个assert是没有意义的，只要限速模块有效，就有可能触发
+            // 第一次Recv是PutPieceTask触发的，在数据没回来之前
+            // 限速器再触发一次就会有这个assert
+            // assert(is_requesting_ == false);
             if (is_requesting_ == true)
                 return;
 
@@ -835,7 +852,9 @@ namespace network
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataSucced, handler_, buffer, file_offset,
                 //    content_offset));
                 NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset << " " << content_offset);
-                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset);
+
+                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, 
+                    http_response_->IsGzip());
             }
         }
         else if (err == boost::asio::error::operation_aborted)
@@ -881,7 +900,9 @@ namespace network
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataPartial, handler_, buffer,
                     //    file_offset, content_offset));
                     NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataPartial " << file_offset << " " << content_offset);
-                    handler_->OnRecvHttpDataPartial(buffer, file_offset, content_offset);
+
+                    handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset,
+                        http_response_->IsGzip());
                 }
             }
 

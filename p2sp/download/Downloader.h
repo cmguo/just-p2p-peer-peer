@@ -27,7 +27,8 @@ namespace p2sp
             boost::asio::io_service & io_svc,
             const protocol::UrlInfo& url_info,
             DownloadDriver__p download_driver,
-            bool is_open_service = false);
+            bool is_open_service,
+            bool is_head_only);
 
         static HttpDownloader__p CreateByUrl(
             boost::asio::io_service & io_svc,
@@ -35,7 +36,8 @@ namespace p2sp
             const protocol::UrlInfo& url_info,
             DownloadDriver__p download_driver,
             bool is_to_get_header,
-            bool is_open_service = false);
+            bool is_open_service,
+            bool is_head_only);
 
         virtual ~Downloader() {}
 

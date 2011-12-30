@@ -16,7 +16,8 @@ namespace p2sp
         boost::asio::io_service & io_svc,
         const protocol::UrlInfo& url_info,
         DownloadDriver__p download_driver,
-        bool is_open_service)
+        bool is_open_service,
+        bool is_head_only)
     {
         if (url_info.type_ == protocol::UrlInfo::HTTP)
         {
@@ -24,7 +25,7 @@ namespace p2sp
             string url = boost::algorithm::to_lower_copy(url_info.url_);
             if (boost::algorithm::starts_with(url, "http://"))
             {
-                return HttpDownloader::Create(io_svc, url_info, download_driver, is_open_service);
+                return HttpDownloader::Create(io_svc, url_info, download_driver, is_open_service, is_head_only);
             }
             else
             {
@@ -45,7 +46,8 @@ namespace p2sp
         const protocol::UrlInfo& url_info,
         DownloadDriver__p download_driver,
         bool is_to_get_header,
-        bool is_open_service)
+        bool is_open_service,
+        bool is_head_only)
     {
         if (url_info.type_ == protocol::UrlInfo::HTTP)
         {
@@ -53,7 +55,7 @@ namespace p2sp
             string url = boost::algorithm::to_lower_copy(url_info.url_);
             if (boost::algorithm::starts_with(url, "http://"))
             {
-                return HttpDownloader::Create(io_svc, http_request_demo, url_info, download_driver, is_to_get_header, is_open_service);
+                return HttpDownloader::Create(io_svc, http_request_demo, url_info, download_driver, is_to_get_header, is_open_service, is_head_only);
             }
             else
             {

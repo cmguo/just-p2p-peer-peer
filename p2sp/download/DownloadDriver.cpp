@@ -1375,11 +1375,11 @@ namespace p2sp
         if (instance_->IsComplete())
         {
             DD_EVENT("instance is complete! ");
-            downloader = Downloader::CreateByUrl(io_svc_, http_request, url_info, shared_from_this(), true, is_open_service_);
+            downloader = Downloader::CreateByUrl(io_svc_, http_request, url_info, shared_from_this(), true, is_open_service_, is_head_only_);
         }
         else
         {
-            downloader = Downloader::CreateByUrl(io_svc_, http_request, url_info, shared_from_this(), false, is_open_service_);
+            downloader = Downloader::CreateByUrl(io_svc_, http_request, url_info, shared_from_this(), false, is_open_service_, is_head_only_);
         }
 
         if (downloader)
@@ -1432,7 +1432,7 @@ namespace p2sp
             return HttpDownloader::p();
         }
         // 创建 HttpDownloader(url_info)
-        downloader = Downloader::CreateByUrl(io_svc_, url_info, shared_from_this(), is_open_service_);
+        downloader = Downloader::CreateByUrl(io_svc_, url_info, shared_from_this(), is_open_service_, is_head_only_);
 
         if (downloader)
         {

@@ -76,6 +76,7 @@ namespace network
         std::map<string, string> pragmas_;
         // template
         HttpRequest::p http_request_demo_;
+        bool is_accept_gzip_;
 
         HttpRequestInfo()
             : method_("GET")
@@ -88,6 +89,7 @@ namespace network
             , range_end_(0)
             , ip_("")
             , port_(80)
+            , is_accept_gzip_(false)
         {
         }
         string ToString();

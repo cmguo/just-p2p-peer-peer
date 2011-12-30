@@ -95,7 +95,7 @@ namespace p2sp
                 client_.reset();
             }
 
-            client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, request_url);
+            client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, request_url, "", 0, 0, false);
             client_->SetHandler(shared_from_this());
             client_->SetRecvTimeout(5 * 1000);
             client_->Connect();
@@ -275,7 +275,7 @@ namespace p2sp
     }
 
     void HttpDragDownloader::OnRecvHttpDataSucced(
-        protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+        protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         DebugLog("HttpDragDownloader::OnRecvHttpDataSucced fetch_time:%d", fetch_timer_.elapsed());
         LOG(__DEBUG, "", "HttpDragDownloader::OnRecvHttpDataSucced fetch_time:" << fetch_timer_.elapsed());

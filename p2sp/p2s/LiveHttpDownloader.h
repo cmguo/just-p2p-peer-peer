@@ -82,7 +82,7 @@ namespace p2sp
 
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
         virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
+        virtual void OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
         virtual void OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
 
         virtual void OnRecvHttpDataFailed(uint32_t error_code);

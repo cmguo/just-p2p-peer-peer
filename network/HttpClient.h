@@ -28,7 +28,7 @@ namespace network
 
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response) = 0;
         virtual void OnRecvHttpHeaderFailed(uint32_t error_code) = 0;
-        virtual void OnRecvHttpDataSucced(BufferType const & buffer, uint32_t file_offset, uint32_t content_offset) = 0;
+        virtual void OnRecvHttpDataSucced(BufferType const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip) = 0;
         virtual void OnRecvHttpDataPartial(BufferType const & buffer, uint32_t file_offset, uint32_t content_offset) = 0;
         virtual void OnRecvHttpDataFailed(uint32_t error_code) = 0;
         virtual void OnRecvTimeout() = 0;
@@ -52,25 +52,28 @@ namespace network
             boost::asio::io_service & io_svc,
             network::HttpRequest::p http_request_demo,
             string url,
-            string refer_url = "",
-            uint32_t range_begin = 0,
-            uint32_t range_end = 0);
+            string refer_url,
+            uint32_t range_begin,
+            uint32_t range_end,
+            bool is_accept_gzip);
 
         static p create(
             boost::asio::io_service & io_svc,
             string url,
-            string refer_url = "",
-            uint32_t range_begin = 0,
-            uint32_t range_end = 0);
+            string refer_url,
+            uint32_t range_begin,
+            uint32_t range_end,
+            bool is_accept_gzip);
 
         static p create(
             boost::asio::io_service & io_svc,
             string domain,
             boost::uint16_t port,
             string request,
-            string refer_url = "",
-            uint32_t range_begin = 0,
-            uint32_t range_end = 0);
+            string refer_url,
+            uint32_t range_begin,
+            uint32_t range_end,
+            bool is_accept_gzip);
 
     public:
         HttpClient(
@@ -80,7 +83,8 @@ namespace network
             string request,
             string refer_url,
             uint32_t range_begin,
-            uint32_t range_end);
+            uint32_t range_end,
+            bool is_accept_gzip);
 
     public:
         void Close();
@@ -167,6 +171,8 @@ namespace network
         boost::uint16_t target_port_;
 
         framework::timer::TickCounter recv_time_counter_;
+
+        bool is_accept_gzip_;
     };
 }
 

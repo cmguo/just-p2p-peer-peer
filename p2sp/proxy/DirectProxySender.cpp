@@ -132,7 +132,7 @@ namespace p2sp
 
         LOG(__INFO, "proxy", "DirectProxySender::SendHttpRequest ");
         http_client_ = network::HttpClient<protocol::SubPieceContent>::create(
-            io_svc_, http_request_, http_request_->GetUrl());
+            io_svc_, http_request_, http_request_->GetUrl(), "", 0, 0, false);
 
         http_client_->SetHandler(shared_from_this());
         http_client_->Connect();
@@ -214,7 +214,7 @@ namespace p2sp
 
     }
 
-    void DirectProxySender::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void DirectProxySender::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         if (is_running_ == false)
         {

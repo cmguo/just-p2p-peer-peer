@@ -25,7 +25,8 @@ namespace p2sp
         boost::asio::io_service & io_svc,
         const protocol::UrlInfo& url_info,
         DownloadDriver::p download_driver,
-        bool is_open_service)
+        bool is_open_service,
+        bool is_head_only)
         : io_svc_(io_svc)
         , url_info_(url_info)
         , is_to_get_header_(false)
@@ -33,6 +34,7 @@ namespace p2sp
         , download_driver_(download_driver)
         , http_speed_limiter_(1000)
         , downloading_time_in_seconds_(0)
+        , is_head_only_(is_head_only)
     {
     }
 
@@ -42,7 +44,8 @@ namespace p2sp
         const protocol::UrlInfo& url_info,
         DownloadDriver::p download_driver,
         bool is_to_get_header,
-        bool is_open_service)
+        bool is_open_service,
+        bool is_head_only)
         : io_svc_(io_svc)
         , url_info_(url_info)
         , is_to_get_header_(is_to_get_header)
@@ -51,6 +54,7 @@ namespace p2sp
         , http_request_demo_(http_request_demo)
         , http_speed_limiter_(1000)
         , downloading_time_in_seconds_(0)
+        , is_head_only_(is_head_only)
     {
     }
 
@@ -89,9 +93,9 @@ namespace p2sp
         }
 
         if (http_request_demo_)
-            http_connection_ = HttpConnection::Create(io_svc_, http_request_demo_, shared_from_this(), url_info_, is_to_get_header_);
+            http_connection_ = HttpConnection::Create(io_svc_, http_request_demo_, shared_from_this(), url_info_, is_to_get_header_, is_head_only_);
         else
-            http_connection_ = HttpConnection::Create(io_svc_, shared_from_this(), url_info_);
+            http_connection_ = HttpConnection::Create(io_svc_, shared_from_this(), url_info_, is_head_only_);
 
         if (is_original_)
         {

@@ -57,6 +57,8 @@ namespace network
         //
         bool IsChunked();
         string ToString();
+
+        bool IsGzip();
     private:
         string response_header_string_;
         volatile bool response_modified_;

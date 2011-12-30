@@ -147,7 +147,7 @@ namespace p2sp
             }
 
             http_client_ = HttpClient<protocol::LiveSubPieceContent>::create(io_svc_, pms_url_domain_,
-                pms_url_port_, MakeRequstPath(block_tasks_.front().GetBlockId()));
+                pms_url_port_, MakeRequstPath(block_tasks_.front().GetBlockId()), "", 0, 0, false);
             http_client_->SetHandler(shared_from_this());
 
             // 二代直播 PMS请求 加入版本号
@@ -250,7 +250,7 @@ namespace p2sp
         SleepForConnect();
     }
 
-    void LiveHttpDownloader::OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void LiveHttpDownloader::OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         if (!is_running_)
         {

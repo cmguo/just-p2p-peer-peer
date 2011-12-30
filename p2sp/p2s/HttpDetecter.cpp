@@ -177,7 +177,7 @@ namespace p2sp
         http_client_->Close();
     }
 
-    void HttpDetecter::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void HttpDetecter::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         if (is_running_ == false)
             return;
@@ -221,7 +221,7 @@ namespace p2sp
     void HttpDetecter::SendDemoRequest() 
     {
         http_client_ = network::HttpClient<protocol::SubPieceContent>::create(
-            io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
+            io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, 0, false);
 
         http_client_->SetHandler(shared_from_this());
         http_client_->Connect();

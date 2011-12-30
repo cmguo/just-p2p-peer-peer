@@ -35,7 +35,8 @@ namespace p2sp
     HttpConnection::HttpConnection(
         boost::asio::io_service & io_svc,
         HttpDownloader__p downloader,
-        protocol::UrlInfo url_info)
+        protocol::UrlInfo url_info,
+        bool is_head_only)
         : io_svc_(io_svc)
         , downloader_(downloader)
         , url_info_(url_info)
@@ -54,6 +55,7 @@ namespace p2sp
         , retry_count_403_header_(0)
         , connect_fail_count_(0)
         , download_bytes_(0)
+        , is_head_only_(is_head_only)
     {}
 
     HttpConnection::HttpConnection(
@@ -61,7 +63,8 @@ namespace p2sp
         const network::HttpRequest::p http_request_demo,
         HttpDownloader__p downloader,
         protocol::UrlInfo url_info,
-        bool is_to_get_header)
+        bool is_to_get_header,
+        bool is_head_only)
         : io_svc_(io_svc)
         , downloader_(downloader)
         , url_info_(url_info)
@@ -81,6 +84,7 @@ namespace p2sp
         , retry_count_403_header_(0)
         , connect_fail_count_(0)
         , download_bytes_(0)
+        , is_head_only_(is_head_only)
     {}
 
     void HttpConnection::Start(bool is_support_start, bool is_open_service, uint32_t head_length)
@@ -128,6 +132,11 @@ namespace p2sp
         {
             LOG(__DEBUG, "http", "HttpConnection::Start is_pausing = true, do connect");
             DoConnect();
+        }
+
+        if (is_open_service_ && is_head_only_)
+        {
+            gzip_decompresser_.Start(shared_from_this());
         }
     }
 
@@ -195,7 +204,16 @@ namespace p2sp
                 download_bytes_ = 0;
                 http_client_->Close();
             }
-            http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_);
+            if (is_head_only_)
+            {
+                boost::uint32_t gzip_range_end = ((head_length_ - 1) / SUB_PIECE_SIZE + 1) * SUB_PIECE_SIZE - 1;
+                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, gzip_range_end, true);
+            }
+            else
+            {
+                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, 0, false);
+            }
+            
             LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " create http_client = " << http_client_);
 
             http_client_->SetHandler(shared_from_this());
@@ -891,39 +909,33 @@ namespace p2sp
         }
     }
 
-    void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         HTTP_EVENT("OnRecvHttpDataSucced " << url_info_ << " file_offset=" << file_offset << " content_offset=" << content_offset);
 
         if (is_running_ == false) return;
 
-        download_bytes_ += buffer.Length();
-
-        downloader_->GetStatistics()->SubmitDownloadedBytes(buffer.Length());
-        if (downloader_->IsOriginal())
+        if (is_gzip)
         {
-            statistic::StatisticModule::Inst()->SubmitTotalHttpOriginalDataBytes(buffer.Length());
+            assert(is_head_only_);
+
+            if (!gzip_decompresser_.OnRecvData(buffer, file_offset, content_offset))
+            {
+                HttpRecvSubPiece();
+            }
+            else
+            {
+                http_client_->Close();
+            }
+
+            return;
         }
-        else
-            statistic::StatisticModule::Inst()->SubmitTotalHttpNotOriginalDataBytes(buffer.Length());
 
         uint32_t block_size_ = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
         protocol::SubPieceInfo sub_piece_info_;
         protocol::SubPieceInfo::MakeByPosition(file_offset, block_size_, sub_piece_info_);
-
-        //  HTTP请求不支持range重下的情况
-        //  以前下过的不再往storage里送 减小开销
-        // if (sub_piece_info_.GetPosition(block_size_) >= piece_info_ex_.GetPosition(block_size_))
-        if (false == downloader_->GetDownloadDriver()->GetInstance()->HasSubPiece(sub_piece_info_))
-        {
-            downloader_->GetDownloadDriver()->GetStatistic()->SubmitHttpDataBytes(buffer.Length());
-            if (downloader_->GetDownloadDriver()->IsOpenService())
-            {
-                statistic::DACStatisticModule::Inst()->SubmitHttpDownloadBytes(buffer.Length());
-            }
-        }
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SubPieceComplete " << sub_piece_info_);
-        downloader_->GetDownloadDriver()->GetInstance()->AsyncAddSubPiece(sub_piece_info_, buffer);
+            
+        RecvHttpData(buffer, sub_piece_info_);
 
         bool piece_complete = false;
         // 已经下载到该片piece的终点
@@ -1421,5 +1433,45 @@ namespace p2sp
         status = NONE;
         http_client_->Close();
         DoConnect();
+    }
+
+    void HttpConnection::RecvHttpData(const protocol::SubPieceBuffer & buffer, const protocol::SubPieceInfo & sub_piece_info)
+    {
+        download_bytes_ += buffer.Length();
+
+        downloader_->GetStatistics()->SubmitDownloadedBytes(buffer.Length());
+        if (downloader_->IsOriginal())
+        {
+            statistic::StatisticModule::Inst()->SubmitTotalHttpOriginalDataBytes(buffer.Length());
+        }
+        else
+            statistic::StatisticModule::Inst()->SubmitTotalHttpNotOriginalDataBytes(buffer.Length());
+
+        //  HTTP请求不支持range重下的情况
+        //  以前下过的不再往storage里送 减小开销
+        // if (sub_piece_info_.GetPosition(block_size_) >= piece_info_ex_.GetPosition(block_size_))
+        if (false == downloader_->GetDownloadDriver()->GetInstance()->HasSubPiece(sub_piece_info))
+        {
+            downloader_->GetDownloadDriver()->GetStatistic()->SubmitHttpDataBytes(buffer.Length());
+            if (downloader_->GetDownloadDriver()->IsOpenService())
+            {
+                statistic::DACStatisticModule::Inst()->SubmitHttpDownloadBytes(buffer.Length());
+            }
+        }
+        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SubPieceComplete " << sub_piece_info_);
+        downloader_->GetDownloadDriver()->GetInstance()->AsyncAddSubPiece(sub_piece_info, buffer);
+    }
+
+    void HttpConnection::OnDecompressComplete(std::deque<boost::shared_ptr<protocol::SubPieceBuffer> > & sub_piece_buffer_deque)
+    {
+        boost::uint32_t offset = 0;
+
+        for (std::deque<boost::shared_ptr<protocol::SubPieceBuffer> >::iterator iter = sub_piece_buffer_deque.begin();
+            iter != sub_piece_buffer_deque.end(); ++iter)
+        {
+            protocol::SubPieceBuffer & buffer = *((*iter).get());
+            OnRecvHttpDataSucced(buffer, offset, offset, false);
+            offset += (*iter)->Length();
+        }
     }
 }
