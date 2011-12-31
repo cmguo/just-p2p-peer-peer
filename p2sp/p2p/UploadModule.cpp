@@ -103,8 +103,11 @@ namespace p2sp
         // speed managerment
         OnUploadSpeedControl(times);
 
-        // Statistic
-        SubmitUploadInfoStatistic();
+        if (times % 4 == 0)
+        {
+            // Statistic
+            SubmitUploadInfoStatistic();
+        }
 
         if (times % 4 == 0)
         {
@@ -552,7 +555,8 @@ namespace p2sp
                 if (upload_speed_limit_kbs < upload_speed_kbs + 120 ||
                     upload_speed_limit_kbs < upload_speed_kbs * 12 / 10)
                 {
-                    upload_speed_limit_kbs *= 1.2;
+                    upload_speed_limit_kbs = upload_speed_limit_kbs * 12 / 10 > upload_speed_limit_kbs + 2 ?
+                        upload_speed_limit_kbs * 12 / 10 : upload_speed_limit_kbs + 2;
                 }
             }
 

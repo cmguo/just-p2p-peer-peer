@@ -96,7 +96,7 @@ namespace p2sp
         uint16_t priority, uint16_t dest_protocol_version)
     {
         // 不限速
-        if (ignoreUploadSpeedLimit || GetSpeedLimitInKBps() < 0)
+        if (ignoreUploadSpeedLimit || static_cast<boost::int32_t>(GetSpeedLimitInKBps()) < 0)
         {
             packet->SendPacket(dest_protocol_version);
             LOG(__DEBUG, "upload", "DoSendSubPiecePacket GetSpeedLimitInKBps() < 0");
