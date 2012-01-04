@@ -1024,14 +1024,6 @@ namespace p2sp
 
     void LiveP2PDownloader::DoList()
     {
-        if (!is_p2p_pausing_ && 
-            GetMinRestTimeInSeconds() < 13 &&
-            dolist_time_interval_ >= 16000)
-        {
-            // reset list cycle.
-            dolist_time_interval_ = 1000;
-        }
-
         if (GetConnectedPeersCount() < GetMaxConnectCount() &&
             last_dolist_time_.elapsed() >= dolist_time_interval_)
         {
