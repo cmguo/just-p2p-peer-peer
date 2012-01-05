@@ -1835,6 +1835,9 @@ namespace storage
 
     void Instance::GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size)
     {
-        subpiece_manager_->GetDownloadProgressBitmap(bitmap, bitmap_size);
+        if (subpiece_manager_)
+        {
+            subpiece_manager_->GetDownloadProgressBitmap(bitmap, bitmap_size);
+        }
     }
 }

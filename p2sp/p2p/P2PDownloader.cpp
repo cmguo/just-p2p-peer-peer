@@ -1069,8 +1069,13 @@ namespace p2sp
         {
             if (peers_.find(packet.end_point) != peers_.end())
             {
+                assert(peers_[packet.end_point]);
                 PeerConnection::p peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
-                peer_connection->OnAnnounce((protocol::AnnouncePacket const &)packet);
+                assert(peer_connection);
+                if (peer_connection)
+                {
+                    peer_connection->OnAnnounce((protocol::AnnouncePacket const &)packet);
+                }
             }
             return;
         }
