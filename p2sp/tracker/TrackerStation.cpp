@@ -192,6 +192,8 @@ namespace p2sp
             {
                 no_report_response_times_ = 0;
 
+                report_failed_times_++;
+
                 if (current_report_tracker_)
                 {
                     statistic::StatisticModule::Inst()->SetIsSubmitTracker(current_report_tracker_->GetTrackerInfo(), false);
@@ -199,7 +201,18 @@ namespace p2sp
 
                 current_report_tracker_ = TrackerClient::p();
 
-                report_timer_.interval(DEFAULT_INTERVAL_IN_SECONDS_ *1000);
+                boost::uint32_t interval_in_second = DEFAULT_INTERVAL_IN_SECONDS_;
+
+                if (report_failed_times_ > 3)
+                {
+                    interval_in_second += (report_failed_times_ - 3) * 10;
+                    if (interval_in_second > 300)
+                    {
+                        interval_in_second = 300;
+                    }
+                }
+
+                report_timer_.interval(interval_in_second *1000);
             }
         }
 
@@ -272,6 +285,7 @@ namespace p2sp
 
         if (packet.error_code_ == 0)
         {
+            report_failed_times_ = 0;
             no_report_response_times_ = 0;
             is_report_response_ = true;
 

@@ -24,6 +24,7 @@ namespace p2sp
             , tracker_type_(tracker_type)
             , no_report_response_times_(0)
             , is_report_response_(true)
+            , report_failed_times_(0)
             , report_timer_(global_second_timer(), 1000 * DEFAULT_INTERVAL_IN_SECONDS_, 
                 boost::bind(&TrackerStation::OnTimerElapsed, this, &report_timer_))
         {
@@ -51,7 +52,7 @@ namespace p2sp
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
     private:
-        static const uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 20;
+        static const uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 60;
 
     private:
         bool is_running_;
@@ -76,6 +77,8 @@ namespace p2sp
         boost::uint32_t last_report_transaction_id_;
 
         framework::timer::PeriodicTimer report_timer_;
+
+        boost::uint32_t report_failed_times_;
     };
 }
 
