@@ -1819,6 +1819,15 @@ namespace p2sp
             download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
             download_driver_->SetNeedBubble(false);
             download_driver_->SetIsPush(is_push);
+            if(is_push) 
+            {
+                //push任务如果没有设置source_type，source_type默认为255
+                //它的dac日志会被上报到这个域名：upload-va.synacast.com
+                //而source_type为0的日志，会被上报到pplive-va.synacast.com 这个域名。
+                //而客户端被观看了的的push任务（不等于被下载的push任务），会上报到pplive-va.synacast.com。
+                //为了方便统计，这两种情况（被下载和被观看的push任务）都应该上报到同一个域名，因此这里做出修改。
+                download_driver_->SetSourceType(PlayInfo::SOURCE_PPLIVE); 
+            }
 
             protocol::RidInfo local_rid_info = rid_info;
             if (false == local_rid_info.HasRID()) 
