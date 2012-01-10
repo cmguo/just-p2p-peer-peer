@@ -110,6 +110,8 @@ namespace p2sp
 
             live_minimum_window_size_ = BootStrapGeneralConfig::Inst()->GetLiveMinimumWindowSize();
             live_maximum_window_size_ = BootStrapGeneralConfig::Inst()->GetLiveMaximumWindowSize();
+            udpserver_maximum_window_size_ = BootStrapGeneralConfig::Inst()->GetUdpServerMaximumWindow();
+            udpserver_maximum_requests_ = BootStrapGeneralConfig::Inst()->GetUdpServerMaximumRequests();
         }
 
         void DoAnnounce();
@@ -174,6 +176,10 @@ namespace p2sp
         boost::uint32_t last_received_packet_;
 
         std::multimap<uint32_t, protocol::LiveSubPieceInfo> request_map_;
+
+        boost::uint32_t udpserver_maximum_window_size_;
+
+        boost::uint32_t udpserver_maximum_requests_;
 
     };
 }

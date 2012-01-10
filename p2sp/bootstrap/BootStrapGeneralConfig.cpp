@@ -66,7 +66,9 @@ namespace p2sp
         , should_use_exchange_peers_firstly_(false)
         , live_exchange_interval_in_second_(10)
         , live_extended_connections_(0)
-        , live_lost_prejudge_(false)
+        , live_lost_prejudge_(true)
+        , udpserver_maximum_requests_(6)
+        , udpserver_maximum_window_size_(25)
     {
     }
 
@@ -181,7 +183,9 @@ namespace p2sp
                 ("config.epf", po::value<bool>()->default_value(should_use_exchange_peers_firstly_))
                 ("config.lei", po::value<uint32_t>()->default_value(live_exchange_interval_in_second_))
                 ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_))
-                ("config.llp", po::value<bool>()->default_value(live_lost_prejudge_));
+                ("config.llp", po::value<bool>()->default_value(live_lost_prejudge_))
+                ("config.umr", po::value<uint32_t>()->default_value(udpserver_maximum_requests_))
+                ("config.umw", po::value<uint32_t>()->default_value(udpserver_maximum_window_size_));
 
             std::istringstream config_stream(config_string);
 
@@ -239,6 +243,8 @@ namespace p2sp
             live_exchange_interval_in_second_ = vm["config.lei"].as<uint32_t>();
             live_extended_connections_ = vm["config.lec"].as<uint32_t>();
             live_lost_prejudge_ = vm["config.llp"].as<bool>();
+            udpserver_maximum_requests_ = vm["config.umr"].as<uint32_t>();
+            udpserver_maximum_window_size_ = vm["config.umw"].as<uint32_t>();
 
             if (save_to_disk)
             {

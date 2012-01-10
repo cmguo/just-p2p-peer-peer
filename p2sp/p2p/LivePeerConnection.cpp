@@ -53,7 +53,14 @@ namespace p2sp
                 window_size_ = (9 * last_window_size + 1 * window_size_) / 10;
             }
 
-            LIMIT_MIN_MAX(window_size_, live_minimum_window_size_, live_maximum_window_size_);
+            if (IsUdpServer())
+            {
+                LIMIT_MIN_MAX(window_size_, live_minimum_window_size_, udpserver_maximum_window_size_);
+            }
+            else
+            {
+                LIMIT_MIN_MAX(window_size_, live_minimum_window_size_, live_maximum_window_size_);
+            }
 
             // 更新共享内存信息
             UpdatePeerConnectionInfo();
@@ -363,7 +370,14 @@ namespace p2sp
     {
         while (requesting_count_ < window_size_ && !task_set_.empty())
         {
-            RequestSubPieces(6, false);
+            if (IsUdpServer())
+            {
+                RequestSubPieces(udpserver_maximum_requests_, false);
+            }
+            else
+            {
+                RequestSubPieces(6, false);
+            }
         }
     }
 

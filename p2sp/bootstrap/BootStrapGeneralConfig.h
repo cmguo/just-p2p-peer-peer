@@ -262,6 +262,16 @@ namespace p2sp
             return live_lost_prejudge_;
         }
 
+        boost::uint32_t GetUdpServerMaximumRequests() const
+        {
+            return udpserver_maximum_requests_;
+        }
+
+        boost::uint32_t GetUdpServerMaximumWindow() const
+        {
+            return udpserver_maximum_window_size_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -424,6 +434,12 @@ namespace p2sp
 
         // 二代直播，丢包预判策略
         bool live_lost_prejudge_;
+
+        // 二代直播udp server请求包包含的最大请求subpieces数
+        boost::uint32_t udpserver_maximum_requests_;
+
+        // 二代直播udp server最大window size
+        boost::uint32_t udpserver_maximum_window_size_;
 
     };
 }
