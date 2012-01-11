@@ -706,6 +706,8 @@ namespace p2sp
         // W1: 剩余时间的平均值
         // X1: 剩余时间的方差
         // Y1: 平均1分钟之内发起连接数
+        // Z1: 总共收到的数据包的个数
+        // A2: 收到的逆序数据包的个数
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -824,6 +826,17 @@ namespace p2sp
             info.AverageConnectPeersCountInMinute = live_p2p_downloader_->GetTotalConnectPeersCount() * 60 / (download_time_.elapsed() / 1000);
         }
 
+        if (live_p2p_downloader_)
+        {
+            info.TotalReceivedSubPiecePacketCount = live_p2p_downloader_->GetTotalReceivedSubPiecePacketCount();
+            info.ReverseSubPiecePacketCount = live_p2p_downloader_->GetReverseOrderSubPiecePacketCount();
+        }
+        else
+        {
+            info.TotalReceivedSubPiecePacketCount = 0;
+            info.ReverseSubPiecePacketCount = 0;
+        }
+
         std::ostringstream log_stream;
 
         log_stream << "C=";
@@ -895,6 +908,8 @@ namespace p2sp
         log_stream << "&W1=" << info.AverageOfRestPlayableTime;
         log_stream << "&X1=" << info.VarianceOfRestPlayableTime;
         log_stream << "&Y1=" << info.AverageConnectPeersCountInMinute;
+        log_stream << "&Z1=" << info.TotalReceivedSubPiecePacketCount;
+        log_stream << "&A2=" << info.ReverseSubPiecePacketCount;
 
         string log = log_stream.str();
 

@@ -89,6 +89,9 @@ namespace p2sp
 
         void DeleteLostPackets(uint32_t transaction_id, std::multimap<uint32_t, protocol::LiveSubPieceInfo>& to_delete);
 
+        boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
+        boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
+
     private:
         // 构造
         LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 
@@ -103,6 +106,8 @@ namespace p2sp
             , connect_type_(connect_type)
             , request_subpiece_count_(0)
             , last_received_packet_(0)
+            , reverse_order_packet_count_(0)
+            , total_received_packet_count_(0)
         {
             assert(connect_type < protocol::CONNECT_MAX);
             peer_connection_info_.ConnectType = connect_type;
@@ -176,6 +181,9 @@ namespace p2sp
         boost::uint32_t last_received_packet_;
 
         std::multimap<uint32_t, protocol::LiveSubPieceInfo> request_map_;
+
+        boost::uint32_t reverse_order_packet_count_;
+        boost::uint32_t total_received_packet_count_;
 
         boost::uint32_t udpserver_maximum_window_size_;
 

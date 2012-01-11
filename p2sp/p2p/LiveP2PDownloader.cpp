@@ -1427,4 +1427,30 @@ namespace p2sp
 
         return lhs < rhs;
     }
+
+    boost::uint32_t LiveP2PDownloader::GetReverseOrderSubPiecePacketCount() const
+    {
+        boost::uint32_t reverse_order_packet_count = 0;
+
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            reverse_order_packet_count += iter->second->GetReverseOrderSubPiecePacketCount();
+        }
+
+        return reverse_order_packet_count;
+    }
+
+    boost::uint32_t LiveP2PDownloader::GetTotalReceivedSubPiecePacketCount() const
+    {
+        boost::uint32_t total_received_packet_count = 0;
+
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            total_received_packet_count += iter->second->GetTotalReceivedSubPiecePacketCount();
+        }
+
+        return total_received_packet_count;
+    }
 }

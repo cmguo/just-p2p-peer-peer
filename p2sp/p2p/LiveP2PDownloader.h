@@ -266,6 +266,9 @@ namespace p2sp
 
         uint32_t GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info);
 
+        boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
+        boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
+
     private:
         void CheckBlockComplete();
         void DoList();

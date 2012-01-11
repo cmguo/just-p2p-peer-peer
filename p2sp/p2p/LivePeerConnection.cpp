@@ -204,6 +204,12 @@ namespace p2sp
         {
             last_received_packet_ = transaction_id;
         }
+        else if (transaction_id < last_received_packet_)
+        {
+            ++reverse_order_packet_count_;
+        }
+
+        ++total_received_packet_count_;
     }
 
     void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
@@ -555,5 +561,15 @@ namespace p2sp
         }
 
         return supply_subpiece_count;
+    }
+
+    boost::uint32_t LivePeerConnection::GetReverseOrderSubPiecePacketCount() const
+    {
+        return reverse_order_packet_count_;
+    }
+
+    boost::uint32_t LivePeerConnection::GetTotalReceivedSubPiecePacketCount() const
+    {
+        return total_received_packet_count_;
     }
 }
