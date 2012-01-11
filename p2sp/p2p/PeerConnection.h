@@ -52,6 +52,7 @@ namespace p2sp
         virtual bool HasRidInfo() const;
 
         virtual void KeepAlive();
+        virtual void UpdateConnectTime();
 
         // 消息
         virtual void OnP2PTimer(boost::uint32_t times);

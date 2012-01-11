@@ -54,6 +54,8 @@ namespace measure
 
         void UpdateTickCount(uint32_t & curr_sec);
 
+        uint32_t CalcSpeedInDuration(uint32_t duration);
+
     private:
 
         static const uint32_t SECONDS_IN_SECOND = 1;
@@ -74,7 +76,7 @@ namespace measure
 
         uint32_t history_bytes_[HISTORY_INTERVAL_IN_SEC];
 
-        uint32_t last_sec_;
+        uint32_t current_sec_;
 
         bool is_running_;
     };
@@ -83,13 +85,13 @@ namespace measure
     {
         CheckTickCount();
         total_bytes_ += bytes;
-        history_bytes_[GetPositionFromSeconds(last_sec_)] += bytes;
+        history_bytes_[GetPositionFromSeconds(current_sec_)] += bytes;
     }
 
     inline void ByteSpeedMeter::CheckTickCount()
     {
         uint32_t curr_sec = framework::timer::TickCounter::tick_count() / 1000;
-        if (curr_sec == last_sec_)
+        if (curr_sec == current_sec_)
             return;
         UpdateTickCount(curr_sec);
     }

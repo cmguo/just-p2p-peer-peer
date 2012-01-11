@@ -50,7 +50,8 @@ namespace p2sp
         virtual bool IsBlockFull() = 0;
 
         virtual bool LongTimeNoSee() = 0;
-        virtual void KeepAlive() = 0;
+        virtual void KeepAlive() {}
+        virtual void UpdateConnectTime() {}
 
         virtual void SendPacket(const std::vector<protocol::SubPieceInfo> & subpieces,
             boost::uint32_t copy_count) = 0;

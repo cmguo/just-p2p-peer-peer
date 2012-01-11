@@ -401,6 +401,7 @@ namespace p2sp
 
             HTTPSPEED Check2300HttpSpeed();
             bool Is2300RestTimeEnough();
+            bool Is2200RestTimeEnough();
             bool PrefersSavingServerBandwidth();
             bool Is3200P2pSlow();
             boost::int32_t CalcDownloadPriority();

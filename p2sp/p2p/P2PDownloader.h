@@ -183,7 +183,7 @@ namespace p2sp
         boost::uint32_t GetSpeedLimitRestCount();
         boost::int32_t GetDownloadPriority();
 
-        bool NeedKickPeerConnection();
+        bool NeedConnectNewConnection();
 
         boost::uint32_t GetDownloadingTimeInSeconds() const {return downloading_time_in_seconds_;}
 
@@ -231,6 +231,7 @@ namespace p2sp
 
         //
         void KeepConnectionAlive();
+        void UpdateConnectTime();
 
         void AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
             boost::uint32_t timeout, PeerConnection__p peer_connection);

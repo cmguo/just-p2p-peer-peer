@@ -226,6 +226,11 @@ namespace p2sp
             peer_count > 0;
     }
 
+    bool SwitchController::OpenServiceVideoControlMode::Is2200RestTimeEnough()
+    {
+        return GetGlobalDataProvider()->GetRestPlayableTime() >= 50000;
+    }
+
     bool SwitchController::OpenServiceVideoControlMode::Is3200P2pSlow()
     {
         uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
@@ -567,22 +572,17 @@ namespace p2sp
 
                 // 进入2200状态表明p2p和http速度不能满足播放，两个一起跑，尽量跑快
 
-                // 每4s设置一次为NORMAL_MODE
-                if ((time_counter_2200.elapsed() / 1000) % 4 == 0) 
-                    p2p->SetDownloadMode(IP2PControlTarget::NORMAL_MODE);
-                else
-                    p2p->SetDownloadMode(IP2PControlTarget::FAST_MODE);
-
+                p2p->SetDownloadMode(IP2PControlTarget::NORMAL_MODE);
                 p2p->SetDownloadPriority(CalcDownloadPriority());
 
                 if (p2p->GetCurrentDownloadSpeed() < data_rate * 12 / 10 && 
-                    p2p->GetCurrentDownloadSpeed() < band_width * 8 / 10)
+                    p2p->GetCurrentDownloadSpeed() < band_width * 7 / 10)
                 {
                     time_counter_x_.reset();
                 }
 
                 if (http->GetCurrentDownloadSpeed() < data_rate * 11 / 10 && 
-                    http->GetCurrentDownloadSpeed() < band_width * 8 / 10)
+                    http->GetCurrentDownloadSpeed() < band_width * 7 / 10)
                 {
                     time_counter_y_.reset();
                 }
@@ -598,7 +598,7 @@ namespace p2sp
 
                 if (PrefersSavingServerBandwidth())
                 {
-                    if (fast_p2p_download)
+                    if (fast_p2p_download || Is2200RestTimeEnough())
                     {
                         ChangeTo3200(false);
                     }
@@ -609,7 +609,7 @@ namespace p2sp
                 }
                 else
                 {
-                    if (fast_http_download)
+                    if (fast_http_download || Is2200RestTimeEnough())
                     {
                         ChangeTo2300();
                     }
@@ -646,7 +646,7 @@ namespace p2sp
                 {
                     if (rest_playable_time_in_ms <= 30000)
                         p2p->SetDownloadMode(IP2PControlTarget::NORMAL_MODE);
-                    else if (rest_playable_time_in_ms <= 60000 && p2p->GetNonConsistentSize() > 30)
+                    else if (rest_playable_time_in_ms <= 70000 && p2p->GetCurrentDownloadSpeed() < data_rate)
                         p2p->SetDownloadMode(IP2PControlTarget::NORMAL_MODE);
                     else
                         p2p->SetDownloadMode(IP2PControlTarget::FAST_MODE);

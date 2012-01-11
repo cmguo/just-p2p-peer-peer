@@ -482,47 +482,30 @@ namespace p2sp
 
     bool PeerConnection::CanKick()
     {
-        if (false == is_running_) {
+        if (false == is_running_) 
+        {
             LOGX(__DEBUG, "kick", "Endpoint = " << end_point_ << ", Not Running, CanKick return true");
             return true;
         }
-        // if (connected_time_.GetElapsed() >= 3*1000 && statistic_->GetAverageRTT() == statistic_->GetLongestRtt())
+
         if (connected_time_.elapsed() >= 3 * 1000 && statistic_->GetSpeedInfo().NowDownloadSpeed < 5*1024)
         {
             LOGX(__DEBUG, "kick", "Endpoint = " << end_point_ << ", Elapsed >= 3000, CanKick return true"
                 << ", sent_count = " << sent_count_ << ", received_count = " << received_count_);
             return true;
         }
-        if (connected_time_.elapsed() >= P2SPConfigs::PEERCONNECTION_CAN_KICK_TIME_IN_MILLISEC)
-        {
-            LOGX(__DEBUG, "kick", "Endpoint = " << end_point_ << ", Elapsed >= 8000, CanKick return true");
-            return true;
-        }
-        // if (connected_time_.elapsed() >= P2SPConfigs::PEERCONNECTION_CAN_KICK_TIME_IN_MILLISEC)
-        // {
-        //    if (p2p_downloader_->GetSpeedInfo().NowDownloadSpeed >= p2p_downloader_->GetDataRate() + 5 * 1024)
-        //    {
-        //        if (statistic_->GetSpeedInfo().NowDownloadSpeed < P2SPConfigs::PEERCONNECTION_CAN_KICK_SPEED_IN_BPS * 0.5)
-        //        {
-        //            LOGX(__DEBUG, "kick", "Endpoint = " << end_point_ << ", Elapsed >= 12000, 0.7, CanKick return true");
-        //            return true;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        if (statistic_->GetSpeedInfo().NowDownloadSpeed < P2SPConfigs::PEERCONNECTION_CAN_KICK_SPEED_IN_BPS)
-        //        {
-        //            LOGX(__DEBUG, "kick", "Endpoint = " << end_point_ << ", Elapsed >= 12000, 1.0, CanKick return true");
-        //            return true;
-        //        }
-        //    }
-        // }
+
         return false;
     }
 
     void PeerConnection::KeepAlive()
     {
         DoReportDownloadSpeed();
+    }
+
+    void PeerConnection::UpdateConnectTime()
+    {
+        connected_time_.reset();
     }
 
     void PeerConnection::SendPacket(const std::vector<protocol::SubPieceInfo> & subpieces,

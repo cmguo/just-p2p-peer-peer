@@ -74,7 +74,9 @@ namespace p2sp
         //
         static uint32_t P2P_DOWNLOAD_INIT_TIMEOUT;
         //
-        static uint32_t P2P_DOWNLOAD_MAX_CONNECT_COUNT;
+        static uint32_t P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND;
+        //
+        static uint32_t P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND;
         //
         static uint32_t P2P_DOWNLOAD_MIN_CONNECT_COUNT;
         //

@@ -108,10 +108,10 @@ namespace p2sp
                                 P2P_DOWNLOAD_INIT_MAX_CONNECT_COUNT_PER_SEC = boost::lexical_cast<uint32_t>(value);
                         else if (key == "P2P_DOWNLOAD_INIT_TIMEOUT")
                                 P2P_DOWNLOAD_INIT_TIMEOUT = boost::lexical_cast<uint32_t>(value);
-                        else if (key == "P2P_DOWNLOAD_MAX_CONNECT_COUNT")
-                            P2P_DOWNLOAD_MAX_CONNECT_COUNT = boost::lexical_cast<uint32_t>(value);
-                        else if (key == "P2P_DOWNLOAD_MIN_CONNECT_COUNT")
-                            P2P_DOWNLOAD_MIN_CONNECT_COUNT = boost::lexical_cast<uint32_t>(value);
+                        else if (key == "P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND")
+                            P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND = boost::lexical_cast<uint32_t>(value);
+                        else if (key == "P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND")
+                            P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND = boost::lexical_cast<uint32_t>(value);
                         else if (key == "P2P_DOWNLOAD_MAX_SCHEDULE_COUNT")
                             P2P_DOWNLOAD_MAX_SCHEDULE_COUNT = boost::lexical_cast<uint32_t>(value);
                         else if (key == "P2P_DOWNLOAD_NEED_INCREASE_MAX_POOLED_PEER_COUNT")
@@ -242,13 +242,15 @@ namespace p2sp
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_INIT_TIMEOUT = 1200;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT = 40;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND = 40;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT = 25;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND = 40;
+    //
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT = 5;
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_SCHEDULE_COUNT = 25;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_PER_SEC = 20;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_PER_SEC = 10;
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_NEED_INCREASE_MAX_POOLED_PEER_COUNT = 16;
     //

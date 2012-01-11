@@ -18,7 +18,7 @@ namespace measure
     {
         start_time_ = 0;
         total_bytes_ = 0;
-        last_sec_ = 0;
+        current_sec_ = 0;
         memset(history_bytes_, 0, sizeof(history_bytes_));
     }
 
@@ -79,88 +79,57 @@ namespace measure
 
     uint32_t ByteSpeedMeter::SecondByteSpeed()  // 2 second
     {
-        if (is_running_ == false)
-            return 0;
-
-        CheckTickCount();
-
-        uint32_t bytes_in_recent = 0;
-        for (uint32_t i = last_sec_; i > last_sec_ - SECONDS_IN_SECOND; i--)
-            bytes_in_recent += history_bytes_[GetPositionFromSeconds(i)];
-
-        uint32_t elapsed_time = GetElapsedTimeInMilliSeconds();
-        if (elapsed_time > SECONDS_IN_SECOND * 1000)
-            return bytes_in_recent / SECONDS_IN_SECOND;
-        else
-            return 1000 * bytes_in_recent / elapsed_time;
+        return CalcSpeedInDuration(SECONDS_IN_SECOND);
     }
 
     uint32_t ByteSpeedMeter::CurrentByteSpeed()  // 5 seconds
     {
-        if (is_running_ == false)
-            return 0;
-
-        CheckTickCount();
-
-        uint32_t bytes_in_recent = 0;
-        for (uint32_t i = last_sec_; i > last_sec_ - SECONDS_IN_RECENT; i--)
-            bytes_in_recent += history_bytes_[GetPositionFromSeconds(i)];
-
-        uint32_t elapsed_time = GetElapsedTimeInMilliSeconds();
-        if (elapsed_time > SECONDS_IN_RECENT * 1000)
-            return bytes_in_recent / SECONDS_IN_RECENT;
-        else
-            return 1000 * bytes_in_recent / elapsed_time;
+        return CalcSpeedInDuration(SECONDS_IN_RECENT);
     }
 
     uint32_t ByteSpeedMeter::RecentByteSpeed()  // 20 seconds
     {
-        if (is_running_ == false)
-            return 0;
-
-        CheckTickCount();
-
-        boost::int64_t bytes_in_recent_20sec = 0;
-        for (uint32_t i = last_sec_; i > last_sec_ - SECONDS_IN_RECENT_20SEC; i--)
-            bytes_in_recent_20sec += history_bytes_[GetPositionFromSeconds(i)];
-
-        uint32_t elapsed_time = GetElapsedTimeInMilliSeconds();
-        if (elapsed_time > SECONDS_IN_RECENT_20SEC * 1000)
-            return (uint32_t)(bytes_in_recent_20sec / elapsed_time);
-        else
-            return (uint32_t)(1000 * bytes_in_recent_20sec / elapsed_time);
+        return CalcSpeedInDuration(SECONDS_IN_RECENT_20SEC);
     }
 
     uint32_t ByteSpeedMeter::RecentMinuteByteSpeed()  // 1 minute
     {
-        if (is_running_ == false)
-            return 0;
-
-        CheckTickCount();
-
-        boost::int64_t bytes_in_minute = 0;
-        for (uint32_t i = 0; i < HISTORY_INTERVAL_IN_SEC; i++)
-            bytes_in_minute += history_bytes_[i];
-
-        uint32_t elapsed_time = GetElapsedTimeInMilliSeconds();
-        if (elapsed_time > HISTORY_INTERVAL_IN_SEC * 1000)
-            return (uint32_t)(bytes_in_minute / HISTORY_INTERVAL_IN_SEC);
-        else
-            return (uint32_t)(1000 * bytes_in_minute / elapsed_time);
+        return CalcSpeedInDuration(HISTORY_INTERVAL_IN_SEC);
     }
 
     void ByteSpeedMeter::UpdateTickCount(uint32_t & curr_sec)
     {
-        if (curr_sec - last_sec_ >= HISTORY_INTERVAL_IN_SEC)
+        if (curr_sec - current_sec_ >= HISTORY_INTERVAL_IN_SEC)
         {
             memset(history_bytes_, 0, sizeof(history_bytes_));
         }
         else
         {
-            for (uint32_t i = curr_sec; i > last_sec_; i--)
+            for (uint32_t i = curr_sec; i > current_sec_; i--)
                 history_bytes_[GetPositionFromSeconds(i)] = 0;
         }
 
-        last_sec_ = curr_sec;
+        current_sec_ = curr_sec;
+    }
+
+    uint32_t ByteSpeedMeter::CalcSpeedInDuration(uint32_t duration)
+    {
+        if (is_running_ == false)
+        {
+            return 0;
+        }
+
+        CheckTickCount();
+
+        boost::int64_t bytes_in_recent = 0;
+        uint32_t last_sec = current_sec_ - 1;
+        for (uint32_t i = last_sec; i > last_sec - duration; i--)
+            bytes_in_recent += history_bytes_[GetPositionFromSeconds(i)];
+
+        uint32_t elapsed_time = GetElapsedTimeInMilliSeconds();
+        if (elapsed_time > duration * 1000)
+            return static_cast<uint32_t>(bytes_in_recent / duration);
+        else
+            return static_cast<uint32_t>(1000 * bytes_in_recent / elapsed_time);
     }
 }

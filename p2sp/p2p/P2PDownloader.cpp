@@ -84,7 +84,7 @@ namespace p2sp
         // download_speed_limiter_ = DownloadSpeedLimiter::Create(600, 2500);
         // download_speed_limiter_->Start();
 
-        p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT;
+        p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND;
 
 
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
@@ -506,6 +506,12 @@ namespace p2sp
             return;
         }
 
+        if (!NeedConnectNewConnection())
+        {
+            statistic_->SubmitConnectCount(0);
+            return;
+        }
+
         // check speed
         uint32_t data_rate = instance_->GetMetaData().VideoDataRate;
         if (data_rate == 0) data_rate = (is_openservice_ ? 60 * 1024 : 30 * 1024);
@@ -520,13 +526,14 @@ namespace p2sp
             connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
             if (connect_count < 0)
                 connect_count = 0;
-            LIMIT_MAX(connect_count, P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_PER_SEC);
 
             // 保证在连接不满时至少连一个节点
             if (p2p_max_connect_count_ > peers_.size())
             {
                 LIMIT_MIN(connect_count, 1);
             }
+
+            LIMIT_MAX(connect_count, P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_PER_SEC);
         }
 
         // 往共享内存写入每秒发起的连接数
@@ -558,23 +565,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        // 策略函数： 踢出连接
-        //    当前要踢出连接数 = 已连接数 - (最大连接数*7/10)
-        //    当前要踢出连接数 最小值控制为 0
-        //
-        // 如果 当前要踢出连接数 == 0 return
-        //
-        // ? 计算 要踢除 的顺序  <建议就按照  PeerConnection的 下载速度 从小往大 排>
-        //    按顺序踢  (注意保护时间 如果 连接刚连上，还不到20s，则不踢出他)
-
-        if (!NeedKickPeerConnection())
-        {
-            LOGX(__DEBUG, "kick", "Do not need to kick connection");
-            return;
-        }
-
         std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> peer_connections;
-
         std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end(); iter++)
         {
@@ -597,19 +588,23 @@ namespace p2sp
                 peer_kick_map.insert(std::make_pair(peer_now_speed, iter->second));
             }
         }
-        else
+        else if(peers_.size() > P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT)
         {
-            kick_count = peer_connections.size() - p2p_max_connect_count_ * 9 / 10;
-            LIMIT_MIN(kick_count, 0);
+            kick_count = p2p_max_connect_count_ / 10;
+            if ((int32_t)peers_.size() - kick_count < P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT)
+            {
+                kick_count = peers_.size() - P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
+            }
+            
             if (kick_count != 0)
             {
                 std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
                 for (iter = peer_connections.begin(); iter != peer_connections.end(); iter++)
                 {
-                    if (iter->second->CanKick() && iter->second->GetStatistic())
+                    ConnectionBase__p peer = iter->second;
+                    if (peer->CanKick() && peer->GetStatistic())
                     {
-                        boost::uint32_t peer_now_speed = iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
-                        peer_kick_map.insert(std::make_pair(peer_now_speed, iter->second));
+                        peer_kick_map.insert(std::make_pair(peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed, peer));
                     }
                 }
             }
@@ -618,7 +613,7 @@ namespace p2sp
         P2P_EVENT("P2PDownloader::KickPeerConnection kick_count" << kick_count);
 
         // 往共享内存写入每秒踢掉的连接数
-        statistic_->SubmitKickCount(kick_count);
+        statistic_->SubmitKickCount(std::min(kick_count, (int32_t)peer_kick_map.size()));
 
         std::multimap<uint32_t, ConnectionBase__p>::iterator iter_kick = peer_kick_map.begin();
         for (boost::int32_t i = 0; i < kick_count && iter_kick != peer_kick_map.end(); ++i, ++iter_kick)
@@ -838,6 +833,10 @@ namespace p2sp
                 KickPeerConnection();
 
                 KickSnConnection();
+            }
+            else
+            {
+                UpdateConnectTime();
             }
 
             // 连接节点
@@ -1754,7 +1753,7 @@ namespace p2sp
 
     void P2PDownloader::DoList()
     {
-        if (ippool_ && ippool_->GetNotTriedPeerCount() < 30 && NeedKickPeerConnection())
+        if (ippool_ && ippool_->GetNotTriedPeerCount() < 30 && NeedConnectNewConnection())
         {
             if ((dolist_count_ < 5 && (!last_dolist_time_.running() || last_dolist_time_.elapsed() > 2 * 1000)) ||
                 last_dolist_time_.elapsed() > 60 * 1000)
@@ -1766,17 +1765,27 @@ namespace p2sp
         }
     }
 
-    bool P2PDownloader::NeedKickPeerConnection()
+    bool P2PDownloader::NeedConnectNewConnection()
     {
         boost::uint32_t data_rate = GetDataRate();
 
-        LOGX(__DEBUG, "kick", "NeedKickPeerConnection = " << shared_from_this()
+        LOGX(__DEBUG, "kick", "NeedConnectNewConnection = " << shared_from_this()
             << "IsEndOfAssign" << assigner_->IsEndOfAssign()
             << ", NowDownloadSpeed " << GetCurrentDownloadSpeed() 
             << ", data_rate " << data_rate);
 
-        return !assigner_->IsEndOfAssign() && (GetCurrentDownloadSpeed() < data_rate + 50 * 1024)
-            && (GetCurrentDownloadSpeed() < data_rate * 14 / 10);
+        return !assigner_->IsEndOfAssign() && (GetCurrentDownloadSpeed() < data_rate + 30 * 1024)
+            && (GetCurrentDownloadSpeed() < data_rate * 12 / 10)
+            && (GetCurrentDownloadSpeed() < statistic::StatisticModule::Inst()->GetBandWidth() * 7 / 10);
+    }
+
+    void P2PDownloader::UpdateConnectTime()
+    {
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        for (iter = peers_.begin(); iter != peers_.end(); ++iter)
+        {
+            iter->second->UpdateConnectTime();
+        }
     }
 
     void P2PDownloader::AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
@@ -1813,20 +1822,20 @@ namespace p2sp
             // 75KB以上，5K多一个连接，最多40
             if (GetDataRate() / 1024 > 75)
             {
-                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT
+                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND
                     + (GetDataRate() / 1024 - 75) / 5;
 
-                LIMIT_MIN_MAX(p2p_max_connect_count_, P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT,
-                    P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT);
+                LIMIT_MIN_MAX(p2p_max_connect_count_, P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND,
+                    P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND);
             }
             else
             {
-                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
+                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND;
             }
         }
         else
         {
-            p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
+            p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND;
         }
     }
 
