@@ -272,6 +272,11 @@ namespace p2sp
             return udpserver_maximum_window_size_;
         }
 
+        boost::uint32_t GetLiveMinimumUploadSpeedInKiloBytes() const
+        {
+            return live_minimum_upload_speed_in_kilobytes_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -440,6 +445,9 @@ namespace p2sp
 
         // 二代直播udp server最大window size
         boost::uint32_t udpserver_maximum_window_size_;
+
+        // 二代直播最小上传速度
+        boost::uint32_t live_minimum_upload_speed_in_kilobytes_;
 
     };
 }

@@ -69,6 +69,7 @@ namespace p2sp
         , live_lost_prejudge_(true)
         , udpserver_maximum_requests_(6)
         , udpserver_maximum_window_size_(25)
+        , live_minimum_upload_speed_in_kilobytes_(20)
     {
     }
 
@@ -185,7 +186,8 @@ namespace p2sp
                 ("config.lec", po::value<uint32_t>()->default_value(live_extended_connections_))
                 ("config.llp", po::value<bool>()->default_value(live_lost_prejudge_))
                 ("config.umr", po::value<uint32_t>()->default_value(udpserver_maximum_requests_))
-                ("config.umw", po::value<uint32_t>()->default_value(udpserver_maximum_window_size_));
+                ("config.umw", po::value<uint32_t>()->default_value(udpserver_maximum_window_size_))
+                ("config.lminu", po::value<uint32_t>()->default_value(live_minimum_upload_speed_in_kilobytes_));
 
             std::istringstream config_stream(config_string);
 
@@ -245,6 +247,7 @@ namespace p2sp
             live_lost_prejudge_ = vm["config.llp"].as<bool>();
             udpserver_maximum_requests_ = vm["config.umr"].as<uint32_t>();
             udpserver_maximum_window_size_ = vm["config.umw"].as<uint32_t>();
+            live_minimum_upload_speed_in_kilobytes_ = vm["config.lminu"].as<uint32_t>();
 
             if (save_to_disk)
             {

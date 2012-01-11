@@ -516,6 +516,12 @@ namespace p2sp
         int32_t upload_speed_limit_kbs = GetUploadSpeedLimitInKBps();
         bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
 
+        uint32_t currentMinUploadSpeedLimit = MinUploadSpeedLimitInKbs;
+        if (p2sp::ProxyModule::Inst()->IsWatchingLive())
+        {
+            currentMinUploadSpeedLimit = BootStrapGeneralConfig::Inst()->GetLiveMinimumUploadSpeedInKiloBytes();
+        }
+
         if (upload_speed_limit_kbs < 0)
         {
             if (is_network_good)
@@ -526,7 +532,7 @@ namespace p2sp
             {
                 if (is_main_state)
                 {
-                    return MinUploadSpeedLimitInKbs * 1024;
+                    return currentMinUploadSpeedLimit * 1024;
                 }
                 else
                 {
@@ -542,7 +548,7 @@ namespace p2sp
 
                 if (is_main_state)
                 {
-                    LIMIT_MIN(upload_speed_limit_kbs, MinUploadSpeedLimitInKbs);
+                    LIMIT_MIN(upload_speed_limit_kbs, currentMinUploadSpeedLimit);
                 }
                 else
                 {
