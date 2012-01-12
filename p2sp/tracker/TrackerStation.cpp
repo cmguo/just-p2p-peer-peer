@@ -293,6 +293,10 @@ namespace p2sp
             {
                 report_timer_.interval(packet.response.keep_alive_interval_ * 1000);
             }
+            else
+            {
+                report_timer_.interval(DEFAULT_INTERVAL_IN_SECONDS_ * 1000);
+            }
 
             if (!current_report_tracker_)
             {
