@@ -295,10 +295,11 @@ namespace statistic
     P2PDownloaderStatistic::p StatisticModule::AttachP2PDownloaderStatistic(const RID& rid)
     {
         STAT_DEBUG("StatisticModule::AttachP2PDownloaderStatistic [IN]"); STAT_EVENT("StatisticModule is attaching p2p downloader with RID " << rid);
-        P2PDownloaderStatistic::p p2p_downloader_;
+        P2PDownloaderStatistic::p p2p_downloader_ = P2PDownloaderStatistic::Create(rid);
 
         if (is_running_ == false)
         {
+            assert(false);
             STAT_WARN("StatisticModule is not running, return null.");
             return p2p_downloader_;
         }
@@ -307,12 +308,13 @@ namespace statistic
         if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
         {
             STAT_WARN("p2p downloader " << rid << " exists. Return null.");
-            return p2p_downloader_;
+            return p2p_downloader_statistic_map_[rid];
         }
 
         // 判断最大个数
         if (statistic_info_.P2PDownloaderCount == UINT8_MAX_VALUE - 1)
         {
+            assert(false);
             STAT_WARN("p2p downloader std::map is full. size: " << statistic_info_.P2PDownloaderCount << ". Return null.");
             return p2p_downloader_;
         }
@@ -321,7 +323,6 @@ namespace statistic
         AddP2PDownloaderRID(rid);
 
         // 新建一个 P2PDownloaderStatistic::p, 然后添加到 download_driver_statistic_s_ 中
-        p2p_downloader_ = P2PDownloaderStatistic::Create(rid);
         p2p_downloader_statistic_map_[rid] = p2p_downloader_;
 
         STAT_DEBUG("Created P2P Downloader with RID: " << rid);
