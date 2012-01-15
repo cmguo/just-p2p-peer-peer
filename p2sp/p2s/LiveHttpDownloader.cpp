@@ -175,15 +175,11 @@ namespace p2sp
     {
         connect_failed_times_ = 0;
         is_pms_status_good_ = true;
-        if (status_ == connecting)
-        {
-            http_client_->HttpGet();
-            status_ = sending_request_head;
-        }
-        else
-        {
-            assert(false);
-        }
+
+        assert(status_ == connecting);
+
+        http_client_->HttpGet();
+        status_ = sending_request_head;
     }
 
     void LiveHttpDownloader::OnConnectFailed(uint32_t error_code)
@@ -226,8 +222,10 @@ namespace p2sp
         {
         case 200:
         case 206:
-            RequestSubPiece();
+            // RequestSubPiece()当中可能调用DoConnect()把status_重置为closed;
+            // 这里设置status_状态必须在调用RequestSubPiece()之前
             status_ = recving_response_data;
+            RequestSubPiece();
             break;
         default:
             // 重试
