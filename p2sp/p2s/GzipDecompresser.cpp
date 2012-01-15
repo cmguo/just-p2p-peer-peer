@@ -9,10 +9,6 @@
 
 namespace p2sp
 {
-#ifdef BOOST_WINDOWS_API
-#pragma optimize("", off)
-#endif
-
     void GzipDecompresser::Start(boost::shared_ptr<IDecompressListener> handler)
     {
         handler_ = handler;
@@ -36,8 +32,11 @@ namespace p2sp
         
         if (is_header_decompress_)
         {
-            handler_->OnDecompressComplete(sub_piece_buffer_deque_);
-            return true;
+            if (handler_)
+            {
+                handler_->OnDecompressComplete(sub_piece_buffer_deque_);
+                return true;
+            }
         }
 
         return false;
@@ -98,7 +97,4 @@ namespace p2sp
 
         return false;
     }
-#ifdef BOOST_WINDOWS_API
-#pragma optimize("", on)
-#endif
 }
