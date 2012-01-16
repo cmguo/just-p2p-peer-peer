@@ -92,6 +92,11 @@ namespace p2sp
                 inflateEnd(&stream_);
                 return false;
             }
+
+            if (stream_.avail_in == 0)
+            {
+                break;
+            }
         }
         while (stream_.avail_out == 0);
 
