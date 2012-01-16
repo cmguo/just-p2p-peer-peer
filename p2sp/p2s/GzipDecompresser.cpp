@@ -20,7 +20,7 @@ namespace p2sp
     {
         assert(!is_header_decompress_);
 
-        if (file_offset >= 256*1024)
+        if (file_offset >= 512*1024)
         {
             return true;
         }
@@ -42,7 +42,7 @@ namespace p2sp
         return false;
     }
 
-    bool GzipDecompresser::Decompress(const boost::uint8_t *src, boost::uint32_t src_len)
+    void GzipDecompresser::Decompress(const boost::uint8_t *src, boost::uint32_t src_len)
     {
         stream_.avail_in = src_len;
         stream_.next_in = (Bytef *)src;
@@ -52,7 +52,7 @@ namespace p2sp
             boost::shared_ptr<protocol::SubPieceBuffer> buffer;
             if (sub_piece_buffer_deque_.empty() || (*sub_piece_buffer_deque_.rbegin())->Length() == SUB_PIECE_SIZE)
             {
-                buffer = boost::shared_ptr<protocol::SubPieceBuffer>(new protocol::SubPieceBuffer(new protocol::SubPieceContent, SUB_PIECE_SIZE));
+                buffer = boost::shared_ptr<protocol::SubPieceBuffer>(new protocol::SubPieceBuffer(new protocol::SubPieceContent, 0));
                 sub_piece_buffer_deque_.push_back(buffer);
             }
             else
@@ -63,43 +63,30 @@ namespace p2sp
             assert(buffer);
             assert(buffer->Length() <= SUB_PIECE_SIZE);
 
-            boost::uint32_t buffer_size = 0;
-            if (buffer->Length() != SUB_PIECE_SIZE)
-            {
-                buffer_size = buffer->Length();
-                buffer->Length(SUB_PIECE_SIZE);
-            }
-
-            stream_.avail_out = buffer->Length() - buffer_size;
-            stream_.next_out = buffer->Data() + buffer_size;
+            stream_.avail_out = SUB_PIECE_SIZE - buffer->Length();
+            stream_.next_out = buffer->Data() + buffer->Length();
 
             boost::uint32_t ret = inflate(&stream_, Z_NO_FLUSH);
             assert(ret != Z_STREAM_ERROR);
             switch (ret)
             {
             case Z_OK:
-                buffer->Length(buffer->Length() - stream_.avail_out);
+                buffer->Length(SUB_PIECE_SIZE - stream_.avail_out);
                 break;
             case Z_STREAM_END:
+                buffer->Length(SUB_PIECE_SIZE - stream_.avail_out);
                 inflateEnd(&stream_);
                 is_header_decompress_ = true;
-                return true;
+                return;
             case Z_NEED_DICT:
                 ret = Z_DATA_ERROR;
             case Z_DATA_ERROR:
             case Z_MEM_ERROR:
                 assert(false);
                 inflateEnd(&stream_);
-                return false;
-            }
-
-            if (stream_.avail_in == 0)
-            {
-                break;
+                return;
             }
         }
         while (stream_.avail_out == 0);
-
-        return false;
     }
 }

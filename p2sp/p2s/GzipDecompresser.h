@@ -48,7 +48,7 @@ namespace p2sp
         bool OnRecvData(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
 
     private:
-        bool Decompress(const boost::uint8_t *src, boost::uint32_t src_len);
+        void Decompress(const boost::uint8_t *src, boost::uint32_t src_len);
 
     private:
         boost::shared_ptr<IDecompressListener> handler_;
