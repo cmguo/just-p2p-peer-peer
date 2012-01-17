@@ -131,32 +131,30 @@ namespace statistic
 
         if (is_running_ == false)
         {
+            assert(false);
             STAT_WARN("PeerConnectionStatistic is not running. Return null.");
             return peer_connection_info_;
         }
 
-
         // 判断个数
         if (peer_connection_statistic_map_.size() == GetMaxP2PConnectionCount())
         {
+            assert(false);
             STAT_WARN("Peer Connection Map is Full, size: " << GetMaxP2PConnectionCount() << ". Return null.");
             return peer_connection_info_;
         }
-
 
         PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.find(end_point);
 
         // 存在, 返回空
         if (it != peer_connection_statistic_map_.end())
         {
-            return peer_connection_info_;
+            return peer_connection_statistic_map_[end_point];
         }
-
 
         // create and insert
         peer_connection_info_ = PeerConnectionStatistic::Create(end_point);
         peer_connection_statistic_map_[end_point] = peer_connection_info_;
-
 
         // start
         peer_connection_info_->Start();
