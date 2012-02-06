@@ -222,9 +222,20 @@ namespace p2sp
             {
                 return true;
             }
+
+            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
+                time_counter_3200_.elapsed() > 5 * 1000)
+            {
+                return true;
+            }
         }
         else
         {
+            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
+            {
+                return true;
+            }
+
             // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
             if (rest_play_time_when_switched_ > settings_.GetSafeEnoughRestPlayableTime())
             {
