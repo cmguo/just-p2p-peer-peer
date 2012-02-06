@@ -620,6 +620,8 @@ namespace p2sp
             ParseUniqueID(uri, play_info->unique_id_);
             // resttime
             ParseRestTime(uri, play_info->rest_time_);
+
+            return play_info;
         }
         else if (boost::algorithm::istarts_with(uri.getpath(), LIVE_SET_FLAG))
         {
