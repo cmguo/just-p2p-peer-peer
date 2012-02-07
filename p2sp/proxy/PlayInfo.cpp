@@ -619,7 +619,10 @@ namespace p2sp
             // UniqueID
             ParseUniqueID(uri, play_info->unique_id_);
             // resttime
-            ParseRestTime(uri, play_info->rest_time_);
+            if (!ParseRestTime(uri, play_info->rest_time_))
+            {
+                play_info->rest_time_ = 0;
+            }
 
             return play_info;
         }
