@@ -215,9 +215,16 @@ namespace p2sp
     {
         boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
+        boost::uint32_t time_of_advancing_switching_to_http = 0;
+
+        if (GetP2PControlTarget()->GetCurrentDownloadSpeed() < settings_.GetP2PSpeedThreshold() * 1024)
+        {
+            time_of_advancing_switching_to_http = settings_.GetTimeOfAdvancingSwitchingHttp();
+        }
+
         if (is_started_)
         {
-            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() &&
+            if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() + time_of_advancing_switching_to_http &&
                 time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenStart())
             {
                 return true;
@@ -239,7 +246,7 @@ namespace p2sp
             // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
             if (rest_play_time_when_switched_ > settings_.GetSafeEnoughRestPlayableTime())
             {
-                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime())
+                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime() + time_of_advancing_switching_to_http)
                 {
                     GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
                     changed_to_http_because_of_large_upload_ = false;
@@ -250,7 +257,7 @@ namespace p2sp
             // http跑了1分钟或者3分钟剩余时间还不够多但也没有卡时切过来的
             if (rest_play_time_when_switched_ > 0)
             {
-                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim()
+                if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() + time_of_advancing_switching_to_http
                     && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithNotEnoughTime())
                 {
                     GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
@@ -376,6 +383,8 @@ namespace p2sp
         time_to_ignore_http_bad_ = BootStrapGeneralConfig::Inst()->GetTimeToIgnoreHttpBad();
         p2p_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenStart();
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
+        p2p_speed_threshold_ = BootStrapGeneralConfig::Inst()->GetP2PSpeedThreshold();
+        time_of_advancing_switching_to_http_when_p2p_slow_ = BootStrapGeneralConfig::Inst()->GetTimeOfAdvancingSwitchingHttp();
     }
 
     void SwitchController::LiveControlMode::CheckState3300()

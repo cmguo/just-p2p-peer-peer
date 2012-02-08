@@ -554,6 +554,16 @@ namespace p2sp
                     return should_use_bw_type_;
                 }
 
+                boost::uint32_t GetP2PSpeedThreshold() const
+                {
+                    return p2p_speed_threshold_;
+                }
+
+                boost::uint32_t GetTimeOfAdvancingSwitchingHttp() const
+                {
+                    return time_of_advancing_switching_to_http_when_p2p_slow_;
+                }
+
             private:
                 // Http状态下剩余时间足够
                 boost::uint32_t safe_enough_rest_playable_time_delim_under_http_;
@@ -599,6 +609,12 @@ namespace p2sp
 
                 // 是否利用BWType
                 bool should_use_bw_type_;
+
+                // P2P速度低的阈值
+                boost::uint32_t p2p_speed_threshold_;
+
+                // 在P2P速度不好的情况下，提前多少秒切Http
+                boost::uint32_t time_of_advancing_switching_to_http_when_p2p_slow_;
             };
         public:
             typedef boost::shared_ptr<LiveControlMode> p;

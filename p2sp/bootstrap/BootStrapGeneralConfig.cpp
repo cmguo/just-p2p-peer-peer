@@ -70,6 +70,8 @@ namespace p2sp
         , udpserver_maximum_requests_(6)
         , udpserver_maximum_window_size_(25)
         , live_minimum_upload_speed_in_kilobytes_(20)
+        , p2p_speed_threshold_(5)
+        , time_of_advancing_switching_to_http_when_p2p_slow_(3)
     {
     }
 
@@ -187,7 +189,9 @@ namespace p2sp
                 ("config.llp", po::value<bool>()->default_value(live_lost_prejudge_))
                 ("config.umr", po::value<uint32_t>()->default_value(udpserver_maximum_requests_))
                 ("config.umw", po::value<uint32_t>()->default_value(udpserver_maximum_window_size_))
-                ("config.lminu", po::value<uint32_t>()->default_value(live_minimum_upload_speed_in_kilobytes_));
+                ("config.lminu", po::value<uint32_t>()->default_value(live_minimum_upload_speed_in_kilobytes_))
+                ("config.p2pst", po::value<uint32_t>()->default_value(p2p_speed_threshold_))
+                ("config.ahttp", po::value<uint32_t>()->default_value(time_of_advancing_switching_to_http_when_p2p_slow_));
 
             std::istringstream config_stream(config_string);
 
@@ -248,6 +252,8 @@ namespace p2sp
             udpserver_maximum_requests_ = vm["config.umr"].as<uint32_t>();
             udpserver_maximum_window_size_ = vm["config.umw"].as<uint32_t>();
             live_minimum_upload_speed_in_kilobytes_ = vm["config.lminu"].as<uint32_t>();
+            p2p_speed_threshold_ = vm["config.p2pst"].as<uint32_t>();
+            time_of_advancing_switching_to_http_when_p2p_slow_ = vm["config.ahttp"].as<uint32_t>();
 
             if (save_to_disk)
             {
