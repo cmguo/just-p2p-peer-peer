@@ -269,7 +269,7 @@ namespace p2sp
     //
     uint32_t P2SPConfigs::P2P_MIN_TOTAL_WINDOW_SIZE = 40;
     //
-    uint32_t P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT = 500;
+    uint32_t P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT = 1024;
     uint32_t P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT_TEST = 500;
     //
     uint32_t P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT_ENABEL = 0;

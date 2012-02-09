@@ -63,7 +63,7 @@ namespace p2sp
         // HTTP限速
         if (GetHTTPControlTarget())
         {
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(400);
+            GetHTTPControlTarget()->SetSpeedLimitInKBps(1024);
         }
 
         // GetP2PControlTarget()->Resume();
