@@ -325,13 +325,10 @@ namespace statistic
         boost::uint8_t  LiveDownloadDriverCount;               // 正在下载的直播视频
         boost::uint32_t LiveDownloadDriverIDs[LIVEDOWNLOADER_MAX_COUNT];// 正在下载的直播视频 驱动器ID; 如果为 0 表示不存在; (不连续)
 
-        boost::uint8_t   Resersed[945 - 4 * LIVEDOWNLOADER_MAX_COUNT];                      // 保留字段
+        protocol::VersionInfoEx PeerVersion;
+        boost::uint8_t   Resersed[937 - 4 * LIVEDOWNLOADER_MAX_COUNT];                      // 保留字段
 
-        STASTISTIC_INFO()
-        {
-            Clear();
-            LocalPeerInfo.PeerVersion = protocol::PEER_VERSION;
-        }
+        STASTISTIC_INFO();
 
         void Clear()
         {
@@ -386,6 +383,8 @@ namespace statistic
 
             ar & LiveDownloadDriverCount;
             ar & framework::container::make_array(LiveDownloadDriverIDs, sizeof(LiveDownloadDriverIDs) / sizeof(LiveDownloadDriverIDs[0]));
+
+            ar & PeerVersion;
 
             ar & framework::container::make_array(Resersed, sizeof(Resersed) / sizeof(Resersed[0]));
         }
