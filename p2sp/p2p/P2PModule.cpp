@@ -368,10 +368,9 @@ namespace p2sp
                 max_historical_download_speed_ = now_download_speed;
         }
 
-#ifdef DISK_MODE
         // 首先 UploadManager 调用这个
         UploadModule::Inst()->OnP2PTimer(times);
-#endif
+
         // P2PDownloader->OnP2PTimer 所有的
         for (std::map<RID, P2PDownloader::p>::iterator iter  = rid_indexer_.begin(); iter != rid_indexer_.end(); iter ++)
         {
