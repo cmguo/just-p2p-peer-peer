@@ -222,6 +222,8 @@ namespace p2sp
 
         void ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status);
 
+        void RestrictSendListLength(uint32_t postion,vector<protocol::SubPieceBuffer>&buffers);
+
     public:
         //////////////////////////////////////////////////////////////////////////
         // IGlobalControlTarget

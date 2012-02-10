@@ -177,7 +177,6 @@ namespace p2sp
             http_server_socket_->SetRecvTimeout(5*1000);
             http_server_socket_->HttpRecv();
         }
-
         rest_time = 0;
     }
 
@@ -325,6 +324,8 @@ namespace p2sp
                 {
                     send_buffs.push_back(buffers[i]);
                 }
+
+            //    DebugLog("send_buffs: %d",send_buffs.size());
 
                 proxy_sender_->OnRecvSubPiece(start_position, send_buffs);
                 send_count_ += send_buffs.size();
@@ -2003,4 +2004,6 @@ namespace p2sp
     {
         return live_download_driver_ ? live_download_driver_->GetTotalRecievedSubPieceCount() : 0;
     }
+
+    
 }

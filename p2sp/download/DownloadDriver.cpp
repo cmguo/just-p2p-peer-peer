@@ -41,6 +41,7 @@
 #define DD_EVENT(s)    LOG(__EVENT, "P2P", s)
 #define DD_WARN(s)    LOG(__WARN, "P2P", s)
 #define DD_ERROR(s)    LOG(__ERROR, "P2P", s)
+const int MAX_SEND_LIST_LENGTH = 1024;
 
 using namespace network;
 using namespace statistic;
@@ -932,6 +933,8 @@ namespace p2sp
         }
 
         is_running_ = false;
+
+        second_timer_.stop();
     }
 
     void DownloadDriver::SendDacStopData()
@@ -1930,25 +1933,39 @@ namespace p2sp
         LOGX(__DEBUG, "interface", "DownloadDriver::OnNoticeSetWebUrl weburl = " << web_url);
         statistic_->SetWebUrl(web_url);
     }
+    void DownloadDriver::RestrictSendListLength(uint32_t position,vector<protocol::SubPieceBuffer>&buffers)
+    {
+        //用于将sendList控制在1024的以内
+        int sendListLength = proxy_connection_->GetSendPendingCount();
 
+        std::vector<base::AppBuffer> app_buffers;
+
+        for (std::vector<protocol::SubPieceBuffer>::iterator iter = buffers.begin();
+            iter != buffers.end(); ++iter)
+        {
+            if( sendListLength<MAX_SEND_LIST_LENGTH )
+            {
+                base::AppBuffer app_buffer(*iter);
+                app_buffers.push_back(app_buffer);
+                sendListLength++;
+            }
+            else
+            {
+                break;
+            }
+        }
+        proxy_connection_->OnRecvSubPiece(position, app_buffers);
+    }
      // 通知获得文件名
     void DownloadDriver::OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer)
     {
         assert(buffer.Data() && (buffer.Length() <= bytes_num_per_piece_g_) && (buffer.Length()>0));
-        if (proxy_connection_ && proxy_connection_->GetPlayingPosition() == position)
+        
+        if(proxy_connection_ && proxy_connection_->GetPlayingPosition() == position)
         {
             std::vector<protocol::SubPieceBuffer> buffers(1, buffer);
             instance_->GetSubPieceForPlay(shared_from_this(), position + buffer.Length(), buffers);
-
-            std::vector<base::AppBuffer> app_buffers;
-            for (std::vector<protocol::SubPieceBuffer>::iterator iter = buffers.begin();
-                iter != buffers.end(); ++iter)
-            {
-                base::AppBuffer app_buffer(*iter);
-                app_buffers.push_back(app_buffer);
-            }
-
-            proxy_connection_->OnRecvSubPiece(position, app_buffers);
+            RestrictSendListLength(position,buffers);
         }
     }
 
@@ -2754,7 +2771,16 @@ namespace p2sp
             }
 
             SNStrategy();
-        }
+                
+            //当void DownloadDriver::OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer)
+            //得不到执行时，利用定时器发送
+            std::vector<protocol::SubPieceBuffer> buffers;
+
+            uint32_t pp =   proxy_connection_->GetPlayingPosition();
+            instance_->GetSubPieceForPlay(shared_from_this(), pp ,buffers);
+            RestrictSendListLength(pp,buffers);
+          }
+  
     }
 
     void DownloadDriver::SetAcclerateStatus(boost::int32_t status)

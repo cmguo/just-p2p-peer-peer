@@ -222,6 +222,16 @@ namespace p2sp
 
         void StopEstimateIkanRestPlayTime() { need_estimate_ikan_rest_play_time_ = false; }
 
+        boost::uint32_t GetSendPendingCount()
+        {
+            if(!http_server_socket_)
+                return 0;
+            else
+            {
+                return http_server_socket_->GetSendPendingCount();
+            }
+        }
+
     protected:
         virtual void initialize();
         virtual void clear();
@@ -304,7 +314,7 @@ namespace p2sp
 #endif
 
         // TODO(herain):在flash p2p播放器全部上线后可以删掉估算相关的代码
-        // 是否需要估算ikan player的剩余缓冲时间		
+        // 是否需要估算ikan player的剩余缓冲时间        
         bool need_estimate_ikan_rest_play_time_;
     private:
         ProxyConnection(
