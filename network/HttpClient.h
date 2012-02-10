@@ -173,6 +173,7 @@ namespace network
         framework::timer::TickCounter recv_time_counter_;
 
         bool is_accept_gzip_;
+        bool is_response_gzip_;
     };
 }
 

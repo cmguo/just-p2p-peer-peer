@@ -56,6 +56,7 @@ namespace network
         , get_count_(0)
         , recv_time_counter_(false)
         , is_accept_gzip_(is_accept_gzip)
+        , is_response_gzip_(false)
     {
         request_info_.domain_ = domain;
         if (port == 80)
@@ -645,6 +646,9 @@ namespace network
                 Close();
                 return;
             }
+
+            is_response_gzip_ = http_response_->IsGzip();
+
             assert(header_length > 0);
             if (header_length == 0)
             {
@@ -771,8 +775,7 @@ namespace network
                 //    content_offset_));
                 NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset_ << " " << content_offset_);
                 
-                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset,
-                    http_response_->IsGzip());
+                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
             }
         }
         else
@@ -853,8 +856,7 @@ namespace network
                 //    content_offset));
                 NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset << " " << content_offset);
 
-                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, 
-                    http_response_->IsGzip());
+                handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
             }
         }
         else if (err == boost::asio::error::operation_aborted)
@@ -901,8 +903,7 @@ namespace network
                     //    file_offset, content_offset));
                     NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataPartial " << file_offset << " " << content_offset);
 
-                    handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset,
-                        http_response_->IsGzip());
+                    handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
                 }
             }
 
