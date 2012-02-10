@@ -151,13 +151,25 @@ namespace p2sp
             {
                 // asserts
                 assert(state_.timer_using_ == State::TIMER_USING_NONE);
-                // action
-                time_counter_h_.reset();
-                // state
-                state_.timer_ = State::TIMER_STARTED;
-                state_.timer_using_ = State::TIMER_USING_H;
+
+                if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY && 
+                    GetGlobalDataProvider()->GetBWType() != JBW_HTTP_PREFERRED)
+                {
+                    // action
+                    time_counter_h_.reset();
+                    // state
+                    state_.timer_ = State::TIMER_STARTED;
+                    state_.timer_using_ = State::TIMER_USING_H;
+                }
+                else
+                {
+                    // action
+                    GetHTTPControlTarget()->Resume();
+                    // state
+                    state_.http_ = State::HTTP_DOWNLOADING;
+                }
+
                 // next
-                // Next(times);
                 continue;
             }
             //////////////////////////////////////////////////////////////////////////
