@@ -231,7 +231,7 @@ namespace p2sp
     uint32_t P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT = 800;
 
     //
-    uint32_t P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT = 20;
+    uint32_t P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT = 1024;
     //
     uint32_t P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL = 0;
 

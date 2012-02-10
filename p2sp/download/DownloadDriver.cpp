@@ -2559,8 +2559,8 @@ namespace p2sp
         // 因为后可能切换到选节目模式之后，是限总速度的，这需要恢复过来
         if (GetHTTPControlTarget())
         {
-            // HTTP默认限速400
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(400);
+            // HTTP默认限速1024
+            GetHTTPControlTarget()->SetSpeedLimitInKBps(P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT);
         }
 
         if (download_mode_ == IGlobalControlTarget::SMART_MODE)

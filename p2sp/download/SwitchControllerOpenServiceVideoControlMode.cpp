@@ -63,7 +63,7 @@ namespace p2sp
         // HTTP限速
         if (GetHTTPControlTarget())
         {
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(1024);
+            GetHTTPControlTarget()->SetSpeedLimitInKBps(P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT);
         }
 
         // GetP2PControlTarget()->Resume();
