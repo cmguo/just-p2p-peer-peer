@@ -1417,6 +1417,9 @@ namespace p2sp
 
         if (is_limit_download_connection_)
         {
+            // 客户端已经除去网页预留带宽模式了
+            assert(false);
+
             // 网页预留带宽模式
             if (!play_vod_connections.empty())
             {
@@ -1581,8 +1584,8 @@ namespace p2sp
                 }
                 else
                 {
-                    // 不在观看，75%带宽平分给下载
-                    download_speed_limit_in_KBps = bandwidth * 3/4 / 1024 / download_connections.size();
+                    // 不在观看，不限速
+                    download_speed_limit_in_KBps = -1;
                 }
             }
         }
