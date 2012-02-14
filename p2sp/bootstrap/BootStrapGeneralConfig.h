@@ -287,6 +287,16 @@ namespace p2sp
             return time_of_advancing_switching_to_http_when_p2p_slow_;
         }
 
+        boost::uint32_t GetP2PProtectTimeIfStartAndSpeedIs0() const
+        {
+            return p2p_protect_time_if_start_and_speed_is_0_;
+        }
+
+        boost::uint32_t GetP2PProtectTimeIfSpeedIs0() const
+        {
+            return p2p_protect_time_if_speed_is_0_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -465,6 +475,11 @@ namespace p2sp
         // 在P2P速度不好的情况下，提前多少秒切Http
         boost::uint32_t time_of_advancing_switching_to_http_when_p2p_slow_;
 
+        // 刚启动时，在P2P下至少停留多长时间，然后检测P2P速度是不是为0
+        boost::uint32_t p2p_protect_time_if_start_and_speed_is_0_;
+
+        // 非刚启动时，在P2P下至少停留多长时间，然后才检测P2P速度是不是为0
+        boost::uint32_t p2p_protect_time_if_speed_is_0_;
     };
 }
 #endif

@@ -227,12 +227,22 @@ namespace p2sp
             if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() + time_of_advancing_switching_to_http &&
                 time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenStart())
             {
+                SetChangeToHttpBecauseOfUrgent();
                 return true;
             }
 
             if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
                 time_counter_3200_.elapsed() > 5 * 1000)
             {
+                SetChangeToHttpBecauseOfUrgent();
+                return true;
+            }
+
+            if (GetP2PControlTarget()->GetCurrentDownloadSpeed() == 0 &&
+                rest_play_time_in_second < settings_.GetUrgentRestPlayableTimeDelim() &&
+                time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeIfStartAndSpeedIs0())
+            {
+                SetChangeToHttpBecauseOfUrgent();
                 return true;
             }
         }
@@ -248,8 +258,7 @@ namespace p2sp
             {
                 if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelimWhenSwitchedWithLargeTime() + time_of_advancing_switching_to_http)
                 {
-                    GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
-                    changed_to_http_because_of_large_upload_ = false;
+                    SetChangeToHttpBecauseOfUrgent();
                     return true;
                 }
             }
@@ -260,20 +269,30 @@ namespace p2sp
                 if (rest_play_time_in_second < settings_.GetP2PRestPlayableTimeDelim() + time_of_advancing_switching_to_http
                     && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithNotEnoughTime())
                 {
-                    GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
-                    changed_to_http_because_of_large_upload_ = false;
+                    SetChangeToHttpBecauseOfUrgent();
                     return true;
                 }
             }
 
             // 卡了后切过来的
             // P2P同样卡，再切换回去试试
-            if (rest_play_time_in_second == 0 && time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithBuffering())
+            if (rest_play_time_when_switched_ == 0 &&
+                rest_play_time_in_second == 0 &&
+                time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeWhenSwitchedWithBuffering())
             {
-                GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
-                changed_to_http_because_of_large_upload_ = false;
+                SetChangeToHttpBecauseOfUrgent();
                 return true;
             }
+
+            if (GetP2PControlTarget()->GetCurrentDownloadSpeed() == 0 &&
+                rest_play_time_in_second < settings_.GetUrgentRestPlayableTimeDelim() &&
+                time_counter_3200_.elapsed() > settings_.GetP2PProtectTimeIfSpeedIs0() &&
+                rest_play_time_when_switched_ != 0)
+            {
+                SetChangeToHttpBecauseOfUrgent();
+                return true;
+            }
+
         }
 
         if (GetGlobalDataProvider()->ShouldUseCDNWhenLargeUpload()
@@ -385,6 +404,9 @@ namespace p2sp
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
         p2p_speed_threshold_ = BootStrapGeneralConfig::Inst()->GetP2PSpeedThreshold();
         time_of_advancing_switching_to_http_when_p2p_slow_ = BootStrapGeneralConfig::Inst()->GetTimeOfAdvancingSwitchingHttp();
+        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
+        p2p_protect_time_if_start_and_speed_is_0_ =  BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfStartAndSpeedIs0();
+        p2p_protect_time_if_speed_is_0_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfSpeedIs0();
     }
 
     void SwitchController::LiveControlMode::CheckState3300()
@@ -414,5 +436,11 @@ namespace p2sp
         {
             ResumeP2PDownloader();
         }
+    }
+
+    void SwitchController::LiveControlMode::SetChangeToHttpBecauseOfUrgent()
+    {
+        GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
+        changed_to_http_because_of_large_upload_ = false;
     }
 }
