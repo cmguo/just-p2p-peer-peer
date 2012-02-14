@@ -708,6 +708,7 @@ namespace p2sp
         // Y1: 平均1分钟之内发起连接数
         // Z1: 总共收到的数据包的个数
         // A2: 收到的逆序数据包的个数
+        // B2: 带宽
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -837,6 +838,8 @@ namespace p2sp
             info.ReverseSubPiecePacketCount = 0;
         }
 
+        info.BandWidth = statistic::StatisticModule::Inst()->GetBandWidth();
+
         std::ostringstream log_stream;
 
         log_stream << "C=";
@@ -910,6 +913,7 @@ namespace p2sp
         log_stream << "&Y1=" << info.AverageConnectPeersCountInMinute;
         log_stream << "&Z1=" << info.TotalReceivedSubPiecePacketCount;
         log_stream << "&A2=" << info.ReverseSubPiecePacketCount;
+        log_stream << "&B2=" << info.BandWidth;
 
         string log = log_stream.str();
 

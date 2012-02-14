@@ -96,6 +96,7 @@ namespace p2sp
         boost::uint32_t         AverageConnectPeersCountInMinute;
         boost::uint32_t         TotalReceivedSubPiecePacketCount;
         boost::uint32_t         ReverseSubPiecePacketCount;
+        boost::uint32_t         BandWidth;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
