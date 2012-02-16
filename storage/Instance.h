@@ -259,6 +259,7 @@ namespace storage
         void OnThreadReadSubPieceSucced(const protocol::SubPieceInfo & subpiece_info, protocol::SubPieceBuffer buff);
 
         void GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size);
+        map<uint32_t, boost::dynamic_bitset<uint32_t> > GetSubPiecesBitMap();
 
     protected:
         // 从资源描述, subpiece_manager_中删除block
@@ -549,6 +550,7 @@ namespace storage
         if (is_running_ == false) return protocol::UrlInfo();
         return origanel_url_info_;
     }
+
 }// storage
 
 #endif  // STORAGE_INSTANCE_H

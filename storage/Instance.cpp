@@ -1429,7 +1429,7 @@ namespace storage
             return;
 
         assert(pointer == &traffic_timer_);
-
+        
         ++last_push_time_;
         if (last_push_time_ >= TRAFFIC_UNIT_TIME)
         {
@@ -1840,4 +1840,27 @@ namespace storage
             subpiece_manager_->GetDownloadProgressBitmap(bitmap, bitmap_size);
         }
     }
+
+    std::map<uint32_t,boost::dynamic_bitset<uint32_t> > Instance::GetSubPiecesBitMap()
+    {
+       map<uint32_t,boost::dynamic_bitset<uint32_t> > subpieces_bitmap_;
+       uint32_t total_block_count = GetBlockCount();
+       for(uint32_t block_index = 0; block_index<total_block_count; block_index++)
+       {
+           //获取每个block中的bitset
+           boost::dynamic_bitset<uint32_t> &db = subpieces_bitmap_[block_index];
+           uint32_t block_subpiece_num = subpiece_manager_->GetBlockSubPieceCount(block_index);
+           db.resize(block_subpiece_num);
+           for(int subpiece_index = 0; subpiece_index < block_subpiece_num; subpiece_index++)
+           {
+               protocol::SubPieceInfo spi(block_index,subpiece_index);
+               if (subpiece_manager_->HasSubPiece(spi))
+               {
+                   db.set(subpiece_index);
+               }
+           }
+       }
+       return subpieces_bitmap_;
+    }
+
 }
