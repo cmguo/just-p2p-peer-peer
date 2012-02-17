@@ -50,7 +50,7 @@ namespace p2sp
 
     private:
         // 播放数据
-        void OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer);
+        void OnAsyncGetSubPieceSucced(uint32_t start_position, const base::AppBuffer & buffer);
         void SendHttpHeader(network::HttpResponse::p response);
 
     private:

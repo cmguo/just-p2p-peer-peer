@@ -1935,6 +1935,11 @@ namespace p2sp
     }
     void DownloadDriver::RestrictSendListLength(uint32_t position,vector<protocol::SubPieceBuffer>&buffers)
     {
+        if (buffers.empty())
+        {
+            return;
+        }
+
         //用于将sendList控制在1024的以内
         int sendListLength = proxy_connection_->GetSendPendingCount();
 
@@ -1954,6 +1959,7 @@ namespace p2sp
                 break;
             }
         }
+
         proxy_connection_->OnRecvSubPiece(position, app_buffers);
     }
      // 通知获得文件名

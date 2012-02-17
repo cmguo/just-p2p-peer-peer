@@ -79,7 +79,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void RangeProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
+    void RangeProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, const base::AppBuffer & buffer)
     {
         if (is_running_ == false) return;
         assert(file_length_ > 0);
@@ -196,6 +196,7 @@ namespace p2sp
 
     void RangeProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
+        assert(!buffers.empty());
         if (!is_response_header_)
         {
             SendHttpHeader(network::HttpResponse::p());
