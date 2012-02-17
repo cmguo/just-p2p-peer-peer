@@ -329,6 +329,8 @@ namespace p2sp
             return source_type_;
         }
 
+        virtual bool DoesFallBehindTooMuch() const;
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 

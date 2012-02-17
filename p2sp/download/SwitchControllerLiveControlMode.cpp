@@ -156,6 +156,10 @@ namespace p2sp
         if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
             return;
 
+        // 如果落后太多，一直用Http，不再切换P2P
+        if (GetGlobalDataProvider()->DoesFallBehindTooMuch())
+            return;
+
         boost::uint32_t rest_play_time_in_second = GetGlobalDataProvider()->GetRestPlayableTime();
 
         if (NeedChangeTo3200())
@@ -220,6 +224,11 @@ namespace p2sp
         if (GetP2PControlTarget()->GetCurrentDownloadSpeed() < settings_.GetP2PSpeedThreshold() * 1024)
         {
             time_of_advancing_switching_to_http = settings_.GetTimeOfAdvancingSwitchingHttp();
+        }
+
+        if (GetGlobalDataProvider()->DoesFallBehindTooMuch())
+        {
+            return true;
         }
 
         if (is_started_)

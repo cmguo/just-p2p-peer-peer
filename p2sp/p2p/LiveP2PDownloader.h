@@ -269,6 +269,8 @@ namespace p2sp
         boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
         boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
 
+        boost::uint32_t GetMinFirstBlockID() const;
+
     private:
         void CheckBlockComplete();
         void DoList();

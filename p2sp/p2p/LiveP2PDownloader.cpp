@@ -1453,4 +1453,26 @@ namespace p2sp
 
         return total_received_packet_count;
     }
+
+    boost::uint32_t LiveP2PDownloader::GetMinFirstBlockID() const
+    {
+        boost::uint32_t min_first_block_id = std::numeric_limits<uint32_t>::max();
+
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end(); ++iter)
+        {
+            if (min_first_block_id > iter->second->GetPeerConnectionInfo().FirstLiveBlockId &&
+                iter->second->GetPeerConnectionInfo().FirstLiveBlockId != 0)
+            {
+                min_first_block_id = iter->second->GetPeerConnectionInfo().FirstLiveBlockId;
+            }
+        }
+
+        if (min_first_block_id == std::numeric_limits<uint32_t>::max())
+        {
+            min_first_block_id = 0;
+        }
+
+        return min_first_block_id;
+    }
 }

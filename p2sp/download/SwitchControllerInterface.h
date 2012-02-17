@@ -209,6 +209,7 @@ namespace p2sp
         virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) = 0;
         virtual bool GetReplay() const = 0;
         virtual boost::uint32_t GetSourceType() const = 0;
+        virtual bool DoesFallBehindTooMuch() const = 0;
     };
 
 }

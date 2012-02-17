@@ -1118,4 +1118,15 @@ namespace p2sp
     {
         rest_time_tracker_.SetRestTimeInSecond(rest_time_in_second);
     }
+
+    bool LiveDownloadDriver::DoesFallBehindTooMuch() const
+    {
+        if (live_p2p_downloader_ &&
+            playing_position_.GetBlockId() + BootStrapGeneralConfig::Inst()->GetFallBehindSecondsThreshold() < live_p2p_downloader_->GetMinFirstBlockID())
+        {
+            return true;
+        }
+
+        return false;
+    }
 }

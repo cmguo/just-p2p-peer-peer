@@ -274,6 +274,7 @@ namespace p2sp
         virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) {};
         virtual bool GetReplay() const {return false;}
         virtual uint32_t GetSourceType() const { return source_type_; }
+        virtual bool DoesFallBehindTooMuch() const { return false; }
 
     private:
         HttpDownloader__p AddHttpDownloader(const protocol::UrlInfo& url_info, bool is_orginal = false);

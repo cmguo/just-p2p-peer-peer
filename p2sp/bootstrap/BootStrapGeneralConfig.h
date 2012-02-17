@@ -297,6 +297,11 @@ namespace p2sp
             return p2p_protect_time_if_speed_is_0_;
         }
 
+        boost::uint32_t GetFallBehindSecondsThreshold() const
+        {
+            return fall_behind_seconds_threshold_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -480,6 +485,9 @@ namespace p2sp
 
         // 非刚启动时，在P2P下至少停留多长时间，然后才检测P2P速度是不是为0
         boost::uint32_t p2p_protect_time_if_speed_is_0_;
+
+        // 落后的阈值
+        boost::uint32_t fall_behind_seconds_threshold_;
     };
 }
 #endif
