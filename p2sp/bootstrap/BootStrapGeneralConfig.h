@@ -302,6 +302,16 @@ namespace p2sp
             return fall_behind_seconds_threshold_;
         }
 
+        boost::uint32_t GetMaxRestPlayableTime() const
+        {
+            return max_rest_playable_time_;
+        }
+
+        boost::uint32_t GetMinRestPlayableTime() const
+        {
+            return min_rest_playable_time_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -488,6 +498,12 @@ namespace p2sp
 
         // 落后的阈值
         boost::uint32_t fall_behind_seconds_threshold_;
+
+        // 当剩余时间超过该值时，暂停下载
+        boost::uint32_t max_rest_playable_time_;
+
+        // 当剩余时间小于该值时，开始下载
+        boost::uint32_t min_rest_playable_time_;
     };
 }
 #endif

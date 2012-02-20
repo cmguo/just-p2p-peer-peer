@@ -75,6 +75,8 @@ namespace p2sp
         , p2p_protect_time_if_start_and_speed_is_0_(10 * 1000)
         , p2p_protect_time_if_speed_is_0_(5 * 1000)
         , fall_behind_seconds_threshold_(30)
+        , max_rest_playable_time_(120)
+        , min_rest_playable_time_(60)
     {
     }
 
@@ -197,7 +199,9 @@ namespace p2sp
                 ("config.ahttp", po::value<uint32_t>()->default_value(time_of_advancing_switching_to_http_when_p2p_slow_))
                 ("config.pp1", po::value<uint32_t>()->default_value(p2p_protect_time_if_start_and_speed_is_0_))
                 ("config.pp2", po::value<uint32_t>()->default_value(p2p_protect_time_if_speed_is_0_))
-                ("config.fbt", po::value<uint32_t>()->default_value(fall_behind_seconds_threshold_));
+                ("config.fbt", po::value<uint32_t>()->default_value(fall_behind_seconds_threshold_))
+                ("config.maxlive2t", po::value<uint32_t>()->default_value(max_rest_playable_time_))
+                ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_));
 
             std::istringstream config_stream(config_string);
 
@@ -263,6 +267,8 @@ namespace p2sp
             p2p_protect_time_if_start_and_speed_is_0_ = vm["config.pp1"].as<uint32_t>();
             p2p_protect_time_if_speed_is_0_ = vm["config.pp2"].as<uint32_t>();
             fall_behind_seconds_threshold_ = vm["config.fbt"].as<uint32_t>();
+            max_rest_playable_time_ = vm["config.maxlive2t"].as<uint32_t>();
+            min_rest_playable_time_ = vm["config.minlive2t"].as<uint32_t>();
 
             if (save_to_disk)
             {

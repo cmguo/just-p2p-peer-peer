@@ -152,6 +152,12 @@ namespace p2sp
         assert(GetHTTPControlTarget());
         assert(GetP2PControlTarget());
 
+        if (NeedChangeTo3300())
+        {
+            ChangeTo3300();
+            return;
+        }
+
         // 如果P2P节点数为0，不再进行判断
         if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
             return;
@@ -182,6 +188,12 @@ namespace p2sp
     {
         assert(GetHTTPControlTarget());
         assert(GetP2PControlTarget());
+
+        if (NeedChangeTo3300())
+        {
+            ChangeTo3300();
+            return;
+        }
 
         if (NeedChangeTo2300())
         {
@@ -416,34 +428,61 @@ namespace p2sp
         urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
         p2p_protect_time_if_start_and_speed_is_0_ =  BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfStartAndSpeedIs0();
         p2p_protect_time_if_speed_is_0_ = BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfSpeedIs0();
+        max_rest_playable_time_ = BootStrapGeneralConfig::Inst()->GetMaxRestPlayableTime();
+        min_rest_playable_time_ = BootStrapGeneralConfig::Inst()->GetMinRestPlayableTime();
     }
 
     void SwitchController::LiveControlMode::CheckState3300()
     {
-        if (settings_.GetShouldUseBWType() && GetHTTPControlTarget() && GetP2PControlTarget())
+        if (is_started_)
         {
-            // bwtype = JBW_NORMAL p2p启动
-            if (GetGlobalDataProvider()->GetBWType() == JBW_NORMAL && GetGlobalDataProvider()->GetReplay() == false
-                && GetGlobalDataProvider()->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2)
+            if (settings_.GetShouldUseBWType() && GetHTTPControlTarget() && GetP2PControlTarget())
             {
-                ChangeTo3200();
-            }
-            else
-            {
-                ChangeTo2300();
+                // bwtype = JBW_NORMAL p2p启动
+                if (GetGlobalDataProvider()->GetBWType() == JBW_NORMAL && GetGlobalDataProvider()->GetReplay() == false
+                    && GetGlobalDataProvider()->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2)
+                {
+                    ChangeTo3200();
+                }
+                else
+                {
+                    ChangeTo2300();
+                }
+
+                return;
             }
 
-            return;
+            // bs开关为关，只要有Http，则Http启动
+            if (GetHTTPControlTarget())
+            {
+                ResumeHttpDownloader();
+            }
+            else if (GetP2PControlTarget())
+            {
+                ResumeP2PDownloader();
+            }
         }
-
-        // bs开关为关，只要有Http，则Http启动
-        if (GetHTTPControlTarget())
+        else if(GetGlobalDataProvider()->GetRestPlayableTime() < settings_.GetMinRestPlayableTime())
         {
-            ResumeHttpDownloader();
-        }
-        else if (GetP2PControlTarget())
-        {
-            ResumeP2PDownloader();
+            if (GetP2PControlTarget() && GetHTTPControlTarget())
+            {
+                if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 || GetGlobalDataProvider()->DoesFallBehindTooMuch())
+                {
+                    ResumeHttpDownloader();
+                }
+                else
+                {
+                    ResumeP2PDownloader();
+                }
+            }
+            else if (GetP2PControlTarget())
+            {
+                ResumeP2PDownloader();
+            }
+            else if (GetHTTPControlTarget())
+            {
+                ResumeHttpDownloader();
+            }
         }
     }
 
@@ -451,5 +490,17 @@ namespace p2sp
     {
         GetGlobalDataProvider()->SubmitChangedToHttpTimesWhenUrgent();
         changed_to_http_because_of_large_upload_ = false;
+    }
+
+    bool SwitchController::LiveControlMode::NeedChangeTo3300()
+    {
+        return GetGlobalDataProvider()->GetRestPlayableTime() > settings_.GetMaxRestPlayableTime();
+    }
+
+    void SwitchController::LiveControlMode::ChangeTo3300()
+    {
+        is_started_ = false;
+        PauseP2PDownloader();
+        PauseHttpDownloader();
     }
 }

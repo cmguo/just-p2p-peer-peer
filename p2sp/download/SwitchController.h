@@ -579,6 +579,16 @@ namespace p2sp
                     return p2p_protect_time_if_speed_is_0_;
                 }
 
+                boost::uint32_t GetMaxRestPlayableTime() const
+                {
+                    return max_rest_playable_time_;
+                }
+
+                boost::uint32_t GetMinRestPlayableTime() const
+                {
+                    return min_rest_playable_time_;
+                }
+
             private:
                 // Http状态下剩余时间足够
                 boost::uint32_t safe_enough_rest_playable_time_delim_under_http_;
@@ -639,6 +649,12 @@ namespace p2sp
 
                 // 非刚启动时，在P2P下至少停留多长时间，然后才检测P2P速度是不是为0
                 boost::uint32_t p2p_protect_time_if_speed_is_0_;
+
+                // 当剩余时间超过该值时，暂停下载
+                boost::uint32_t max_rest_playable_time_;
+
+                // 当剩余时间小于该值时，开始下载
+                boost::uint32_t min_rest_playable_time_;
             };
         public:
             typedef boost::shared_ptr<LiveControlMode> p;
@@ -683,6 +699,7 @@ namespace p2sp
         private:
             void ChangeTo3200();
             void ChangeTo2300();
+            void ChangeTo3300();
 
             void CheckState3200();
             void CheckState2300();
@@ -690,6 +707,7 @@ namespace p2sp
 
             bool NeedChangeTo2300();
             bool NeedChangeTo3200();
+            bool NeedChangeTo3300();
 
             void PauseHttpDownloader();
             void ResumeHttpDownloader();
