@@ -36,6 +36,8 @@ namespace p2sp
             LOG(__DEBUG, "", "get port failed. use dafault port 80.");
             pms_url_port_ = 80;
         }
+
+        transform(rid_.begin(), rid_.end(), rid_.begin(), tolower);
     }
 
     void LiveHttpDownloader::Start()
