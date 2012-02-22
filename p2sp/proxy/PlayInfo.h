@@ -97,7 +97,7 @@ namespace p2sp
 
         boost::int32_t GetIsDrag() const { return is_drag_; }
 
-        boost::uint32_t GetRestTime() const { return rest_time_; }
+        boost::uint32_t GetRestTimeInMillisecond() const { return rest_time_in_millisecond_; }
 
         bool GetHeadOnly() const { return head_only_; }
 
@@ -222,7 +222,7 @@ namespace p2sp
         bool auto_close_;
         boost::int32_t is_drag_;
         bool head_only_;
-        boost::uint32_t rest_time_;
+        boost::uint32_t rest_time_in_millisecond_;
         boost::uint32_t bwtype_;
         boost::int32_t send_speed_limit_;
         std::vector<std::string> bak_hosts_;

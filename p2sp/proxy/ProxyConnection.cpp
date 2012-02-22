@@ -808,7 +808,7 @@ namespace p2sp
                 url_info.url_ = ProxyModule::RemovePpvakeyFromUrl(url_info.url_);
             }
 
-            download_driver_->SetRestPlayTime(play_info->GetRestTime());
+            download_driver_->SetRestPlayTime(play_info->GetRestTimeInMillisecond());
             download_driver_->SetIsHeadOnly(play_info->GetHeadOnly());
             download_driver_->SetSessionID(play_info->GetPlayerId());
             download_driver_->SetOpenServiceStartPosition(start_position);
@@ -1949,9 +1949,9 @@ namespace p2sp
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
             play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID());
 
-        if (play_info->GetRestTime() > 0)
+        if (play_info->GetRestTimeInMillisecond() > 0)
         {
-            live_download_driver_->SetRestTimeInSecond(play_info->GetRestTime());
+            live_download_driver_->SetRestTimeInSecond(play_info->GetRestTimeInMillisecond() / 1000);
         }
     }
 

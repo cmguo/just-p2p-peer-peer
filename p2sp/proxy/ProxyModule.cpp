@@ -771,7 +771,7 @@ namespace p2sp
         }
     }
 
-    void ProxyModule::SetRestPlayTimeByUrl(string url, boost::uint32_t rest_play_time)
+    void ProxyModule::SetRestPlayTimeByUrl(string url, boost::uint32_t rest_play_time_in_millisecond)
     {
         if (!is_running_)
         {
@@ -795,7 +795,7 @@ namespace p2sp
             {
                 if (dd->GetOpenServiceFileName() == filename)
                 {
-                    dd->SetRestPlayTime(rest_play_time);
+                    dd->SetRestPlayTime(rest_play_time_in_millisecond);
                 }
             }
             else
@@ -809,7 +809,7 @@ namespace p2sp
                                         
                     if (play_info && live_download_driver->GetUniqueID() == play_info->GetUniqueID())
                     {
-                        live_download_driver->SetRestTimeInSecond(rest_play_time);
+                        live_download_driver->SetRestTimeInSecond(rest_play_time_in_millisecond / 1000);
                     }
                 }
             }

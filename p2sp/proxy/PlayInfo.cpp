@@ -513,12 +513,12 @@ namespace p2sp
             }
 
             // rest time
-            if (!ParseRestTime(uri, play_info->rest_time_))
+            if (!ParseRestTime(uri, play_info->rest_time_in_millisecond_))
             {
                 if (play_info->is_drag_ == 1)
                 {
                     // 拖动请求，rest_time_设为0标明下载非常紧急
-                    play_info->rest_time_ = 0;
+                    play_info->rest_time_in_millisecond_ = 0;
                 }
                 else
                 {
@@ -526,7 +526,7 @@ namespace p2sp
                     // 正常启动客户端会在发出请求后通过接口继续设置rest_time_，这里的初始值不会有副作用
                     // 如果是预下载，那么客户端不会通过接口继续设置rest_time_，这里的初值会造成从http启动，
                     //      在后面内核会通过SetRestPlayTime的频度来确定是预下载，从而重新设置rest_time。
-                    play_info->rest_time_ = 0;
+                    play_info->rest_time_in_millisecond_ = 0;
                 }
             }
 
@@ -619,9 +619,9 @@ namespace p2sp
             // UniqueID
             ParseUniqueID(uri, play_info->unique_id_);
             // resttime
-            if (!ParseRestTime(uri, play_info->rest_time_))
+            if (!ParseRestTime(uri, play_info->rest_time_in_millisecond_))
             {
-                play_info->rest_time_ = 0;
+                play_info->rest_time_in_millisecond_ = 0;
             }
 
             return play_info;
@@ -671,7 +671,7 @@ namespace p2sp
             // start_position 不是0表示ikan是拖动请求，设置rest_time默认值为0
             if (start_position != 0)
             {
-                play_info->rest_time_ = 0;
+                play_info->rest_time_in_millisecond_ = 0;
             }
             play_info->start_position_ = start_position;
         }
