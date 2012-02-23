@@ -132,6 +132,7 @@ namespace statistic
         if (is_running_ == false)
         {
             assert(false);
+            base::util::DoCrash(100);
             STAT_WARN("PeerConnectionStatistic is not running. Return null.");
             return peer_connection_info_;
         }
@@ -140,6 +141,7 @@ namespace statistic
         if (peer_connection_statistic_map_.size() == GetMaxP2PConnectionCount())
         {
             assert(false);
+            base::util::DoCrash(100);
             STAT_WARN("Peer Connection Map is Full, size: " << GetMaxP2PConnectionCount() << ". Return null.");
             return peer_connection_info_;
         }
