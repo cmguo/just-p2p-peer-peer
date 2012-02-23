@@ -138,7 +138,6 @@ namespace p2sp
         virtual bool IsP2PDownloader() {return true;}
 
         // IP2PControlTarget
-        virtual void SetAssignPeerCountLimit(uint32_t assign_peer_count_limit); // 0: no limit
         virtual void NoticeHttpBad(bool is_http_bad);
         virtual void SetDownloadMode(P2PDwonloadMode mode);
         virtual void SetMaxConnectCount(boost::int32_t max_connect_count);

@@ -34,11 +34,6 @@ namespace p2sp
         // 消息
         void OnP2PTimer(uint32_t times);
 
-        void SetAssignPeerCountLimit(boost::uint32_t assign_peer_count_limit)
-        {
-            assign_peer_count_limit_ = assign_peer_count_limit;
-        }
-
         bool IsEndOfAssign() const
         {
             return is_end_of_file_;
@@ -82,13 +77,11 @@ namespace p2sp
         uint32_t block_size_;
         uint32_t file_length_;
 
-        uint32_t assign_peer_count_limit_;
         boost::uint16_t subpiece_count_;
         // statistic
         uint32_t total_assign_count_;
         uint32_t redundant_assign_count_;
 
-        //
         bool is_end_of_file_;
 
     private:
@@ -96,7 +89,6 @@ namespace p2sp
         Assigner(P2PDownloader__p p2p_downloader)
             : p2p_downloader_(p2p_downloader)
             , is_running_(false)
-            , assign_peer_count_limit_(0)
         {}
     };
 

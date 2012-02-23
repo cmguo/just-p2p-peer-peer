@@ -2161,30 +2161,6 @@ namespace p2sp
 
         return false;
     }
-/*
-    void DownloadDriver::OnPlayTimer(uint32_t times)
-    {
-        if (false == is_running_)
-            return;
-        // instance_->AsyncGetSubPieceForPlay(playing_position_, proxy_connection_);
-        LOG(__EVENT, "proxy", "DownloadDriver::OnPlayTimer PlayingPosition" << proxy_connection_->GetPlayingPosition());
-        instance_->AsyncGetSubPieceForPlay(proxy_connection_->GetPlayingPosition(), proxy_connection_);
-    }
-*/
-
-    bool DownloadDriver::IsHttpDownloaderSupportRange()
-    {
-        if (!is_running_)
-            return false;
-        for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
-        {
-            if (iter->http_downloader_->IsSupportRange())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 
     //////////////////////////////////////////////////////////////////////////
     // IGlobalDataProvider

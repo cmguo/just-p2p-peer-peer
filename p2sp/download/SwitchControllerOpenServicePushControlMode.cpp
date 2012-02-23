@@ -210,10 +210,6 @@ namespace p2sp
                 {
                     // ! PeerCount Limit
                     http->Resume();
-                    //                 if (bandwidth < 2 * data_rate)
-                    //                 {
-                    //                     p2p->SetAssignPeerCountLimit(8);
-                    //                 }
                     // state
                     state_.http_ = State::HTTP_DOWNLOADING;
                     state_.timer_using_ = State::TIMER_USING_NONE;
@@ -248,7 +244,6 @@ namespace p2sp
                 if ((b1&&b2) || b3)
                 {
                     // action
-                    p2p->SetAssignPeerCountLimit(0);
                     http->Pause();
                     // state
                     state_.http_ = State::HTTP_PAUSING;
@@ -258,7 +253,6 @@ namespace p2sp
                 else if (available_peer_count == 0)
                 {
                     // action
-                    p2p->SetAssignPeerCountLimit(0);
                     p2p->Pause();
                     state_.p2p_ = State::P2P_PAUSING;
                     // next

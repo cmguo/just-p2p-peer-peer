@@ -161,11 +161,7 @@ namespace p2sp
         uint32_t GetHttpDownloadAvgSpeed();
         uint32_t GetP2PDownloadMaxSpeed();
 
-        bool IsHttpSupportRange();
-
         uint32_t GetConnectedElapsedTime() const { return can_connect_ ? connected_time_counter_.elapsed() : 0; }
-
-        uint32_t GetDownloadStatus();
 
         uint32_t GetTotalWindowSize() const;
 
@@ -196,7 +192,6 @@ namespace p2sp
 
         virtual void Pause();
         virtual void Resume();
-        virtual void SetAssignPeerCountLimit(uint32_t assign_peer_count_limit);  // 0: no limit
         virtual void SetDownloadMode(IP2PControlTarget::P2PDwonloadMode mode);
         virtual void SetDownloadPriority(boost::int32_t prioriy);
         virtual void NoticeHttpBad(bool is_http_bad);

@@ -712,20 +712,6 @@ namespace p2sp
         return max_speed;
     }
 
-    bool P2PDownloader::IsHttpSupportRange()
-    {
-        if (is_running_ == false)
-            return false;
-
-        STL_FOR_EACH_CONST(std::set<DownloadDriver::p>, download_driver_s_, iter)
-        {
-            DownloadDriver::p driver = *iter;
-            if (driver && driver->IsHttpDownloaderSupportRange())
-                return true;
-        }
-        return false;
-    }
-
     void P2PDownloader::OnP2PTimer(uint32_t times)
     {
         // P2PModule调用，250ms执行一次
@@ -1201,31 +1187,6 @@ namespace p2sp
         return data_rate_ == 0 ? 30 * 1024 : data_rate_;
     }
 
-    boost::uint32_t P2PDownloader::GetDownloadStatus()
-    {
-        if (false == is_running_)
-            return 0;
-
-        uint32_t state = 0;
-        // 1:p2p单独跑支持range  2: http单独跑支持range  3:两个一起跑支持range
-        // 11:p2p单独跑不支持range 12:http单独跑不支持range 13:两个一起跑不支持range
-
-        // range
-        if (false == IsHttpSupportRange())
-            state += 10;
-        // p2p/http
-        if (set_pausing_ && !is_p2p_pausing_)  // http pause
-            state += 1;
-        else if (!set_pausing_ && is_p2p_pausing_)  // p2p pause
-            state += 2;
-        else if (!set_pausing_ && !is_p2p_pausing_)
-            state += 3;
-        else if (set_pausing_ && is_p2p_pausing_)
-            assert(0);
-
-        return state;
-    }
-
     uint32_t P2PDownloader::GetTotalWindowSize() const
     {
         if (false == is_running_)
@@ -1313,13 +1274,6 @@ namespace p2sp
         if (false == is_running_)
             return;
         StopPausing();
-    }
-
-    void P2PDownloader::SetAssignPeerCountLimit(uint32_t assign_peer_count_limit)
-    {
-        if (false == is_running_)
-            return;
-        assigner_->SetAssignPeerCountLimit(assign_peer_count_limit);
     }
 
     void P2PDownloader::SetDownloadMode(IP2PControlTarget::P2PDwonloadMode mode)

@@ -89,9 +89,6 @@ namespace p2sp
     public:
 
         // Control
-
-        virtual void SetAssignPeerCountLimit(uint32_t assign_peer_count_limit) = 0;  // 0: no limit
-
         virtual void NoticeHttpBad(bool is_http_bad) = 0;
 
         virtual void SetDownloadMode(P2PDwonloadMode mode) = 0;

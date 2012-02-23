@@ -154,8 +154,6 @@ namespace p2sp
         boost::int32_t GetDownloadDriverID() const { return id_; }
         static boost::int32_t GetDownloaderDriverSID() {return s_id_ ++;}
 
-        bool IsHttpDownloaderSupportRange();
-
         bool IsPlayByRID() const { return is_play_by_rid_; }
 
         void NoticePieceTaskTimeOut(const protocol::PieceInfoEx& piece_info_ex, VodDownloader__p downloader);

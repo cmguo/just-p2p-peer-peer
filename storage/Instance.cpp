@@ -1370,7 +1370,7 @@ namespace storage
         }
 
         // 通过BHO保存下载的资源，不会被删除
-        if (DM_BY_BHOSAVE == down_mode_)
+        if (IsSaveMode())
         {
             return false;
         }

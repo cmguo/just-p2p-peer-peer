@@ -495,11 +495,6 @@ namespace p2sp
     }
 
     // IP2PControlTarget
-    void LiveP2PDownloader::SetAssignPeerCountLimit(uint32_t assign_peer_count_limit)
-    {
-
-    }
-
     void LiveP2PDownloader::NoticeHttpBad(bool is_http_bad)
     {
 

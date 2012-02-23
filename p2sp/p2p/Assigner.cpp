@@ -48,7 +48,6 @@ namespace p2sp
         redundant_assign_count_ = 0;
         total_assign_count_ = 0;
 
-        assign_peer_count_limit_ = 0;
         is_end_of_file_ = false;
     }
 
