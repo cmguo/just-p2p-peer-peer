@@ -998,16 +998,14 @@ namespace p2sp
 
         // E: 视频名称(VideoName)
 #ifdef PEER_PC_CLIENT
-        wstring w_file_name;
         if (is_open_service_) 
         {
-            w_file_name = base::s2ws(openservice_file_name_);
+            strcpy(info.szVideoName, openservice_file_name_.c_str());
         }
-        else 
+        else
         {
-            w_file_name = base::s2ws(statistic_->GetFileName());
+            strcpy(info.szVideoName, statistic_->GetFileName().c_str());
         }
-        wcscpy((wchar_t*)info.szVideoName, w_file_name.c_str());
 #endif
 
         // F: OriginalUrl(原始URL)
@@ -1568,6 +1566,7 @@ namespace p2sp
         if (true == is_http_403_header_)
             return;
 
+        // TODO(herain):http失败后状态机需要切换到p2p下载
         is_http_403_header_ = true;
 
         if (instance_->GetFileLength() != 0)
