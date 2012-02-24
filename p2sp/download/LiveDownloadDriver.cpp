@@ -416,7 +416,9 @@ namespace p2sp
 
             rest_playable_times_.push_back(GetRestPlayableTime());
 
-            if (tick_count_since_last_recv_subpiece_.elapsed() > 180 * 1000 && !is_notify_restart_)
+            if (tick_count_since_last_recv_subpiece_.elapsed() > 180 * 1000 && !is_notify_restart_
+                && ((live_http_downloader_ && !live_http_downloader_->IsPausing()) ||
+                (live_p2p_downloader_ && !live_p2p_downloader_->IsPausing())))
             {
 #ifdef PEER_PC_CLIENT
                 WindowsMessage::Inst().PostWindowsMessage(UM_LIVE_RESTART, NULL, NULL);
