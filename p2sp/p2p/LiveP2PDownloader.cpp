@@ -418,16 +418,6 @@ namespace p2sp
         return is_p2p_pausing_;
     }
 
-    boost::int32_t  LiveP2PDownloader::GetBlockTaskNum()
-    {
-        return block_tasks_.size();
-    }
-
-    bool LiveP2PDownloader::HasBlockTask() const
-    {
-        return true;
-    }
-
     statistic::SPEED_INFO_EX LiveP2PDownloader::GetSpeedInfoEx()
     {
         return p2p_speed_info_.GetSpeedInfoEx();
@@ -963,58 +953,6 @@ namespace p2sp
     const map<uint32_t, uint16_t> & LiveP2PDownloader::GetSubPieceCountMap()
     {
         return block_count_map_;
-    }
-
-    // 传说中一代直播的经典算法
-    storage::LivePosition LiveP2PDownloader::Get75PercentPointInBitmap()
-    {
-        if (peers_.empty())
-        {
-            return storage::LivePosition(0, 0);
-        }
-
-        uint32_t live_interval = live_instance_->GetLiveInterval();
-
-        map<uint32_t, uint32_t> pos;
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            pos.insert(std::make_pair(iter->second->Get75PercentPointInBitmap(live_interval), 0));
-        }
-
-        // 需要除去0
-        if (pos.begin()->first == 0)
-        {
-            pos.erase(pos.begin());
-        }
-
-        if (pos.empty())
-        {
-            return storage::LivePosition(0, 0);
-        }
-
-        map<uint32_t, uint32_t>::iterator max_iter = pos.begin();
-
-        for (map<uint32_t, uint32_t>::iterator pos_iter = pos.begin();
-            pos_iter != pos.end(); ++pos_iter)
-        {
-            for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator
-                peer_iter = peers_.begin(); peer_iter != peers_.end(); ++peer_iter)
-            {
-                pos_iter->second += peer_iter->second->GetSubPieceCountInBitmap(pos_iter->first);
-            }
-
-            // 这里如果多个位置对应的值相等的话，会选择比较小的那个值，从P2P效果来说，更加稳一点
-            // 如果需要跳得更多，修改为>=就好
-            if (pos_iter->second > max_iter->second)
-            {
-                max_iter = pos_iter;
-            }
-        }
-
-        assert(max_iter->first > 0);
-
-        return storage::LivePosition(max_iter->first, 0);
     }
 
     void LiveP2PDownloader::DoList()

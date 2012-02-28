@@ -158,11 +158,6 @@ namespace p2sp
         void Start();
         void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver);
         void OnP2PTimer(boost::uint32_t times);
-        void DoRequestSubPiece() {};
-        void AddBlockCount(boost::uint32_t);
-        void AddBlockId(boost::uint32_t);
-        boost::int32_t  GetBlockTaskNum();
-        bool HasBlockTask() const;
         RID GetRid();
 
         statistic::SPEED_INFO GetSpeedInfo();
@@ -232,9 +227,6 @@ namespace p2sp
             uint32_t transaction_id);
 
         const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & GetPeerConnectionInfo() const;
-
-        // 传说中一代直播的经典算法
-        storage::LivePosition Get75PercentPointInBitmap();
 
         // for statistic
         void SubmitAllRequestSubPieceCount(boost::uint16_t request_sub_piece_count);
