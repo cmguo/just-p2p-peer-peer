@@ -35,6 +35,8 @@ namespace p2sp
             if (handler_)
             {
                 handler_->OnDecompressComplete(sub_piece_buffer_deque_);
+                sub_piece_buffer_deque_.clear();
+                handler_.reset();
                 return true;
             }
         }
