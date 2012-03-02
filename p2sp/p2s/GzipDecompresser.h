@@ -22,6 +22,7 @@ namespace p2sp
     {
     public:
         void Start(boost::shared_ptr<IDecompressListener> handler);
+        void Stop();
 
         GzipDecompresser()
         {

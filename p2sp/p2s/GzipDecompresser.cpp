@@ -15,6 +15,12 @@ namespace p2sp
         is_header_decompress_ = false;
     }
 
+    void GzipDecompresser::Stop()
+    {
+        sub_piece_buffer_deque_.clear();
+        handler_.reset();
+    }
+
     bool GzipDecompresser::OnRecvData(protocol::SubPieceBuffer const & buffer, 
         uint32_t file_offset, uint32_t content_offset)
     {
@@ -35,8 +41,9 @@ namespace p2sp
             if (handler_)
             {
                 handler_->OnDecompressComplete(sub_piece_buffer_deque_);
-                sub_piece_buffer_deque_.clear();
-                handler_.reset();
+
+                Stop();
+                
                 return true;
             }
         }

@@ -150,6 +150,8 @@ namespace p2sp
         sleep_once_timer_.stop();
         pausing_sleep_timer_.stop();
 
+        gzip_decompresser_.Stop();
+
         if (http_client_)
         {
             http_client_->Close();
