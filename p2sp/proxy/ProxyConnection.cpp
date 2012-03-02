@@ -1912,17 +1912,6 @@ namespace p2sp
         }
     }
 
-    bool ProxyConnection::IsDownloading() const
-    {
-        if (false == is_running_)
-            return false;
-
-        if (download_driver_)
-            return download_driver_->IsDownloading();
-        else
-            return false;
-    }
-
     void ProxyConnection::SetSendSpeedLimit(const boost::int32_t send_speed_limit)
     {
         send_speed_limit_ = send_speed_limit;

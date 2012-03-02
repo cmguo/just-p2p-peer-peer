@@ -202,40 +202,6 @@ namespace p2sp
         http_connection_->PutPieceTask(piece_info_ex_s);
     }
 
-    bool HttpDownloader::IsConnected()
-    {
-        if (is_running_ == false)
-            return false;
-
-        return http_connection_->IsConnected();
-    }
-
-    void HttpDownloader::StopPausing()
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        if (true == http_connection_->IsPausing())
-        {
-            http_connection_->StopPausing();
-        }
-    }
-
-    void HttpDownloader::SetPausing()
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        if (false == http_connection_->IsPausing())
-        {
-            http_connection_->SetPausing();
-        }
-    }
-
     bool HttpDownloader::IsPausing()
     {
         if (false == is_running_)
@@ -252,12 +218,30 @@ namespace p2sp
     void HttpDownloader::Pause()
     {
         statistic_->SetIsPause(true);
-        SetPausing();
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        if (false == http_connection_->IsPausing())
+        {
+            http_connection_->Pause();
+        }
     }
+
     void HttpDownloader::Resume()
     {
         statistic_->SetIsPause(false);
-        StopPausing();
+
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        if (true == http_connection_->IsPausing())
+        {
+            http_connection_->Resume();
+        }
     }
 
     boost::uint32_t HttpDownloader::GetSecondDownloadSpeed()

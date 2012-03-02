@@ -16,7 +16,7 @@ namespace p2sp
 
     bool LiveBlockTask::IsTimeout(const LiveDownloader__p & request_download)
     {
-        return (download_->IsP2PDownloader() != request_download->IsP2PDownloader() && 
+        return ((download_ != request_download) && 
             (tick_count_.elapsed() > timeout_ || download_->IsPausing()));
     }
 

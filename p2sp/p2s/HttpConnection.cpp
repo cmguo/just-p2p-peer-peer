@@ -1060,7 +1060,7 @@ namespace p2sp
         }
     }
 
-    void HttpConnection::SetPausing()
+    void HttpConnection::Pause()
     {
         if (false == is_running_)
             return;
@@ -1088,7 +1088,7 @@ namespace p2sp
         HTTP_DEBUG(__FUNCTION__ << " http_connection_=" << shared_from_this() << " is_support_range_=" << is_support_range_ << " is_pausing_=" << is_pausing_);
     }
 
-    void HttpConnection::StopPausing()
+    void HttpConnection::Resume()
     {
         if (is_running_ == false)
             return;
@@ -1159,7 +1159,6 @@ namespace p2sp
             else
             {
                 LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " assert");
-                // assert(!"HttpConnection::StopPausing KKK");
                 status = NONE;
                 have_piece_ = false;
                 DoConnect();

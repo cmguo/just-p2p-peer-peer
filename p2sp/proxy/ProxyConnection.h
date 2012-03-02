@@ -195,7 +195,6 @@ namespace p2sp
         PlayInfo::p GetPlayInfo() const { return play_info_; }
 
         bool IsMovieUrl() const { return is_movie_url_; }
-        bool IsDownloading() const;
 
         void SetSendSpeedLimit(const boost::int32_t send_speed_limit);
 

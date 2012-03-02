@@ -58,19 +58,14 @@ namespace p2sp
     public:
 
         virtual void PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_info_ex_s, DownloadDriver__p downloader_driver);
-        virtual bool IsConnected();
         virtual bool GetUrlInfo(protocol::UrlInfo& url_info) { url_info = url_info_; return true;}
         virtual bool IsSupportRange();
-        virtual bool HasPieceTask() const { assert(0); return false; }
 
         virtual void HttpConnectComplete(HttpConnection__p http_connection);
 
         // HttpConnection下达命令做detecter
         virtual void DoDetecter(HttpConnection__p http_connection, protocol::UrlInfo url_info);
         virtual void DetectorReport(HttpConnection__p http_connection, bool is_support_range);
-
-        virtual void StopPausing();
-        virtual void SetPausing();
         virtual bool IsPausing();
 
         virtual void OnPieceTimeout(DownloadDriver__p download_driver_, const protocol::PieceInfoEx & piece);

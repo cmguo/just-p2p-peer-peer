@@ -196,7 +196,6 @@ namespace p2sp
         void SetBWType(JumpBWType bwtype) {bwtype_ = bwtype;}
 
         bool IsSaveMode() const;
-        bool IsDownloading() const;
         boost::uint32_t GetSecondDownloadSpeed();
         void OnPieceRequest(const protocol::PieceInfo & piece);
 
@@ -379,7 +378,6 @@ namespace p2sp
         boost::int32_t id_;
         static boost::int32_t s_id_;
         bool is_support_start_;
-        bool is_pausing_;
         bool is_open_service_;
         bool is_drag_;
         bool is_drag_local_play_for_switch_;

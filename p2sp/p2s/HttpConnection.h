@@ -63,15 +63,13 @@ namespace p2sp
         void PutPieceTask();
         void PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_infos);
 
-        bool IsConnected() const { return is_connected_; }
-
         bool IsSupportRange() const { return is_support_range_; }
 
         void DetectorReport(bool is_support_range);
 
-        void StopPausing();
+        void Resume();
 
-        void SetPausing();
+        void Pause();
 
         bool IsPausing() {return is_pausing_;}
 

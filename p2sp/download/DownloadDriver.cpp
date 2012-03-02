@@ -100,7 +100,6 @@ namespace p2sp
         , is_complete_(false)
         , proxy_connection_(proxy_connetction)
         , id_(s_id_++)
-        , is_pausing_(false)
         , is_open_service_(false)
         , is_http_403_header_(false)
         , is_http_304_header_(false)
@@ -1393,10 +1392,6 @@ namespace p2sp
             downloaders_.insert(downloader);
             // 在 downloader_indexer索引中 添加这个Downloader
             url_indexer_.push_back(UrlHttpDownloaderPair(url_info.url_, downloader));
-
-            if (is_pausing_)
-                downloader->SetPausing();
-
             downloader->SetSpeedLimitInKBps(speed_limit_in_KBps_);
         }
         else
@@ -1445,10 +1440,6 @@ namespace p2sp
             downloaders_.insert(downloader);
             // 在 downloader_indexer索引中 添加这个Downloader
             url_indexer_.push_back(UrlHttpDownloaderPair(url_info.url_, downloader));
-
-            if (is_pausing_)
-                downloader->SetPausing();
-
             downloader->SetSpeedLimitInKBps(speed_limit_in_KBps_);
         }
         else
@@ -2455,31 +2446,6 @@ namespace p2sp
         return false;
     }
 
-    bool DownloadDriver::IsDownloading() const
-    {
-        if (false == is_running_)
-            return false;
-
-        // 判断是否有downloader处于非pause状态
-        bool is_all_pausing = true;
-        for (std::set<VodDownloader__p>::const_iterator iter = downloaders_.begin();
-                iter != downloaders_.end(); ++iter)
-        {
-            if (!(*iter)->IsPausing())
-            {
-                is_all_pausing = false;
-                break;
-            }
-        }
-
-        if (is_all_pausing)
-            return false;
-
-        if (piece_request_manager_)
-            return piece_request_manager_->HasPieceTask();
-        else
-            return false;
-    }
     void DownloadDriver::OnPieceRequest(const protocol::PieceInfo & piece)
     {
         if (false == is_running_)

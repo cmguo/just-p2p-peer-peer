@@ -80,18 +80,11 @@ namespace p2sp
         virtual void Start();
         virtual void Stop();
 
-        virtual bool IsDownloading();
         virtual void PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_info_ex_s, DownloadDriver__p downloader_driver);
-        virtual bool IsConnected();
         virtual bool GetUrlInfo(protocol::UrlInfo& url_info);
         virtual bool CanDownloadPiece(const protocol::PieceInfo& piece_info);
         virtual bool IsP2PDownloader() { return true; }
-        virtual bool IsSupportRange() { return true; }
-        virtual void StopPausing() { is_p2p_pausing_ = false; }
-        virtual void SetPausing() { is_p2p_pausing_ = true; }
         virtual bool IsPausing() {return is_p2p_pausing_;}
-        virtual bool HasPieceTask() const { return piece_tasks_.size() != 0; }
-
 
         void AttachDownloadDriver(DownloadDriver__p download_driver);
         void DettachDownloadDriver(DownloadDriver__p download_driver);
@@ -114,8 +107,6 @@ namespace p2sp
         bool HasSubPiece(const protocol::SubPieceInfo& sub_piece);
 
         bool IsDownloadInitialization() {return start_time_counter_.elapsed() <= p2sp::P2SPConfigs::P2P_DOWNLOAD_INIT_TIMEOUT;}
-        bool IsConnected(const boost::asio::ip::udp::endpoint& end_point) const;
-        bool IsConnected(const Guid& peer_guid) const;
         boost::shared_ptr<storage::Instance> GetInstance() const { return instance_; }
         void SetInstance(boost::shared_ptr<storage::Instance> inst) { instance_ = inst; }
         statistic::P2PDownloaderStatistic::p GetStatistic() const { return statistic_; }
@@ -133,7 +124,6 @@ namespace p2sp
         uint32_t CalcConnectedFullBlockActivePeerCount();
         uint32_t CalcConnectedAvailableBlockPeerCount();
         uint32_t GetConnectedFullBlockPeerCount() const { return connected_full_block_peer_count_; }
-        uint32_t GetConnectedAvailableBlockPeerCount() const { return connected_available_block_peer_count_; }
         uint32_t CalcConnectedFullBlockAvgDownloadSpeed();
         uint32_t CalculateActivePeerCount();
         uint32_t GetActivePeerCount() const { return active_peer_count_; }
@@ -214,6 +204,7 @@ namespace p2sp
 
     public:
 
+        bool IsConnected();
         uint32_t GetDataRate();
 
         bool IsPlayByRID();
@@ -358,13 +349,6 @@ namespace p2sp
             statistic_->SubmitPeerUploadedBytes(packet.length());
             p2sp::AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);
         }
-    }
-
-    inline bool P2PDownloader::IsDownloading()
-    {
-        if (is_running_ == false)
-            return false;
-        return piece_tasks_.size() > 0;
     }
 
     inline uint32_t P2PDownloader::GetP2PDownloadMaxSpeed()

@@ -1267,13 +1267,15 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
-        SetPausing();
+
+        is_p2p_pausing_ = true;
     }
     void P2PDownloader::Resume()
     {
         if (false == is_running_)
             return;
-        StopPausing();
+
+        is_p2p_pausing_ = false;
     }
 
     void P2PDownloader::SetDownloadMode(IP2PControlTarget::P2PDwonloadMode mode)

@@ -62,7 +62,6 @@ namespace p2sp
     public:
         bool IsRequesting(const protocol::PieceInfo& piece_info) const;
         bool AddPieceTask(const protocol::PieceInfo& piece_info, VodDownloader__p downloader);
-        bool HasPieceTask(){return requesting_map_.size() != 0;}
         void ClearTasks();
         bool RemovePieceTask(const protocol::PieceInfo& piece_info, VodDownloader__p downloader);
         void CheckPieceTimeout();
