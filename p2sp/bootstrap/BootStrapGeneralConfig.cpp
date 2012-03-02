@@ -77,6 +77,7 @@ namespace p2sp
         , fall_behind_seconds_threshold_(30)
         , max_rest_playable_time_(120)
         , min_rest_playable_time_(60)
+        , prevent_http_predownload(true)
     {
     }
 
@@ -201,7 +202,8 @@ namespace p2sp
                 ("config.pp2", po::value<uint32_t>()->default_value(p2p_protect_time_if_speed_is_0_))
                 ("config.fbt", po::value<uint32_t>()->default_value(fall_behind_seconds_threshold_))
                 ("config.maxlive2t", po::value<uint32_t>()->default_value(max_rest_playable_time_))
-                ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_));
+                ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_))
+                ("config.phpd", po::value<bool>()->default_value(prevent_http_predownload));
 
             std::istringstream config_stream(config_string);
 
@@ -269,6 +271,7 @@ namespace p2sp
             fall_behind_seconds_threshold_ = vm["config.fbt"].as<uint32_t>();
             max_rest_playable_time_ = vm["config.maxlive2t"].as<uint32_t>();
             min_rest_playable_time_ = vm["config.minlive2t"].as<uint32_t>();
+            prevent_http_predownload = vm["config.phpd"].as<bool>();
 
             if (save_to_disk)
             {

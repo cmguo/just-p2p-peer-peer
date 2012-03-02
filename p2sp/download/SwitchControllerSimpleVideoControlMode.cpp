@@ -376,7 +376,7 @@ namespace p2sp
 
             // action, 首先测试http状况，进入2351
             GetHTTPControlTarget()->Resume();
-            time_counter_h_.reset();
+            time_counter_t_.reset();
             t_ = 5000;
 
             // state

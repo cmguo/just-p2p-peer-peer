@@ -9,6 +9,7 @@
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "struct/SubPieceContent.h"
 #include "statistic/StatisticModule.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace p2sp
 {
@@ -46,6 +47,7 @@ namespace p2sp
         http_status_ = http_unknown;
         p2p_status_ = p2p_unknown;
         p2p_failed_times_ = 0;
+        is_timer_h_reset = false;
 
         // parameters
         SWITCH_DEBUG(string(20, '-'));
@@ -54,10 +56,6 @@ namespace p2sp
         if (!GetHTTPControlTarget())
         {
             GetP2PControlTarget()->Resume();
-        }
-        if (!GetP2PControlTarget())
-        {
-            GetHTTPControlTarget()->Resume();
         }
 
         // HTTP限速
@@ -302,6 +300,16 @@ namespace p2sp
         time_counter_y_.reset();
     }
 
+    void SwitchController::OpenServiceVideoControlMode::ChangeTo2000()
+    {
+        assert(!GetP2PControlTarget());
+        GetHTTPControlTarget()->Resume();
+        state_.http_ = State::HTTP_DOWNLOADING;
+        state_.p2p_ = State::P2P_NONE;
+        state_.timer_ = State::TIMER_NONE;
+        state_.timer_using_ = State::TIMER_USING_NONE;
+    }
+
 #ifdef USE_MEMORY_POOL
     bool SwitchController::OpenServiceVideoControlMode::CheckMemory()
     {
@@ -435,21 +443,56 @@ namespace p2sp
         }
 #endif
 
-        if (state_.p2p_ == State::P2P_NONE)
-        {
-            if (GetP2PControlTarget())
-            {
-                state_.p2p_ = State::P2P_PAUSING;
-                p2p_status_ = p2p_unknown;
-            }
-        }
-
         while (true)
         {
             SWITCH_DEBUG((string)state_ << " " << times);
 
-            // <3300>
+            // <3000>
             if (
+                state_.http_ == State::HTTP_PAUSING &&
+                state_.p2p_ == State::P2P_NONE &&
+                state_.timer_using_ == State::TIMER_USING_NONE &&
+                state_.timer_ == State::TIMER_NONE)
+            {
+                if (NeedHttpStart())
+                {
+                    ChangeTo2000();
+                    break;
+                }
+
+                if (GetP2PControlTarget())
+                {
+                    state_.p2p_ = State::P2P_PAUSING;
+                    state_.timer_using_ = State::TIMER_USING_NONE;
+                    state_.timer_ = State::TIMER_NONE;
+                    continue;
+                }
+                else
+                {
+                    bool should_prevent_http_predownload = BootStrapGeneralConfig::Inst()->ShouldPreventHttpPredownload();
+                    if(!should_prevent_http_predownload ||
+                        is_timer_h_reset)
+                    {                        
+                        if(!should_prevent_http_predownload ||
+                            time_counter_h_.elapsed() > 1 * 1000)
+                        {
+                            //action
+                            ChangeTo2000();
+                            is_timer_h_reset = false;
+                            continue;
+                        }
+
+                        break;
+                    }
+                    //aciton
+                    time_counter_h_.reset();
+                    is_timer_h_reset = true;
+                }   
+
+                break;
+            }
+            // <3300>
+            if ( 
                 state_.http_ == State::HTTP_PAUSING &&
                 state_.p2p_ == State::P2P_PAUSING &&
                 state_.timer_using_ == State::TIMER_USING_NONE &&
@@ -503,57 +546,18 @@ namespace p2sp
                 //   1. 头部请求，headonly = 1, 转2300
                 //   2. 客户端拖动，drag = 1, 转2311
                 //   3. ikan拖动，start > 0, 转2311
-                //   4. 其余情况转3300
+                //   4. 其余情况转3200
 
                 SWITCH_DEBUG((string)state_ << "3300" << times);
 
-                if (GetGlobalDataProvider()->IsDragLocalPlayForSwitch())
+                if (NeedHttpStart())
                 {
-                    SWITCH_DEBUG("IsDragLocalPlay!");
-                    if (PrefersSavingServerBandwidth())
-                    {
-                        // 客户端本地拖动，goto 3200
-                        ChangeTo3200(true);
-                        return;
-                    }
-                }
-
-                if (GetGlobalDataProvider()->IsHeadOnly())
-                {
-                    // 头部请求，直接HTTP启动, goto 2300
                     ChangeTo2300();
-                    SWITCH_DEBUG("HEAD ONLY!");
-                    return;
+                    break;
                 }
 
-                if (GetGlobalDataProvider()->IsDrag())
-                {
-                    // 客户端拖动，或VIP开始播放，或次段预下载,
-                    // HTTP启动, goto 2311
-                    ChangeTo2300();
-                    SWITCH_DEBUG("CLIENT DRAG!");
-                    return;
-                }
-
-                if (GetGlobalDataProvider()->IsStartFromNonZero())
-                {
-                    // ikan拖动，HTTP启动, goto 2311
-                    ChangeTo2300();
-                    SWITCH_DEBUG("IKAN DRAG!");
-                    return;
-                }
-
-                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
-                {
-                    // BWType = 1, HTTP启动, goto 2311
-                    ChangeTo2300();
-                    SWITCH_DEBUG("BWTYPE =1!");
-                    return;
-                }
-
-                // 其他所有情况，均由http启动，如果是自然过渡，那么在获得剩余缓冲时间后自然会跳转到p2p
-                ChangeTo2300();
-                
+                // 其他所有情况，均由p2p启动
+                ChangeTo3200(true);                
                 continue;
             }
             // <2200>
@@ -822,6 +826,29 @@ namespace p2sp
                 
                 break;
             }
+
+			// <2000>
+            else if (
+                state_.http_ == State::HTTP_DOWNLOADING &&
+                state_.p2p_ == State::P2P_NONE &&
+                state_.timer_using_ == State::TIMER_USING_NONE &&
+                state_.timer_ == State::TIMER_NONE)
+                {
+                    if (GetP2PControlTarget())
+                    {
+                        assert(GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY);
+                        if (NeedHttpStart())
+                        {
+                            ChangeTo2300();
+                        }
+                        else
+                            ChangeTo3200(true);
+
+                        continue;
+                    }
+
+                    break;
+                }
             else
             {
                 SWITCH_DEBUG("No Such State: " << (string)state_);
@@ -865,5 +892,20 @@ namespace p2sp
         {
             return protocol::RequestSubPiecePacket::DEFAULT_PRIORITY;
         }
+    }
+
+    bool SwitchController::OpenServiceVideoControlMode::NeedHttpStart()
+    {
+        if (GetGlobalDataProvider()->IsHeadOnly() ||                       // 头部请求，直接HTTP启动
+            GetGlobalDataProvider()->IsDrag() ||                           // 客户端拖动，或VIP开始播放，或次段预下载,
+            GetGlobalDataProvider()->IsStartFromNonZero() ||               // ikan拖动，HTTP启动
+            GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE ||       // BWType = 1, HTTP启动
+            !PrefersSavingServerBandwidth())                                // BWType = 2,3 HTTP启动
+        {
+            SWITCH_DEBUG("HTTP FIRST!");
+            return true;
+        }
+
+        return false;
     }
 }

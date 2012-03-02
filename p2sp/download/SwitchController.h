@@ -238,7 +238,6 @@ namespace p2sp
                 : ControlMode(controller)
             {
             }
-
         private:
             // 获取RID的定时器
             framework::timer::TickCounter time_counter_h_;
@@ -405,10 +404,12 @@ namespace p2sp
             bool PrefersSavingServerBandwidth();
             bool Is3200P2pSlow();
             boost::int32_t CalcDownloadPriority();
+            bool NeedHttpStart();
 
             void ChangeTo2200();
             void ChangeTo3200(bool is_p2p_start);
             void ChangeTo2300();
+            void ChangeTo2000();
 
 #ifdef USE_MEMORY_POOL
             bool CheckMemory();
@@ -416,6 +417,8 @@ namespace p2sp
 
             framework::timer::TickCounter time_counter_x_;
             framework::timer::TickCounter time_counter_y_;
+            framework::timer::TickCounter time_counter_h_;
+            bool is_timer_h_reset;
 
             framework::timer::TickCounter time_counter_2200;
             framework::timer::TickCounter time_counter_2300;

@@ -312,6 +312,11 @@ namespace p2sp
             return min_rest_playable_time_;
         }
 
+        bool ShouldPreventHttpPredownload() const
+        {
+            return prevent_http_predownload;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -504,6 +509,9 @@ namespace p2sp
 
         // 当剩余时间小于该值时，开始下载
         boost::uint32_t min_rest_playable_time_;
+
+        //是否在获取tindy-drag的过程中禁止http下载以节省带宽
+        bool prevent_http_predownload;
     };
 }
 #endif
