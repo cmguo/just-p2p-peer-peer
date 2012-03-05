@@ -30,6 +30,7 @@ namespace p2sp
         , download_bytes_use_udpserver_because_of_large_upload_(0)
         , should_connect_udpserver_(false)
         , total_connect_peers_count_(0)
+        , live_subpiece_count_manager_(live_instance->GetLiveInterval())
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
         urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
@@ -219,7 +220,7 @@ namespace p2sp
         if (times % 4 == 0)
         {
             // 删除block_count_map中过期的节点
-            EliminateElapsedBlockCountMap(GetMinPlayingPosition().GetBlockId());
+            live_subpiece_count_manager_.EliminateElapsedSubPieceCountMap(GetMinPlayingPosition().GetBlockId());
 
             // 删除PeerConnection中过期的节点
             for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer_iter = peers_.begin();
@@ -234,8 +235,6 @@ namespace p2sp
 
         if (!is_p2p_pausing_)
         {
-            LOG(__DEBUG, "live_p2p", "block_count_map_.size() = " << block_count_map_.size());
-
             if (times % 4 == 0)
             {
                 live_subpiece_request_manager_.OnP2PTimer(times);
@@ -899,13 +898,7 @@ namespace p2sp
 
     void LiveP2PDownloader::SetBlockCountMap(boost::uint32_t block_id, std::vector<boost::uint16_t> subpiece_count)
     {
-        for (boost::uint32_t i=0; i<subpiece_count.size(); i++)
-        {
-            block_count_map_.insert(std::make_pair(
-                block_id+i*(*download_driver_s_.begin())->GetInstance()->GetLiveInterval(),
-                subpiece_count[i]
-            ));
-        }
+        live_subpiece_count_manager_.SetSubPieceCountMap(block_id, subpiece_count);
     }
 
     std::map<uint32_t,protocol::LiveSubPieceInfo> & LiveP2PDownloader::GetBlockTasks()
@@ -915,17 +908,12 @@ namespace p2sp
 
     bool LiveP2PDownloader::HasSubPieceCount(boost::uint32_t block_id)
     {
-        return block_count_map_.find(block_id) != block_count_map_.end();
+        return live_subpiece_count_manager_.HasSubPieceCount(block_id);
     }
 
     boost::uint16_t LiveP2PDownloader::GetSubPieceCount(boost::uint32_t block_id)
     {
-        if (block_count_map_.find(block_id) != block_count_map_.end())
-        {
-            return block_count_map_[block_id];
-        }
-
-        return 0;
+        return live_subpiece_count_manager_.GetSubPieceCount(block_id);
     }
 
 
@@ -948,11 +936,6 @@ namespace p2sp
     const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & LiveP2PDownloader::GetPeerConnectionInfo() const
     {
         return peers_;
-    }
-
-    const map<uint32_t, uint16_t> & LiveP2PDownloader::GetSubPieceCountMap()
-    {
-        return block_count_map_;
     }
 
     void LiveP2PDownloader::DoList()
@@ -1015,22 +998,6 @@ namespace p2sp
         } while (iter != download_driver_s_.end());
 
         return min_position;
-    }
-
-    void LiveP2PDownloader::EliminateElapsedBlockCountMap(boost::uint32_t block_id)
-    {
-        for (map<uint32_t, uint16_t>::iterator iter = block_count_map_.begin(); 
-            iter != block_count_map_.end(); )
-        {
-            if (iter->first < block_id)
-            {
-                block_count_map_.erase(iter++);
-            }
-            else
-            {
-                break;
-            }
-        }
     }
 
     void LiveP2PDownloader::CheckShouldUseUdpServer()

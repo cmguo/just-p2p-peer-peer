@@ -12,6 +12,8 @@
 #include "storage/LiveInstance.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
+#include "p2sp/p2p/LiveSubPieceCountManager.h"
+
 namespace storage
 {
     class LiveInstance;
@@ -219,7 +221,6 @@ namespace p2sp
 
         bool HasSubPieceCount(boost::uint32_t piece_id);
         boost::uint16_t GetSubPieceCount(boost::uint32_t block_id);
-        const map<uint32_t, uint16_t> & GetSubPieceCountMap();
 
         bool IsRequesting(const protocol::LiveSubPieceInfo & subpiece_info);
         void AddRequestingSubpiece(const protocol::LiveSubPieceInfo & subpiece_info,
@@ -269,7 +270,6 @@ namespace p2sp
         void CheckShouldUseUdpServer();
 
         storage::LivePosition GetMinPlayingPosition() const;
-        void EliminateElapsedBlockCountMap(boost::uint32_t block_id);
 
         void DeleteAllUdpServer();
         bool IsAheadOfMostPeers() const;
@@ -306,7 +306,6 @@ namespace p2sp
         storage::LiveInstance__p live_instance_;
 
         std::map<uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
-        map<uint32_t, uint16_t> block_count_map_;
 
         LiveSubPieceRequestManager live_subpiece_request_manager_;
 
@@ -377,6 +376,8 @@ namespace p2sp
         uint32_t live_extended_connections_;
         framework::timer::TickCounter urgent_tick_counter_;
         framework::timer::TickCounter safe_tick_counter_;
+
+        LiveSubPieceCountManager live_subpiece_count_manager_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()
