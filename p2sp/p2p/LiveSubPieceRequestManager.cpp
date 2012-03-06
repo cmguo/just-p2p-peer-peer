@@ -1,16 +1,10 @@
 #include "Common.h"
 #include "LiveSubPieceRequestManager.h"
 #include "LiveP2PDownloader.h"
-#include "statistic/DACStatisticModule.h"
 
 namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("live_subpiece_request_manager");
-
-    void LiveSubPieceRequestManager::Start(LiveP2PDownloader__p p2p_downloader)
-    {
-        p2p_downloader_ = p2p_downloader;
-    }
 
     void LiveSubPieceRequestManager::Add(
         const protocol::LiveSubPieceInfo & subpiece_info, 
@@ -49,7 +43,6 @@ namespace p2sp
             std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator> range = 
             request_tasks_.equal_range(packet.sub_piece_info_);
 
-        protocol::LiveSubPieceBuffer buffer(packet.sub_piece_content_, packet.sub_piece_length_);
         boost::uint8_t connect_type = protocol::CONNECT_LIVE_PEER;
 
         LiveSubPieceRequestTask::p matched_task;
@@ -77,7 +70,7 @@ namespace p2sp
         {
             matched_task->peer_connection_->DeleteLostPackets(packet.transaction_id_, to_delete);
             // 找到，删除
-            matched_task->peer_connection_->OnSubPiece(matched_task->GetTimeElapsed(), buffer.Length());
+            matched_task->peer_connection_->OnSubPiece(matched_task->GetTimeElapsed(), packet.sub_piece_length_);
             connect_type = matched_task->peer_connection_->GetConnectType(); 
             matched_task->peer_connection_->UpdateLastReceived(packet.transaction_id_);
         }
@@ -121,25 +114,6 @@ namespace p2sp
             matched_task->peer_connection_->OnSubPieceTimeout();
         }
 
-        if (false == p2p_downloader_->HasSubPiece(packet.sub_piece_info_))
-        {
-            ++total_received_subpiece_count_;
-
-            if (connect_type == protocol::CONNECT_LIVE_UDPSERVER)
-            {
-                statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(buffer.Length());
-                total_udpserver_data_bytes_ += buffer.Length();
-            }
-            else
-            {
-                statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(buffer.Length());
-                total_p2p_data_bytes_ += buffer.Length();
-            }
-        }
-
-        p2p_downloader_->GetInstance()->AddSubPiece(packet.sub_piece_info_, buffer);
-
-        ++total_unused_subpiece_count_;
     }
 
     // 每秒执行一次
@@ -161,26 +135,6 @@ namespace p2sp
         }
 
         return false;
-    }
-
-    boost::uint32_t LiveSubPieceRequestManager::GetTotalUnusedSubPieceCount() const
-    {
-        return total_unused_subpiece_count_;
-    }
-
-    boost::uint32_t LiveSubPieceRequestManager::GetTotalRecievedSubPieceCount() const
-    {
-        return total_received_subpiece_count_;
-    }
-
-    boost::uint32_t LiveSubPieceRequestManager::GetTotalP2PDataBytes() const
-    {
-        return total_p2p_data_bytes_;
-    }
-
-    boost::uint32_t LiveSubPieceRequestManager::GetTotalUdpServerDataBytes() const
-    {
-        return total_udpserver_data_bytes_;
     }
 
     uint32_t LiveSubPieceRequestManager::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info) const

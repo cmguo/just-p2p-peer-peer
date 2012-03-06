@@ -65,16 +65,7 @@ namespace p2sp
 #endif
     {
     public:
-        LiveSubPieceRequestManager()
-            : total_unused_subpiece_count_(0)
-            , total_received_subpiece_count_(0)
-            , total_p2p_data_bytes_(0)
-            , total_udpserver_data_bytes_(0)
-        {
-
-        }
         // 操作
-        void Start(LiveP2PDownloader__p p2p_downloader);
         void Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, 
             LivePeerConnection__p peer_connection, uint32_t transaction_id);
 
@@ -85,28 +76,13 @@ namespace p2sp
 
         bool IsRequesting(const protocol::LiveSubPieceInfo& subpiece_info) const;
 
-        // for statistic
-        boost::uint32_t GetTotalUnusedSubPieceCount() const;
-        boost::uint32_t GetTotalRecievedSubPieceCount() const;
-        boost::uint32_t GetTotalP2PDataBytes() const;
-        boost::uint32_t GetTotalUdpServerDataBytes() const;
-
         uint32_t GetRequestingCount( const protocol::LiveSubPieceInfo & subpiece_info ) const;
 
     private:
         void CheckExternalTimeout();
         
     private:
-        // 模块
-        LiveP2PDownloader__p p2p_downloader_;
-        // 变量
         std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p> request_tasks_;
-        
-        // for statistic
-        boost::uint32_t total_unused_subpiece_count_;  // 收到的所有的subpiece个数（包括冗余的）
-        boost::uint32_t total_received_subpiece_count_;  // 收到的subpiece个数（不包括冗余的）
-        boost::uint32_t total_p2p_data_bytes_;  // P2P总下载
-        boost::uint32_t total_udpserver_data_bytes_;  // 从UdpServer下载的字节数
     };
 }
 #endif

@@ -378,6 +378,12 @@ namespace p2sp
         framework::timer::TickCounter safe_tick_counter_;
 
         LiveSubPieceCountManager live_subpiece_count_manager_;
+
+        // for statistic
+        boost::uint32_t total_unused_subpiece_count_;  // 收到的所有的subpiece个数（包括冗余的）
+        boost::uint32_t total_received_subpiece_count_;  // 收到的subpiece个数（不包括冗余的）
+        boost::uint32_t total_p2p_data_bytes_;  // P2P总下载
+        boost::uint32_t total_udpserver_data_bytes_;  // 从UdpServer下载的字节数
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()
@@ -419,7 +425,7 @@ namespace p2sp
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalUnusedSubPieceCount() const
     {
-        return live_subpiece_request_manager_.GetTotalUnusedSubPieceCount();
+        return total_unused_subpiece_count_;
     }
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalAllRequestSubPieceCount() const
@@ -429,7 +435,7 @@ namespace p2sp
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalRecievedSubPieceCount() const
     {
-        return live_subpiece_request_manager_.GetTotalRecievedSubPieceCount();
+        return total_received_subpiece_count_;
     }
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalRequestSubPieceCount() const
@@ -439,12 +445,12 @@ namespace p2sp
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalP2PDataBytes() const
     {
-        return live_subpiece_request_manager_.GetTotalP2PDataBytes();
+        return total_p2p_data_bytes_;
     }
 
     inline boost::uint32_t LiveP2PDownloader::GetTotalUdpServerDataBytes() const
     {
-        return live_subpiece_request_manager_.GetTotalUdpServerDataBytes();
+        return total_udpserver_data_bytes_;
     }
 
     inline void LiveP2PDownloader::SubmitAllRequestSubPieceCount(boost::uint16_t request_sub_piece_count)

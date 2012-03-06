@@ -5,6 +5,7 @@
 #include "p2sp/tracker/TrackerModule.h"
 #include "random.h"
 #include "p2sp/proxy/PlayInfo.h"
+#include "statistic/DACStatisticModule.h"
 
 namespace p2sp
 {
@@ -31,6 +32,10 @@ namespace p2sp
         , should_connect_udpserver_(false)
         , total_connect_peers_count_(0)
         , live_subpiece_count_manager_(live_instance->GetLiveInterval())
+        , total_unused_subpiece_count_(0)
+        , total_received_subpiece_count_(0)
+        , total_p2p_data_bytes_(0)
+        , total_udpserver_data_bytes_(0)
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
         urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
@@ -77,8 +82,6 @@ namespace p2sp
 
         // Assigner
         live_assigner_.Start(shared_from_this());
-        // SubpieceRequestManager
-        live_subpiece_request_manager_.Start(shared_from_this());
 
         // SpeedInfo
         p2p_speed_info_.Start();
@@ -772,7 +775,32 @@ namespace p2sp
                 assert(connect_type == protocol::CONNECT_LIVE_UDPSERVER);
                 udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
             }
-            live_subpiece_request_manager_.OnSubPiece((const protocol::LiveSubPiecePacket &)packet);
+            const protocol::LiveSubPiecePacket & subpiece_packet = (const protocol::LiveSubPiecePacket &)packet;
+
+            live_subpiece_request_manager_.OnSubPiece(subpiece_packet);
+
+            if (false == HasSubPiece(subpiece_packet.sub_piece_info_))
+            {
+                ++total_received_subpiece_count_;
+
+                if (connect_type == protocol::CONNECT_LIVE_UDPSERVER)
+                {
+                    statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(subpiece_packet.sub_piece_length_);
+                    total_udpserver_data_bytes_ += subpiece_packet.sub_piece_length_;
+                }
+                else
+                {
+                    statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(subpiece_packet.sub_piece_length_);
+                    total_p2p_data_bytes_ += subpiece_packet.sub_piece_length_;
+                }
+
+                protocol::LiveSubPieceBuffer buffer(subpiece_packet.sub_piece_content_,
+                    subpiece_packet.sub_piece_length_);
+
+                live_instance_->AddSubPiece(subpiece_packet.sub_piece_info_, buffer);
+            }
+
+            ++total_unused_subpiece_count_;
         }
         else if (packet.PacketAction == protocol::ErrorPacket::Action)
         {
