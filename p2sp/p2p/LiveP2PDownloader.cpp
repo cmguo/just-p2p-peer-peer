@@ -486,12 +486,6 @@ namespace p2sp
         }
     }
 
-    // IP2PControlTarget
-    void LiveP2PDownloader::NoticeHttpBad(bool is_http_bad)
-    {
-
-    }
-
     void LiveP2PDownloader::SetDownloadMode(P2PDwonloadMode mode)
     {
 
@@ -506,10 +500,7 @@ namespace p2sp
     {
         return 0;
     }
-    uint32_t LiveP2PDownloader::GetFullBlockActivePeersCount()
-    {
-        return 0;
-    }
+
     uint32_t LiveP2PDownloader::GetActivePeersCount()
     {
         return 0;

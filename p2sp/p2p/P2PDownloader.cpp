@@ -39,15 +39,12 @@ namespace p2sp
         : rid_(rid)
         , is_connected_(false)
         , start_time_counter_(0)
-        , set_pausing_(false)
         , is_p2p_pausing_(true)
         , data_rate_(0)
         , active_peer_count_(0)
         , non_consistent_size_(0)
-        , is_http_bad_(false)
         , is_openservice_(false)
         , dl_mode_(NORMAL_MODE)
-        , last_trans_id_(-1)
         , once_timer_(global_second_timer(), P2SPConfigs::P2P_DOWNLOAD_CLOSE_TIME_IN_MILLISEC,
             boost::bind(&P2PDownloader::OnTimerElapsed, this, &once_timer_))
         , download_speed_limiter_(600, 2500), download_priority_(protocol::RequestSubPiecePacket::DEFAULT_PRIORITY)
@@ -75,10 +72,7 @@ namespace p2sp
 
         // init
         is_p2p_pausing_ = true;
-        p2p_download_max_speed_ = 0;
         active_peer_count_ = 0;
-        connected_full_block_active_peer_count_ = 0;
-        last_request_subpiece_trans_id_ = 0;
 
         // download speed limiter
         // download_speed_limiter_ = DownloadSpeedLimiter::Create(600, 2500);
@@ -121,9 +115,6 @@ namespace p2sp
         is_connected_ = false;
         can_connect_ = false;
         start_time_counter_.reset();
-
-        is_checking_ = false;
-        checked_ = false;
     }
 
     void P2PDownloader::Stop()
@@ -512,10 +503,6 @@ namespace p2sp
             return;
         }
 
-        // check speed
-        uint32_t data_rate = instance_->GetMetaData().VideoDataRate;
-        if (data_rate == 0) data_rate = (is_openservice_ ? 60 * 1024 : 30 * 1024);
-
         boost::int32_t connect_count;
         if (IsDownloadInitialization())
         {
@@ -657,61 +644,6 @@ namespace p2sp
         return connected_available_block_peer_count_;
     }
 
-    uint32_t P2PDownloader::CalcConnectedFullBlockAvgDownloadSpeed()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t avg_speed = 0;
-        uint32_t peer_count = 0;
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter = peers_.begin(); iter != peers_.end(); iter++)
-        {
-            ConnectionBase__p peer = iter->second;
-            if (peer->IsBlockFull())
-            {
-                avg_speed += peer->GetStatistic()->GetSpeedInfo().AvgDownloadSpeed;
-                ++peer_count;
-            }
-        }
-        return (peer_count == 0 ? 0 : avg_speed / peer_count);
-    }
-
-    uint32_t P2PDownloader::GetHttpDownloadMaxSpeed()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t max_speed = 0;
-        STL_FOR_EACH_CONST(std::set<DownloadDriver::p>, download_driver_s_, iter)
-        {
-            DownloadDriver::p driver = *iter;
-            uint32_t speed = driver->GetStatistic()->GetHttpDownloadMaxSpeed();
-            if (speed > max_speed)
-            {
-                max_speed = speed;
-            }
-        }
-        return max_speed;
-    }
-
-    uint32_t P2PDownloader::GetHttpDownloadAvgSpeed()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t max_speed = 0;
-        STL_FOR_EACH_CONST(std::set<DownloadDriver::p>, download_driver_s_, iter)
-        {
-            DownloadDriver::p driver = *iter;
-            uint32_t speed = driver->GetStatistic()->GetHttpDownloadAvgSpeed();
-            if (speed > max_speed)
-            {
-                max_speed = speed;
-            }
-        }
-        return max_speed;
-    }
-
     void P2PDownloader::OnP2PTimer(uint32_t times)
     {
         // P2PModule调用，250ms执行一次
@@ -827,11 +759,6 @@ namespace p2sp
 
             // 连接节点
             InitPeerConnection();
-
-            // 最大速度
-            uint32_t now_download_speed = statistic_->GetSpeedInfo().NowDownloadSpeed;
-            if (p2p_download_max_speed_ < now_download_speed)
-                p2p_download_max_speed_ = now_download_speed;
 
             // calculate active peer count
             CalculateActivePeerCount();
@@ -1187,19 +1114,6 @@ namespace p2sp
         return data_rate_ == 0 ? 30 * 1024 : data_rate_;
     }
 
-    uint32_t P2PDownloader::GetTotalWindowSize() const
-    {
-        if (false == is_running_)
-            return 0;
-        uint32_t total_window_size = 0;
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::const_iterator it;
-        for (it = peers_.begin(); it != peers_.end(); ++it)
-        {
-            total_window_size += it->second->GetWindowSize();
-        }
-        return total_window_size;
-    }
-
     uint32_t P2PDownloader::CalculateActivePeerCount()
     {
         if (false == is_running_)
@@ -1215,49 +1129,6 @@ namespace p2sp
         }
         P2P_DEBUG(__FUNCTION__ << " ActivePeerCount=" << active_peer_count_);
         return active_peer_count_;
-    }
-
-    uint32_t P2PDownloader::CalcConnectedFullBlockActivePeerCount()
-    {
-        if (false == is_running_)
-            return 0;
-        connected_full_block_active_peer_count_ = 0;
-
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator it;
-        for (it = peers_.begin(); it != peers_.end(); ++it)
-        {
-            ConnectionBase__p peer = it->second;
-            if (peer && peer->IsRunning())
-            {
-                if (peer->IsBlockFull())
-                {
-                    uint32_t now_speed = peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
-                    if (now_speed > 500)
-                        ++connected_full_block_active_peer_count_;
-                }
-            }
-        }
-        P2P_DEBUG(__FUNCTION__ << " FullBlockActivePeerCount=" << connected_full_block_active_peer_count_);
-
-        return connected_full_block_active_peer_count_;
-    }
-
-    bool P2PDownloader::NeedIncreaseWindowSize()
-    {
-        if (false == is_running_)
-            return false;
-        if (is_http_bad_)
-        {
-            uint32_t pooled_peer_count = GetPooledPeersCount();
-            uint32_t connected_peer_count = GetConnectedPeersCount();
-            // (16, 8)
-            if (pooled_peer_count <= P2SPConfigs::P2P_DOWNLOAD_NEED_INCREASE_MAX_POOLED_PEER_COUNT &&
-                connected_peer_count <= P2SPConfigs::P2P_DOWNLOAD_NEED_INCREASE_MAX_CONNECTED_PEER_COUNT)
-            {
-                return true;
-            }
-        }
-        return false;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1284,13 +1155,6 @@ namespace p2sp
             return;
         P2P_EVENT("SetDownloadMode " << mode);
         dl_mode_ = mode;
-    }
-
-    void P2PDownloader::NoticeHttpBad(bool is_http_bad)
-    {
-        if (false == is_running_)
-            return;
-        is_http_bad_ = is_http_bad;
     }
 
     boost::uint32_t P2PDownloader::GetSecondDownloadSpeed()
@@ -1341,12 +1205,7 @@ namespace p2sp
             return 0;
         return connected_full_block_peer_count_;
     }
-    uint32_t P2PDownloader::GetFullBlockActivePeersCount()
-    {
-        if (false == is_running_)
-            return 0;
-        return connected_full_block_active_peer_count_;
-    }
+
     uint32_t P2PDownloader::GetActivePeersCount()
     {
         if (false == is_running_)

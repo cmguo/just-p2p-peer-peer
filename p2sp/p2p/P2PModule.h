@@ -67,15 +67,6 @@ namespace p2sp
         void RemoveRequestCount() { if (request_count_ > 0) -- request_count_; }
         void RemoveRequestCount(uint32_t delta_request_count) { if (delta_request_count <= request_count_) request_count_ -= delta_request_count; else request_count_ = 0; }
 
-        // max download speed, recent 10 min
-        uint32_t GetMaxDownloadSpeed() const { return max_download_speed_; }
-        // max historical
-        uint32_t GetMaxHistoricalDownloadSpeed() const { return max_historical_download_speed_; }
-        uint32_t GetMaxHistoricalUploadSpeed() const { return max_historical_upload_speed_; }
-        // window size
-        bool IsIncreasedWindowSize() const { return is_increased_window_size_; }
-        uint32_t GetAvgAvailableWindowSize() const { return avg_available_window_size_; }
-
         // PeerCountInfo
         P2PDownloader__p GetP2PDownloader(const RID& rid);
         SessionPeerCache__p GetSessionPeerCache() const {return session_cache_;}
@@ -113,11 +104,6 @@ namespace p2sp
         uint32_t request_count_;
         uint32_t sent_count_;
         uint32_t max_download_speed_;
-        uint32_t max_historical_download_speed_;
-        uint32_t max_historical_upload_speed_;
-        // 状态
-        volatile uint32_t avg_available_window_size_;
-        volatile bool is_increased_window_size_;
 
         boost::uint16_t  global_request_send_count_;
 

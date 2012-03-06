@@ -48,18 +48,6 @@ namespace p2sp
     class DownloadDriver;
     typedef boost::shared_ptr<DownloadDriver> DownloadDriver__p;
 
-    struct SerialStaticInfo
-    {
-        uint32_t ip_pool_size;
-        uint32_t connected_count;
-        uint32_t p2p_speed;
-        uint32_t connect_send_count;
-        uint32_t connect_err_full_count;
-        uint32_t connect_err_other_count;
-
-        SerialStaticInfo() { memset(this, 0, sizeof(SerialStaticInfo)); }
-    };
-
     const boost::uint32_t MAX_SN_LIST_SIZE = 4;
 
     class P2PDownloader
@@ -95,8 +83,6 @@ namespace p2sp
         void AddPeer(ConnectionBase__p peer_connection);
         void DelPeer(ConnectionBase__p peer_connection);
 
-        void AddSn(ConnectionBase__p peer_connection);
-
         template <typename PacketType>
         void DoSendPacket(PacketType const & packet,
             boost::uint16_t dest_protocol_version);
@@ -115,18 +101,13 @@ namespace p2sp
         std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> GetPeers() {return peers_;}
         IpPool__p GetIpPool() {return ippool_;}
         Exchanger__p GetExchanger() {return exchanger_;}
-        Assigner__p GetAssigner() {return assigner_;}
 
         virtual void SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
         virtual statistic::SPEED_INFO GetSpeedInfo();
         virtual statistic::SPEED_INFO_EX GetSpeedInfoEx();
         uint32_t CalcConnectedFullBlockPeerCount();
-        uint32_t CalcConnectedFullBlockActivePeerCount();
         uint32_t CalcConnectedAvailableBlockPeerCount();
-        uint32_t GetConnectedFullBlockPeerCount() const { return connected_full_block_peer_count_; }
-        uint32_t CalcConnectedFullBlockAvgDownloadSpeed();
         uint32_t CalculateActivePeerCount();
-        uint32_t GetActivePeerCount() const { return active_peer_count_; }
 
         protocol::PEER_COUNT_INFO GetPeerCountInfo() const;
 
@@ -146,18 +127,6 @@ namespace p2sp
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
         std::set<DownloadDriver__p> GetDownloadDrivers(){return download_driver_s_;}
-
-        uint32_t GetHttpDownloadMaxSpeed();
-        uint32_t GetHttpDownloadAvgSpeed();
-        uint32_t GetP2PDownloadMaxSpeed();
-
-        uint32_t GetConnectedElapsedTime() const { return can_connect_ ? connected_time_counter_.elapsed() : 0; }
-
-        uint32_t GetTotalWindowSize() const;
-
-        bool IsHttpBad() const { return is_http_bad_; }
-        bool NeedIncreaseWindowSize();
-
         bool IsOpenService() const { return is_openservice_; }
         void SetIsOpenService(bool openservie) { is_openservice_ = openservie; }
 
@@ -184,7 +153,6 @@ namespace p2sp
         virtual void Resume();
         virtual void SetDownloadMode(IP2PControlTarget::P2PDwonloadMode mode);
         virtual void SetDownloadPriority(boost::int32_t prioriy);
-        virtual void NoticeHttpBad(bool is_http_bad);
 
         virtual boost::uint32_t GetSecondDownloadSpeed();
         virtual boost::uint32_t GetCurrentDownloadSpeed();
@@ -193,7 +161,6 @@ namespace p2sp
         virtual boost::uint32_t GetPooledPeersCount();
         virtual boost::uint32_t GetConnectedPeersCount();
         virtual boost::uint32_t GetFullBlockPeersCount();
-        virtual boost::uint32_t GetFullBlockActivePeersCount();
         virtual boost::uint32_t GetActivePeersCount();
         virtual boost::uint32_t GetAvailableBlockPeerCount();
         virtual boost::uint16_t GetNonConsistentSize() { return non_consistent_size_;}
@@ -265,36 +232,22 @@ namespace p2sp
         bool is_connected_;                                        // 记录是否已经连接
         framework::timer::TickCounter start_time_counter_;
         bool can_connect_;
-        framework::timer::TickCounter connected_time_counter_;
-        volatile bool set_pausing_;
         uint32_t connected_full_block_peer_count_;                // 已经连上的Peer中有多少是FullBlock的
         uint32_t connected_available_block_peer_count_;           // 已经连上的Peer中有多少个是拥有当前Block的(预分配队列中的第一个Piece所在的Block)
-        // Subpiece
-        protocol::SubPieceInfo last_downloaded_subpiece_;
-        // P2P Check
-        bool is_checking_;
-        bool checked_;
+
 //        framework::timer::OnceTimer checking_timer_;
         // pausing
         bool is_p2p_pausing_;
         // video data rate
         uint32_t data_rate_;
-        // p2p_download_max_speed_
-        uint32_t p2p_download_max_speed_;
         // active peer count
         uint32_t active_peer_count_;
         // p2p下载的距离，指当前下载的最后一片piece和第一片piece之间的piece数
         uint16_t non_consistent_size_;
-        uint32_t connected_full_block_active_peer_count_;
-        volatile bool is_http_bad_;
         boost::int32_t p2p_max_connect_count_;
 
         // download speed limiter
         DownloadSpeedLimiter download_speed_limiter_;
-        uint32_t last_trans_id_;
-
-        // Last RequestSubpieceTransID
-        uint32_t last_request_subpiece_trans_id_;
 
         //
         bool is_openservice_;
@@ -309,7 +262,6 @@ namespace p2sp
 
         bool is_connect_full_;
         boost::uint32_t seconds_elapsed_until_connection_full_;
-
 
         bool is_sn_enable_;
         SNPoolObject sn_pool_object_;
@@ -349,13 +301,6 @@ namespace p2sp
             statistic_->SubmitPeerUploadedBytes(packet.length());
             p2sp::AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);
         }
-    }
-
-    inline uint32_t P2PDownloader::GetP2PDownloadMaxSpeed()
-    {
-        if (is_running_ == false)
-            return 0;
-        return p2p_download_max_speed_;
     }
 
     inline void P2PDownloader::AddPeer(ConnectionBase__p peer_connection)

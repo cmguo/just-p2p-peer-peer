@@ -102,7 +102,6 @@ namespace p2sp
         boost::uint32_t conn_peers_count = p2p->GetConnectedPeersCount();
         boost::uint32_t active_peers_count =  p2p->GetActivePeersCount();
         boost::uint32_t full_peers_count = p2p->GetFullBlockPeersCount();
-        boost::uint32_t full_active_peers_count = p2p->GetFullBlockActivePeersCount();
         boost::uint32_t pooled_peers_count = p2p->GetPooledPeersCount();
         boost::uint32_t data_rate = global->GetDataRate();
         boost::uint32_t bandwidth = global->GetBandWidth();
@@ -130,11 +129,6 @@ namespace p2sp
             {
                 return true;
             }
-            else if (can_download && b7)
-            {
-                if (full_active_peers_count >= 1)
-                    return true;
-            }
         }
         //////////////////////////////////////////////////////////////////////////
         // Range Unsupport
@@ -149,11 +143,6 @@ namespace p2sp
             if (b1 && b2 && b3)
             {
                 return true;
-            }
-            else if (can_download && b3)
-            {
-                if (full_active_peers_count >= 1)
-                    return true;
             }
         }
 
@@ -173,7 +162,6 @@ namespace p2sp
         boost::uint32_t conn_peers_count = GetP2PControlTarget()->GetConnectedPeersCount();
         boost::uint32_t active_peers_count =  GetP2PControlTarget()->GetActivePeersCount();
         boost::uint32_t full_peers_count = GetP2PControlTarget()->GetFullBlockPeersCount();
-        boost::uint32_t full_active_peers_count = GetP2PControlTarget()->GetFullBlockActivePeersCount();
         boost::uint32_t bandwidth = GetGlobalDataProvider()->GetBandWidth();
         bool range = (state_.range_ == State::RANGE_SUPPORT ? true : false);
 
@@ -215,14 +203,9 @@ namespace p2sp
                 bool b2 = (full_peers_count >= 2);
                 bool b3 = (active_peers_count >= 3);
 
-                SWITCH_DEBUG("... range=0 " << b1 << b2 << b3 << " can_download=" << can_download << " estimated_download_time_in_sec=" << estimated_download_time_in_sec << " full_active_peers_count=" << full_active_peers_count);
+                SWITCH_DEBUG("... range=0 " << b1 << b2 << b3 << " can_download=" << can_download << " estimated_download_time_in_sec=" << estimated_download_time_in_sec);
                 if (b1 && b2 && b3)
                 {
-                    return true;
-                }
-                else if (b1 && can_download && full_active_peers_count >= 1)
-                {
-                    SWITCH_DEBUG("true: (b1 && can_download && full_active_peers_count >= 1)");
                     return true;
                 }
                 else if (b1 && can_download && active_peers_count >= 1 && full_peers_count >= 1)
@@ -297,11 +280,6 @@ namespace p2sp
         boost::uint32_t conn_peers = GetP2PControlTarget()->GetConnectedPeersCount();
         boost::uint32_t pooled_peers = GetP2PControlTarget()->GetPooledPeersCount();
         bool is_http_bad = IsHttpBad();
-
-        if (is_http_bad)
-        {
-            GetP2PControlTarget()->NoticeHttpBad(is_http_bad);
-        }
 
         if (conn_peers >= 8 || pooled_peers >= 50 || true == is_http_bad)
         {

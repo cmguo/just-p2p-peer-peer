@@ -89,8 +89,6 @@ namespace p2sp
     public:
 
         // Control
-        virtual void NoticeHttpBad(bool is_http_bad) = 0;
-
         virtual void SetDownloadMode(P2PDwonloadMode mode) = 0;
 
         virtual void SetDownloadPriority(boost::int32_t prioriy) = 0;
@@ -102,8 +100,6 @@ namespace p2sp
         virtual uint32_t GetConnectedPeersCount() = 0;
 
         virtual uint32_t GetFullBlockPeersCount() = 0;
-
-        virtual uint32_t GetFullBlockActivePeersCount() = 0;
 
         virtual uint32_t GetActivePeersCount() = 0;
 

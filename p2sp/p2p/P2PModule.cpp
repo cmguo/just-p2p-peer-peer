@@ -56,11 +56,6 @@ namespace p2sp
         window_size_ = 0;
         sent_count_ = 0;
         max_download_speed_ = 100 * 1024;
-        max_historical_upload_speed_ = 0;
-        max_historical_download_speed_ = 0;
-
-        is_increased_window_size_ = false;
-        avg_available_window_size_ = 0;
 
         UploadModule::Inst()->Start(config_path);
 
@@ -311,13 +306,7 @@ namespace p2sp
         // 按每秒计算
         if (times % 4 == 0)
         {
-            statistic::SPEED_INFO speed_info = statistic::StatisticModule::Inst()->GetSpeedInfo();
             uint32_t now_download_speed = statistic::StatisticModule::Inst()->GetTotalDownloadSpeed();
-            uint32_t now_upload_speed = statistic::StatisticModule::Inst()->GetUploadDataSpeed();  // speed_info.NowUploadSpeed;
-
-            // 设置共享内存全局 window_size_
-            statistic::StatisticModule::Inst()->SetGlobalWindowSize(window_size_);
-
             if (max_download_speed_ < now_download_speed || times % (4 * 60) == 0)  // 1鍒嗛挓
             {
                 if (now_download_speed > 1024)
@@ -331,41 +320,14 @@ namespace p2sp
                 LIMIT_MIN(max_download_speed_, 100*1024);
             }
 
-            window_size_ = max_download_speed_ / 1000 * 4 / 3;
+            // 设置共享内存全局 window_size_
+            statistic::StatisticModule::Inst()->SetGlobalWindowSize(window_size_);
+            window_size_ = max_download_speed_ / 1000 * 4 / 3;  
 
-            P2PDownloader::p p2p_downloader;
-            if (rid_indexer_.size() == 1 && true == (p2p_downloader = rid_indexer_.begin()->second)->NeedIncreaseWindowSize())
-            {
-                is_increased_window_size_ = true;
-                LIMIT_MIN_MAX(window_size_, P2SPConfigs::P2P_MIN_TOTAL_WINDOW_SIZE + 20, P2SPConfigs::P2P_MAX_TOTAL_WINDOW_SIZE);
-                uint32_t used_window_size = p2p_downloader->GetTotalWindowSize();
-                if (window_size_ > used_window_size)
-                {
-                    uint32_t active_peer_count = p2p_downloader->GetActivePeerCount();
-                    avg_available_window_size_ = static_cast<uint32_t>((window_size_ - used_window_size + 0.0) / active_peer_count + 0.5);
-                }
-                else
-                {
-                    avg_available_window_size_ = 0;
-                }
-                LOG(__EVENT, "upload", __FUNCTION__ << " is_increase_window_size_=" << avg_available_window_size_ << " avg_available_window_size_=" << avg_available_window_size_);
-            }
-            else
-            {
-                is_increased_window_size_ = false;
-                avg_available_window_size_ = 0;
-                LIMIT_MIN_MAX(window_size_, P2SPConfigs::P2P_MIN_TOTAL_WINDOW_SIZE, P2SPConfigs::P2P_MAX_TOTAL_WINDOW_SIZE);
-            }
-            // request_count_ = 0;
-
-            // P2P_EVENT(__FUNCTION__ << " WindowSize: " << window_size_ << " RequestCount: " << request_count_ << " SentCount: " << sent_count_);
+            // max_download_speed_最小值为100*1024，所以window_size_最小值为100*1024/1000*4/3 = 136，所以
+            // P2P_MIN_TOTAL_WINDOW_SIZE的默认值40是不起作用的
+            LIMIT_MIN_MAX(window_size_, P2SPConfigs::P2P_MIN_TOTAL_WINDOW_SIZE, P2SPConfigs::P2P_MAX_TOTAL_WINDOW_SIZE);
             sent_count_ = 0;
-
-
-            if (max_historical_upload_speed_ < now_upload_speed)
-                max_historical_upload_speed_ = now_upload_speed;
-            if (max_historical_download_speed_ < now_download_speed)
-                max_historical_download_speed_ = now_download_speed;
         }
 
         // 首先 UploadManager 调用这个
