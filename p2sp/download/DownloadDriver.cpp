@@ -138,6 +138,7 @@ namespace p2sp
         , tiny_drag_http_status_(0)
         , is_sn_added_(false)
         , vip_level_(NO_VIP)
+        , is_drag_(false)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
