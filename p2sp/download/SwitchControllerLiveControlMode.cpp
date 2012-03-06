@@ -38,6 +38,15 @@ namespace p2sp
         state_.http_ = (GetHTTPControlTarget() ? State::HTTP_PAUSING : State::HTTP_NONE);
         state_.p2p_ = (GetP2PControlTarget() ? State::P2P_PAUSING : State::P2P_NONE);
 
+        if (GetHTTPControlTarget() && !GetP2PControlTarget())
+        {
+            ResumeHttpDownloader();
+        }
+        else if (!GetHTTPControlTarget() && GetP2PControlTarget())
+        {
+            ResumeP2PDownloader();
+        }
+
 
 #ifdef USE_MEMORY_POOL
         is_memory_full = false;
