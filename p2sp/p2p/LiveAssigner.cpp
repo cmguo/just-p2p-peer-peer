@@ -42,7 +42,7 @@ namespace p2sp
 
             if (subpiece_count >= 150)
             {
-                return;
+                break;
             }
 
             if (!p2p_downloader_->block_tasks_.empty())
@@ -50,25 +50,13 @@ namespace p2sp
                 const protocol::LiveSubPieceInfo & last_task = p2p_downloader_->block_tasks_.rbegin()->second;
                 if (!p2p_downloader_->HasSubPieceCount(last_task.GetBlockId()))
                 {
-                    return;
-                }
-            }
-
-            bool added = false;
-
-            for (std::set<LiveDownloadDriver__p>::const_iterator iter = p2p_downloader_->GetDownloadDriverSet().begin();
-                iter != p2p_downloader_->GetDownloadDriverSet().end(); ++iter)
-            {
-                if ((*iter)->RequestNextBlock(p2p_downloader_))
-                {
-                    added = true;
                     break;
                 }
             }
 
-            if (added == false)
+            if (!p2p_downloader_->GetDownloadDriver()->RequestNextBlock(p2p_downloader_))
             {
-                return;
+                break;
             }
         }
     }

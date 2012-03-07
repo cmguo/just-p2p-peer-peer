@@ -109,13 +109,13 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveP2PDownloader> p;
-        static p Create(const RID& rid, storage::LiveInstance__p live_instance)
+        static p Create(const RID& rid, LiveDownloadDriver__p live_download_driver, storage::LiveInstance__p live_instance)
         {
-            return p(new LiveP2PDownloader(rid, live_instance));
+            return p(new LiveP2PDownloader(rid, live_download_driver, live_instance));
         }
 
     private:
-        LiveP2PDownloader(const RID & rid, storage::LiveInstance__p live_instance);
+        LiveP2PDownloader(const RID & rid, LiveDownloadDriver__p live_download_driver, storage::LiveInstance__p live_instance);
 
     public:
         // 重载基类的函数
@@ -184,13 +184,12 @@ namespace p2sp
         void InitPeerConnection(LIVE_CONNECT_LEVEL connect_level);
         void KickPeerConnection(LIVE_CONNECT_LEVEL connect_level);
 
-        void AttachDownloadDriver(LiveDownloadDriver__p download_driver);
-        void DetachDownloadDriver(LiveDownloadDriver__p download_driver);
-
-        const std::set<LiveDownloadDriver__p> & GetDownloadDriverSet()
+        LiveDownloadDriver__p GetDownloadDriver()
         {
-            return download_driver_s_;
+            return live_download_driver_;
         }
+
+        boost::uint32_t GetRestTimeInSeconds() const;
 
         void OnUdpRecv(protocol::Packet const & packet);
 
@@ -235,7 +234,6 @@ namespace p2sp
         boost::uint32_t GetTotalRecievedSubPieceCount() const;
         boost::uint32_t GetTotalRequestSubPieceCount() const;
         boost::uint32_t GetTotalP2PDataBytes() const;
-        boost::uint32_t GetMinRestTimeInSeconds() const;
         boost::uint32_t GetTotalUdpServerDataBytes() const;
 
         void SubmitUdpServerDownloadBytes(boost::uint32_t bytes);
@@ -267,8 +265,6 @@ namespace p2sp
         LIVE_CONNECT_LEVEL GetConnectLevel();
         void CheckShouldUseUdpServer();
 
-        storage::LivePosition GetMinPlayingPosition() const;
-
         void DeleteAllUdpServer();
         bool IsAheadOfMostPeers() const;
 
@@ -299,7 +295,8 @@ namespace p2sp
         std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> peers_;
         bool is_p2p_pausing_;
         boost::int32_t p2p_max_connect_count_;
-        std::set<LiveDownloadDriver__p> download_driver_s_;
+
+        LiveDownloadDriver__p live_download_driver_;
 
         storage::LiveInstance__p live_instance_;
 

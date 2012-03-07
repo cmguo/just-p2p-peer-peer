@@ -165,11 +165,13 @@ namespace p2sp
             P2PDownloader::p p2p_downloader = rid_indexer_.find(rid)->second;
             p2p_downloader->AddCandidatePeers(peers);
         }
-
-        if (live_rid_index_.find(rid) != live_rid_index_.end())
+        else
         {
-            LiveP2PDownloader::p p2p_downloader = live_rid_index_.find(rid)->second;
-            p2p_downloader->AddCandidatePeers(peers, is_live_udpserver);
+            for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.lower_bound(rid);
+                iter != live_rid_index_.upper_bound(rid); ++iter)
+            {
+                iter->second->AddCandidatePeers(peers, is_live_udpserver);
+            }
         }
     }
 
@@ -181,7 +183,7 @@ namespace p2sp
             packet_.PacketAction == protocol::CloseSessionPacket::Action)
         {
             // 由于PeerInfoPacket和CloseSessionPacket中没有传Rid，所以对所有的LiveP2PDownloader都调用OnUdpRecv
-            for (std::map<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.begin();
+            for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.begin();
                 iter != live_rid_index_.end(); ++iter)
             {
                 iter->second->OnUdpRecv(packet_);
@@ -230,8 +232,11 @@ namespace p2sp
         }
         if (live_rid_index_.find(packet.resource_id_) != live_rid_index_.end())
         {
-            LiveP2PDownloader__p p2p_downloader = live_rid_index_.find(packet.resource_id_)->second;
-            p2p_downloader->OnUdpRecv(packet);
+            for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.lower_bound(packet.resource_id_);
+                iter != live_rid_index_.upper_bound(packet.resource_id_); ++iter)
+            {
+                iter->second->OnUdpRecv(packet);
+            }
         }
         else if (packet.PacketAction == protocol::PeerExchangePacket::Action)
         {
@@ -341,11 +346,10 @@ namespace p2sp
         }
 
         // LiveP2PDownloader->OnP2PTimer
-        for (std::map<RID, LiveP2PDownloader::p>::iterator iter = live_rid_index_.begin();
+        for (std::multimap<RID, LiveP2PDownloader::p>::iterator iter = live_rid_index_.begin();
             iter != live_rid_index_.end(); ++iter)
         {
-            LiveP2PDownloader__p downloader = iter->second;
-            downloader->OnP2PTimer(times);
+            iter->second->OnP2PTimer(times);
         }
     }
 
@@ -394,32 +398,22 @@ namespace p2sp
         return UploadModule::Inst()->NeedUseUploadPingPolicy();
     }
 
-    LiveP2PDownloader__p P2PModule::CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance)
+    void P2PModule::OnLiveP2PDownloaderCreated(LiveP2PDownloader__p live_p2p_downloader)
     {
-        if (live_rid_index_.find(rid) != live_rid_index_.end())
-        {
-            return live_rid_index_[rid];
-        }
-
-        LiveP2PDownloader::p live_p2p_downloader = LiveP2PDownloader::Create(rid, live_instance);
-        live_p2p_downloader->Start();
-
-        // 插入直播索引，定时器根据直播索引触发每个LiveP2PDownloader的OnP2PTimer
-        live_rid_index_.insert(std::make_pair(rid, live_p2p_downloader));
-        return live_p2p_downloader;
+        live_rid_index_.insert(std::make_pair(live_p2p_downloader->GetRid(), live_p2p_downloader));
     }
 
-    void P2PModule::OnLiveP2PDownloaderStop(LiveP2PDownloader::p p2p_downloader)
+    void P2PModule::OnLiveP2PDownloaderDestroyed(LiveP2PDownloader::p live_p2p_downloader)
     {
-        if( is_running_ == false )
-            return;
-
-        if (live_rid_index_.find(p2p_downloader->GetRid()) == live_rid_index_.end())
+        for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.lower_bound(live_p2p_downloader->GetRid());
+            iter != live_rid_index_.upper_bound(live_p2p_downloader->GetRid()); ++iter)
         {
-            return;
+            if (iter->second == live_p2p_downloader)
+            {
+                live_rid_index_.erase(iter);
+                break;
+            }
         }
-
-        live_rid_index_.erase(p2p_downloader->GetRid());
     }
 
     void P2PModule::OnConfigUpdated()
@@ -436,7 +430,7 @@ namespace p2sp
     {
         boost::uint32_t connected_count = 0;
 
-        for (std::map<RID, LiveP2PDownloader__p>::const_iterator iter = live_rid_index_.begin();
+        for (std::multimap<RID, LiveP2PDownloader__p>::const_iterator iter = live_rid_index_.begin();
             iter != live_rid_index_.end(); ++iter)
         {
             connected_count += iter->second->GetConnectedPeersCount();

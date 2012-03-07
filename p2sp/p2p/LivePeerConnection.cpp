@@ -71,10 +71,6 @@ namespace p2sp
 
     void LivePeerConnection::DoAnnounce()
     {
-        // 发送 annouce 报文
-        boost::uint32_t request_block_id = 0;
-        boost::uint32_t interval = (*p2p_downloader_->GetDownloadDriverSet().begin())->GetInstance()->GetLiveInterval();
-
         // 计算上传带宽和能力值的较小值，填到LiveRequestAnnouncePacket中的upload_bandwidth_字段中
         boost::int32_t upload_bandwidth = p2sp::P2PModule::Inst()->GetUploadSpeedLimitInKBps();
         if (upload_bandwidth < (boost::int32_t)p2sp::P2PModule::Inst()->GetUploadBandWidthInKBytes())
@@ -92,20 +88,17 @@ namespace p2sp
             announce_copies = 1;
         }
 
-        // 每个播放点都进行Announce
-        for (std::set<LiveDownloadDriver__p>::const_iterator iter = p2p_downloader_->GetDownloadDriverSet().begin();
-            iter != p2p_downloader_->GetDownloadDriverSet().end(); ++iter)
+        // 当前播放点进行Announce
+        boost::uint32_t request_block_id = p2p_downloader_->GetDownloadDriver()->GetPlayingPosition().GetBlockId();
+
+        protocol::LiveRequestAnnouncePacket live_request_annouce_packet(protocol::Packet::NewTransactionID(), 
+            p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
+
+        for(int32_t i = 0; i < announce_copies; i++)
         {
-            boost::uint32_t request_block_id = (*iter)->GetPlayingPosition().GetBlockId();
-
-            protocol::LiveRequestAnnouncePacket live_request_annouce_packet(protocol::Packet::NewTransactionID(), 
-                p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
-
-            for(int32_t i = 0; i < announce_copies; i++)
-            {
-                p2p_downloader_->DoSendPacket(live_request_annouce_packet);
-            }
+            p2p_downloader_->DoSendPacket(live_request_annouce_packet);
         }
+
     }
 
     void LivePeerConnection::OnAnnounce(protocol::LiveAnnouncePacket const & packet)
@@ -492,7 +485,7 @@ namespace p2sp
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()
     {
-        uint32_t rest_time = p2p_downloader_->GetMinRestTimeInSeconds();
+        uint32_t rest_time = p2p_downloader_->GetRestTimeInSeconds();
 
         if (rest_time > 10)
         {

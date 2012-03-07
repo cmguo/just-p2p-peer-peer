@@ -10,8 +10,9 @@
 namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("live_p2p");
-    LiveP2PDownloader::LiveP2PDownloader(const RID & rid, storage::LiveInstance__p live_instance)
+    LiveP2PDownloader::LiveP2PDownloader(const RID & rid, LiveDownloadDriver__p live_download_driver, storage::LiveInstance__p live_instance)
         : rid_(rid)
+        , live_download_driver_(live_download_driver)
         , live_instance_(live_instance)
         , is_running_(false)
         , is_p2p_pausing_(true)
@@ -100,7 +101,7 @@ namespace p2sp
     LIVE_CONNECT_LEVEL LiveP2PDownloader::GetConnectLevel()
     {
         LIVE_CONNECT_LEVEL level = MEDIUM;
-        int32_t rest_time = this->GetMinRestTimeInSeconds();
+        int32_t rest_time = live_download_driver_->GetRestPlayableTime();
         int32_t downloadable_peers_count = this->GetDownloadablePeersCount();
         int32_t connection_threshold = p2p_max_connect_count_ / 3;
 
@@ -194,7 +195,7 @@ namespace p2sp
                 udpserver_connector_->OnP2PTimer(times);
             }
 
-            if (this->GetMinRestTimeInSeconds() >= 20)
+            if (GetRestTimeInSeconds() >= 20)
             {
                 urgent_tick_counter_.reset();
             }
@@ -223,13 +224,13 @@ namespace p2sp
         if (times % 4 == 0)
         {
             // 删除block_count_map中过期的节点
-            live_subpiece_count_manager_.EliminateElapsedSubPieceCountMap(GetMinPlayingPosition().GetBlockId());
+            live_subpiece_count_manager_.EliminateElapsedSubPieceCountMap(live_download_driver_->GetPlayingPosition().GetBlockId());
 
             // 删除PeerConnection中过期的节点
             for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer_iter = peers_.begin();
                 peer_iter != peers_.end(); ++peer_iter)
             {
-                peer_iter->second->EliminateElapsedBlockBitMap(GetMinPlayingPosition().GetBlockId());
+                peer_iter->second->EliminateElapsedBlockBitMap(live_download_driver_->GetPlayingPosition().GetBlockId());
             }
         }
 
@@ -299,10 +300,8 @@ namespace p2sp
 
             if (should_use_udpserver_ == false)
             {
-                assert(!download_driver_s_.empty());
-
                 if (connected_udpserver_count_ > 0 &&
-                    (*download_driver_s_.begin())->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
+                    live_download_driver_->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
                 {
                     udpserver_pool_->DisConnectAll();
 
@@ -681,28 +680,6 @@ namespace p2sp
         }
     }
 
-    void LiveP2PDownloader::AttachDownloadDriver(LiveDownloadDriver__p download_driver)
-    {
-        if (download_driver_s_.find(download_driver) == download_driver_s_.end())
-        {
-            download_driver_s_.insert(download_driver);
-        }
-    }
-
-    void LiveP2PDownloader::DetachDownloadDriver(LiveDownloadDriver__p download_driver)
-    {
-        if (download_driver_s_.find(download_driver) != download_driver_s_.end())
-        {
-            download_driver_s_.erase(download_driver);
-
-            if (download_driver_s_.size() == 0)
-            {
-                Stop();
-                P2PModule::Inst()->OnLiveP2PDownloaderStop(shared_from_this());
-            }
-        }
-    }
-
     void LiveP2PDownloader::OnUdpRecv(protocol::Packet const & packet)
     {
         // 统计速度时不只包括SubPiecePacket，而是包括收到的所有的包
@@ -902,11 +879,7 @@ namespace p2sp
         for (std::set<protocol::LiveSubPieceInfo>::iterator iter = completed_block_set.begin();
             iter != completed_block_set.end(); ++iter)
         {
-            for (std::set<LiveDownloadDriver__p>::iterator dditer = download_driver_s_.begin();
-                dditer != download_driver_s_.end(); ++dditer)
-            {
-                (*dditer)->OnBlockComplete(*iter);
-            }
+            live_download_driver_->OnBlockComplete(*iter);
         }
     }
 
@@ -982,47 +955,15 @@ namespace p2sp
         }
     }
 
-    boost::uint32_t LiveP2PDownloader::GetMinRestTimeInSeconds() const
+    boost::uint32_t LiveP2PDownloader::GetRestTimeInSeconds() const
     {
-        boost::uint32_t min_rest_time = 32768;
-
-        assert(!download_driver_s_.empty());
-
-        for (std::set<LiveDownloadDriver::p>::const_iterator iter = download_driver_s_.begin();
-            iter != download_driver_s_.end(); iter++)
-        {
-            if ((*iter)->GetRestPlayableTime() < min_rest_time)
-            {
-                min_rest_time = (*iter)->GetRestPlayableTime();
-            }
-        }
-
-        return min_rest_time;
-    }
-
-    storage::LivePosition LiveP2PDownloader::GetMinPlayingPosition() const
-    {
-        std::set<LiveDownloadDriver__p>::const_iterator iter = download_driver_s_.begin();
-
-        storage::LivePosition min_position = (*iter)->GetPlayingPosition();
-
-        do 
-        {
-            if ((*iter)->GetPlayingPosition() < min_position)
-            {
-                min_position = (*iter)->GetPlayingPosition();
-            }
-
-            ++iter;
-        } while (iter != download_driver_s_.end());
-
-        return min_position;
+        return live_download_driver_->GetRestPlayableTime();
     }
 
     void LiveP2PDownloader::CheckShouldUseUdpServer()
     {
         // 剩余时间小，使用UdpServer来补带宽
-        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ && !IsInUdpServerProtectTimeWhenStart())
+        if (GetRestTimeInSeconds() < urgent_rest_playable_time_delim_ && !IsInUdpServerProtectTimeWhenStart())
         {
             use_udpserver_reason_ = URGENT;
             should_use_udpserver_ = true;
@@ -1030,7 +971,7 @@ namespace p2sp
             return;
         }
 
-        if (GetMinRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2 && !IsInUdpServerProtectTimeWhenStart())
+        if (GetRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2 && !IsInUdpServerProtectTimeWhenStart())
         {
             should_connect_udpserver_ = true;
         }
@@ -1039,12 +980,9 @@ namespace p2sp
             should_connect_udpserver_ = false;
         }
 
-        assert(!download_driver_s_.empty());
-        std::set<LiveDownloadDriver::p>::const_iterator download_driver = download_driver_s_.begin();
-
         // 上传足够大，剩余时间足够大，并且跟视野中的peer相比，跑的足够靠前，使用UdpServer来快速分发
-        if ((*download_driver)->IsUploadSpeedLargeEnough() &&
-            (*download_driver)->GetRestPlayableTime() > (*download_driver)->GetRestPlayTimeDelim() &&
+        if (live_download_driver_->IsUploadSpeedLargeEnough() &&
+            live_download_driver_->GetRestPlayableTime() > live_download_driver_->GetRestPlayTimeDelim() &&
             IsAheadOfMostPeers())
         {
             use_udpserver_reason_ = LARGE_UPLOAD;
@@ -1054,7 +992,7 @@ namespace p2sp
 
         // 如果是因为上传大而使用UdpServer的，若上传变小并且也使用UdpServer使用了一段时间了，则暂停使用UdpServer
         if (use_udpserver_reason_ == LARGE_UPLOAD &&
-            (*download_driver)->IsUploadSpeedSmallEnough() &&
+            live_download_driver_->IsUploadSpeedSmallEnough() &&
             use_udpserver_tick_counter_.elapsed() > using_udpserver_time_at_least_when_large_upload_ * 1000)
         {
             should_use_udpserver_ = false;
@@ -1063,7 +1001,7 @@ namespace p2sp
 
         // 如果是因为紧急而使用的UdpServer，若剩余时间足够大了，则暂停使用UdpServer
         if (use_udpserver_reason_ == URGENT &&
-            (*download_driver)->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
+            GetRestTimeInSeconds() > safe_enough_rest_playable_time_delim_)
         {
             should_use_udpserver_ = false;
             return;
@@ -1072,7 +1010,7 @@ namespace p2sp
         // 如果是因为紧急而使用的UdpServer，若跑了很长时间剩余时间还可以，则暂停使用UdpServer
         if (use_udpserver_reason_ == URGENT &&
             use_udpserver_tick_counter_.elapsed() > using_udpserver_time_in_second_delim_ * 1000 &&
-            (*download_driver)->GetRestPlayableTime() > safe_rest_playable_time_delim_)
+            GetRestTimeInSeconds() > safe_rest_playable_time_delim_)
         {
             should_use_udpserver_ = false;
             return;
@@ -1175,13 +1113,11 @@ namespace p2sp
 
     void LiveP2PDownloader::SendPeerInfo()
     {
-        assert(!download_driver_s_.empty());
-
         protocol::PeerInfo peer_info(peers_.size(),
             statistic::UploadStatisticModule::Inst()->GetUploadCount(),
             statistic::UploadStatisticModule::Inst()->GetUploadSpeed(),
             UploadModule::Inst()->GetMaxUploadSpeedIncludeSameSubnet(),
-            (*download_driver_s_.begin())->GetRestPlayableTime(),
+            GetRestTimeInSeconds(),
             GetLostRate(),
             GetRedundancyRate());
 
@@ -1243,14 +1179,12 @@ namespace p2sp
 
     bool LiveP2PDownloader::IsInUdpServerProtectTimeWhenStart()
     {
-        assert(!download_driver_s_.empty());
-
         // 在保护时间之内 并且bs开关为开 并且bwtype为0
-        return ((*download_driver_s_.begin())->GetDownloadTime() < udpserver_protect_time_when_start_ &&
-            (*download_driver_s_.begin())->GetBWType() == JBW_NORMAL &&
+        return (live_download_driver_->GetDownloadTime() < udpserver_protect_time_when_start_ &&
+            live_download_driver_->GetBWType() == JBW_NORMAL &&
             should_use_bw_type_ &&
-            (*download_driver_s_.begin())->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2 &&
-            (*download_driver_s_.begin())->GetReplay() == false);
+            live_download_driver_->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2 &&
+            live_download_driver_->GetReplay() == false);
     }
 
     boost::uint32_t LiveP2PDownloader::GetTotalConnectPeersCount() const

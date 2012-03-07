@@ -127,8 +127,10 @@ namespace p2sp
         if (bwtype_ != JBW_HTTP_ONLY)
         {
             // 创建P2PDownloader
-            live_p2p_downloader_ = p2sp::P2PModule::Inst()->CreateLiveP2PDownloader(data_rate_manager_.GetCurrentRID(), live_instance_);
-            live_p2p_downloader_->AttachDownloadDriver(shared_from_this());
+            live_p2p_downloader_ = LiveP2PDownloader::Create(data_rate_manager_.GetCurrentRID(), shared_from_this(), live_instance_);
+            live_p2p_downloader_->Start();
+
+            p2sp::P2PModule::Inst()->OnLiveP2PDownloaderCreated(live_p2p_downloader_);
         }
 
         // 启动BlockRequestManager
@@ -203,7 +205,8 @@ namespace p2sp
 
         if (live_p2p_downloader_)
         {
-            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
+            live_p2p_downloader_->Stop();
+            P2PModule::Inst()->OnLiveP2PDownloaderDestroyed(live_p2p_downloader_);
             live_p2p_downloader_.reset();
         }
 
@@ -482,11 +485,14 @@ namespace p2sp
             bool p2p_paused = live_p2p_downloader_->IsPausing();
 
             live_p2p_downloader_->Pause();
-            live_p2p_downloader_->DetachDownloadDriver(shared_from_this());
+            live_p2p_downloader_->Stop();
+            P2PModule::Inst()->OnLiveP2PDownloaderDestroyed(live_p2p_downloader_);
             live_p2p_downloader_.reset();
 
-            live_p2p_downloader_ = p2sp::P2PModule::Inst()->CreateLiveP2PDownloader(data_rate_manager_.GetCurrentRID(), live_instance_);
-            live_p2p_downloader_->AttachDownloadDriver(shared_from_this());
+            live_p2p_downloader_ = LiveP2PDownloader::Create(data_rate_manager_.GetCurrentRID(), shared_from_this(), live_instance_);
+            live_p2p_downloader_->Start();
+
+            p2sp::P2PModule::Inst()->OnLiveP2PDownloaderCreated(live_p2p_downloader_);
 
             // P2PDownloader的下载状态恢复
             if (!p2p_paused)

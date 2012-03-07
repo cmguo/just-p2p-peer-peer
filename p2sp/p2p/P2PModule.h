@@ -81,8 +81,8 @@ namespace p2sp
 
         // Live
         // 创建直播的P2PDownloader
-        LiveP2PDownloader__p CreateLiveP2PDownloader(const RID& rid, storage::LiveInstance__p live_instance);
-        void OnLiveP2PDownloaderStop(LiveP2PDownloader__p p2p_downloader);
+        void OnLiveP2PDownloaderCreated(LiveP2PDownloader__p live_p2p_downloader);
+        void OnLiveP2PDownloaderDestroyed(LiveP2PDownloader__p live_p2p_downloader);
 
         virtual void OnConfigUpdated();
 
@@ -107,8 +107,8 @@ namespace p2sp
 
         boost::uint16_t  global_request_send_count_;
 
-        // 直播索引，每个rid对应一个直播的LiveP2PDownloader
-        std::map<RID, LiveP2PDownloader__p> live_rid_index_;
+        // 直播索引，直播的LiveP2PDownloader集合
+        std::multimap<RID, LiveP2PDownloader__p> live_rid_index_;
 
         bool is_connection_policy_enable_;
 
