@@ -222,8 +222,6 @@ namespace p2sp
             boost::uint32_t timeout, LivePeerConnection__p peer_connection,
             uint32_t transaction_id);
 
-        const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & GetPeerConnectionInfo() const;
-
         // for statistic
         void SubmitAllRequestSubPieceCount(boost::uint16_t request_sub_piece_count);
         void SubmitRequestSubPieceCount(boost::uint16_t request_sub_piece_count);

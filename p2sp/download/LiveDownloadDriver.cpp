@@ -578,7 +578,7 @@ namespace p2sp
         if (live_p2p_downloader_)
         {
             const std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<p2sp::LivePeerConnection> > & peer_connections
-                = live_p2p_downloader_->GetPeerConnectionInfo();
+                = live_p2p_downloader_->GetPeers();
 
             int i = 0;
             for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<p2sp::LivePeerConnection> >::const_iterator iter

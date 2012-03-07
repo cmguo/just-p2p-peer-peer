@@ -895,11 +895,6 @@ namespace p2sp
         live_subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection, transaction_id);
     }
 
-    const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & LiveP2PDownloader::GetPeerConnectionInfo() const
-    {
-        return peers_;
-    }
-
     void LiveP2PDownloader::DoList()
     {
         if (GetConnectedPeersCount() < GetMaxConnectCount() &&

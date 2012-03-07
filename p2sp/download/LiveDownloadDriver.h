@@ -457,8 +457,6 @@ namespace p2sp
         statistic::SPEED_INFO_EX GetP2PSubPieceSpeedInfoEx() const;
         statistic::SPEED_INFO_EX GetHttpSpeedInfoEx() const;
 
-        const std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> > & GetPeerConnectionInfo() const;
-
         boost::uint8_t IsPlayingPositionBlockFull() const;
 
 #ifndef STATISTIC_OFF
@@ -487,11 +485,6 @@ namespace p2sp
     inline boost::uint8_t LiveDownloadDriver::IsPlayingPositionBlockFull() const
     {
         return live_instance_->HasCompleteBlock(playing_position_.GetBlockId());
-    }
-
-    inline const std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> > & LiveDownloadDriver::GetPeerConnectionInfo() const
-    {
-        return live_p2p_downloader_->GetPeerConnectionInfo();
     }
 
 #ifndef STATISTIC_OFF
