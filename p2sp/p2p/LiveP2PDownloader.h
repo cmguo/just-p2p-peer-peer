@@ -209,8 +209,6 @@ namespace p2sp
 
         void SetBlockCountMap(boost::uint32_t block_id, std::vector<boost::uint16_t> subpiece_count);
 
-        std::map<uint32_t,protocol::LiveSubPieceInfo> & GetBlockTasks();
-
         storage::LiveInstance__p GetInstance()
         {
             return live_instance_;
@@ -259,8 +257,9 @@ namespace p2sp
 
         boost::uint32_t GetMinFirstBlockID() const;
 
+        void OnBlockComplete(const protocol::LiveSubPieceInfo & live_block);
+
     private:
-        void CheckBlockComplete();
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
         void CheckShouldUseUdpServer();
@@ -299,8 +298,6 @@ namespace p2sp
         LiveDownloadDriver__p live_download_driver_;
 
         storage::LiveInstance__p live_instance_;
-
-        std::map<uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
 
         LiveSubPieceRequestManager live_subpiece_request_manager_;
 

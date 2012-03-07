@@ -12,8 +12,29 @@ namespace p2sp
         urgent_ = false;
     }
 
-    void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver)
+    void LiveAssigner::OnBlockTimeout(boost::uint32_t block_id)
     {
+        block_tasks_.erase(block_id);
+    }
+
+    void LiveAssigner::PutBlockTask(const protocol::LiveSubPieceInfo & live_block)
+    {
+        uint32_t block_id = live_block.GetBlockId();
+        if (block_tasks_.find(block_id) == block_tasks_.end())
+        {
+            block_tasks_.insert(std::make_pair(block_id, live_block));
+        }
+    }
+
+    void LiveAssigner::OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver, bool paused)
+    {
+        CheckBlockComplete();
+        
+        if (paused)
+        {
+            return;
+        }
+
 		// 500ms分配一次
 		if (times % 2 == 0)
 		{			
@@ -31,6 +52,27 @@ namespace p2sp
         AssignerPeers(use_udpserver);
     }
 
+    void LiveAssigner::CheckBlockComplete()
+    {
+        // 检查block是否完成
+        std::set<protocol::LiveSubPieceInfo> completed_block_set;
+        for (std::map<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
+            iter != block_tasks_.end();
+            iter++)
+        {
+            if (p2p_downloader_->GetInstance()->HasCompleteBlock(iter->first))
+            {
+                completed_block_set.insert(iter->second);
+            }
+        }
+
+        for (std::set<protocol::LiveSubPieceInfo>::iterator iter = completed_block_set.begin();
+            iter != completed_block_set.end(); ++iter)
+        {
+            p2p_downloader_->OnBlockComplete(*iter);
+        }
+    }
+
     // 根据已有的subpiece_cout和需要分配的capacity
     // 计算出还需要请求多少片piece才能到capacity
     void LiveAssigner::CalcSubpieceTillCapacity()
@@ -45,9 +87,9 @@ namespace p2sp
                 break;
             }
 
-            if (!p2p_downloader_->block_tasks_.empty())
+            if (!block_tasks_.empty())
             {
-                const protocol::LiveSubPieceInfo & last_task = p2p_downloader_->block_tasks_.rbegin()->second;
+                const protocol::LiveSubPieceInfo & last_task = block_tasks_.rbegin()->second;
                 if (!p2p_downloader_->HasSubPieceCount(last_task.GetBlockId()))
                 {
                     break;
@@ -72,8 +114,8 @@ namespace p2sp
 
         bool first_block_urgent_reassign = false;        
 
-        for (std::map<uint32_t,protocol::LiveSubPieceInfo>::iterator iter = p2p_downloader_->GetBlockTasks().begin(); 
-            iter != p2p_downloader_->GetBlockTasks().end(); ++iter, ++block_task_index)
+        for (std::map<uint32_t,protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin(); 
+            iter != block_tasks_.end(); ++iter, ++block_task_index)
         {
             uint32_t block_id = iter->first;
             total_unique_subpiece_count += AssignForMissingSubPieces(block_id, false);

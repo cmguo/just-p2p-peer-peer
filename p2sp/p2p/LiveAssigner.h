@@ -19,9 +19,13 @@ namespace p2sp
     {
     public:
         void Start(LiveP2PDownloader__p p2p_downloader);
-        void OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver);
+        void OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver, bool paused);
+
+        void OnBlockTimeout(boost::uint32_t block_id);
+        void PutBlockTask(const protocol::LiveSubPieceInfo & live_block);
 
     private:
+        void CheckBlockComplete();
         void CalcSubpieceTillCapacity();
 
         boost::uint32_t CaclSubPieceAssignMap();
@@ -52,6 +56,8 @@ namespace p2sp
         friend inline bool operator < (PEER_RECVTIME & p1, PEER_RECVTIME & p2);
 
         std::list<PEER_RECVTIME> peer_connection_recvtime_list_;
+
+        std::map<uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
     };
 
     inline bool operator < (LiveAssigner::PEER_RECVTIME & p1, LiveAssigner::PEER_RECVTIME & p2)

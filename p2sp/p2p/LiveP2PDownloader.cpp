@@ -234,19 +234,16 @@ namespace p2sp
             }
         }
 
-        // 检查block是否完成
-        CheckBlockComplete();
-
         if (!is_p2p_pausing_)
         {
             if (times % 4 == 0)
             {
                 live_subpiece_request_manager_.OnP2PTimer(times);
             }
-
-            // 预分配
-            live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_);
         }
+
+        // 预分配
+        live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_, is_p2p_pausing_);
         
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
             iter != peers_.end(); ++iter)
@@ -471,18 +468,12 @@ namespace p2sp
     // LiveDownloader
     void LiveP2PDownloader::OnBlockTimeout(boost::uint32_t block_id)
     {
-        block_tasks_.erase(block_id);
+        live_assigner_.OnBlockTimeout(block_id);
     }
 
     void LiveP2PDownloader::PutBlockTask(const protocol::LiveSubPieceInfo & live_block)
     {
-        LOG(__DEBUG, "live_p2p", __FUNCTION__ << " " << __LINE__  << " " << live_block);
-        
-        uint32_t block_id = live_block.GetBlockId();
-        if (block_tasks_.find(block_id) == block_tasks_.end())
-        {
-            block_tasks_.insert(std::make_pair(block_id, live_block));
-        }
+        live_assigner_.PutBlockTask(live_block);
     }
 
     void LiveP2PDownloader::SetDownloadMode(P2PDwonloadMode mode)
@@ -862,25 +853,9 @@ namespace p2sp
         }
     }
 
-    void LiveP2PDownloader::CheckBlockComplete()
+    void LiveP2PDownloader::OnBlockComplete(const protocol::LiveSubPieceInfo & live_block)
     {
-        // 检查block是否完成
-        std::set<protocol::LiveSubPieceInfo> completed_block_set;
-        for (std::map<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
-            iter != block_tasks_.end();
-            iter++)
-        {
-            if (live_instance_->HasCompleteBlock(iter->first))
-            {
-                completed_block_set.insert(iter->second);
-            }
-        }
-
-        for (std::set<protocol::LiveSubPieceInfo>::iterator iter = completed_block_set.begin();
-            iter != completed_block_set.end(); ++iter)
-        {
-            live_download_driver_->OnBlockComplete(*iter);
-        }
+        live_download_driver_->OnBlockComplete(live_block);
     }
 
     bool LiveP2PDownloader::HasSubPiece(const protocol::LiveSubPieceInfo & sub_piece)
@@ -891,11 +866,6 @@ namespace p2sp
     void LiveP2PDownloader::SetBlockCountMap(boost::uint32_t block_id, std::vector<boost::uint16_t> subpiece_count)
     {
         live_subpiece_count_manager_.SetSubPieceCountMap(block_id, subpiece_count);
-    }
-
-    std::map<uint32_t,protocol::LiveSubPieceInfo> & LiveP2PDownloader::GetBlockTasks()
-    {
-        return block_tasks_;
     }
 
     bool LiveP2PDownloader::HasSubPieceCount(boost::uint32_t block_id)
