@@ -1092,7 +1092,6 @@ namespace p2sp
             }
             // LOGX(__DEBUG, "proxy", "IsHttpDownloading: proxy_connection " << proxy_conn);
 
-            boost::shared_ptr<IGlobalControlTarget> control_target;
             if (proxy_conn->IsLiveConnection())
             {
                 LiveDownloadDriver__p live_download_driver = proxy_conn->GetLiveDownloadDriver();
@@ -1101,7 +1100,11 @@ namespace p2sp
                     continue;
                 }           
 
-                control_target = live_download_driver;
+                LiveHttpDownloader__p http;
+                if (http && !http->IsPausing())
+                {
+                    return true;
+                }
             }
             else
             {
@@ -1111,15 +1114,11 @@ namespace p2sp
                     continue;
                 }
 
-                control_target = vod_download_driver;
-            }
-            // LOGX(__DEBUG, "proxy", "IsHttpDownloading: DownloadDriver " << dd);
-
-            assert(control_target);
-            IHTTPControlTarget::p http = control_target->GetHTTPControlTarget();
-            if (http && !http->IsPausing())
-            {
-                return true;
+                IHTTPControlTarget::p http = vod_download_driver->GetHTTPControlTarget();
+                if (http && !http->IsPausing())
+                {
+                    return true;
+                }
             }
         }
         return false;

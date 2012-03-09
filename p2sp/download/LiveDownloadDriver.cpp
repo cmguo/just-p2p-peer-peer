@@ -137,18 +137,8 @@ namespace p2sp
         live_block_request_manager_.Start(shared_from_this());
 
         // 直播状态机
-        switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO;
-
-        // 创建直播状态机
-        if (SwitchController::IsValidControlMode(SwitchController::CONTROL_MODE_LIVE))
-        {
-            switch_control_mode_ = static_cast<SwitchController::ControlModeType> (SwitchController::CONTROL_MODE_LIVE);
-        }
-
-        // 直播状态机启动
-        switch_controller_ = SwitchController::Create(shared_from_this());
-        switch_controller_->Start(switch_control_mode_);
-
+        live_switch_controller_.Start(shared_from_this());
+        
 #ifndef STATISTIC_OFF
         live_download_driver_statistic_info_.Clear();
         live_download_driver_statistic_info_.LiveDownloadDriverID = id_;
@@ -210,8 +200,7 @@ namespace p2sp
             live_p2p_downloader_.reset();
         }
 
-        switch_controller_->Stop();
-        switch_controller_.reset();
+        live_switch_controller_.Stop();
 
         live_block_request_manager_.Stop();
 
@@ -234,23 +223,23 @@ namespace p2sp
         download_time_.stop();
     }
 
-    IHTTPControlTarget::p LiveDownloadDriver::GetHTTPControlTarget()
+    LiveHttpDownloader__p LiveDownloadDriver::GetHTTPControlTarget()
     {
         if (live_http_downloader_)
         {
             return live_http_downloader_;
         }
 
-        return IHTTPControlTarget::p();
+        return LiveHttpDownloader__p();
     }
 
-    IP2PControlTarget::p LiveDownloadDriver::GetP2PControlTarget()
+    LiveP2PDownloader__p LiveDownloadDriver::GetP2PControlTarget()
     {
         if (live_p2p_downloader_)
         {
             return live_p2p_downloader_;
         }
-        return IP2PControlTarget::p();
+        return LiveP2PDownloader__p();
     } 
 
     bool LiveDownloadDriver::RequestNextBlock(LiveDownloader__p downloader)
@@ -502,7 +491,7 @@ namespace p2sp
         }
     }
 
-    void LiveDownloadDriver::SetSwitchState(boost::int32_t h, boost::int32_t p, boost::int32_t tu, boost::int32_t t)
+    void LiveDownloadDriver::SetSwitchState(boost::int32_t h, boost::int32_t p)
     {
         switch_state_http_ = h;
         switch_state_p2p_ = p;
@@ -598,9 +587,6 @@ namespace p2sp
 
         // data rate level
         live_download_driver_statistic_info_.DataRateLevel = data_rate_manager_.GetCurrentDataRatePos();
-
-        boost::shared_ptr<SwitchController::QueryControlMode> query_control_mode =
-            boost::shared_dynamic_cast<SwitchController::QueryControlMode>(switch_controller_->GetControlMode());
 
         // 目前没有关于状态机的信息，所以都填0
         // P2P failed times
@@ -937,11 +923,6 @@ namespace p2sp
 
         WindowsMessage::Inst().PostWindowsMessage(UM_LIVE_DAC_STATISTIC, (WPARAM)id_, (LPARAM)dac_data);
 #endif
-    }
-
-    boost::uint32_t LiveDownloadDriver::GetBandWidth()
-    {
-        return statistic::StatisticModule::Inst()->GetBandWidth();
     }
 
     void LiveDownloadDriver::OnPause(bool pause)

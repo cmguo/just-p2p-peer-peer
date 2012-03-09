@@ -194,9 +194,6 @@ namespace p2sp
         case SwitchController::CONTROL_MODE_PUSH_OPENSERVICE:
             mode = OpenServicePushControlMode::Create(controller);
             break;
-        case SwitchController::CONTROL_MODE_LIVE:
-            mode = LiveControlMode::Create(controller);
-            break;
         default:
             mode = NullControlMode::Create(controller);
             break;

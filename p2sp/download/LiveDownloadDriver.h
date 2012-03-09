@@ -8,7 +8,7 @@
 #include "p2sp/p2s/LiveHttpDownloader.h"
 #include "p2sp/p2p/LiveP2PDownloader.h"
 #include "p2sp/download/LiveBlockRequestManager.h"
-#include "p2sp/download/SwitchController.h"
+#include "p2sp/download/LiveSwitchController.h"
 #include "network/HttpResponse.h"
 #include "storage/LiveInstance.h"
 #include "p2sp/download/LiveRestTimeTracker.h"
@@ -198,8 +198,7 @@ namespace p2sp
     };
 
     class LiveDownloadDriver
-        : public IGlobalControlTarget
-        , public ILiveDownloadDriver
+        : public ILiveDownloadDriver
         , public boost::enable_shared_from_this<LiveDownloadDriver>
         , public ConfigUpdateListener
 #ifdef DUMP_OBJECT
@@ -268,68 +267,36 @@ namespace p2sp
         void SetRestTimeInSecond(boost::uint32_t rest_time_in_second);
 
     public:
-        //IGlobalControlTarget
-        virtual uint32_t GetBandWidth();
-        virtual uint32_t GetFileLength(){return 0;}
-        virtual uint32_t GetPlayElapsedTimeInMilliSec() {return 0;}
-        virtual uint32_t GetDownloadingPosition() {return 0;}
-        virtual uint32_t GetDownloadedBytes() {return 0;}
-        virtual uint32_t GetDataDownloadSpeed() {return 0;}
-        virtual bool IsStartFromNonZero() {return true;}
-        virtual bool IsDrag() {return true;}
-        virtual bool IsHeadOnly() {return true;}
-        virtual bool HasRID() {return true;}
+        LiveHttpDownloader__p GetHTTPControlTarget();
+        LiveP2PDownloader__p GetP2PControlTarget();
+        void SetSwitchState(boost::int32_t h, boost::int32_t p);
+        boost::uint32_t GetRestPlayableTime();
+        JumpBWType GetBWType() {return bwtype_;}
+        boost::uint32_t GetDataRate();
 
-        virtual IHTTPControlTarget::p GetHTTPControlTarget();
-        virtual IP2PControlTarget::p GetP2PControlTarget();
-        virtual void OnStateMachineType(uint32_t state_machine_type) {};
-        virtual void OnStateMachineState(const string& state_machine_state) {};
-        virtual void SetSpeedLimitInKBps(boost::int32_t speed_in_KBps) {};
-        virtual void SetSwitchState(boost::int32_t h, boost::int32_t p, boost::int32_t tu, boost::int32_t t);
-        virtual boost::uint32_t GetRestPlayableTime();
-        virtual void SetDragMachineState(boost::int32_t state) {};
-        virtual bool IsDragLocalPlayForSwitch() {return true;}
-        virtual boost::int32_t GetDownloadMode() {return true;}
-        virtual void SetAcclerateStatus(boost::int32_t status) {};
-        virtual JumpBWType GetBWType() {return bwtype_;}
-        virtual void SetHttpHungry() {};
-        virtual boost::uint32_t GetDataRate();
-        virtual bool IsPPLiveClient() {return true;}
-        virtual void NoticeLeave2300() {}
-        virtual void SetDragHttpStatus(int32_t status) {}
-        virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets() 
-        {
-            assert(false);
-            std::vector<IHTTPControlTarget::p> v;
-            return v;
-        }
+        bool ShouldUseCDNWhenLargeUpload() const;
+        boost::uint32_t GetRestPlayTimeDelim() const;
+        bool IsUploadSpeedLargeEnough();
+        bool IsUploadSpeedSmallEnough();
+        bool GetUsingCdnTimeAtLeastWhenLargeUpload() const;
 
-        virtual void ReportUseBakHost() {}
-        virtual void ReportBakHostFail() {}
+        void SetUseCdnBecauseOfLargeUpload();
+        void SetUseP2P();
+        void SubmitChangedToP2PCondition(boost::uint8_t condition);
+        void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1);
+        void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1);
 
-        virtual bool ShouldUseCDNWhenLargeUpload() const;
-        virtual boost::uint32_t GetRestPlayTimeDelim() const;
-        virtual bool IsUploadSpeedLargeEnough();
-        virtual bool IsUploadSpeedSmallEnough();
-        virtual bool GetUsingCdnTimeAtLeastWhenLargeUpload() const;
-
-        virtual void SetUseCdnBecauseOfLargeUpload();
-        virtual void SetUseP2P();
-        virtual void SubmitChangedToP2PCondition(boost::uint8_t condition);
-        virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1);
-        virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1);
-
-        virtual bool GetReplay() const
+        bool GetReplay() const
         {
             return replay_;
         }
 
-        virtual boost::uint32_t GetSourceType() const
+        boost::uint32_t GetSourceType() const
         {
             return source_type_;
         }
 
-        virtual bool DoesFallBehindTooMuch() const;
+        bool DoesFallBehindTooMuch() const;
 
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
@@ -354,8 +321,8 @@ namespace p2sp
         LiveHttpDownloader__p live_http_downloader_;
         LiveP2PDownloader__p live_p2p_downloader_;
         LiveBlockRequestManager live_block_request_manager_;
-        SwitchController::p switch_controller_;
-        SwitchController::ControlModeType switch_control_mode_;
+        
+        LiveSwitchController live_switch_controller_;
 
         DataRateManager data_rate_manager_;
 
