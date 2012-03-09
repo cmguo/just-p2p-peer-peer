@@ -73,6 +73,7 @@ namespace p2sp
         framework::timer::TickCounter time_counter_2300_;
         framework::timer::TickCounter time_counter_3200_;
 #ifdef USE_MEMORY_POOL
+        bool CheckMemory();
         bool is_memory_full;
 #endif
         bool is_started_;
