@@ -12,6 +12,6 @@ namespace statistic
     {
         Clear();
         LocalPeerInfo.PeerVersion = protocol::PEER_VERSION;
-        PeerVersion = p2sp::AppModule::GetKernelVersionInfoEx();
+        PeerVersion = p2sp::AppModule::GetKernelVersionInfo();
     }
 }

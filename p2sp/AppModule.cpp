@@ -79,11 +79,6 @@ namespace p2sp
 
     VERSION_INFO AppModule::GetKernelVersionInfo() { return VERSION_INFO(PEER_KERNEL_VERSION); }
 
-    VersionInfoEx AppModule::GetKernelVersionInfoEx()
-    {
-        return VersionInfoEx(PEER_KERNEL_VERSION);
-    }
-
     bool AppModule::Start(
         boost::asio::io_service & io_svc,
         AppModuleStartInterface::p appmodule_start_interface)

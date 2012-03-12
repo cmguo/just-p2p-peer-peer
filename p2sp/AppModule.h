@@ -234,7 +234,6 @@ class AppModule: public boost::noncopyable,
     void RegisterTcpPackets();
 
     static protocol::VERSION_INFO GetKernelVersionInfo();
-    static protocol::VersionInfoEx GetKernelVersionInfoEx();
 
     // make
     static string MakeUrlByRidInfo(const protocol::RidInfo& rid_info, uint32_t version = 1);

@@ -32,7 +32,7 @@ namespace p2sp
     {
         Guid                  gPeerID;                              // B: 华哥ID
         Guid                  gResourceID;                          // C: ResourceID
-        boost::uint8_t        aPeerVersion[4];                      // D: 内核版本：major, minor, micro, extra
+        boost::uint16_t       aPeerVersion[4];                      // D: 内核版本：major, minor, micro, extra
         char                  szVideoName[512];                     // E: 视频名称/WCHAR
         char                  szOriginalUrl[1000];                  // F: Url
         char                  szOriginalReferUrl[1000];             // G: Refer Url
