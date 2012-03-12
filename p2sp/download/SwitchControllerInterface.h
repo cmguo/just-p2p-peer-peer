@@ -188,21 +188,6 @@ namespace p2sp
         virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets() = 0;
         virtual void ReportUseBakHost() = 0;
         virtual void ReportBakHostFail() = 0;
-
-        virtual bool ShouldUseCDNWhenLargeUpload() const = 0;
-        virtual boost::uint32_t GetRestPlayTimeDelim() const = 0;
-        virtual bool IsUploadSpeedLargeEnough() = 0;
-        virtual bool IsUploadSpeedSmallEnough() = 0;
-        virtual bool GetUsingCdnTimeAtLeastWhenLargeUpload() const = 0;
-
-        virtual void SetUseCdnBecauseOfLargeUpload() = 0;
-        virtual void SetUseP2P() = 0;
-        virtual void SubmitChangedToP2PCondition(boost::uint8_t condition) = 0;
-        virtual void SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times = 1) = 0;
-        virtual void SubmitBlockTimesWhenUseHttpUnderUrgentCondition(boost::uint32_t times = 1) = 0;
-        virtual bool GetReplay() const = 0;
-        virtual boost::uint32_t GetSourceType() const = 0;
-        virtual bool DoesFallBehindTooMuch() const = 0;
     };
 
 }
