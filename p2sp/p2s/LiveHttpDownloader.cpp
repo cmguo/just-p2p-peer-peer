@@ -371,35 +371,6 @@ namespace p2sp
         return http_speed_info_.GetSpeedInfoEx();
     }
 
-    boost::uint32_t LiveHttpDownloader::GetCurrentDownloadSpeed() 
-    {
-        if (false == is_running_)
-            return 0;
-        LOGX(__DEBUG, "live_http_download", "speed = " << GetSpeedInfoEx().NowDownloadSpeed);
-        return GetSpeedInfoEx().NowDownloadSpeed;
-    }
-
-    boost::uint32_t LiveHttpDownloader::GetSecondDownloadSpeed() 
-    {
-        if (false == is_running_)
-            return 0;
-        return GetSpeedInfoEx().SecondDownloadSpeed;
-    }
-
-    uint32_t LiveHttpDownloader::GetMinuteDownloadSpeed()
-    {
-        if (false == is_running_)
-            return 0;
-        return GetSpeedInfoEx().MinuteDownloadSpeed;
-    }
-
-    uint32_t LiveHttpDownloader::GetRecentDownloadSpeed() 
-    {
-        if (false == is_running_)
-            return 0;
-        return GetSpeedInfoEx().RecentDownloadSpeed;
-    }
-
     void LiveHttpDownloader::OnBlockTimeout(boost::uint32_t block_id)
     {
         std::deque<protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
@@ -437,10 +408,6 @@ namespace p2sp
             rid_ = rid.to_string();
             Resume();
         }
-    }
-
-    void LiveHttpDownloader::SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps)
-    {
     }
 
     void LiveHttpDownloader::OnError()

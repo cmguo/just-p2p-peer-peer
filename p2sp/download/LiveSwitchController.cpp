@@ -131,7 +131,7 @@ namespace p2sp
 
         boost::uint32_t time_of_advancing_switching_to_http = 0;
 
-        if (GetP2PControlTarget()->GetCurrentDownloadSpeed() < BootStrapGeneralConfig::Inst()->GetP2PSpeedThreshold() * 1024)
+        if (GetP2PControlTarget()->GetSpeedInfoEx().NowDownloadSpeed < BootStrapGeneralConfig::Inst()->GetP2PSpeedThreshold() * 1024)
         {
             time_of_advancing_switching_to_http = BootStrapGeneralConfig::Inst()->GetTimeOfAdvancingSwitchingHttp();
         }
@@ -157,7 +157,7 @@ namespace p2sp
                 return true;
             }
 
-            if (GetP2PControlTarget()->GetCurrentDownloadSpeed() == 0 &&
+            if (GetP2PControlTarget()->GetSpeedInfoEx().NowDownloadSpeed == 0 &&
                 rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim() &&
                 time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfStartAndSpeedIs0())
             {
@@ -203,7 +203,7 @@ namespace p2sp
                 return true;
             }
 
-            if (GetP2PControlTarget()->GetCurrentDownloadSpeed() == 0 &&
+            if (GetP2PControlTarget()->GetSpeedInfoEx().NowDownloadSpeed == 0 &&
                 rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim() &&
                 time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfSpeedIs0() &&
                 rest_play_time_when_switched_ != 0)

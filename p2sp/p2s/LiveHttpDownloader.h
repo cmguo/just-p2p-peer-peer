@@ -13,7 +13,6 @@ namespace p2sp
 
     class LiveHttpDownloader
         : public LiveDownloader
-        , public IHTTPControlTarget
         , public network::IHttpClientListener<protocol::LiveSubPieceBuffer>
         , public boost::enable_shared_from_this<LiveHttpDownloader>
 #ifdef DUMP_OBJECT
@@ -47,16 +46,8 @@ namespace p2sp
         };
 
     public:
-        // 重载基类的函数
-        // IControlTarget
-        virtual void Pause();
-        virtual void Resume();
-
-        virtual boost::uint32_t GetSecondDownloadSpeed();
-        virtual boost::uint32_t GetCurrentDownloadSpeed();
-        virtual uint32_t GetMinuteDownloadSpeed();
-        virtual uint32_t GetRecentDownloadSpeed(); // 20s
-        virtual void SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
+        void Pause();
+        void Resume();
 
         // Downloader
         virtual void Stop();
@@ -70,10 +61,6 @@ namespace p2sp
         virtual void PutBlockTask(const protocol::LiveSubPieceInfo & live_block);
 
         virtual bool IsP2PDownloader() {return false;}
-
-        // IHTTPControlTarget
-        virtual bool IsDetecting() {return false;}
-        virtual bool IsSupportRange() {return true;}
 
         // IHttpClientListener
         virtual void OnConnectSucced();

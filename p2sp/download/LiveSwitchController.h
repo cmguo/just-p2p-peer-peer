@@ -69,7 +69,6 @@ namespace p2sp
 
         State state_;
 
-        framework::timer::TickCounter time_counter_live_control_mode_;
         framework::timer::TickCounter time_counter_2300_;
         framework::timer::TickCounter time_counter_3200_;
 #ifdef USE_MEMORY_POOL
