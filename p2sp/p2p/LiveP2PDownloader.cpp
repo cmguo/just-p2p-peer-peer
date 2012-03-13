@@ -50,10 +50,6 @@ namespace p2sp
         p2p_max_connect_count_ = default_connection_limit_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
         live_connect_low_normal_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectLowNormalThresHold();
         live_connect_normal_high_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectNormalHighThresHold();
-        live_exchange_large_upload_ability_delim_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadAbilityDelim();
-        live_exchange_large_upload_ability_max_count_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadAbilityMaxCount();
-        live_exchange_large_upload_to_me_delim_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadToMeDelim();
-        live_exchange_large_upload_to_me_max_count_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeLargeUploadToMeMaxCount();
         live_exchange_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetLiveExchangeIntervalInSecond();
         live_extended_connections_ = BootStrapGeneralConfig::Inst()->GetLiveExtendedConnections();
     }
@@ -140,21 +136,9 @@ namespace p2sp
         return level;
     }
 
-    int32_t LiveP2PDownloader::GetDownloadablePeersCount() const
+    uint32_t LiveP2PDownloader::GetDownloadablePeersCount() const
     {
-        int32_t count = 0;
-        for(std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end();
-            iter++)
-        {
-            LivePeerConnection__p conn = iter->second;
-            if (!conn->IsBlockBitmapEmpty())
-            {
-                count++;
-            }
-        }
-
-        return count;
+        return live_connection_manager_.GetDownloadablePeersCount();
     }
 
     // 250ms 被调用一次
@@ -227,11 +211,7 @@ namespace p2sp
             live_subpiece_count_manager_.EliminateElapsedSubPieceCountMap(live_download_driver_->GetPlayingPosition().GetBlockId());
 
             // 删除PeerConnection中过期的节点
-            for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer_iter = peers_.begin();
-                peer_iter != peers_.end(); ++peer_iter)
-            {
-                peer_iter->second->EliminateElapsedBlockBitMap(live_download_driver_->GetPlayingPosition().GetBlockId());
-            }
+            live_connection_manager_.EliminateElapsedBlockBitMap(live_download_driver_->GetPlayingPosition().GetBlockId());
         }
 
         if (!is_p2p_pausing_)
@@ -245,11 +225,7 @@ namespace p2sp
         // 预分配
         live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_, is_p2p_pausing_);
         
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            iter->second->OnP2PTimer(times);
-        }
+        live_connection_manager_.OnP2PTimer(times);
 
         if (times % 4 == 0)
         {
@@ -297,11 +273,9 @@ namespace p2sp
 
             if (should_use_udpserver_ == false)
             {
-                if (connected_udpserver_count_ > 0 &&
+                if (live_connection_manager_.GetConnectedUdpServerCount() > 0 &&
                     live_download_driver_->GetRestPlayableTime() > safe_enough_rest_playable_time_delim_)
                 {
-                    udpserver_pool_->DisConnectAll();
-
                     DeleteAllUdpServer();
                 }
             }
@@ -397,13 +371,7 @@ namespace p2sp
             udpserver_connector_.reset();
         }
 
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            iter->second->Stop();
-        }
-
-        peers_.clear();
+        live_connection_manager_.Stop();
 
         if (live_instance_)
         {
@@ -545,17 +513,17 @@ namespace p2sp
         boost::int32_t connect_count = 0;
         if (connect_level <= LOW)
         {   
-            connect_count = (p2p_max_connect_count_ * 3 / 4 - peers_.size()) - connector_->GetConnectingPeerCount();
+            connect_count = (p2p_max_connect_count_ * 3 / 4 - GetConnectedPeersCount()) - connector_->GetConnectingPeerCount();
         }
         else if (connect_level <= MEDIUM)
         {
-            connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
+            connect_count = (p2p_max_connect_count_ - GetConnectedPeersCount()) * 2 - connector_->GetConnectingPeerCount();
         }
         else
         {
             // high mode
             assert(connect_level == HIGH);
-            connect_count = (p2p_max_connect_count_ - peers_.size()) * 2 - connector_->GetConnectingPeerCount();
+            connect_count = (p2p_max_connect_count_ - GetConnectedPeersCount()) * 2 - connector_->GetConnectingPeerCount();
             LIMIT_MIN(connect_count, 1);
         }
 
@@ -580,7 +548,8 @@ namespace p2sp
 
         if (should_connect_udpserver_ || should_use_udpserver_)
         {
-            for (boost::uint32_t i = connected_udpserver_count_; i < use_udpserver_count_ && i < udpserver_pool_->GetPeerCount(); ++i)
+            for (boost::uint32_t i = live_connection_manager_.GetConnectedUdpServerCount();
+                i < use_udpserver_count_ && i < udpserver_pool_->GetPeerCount(); ++i)
             {
                 protocol::CandidatePeerInfo candidate_peer_info;
 
@@ -596,36 +565,28 @@ namespace p2sp
 
     void LiveP2PDownloader::KickPeerConnection(LIVE_CONNECT_LEVEL connect_level)
     {   
-        std::multimap<KickLiveConnectionIndicator, LivePeerConnection::p> peer_kick_map;
+        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> no_response_peer_set;
+        live_connection_manager_.GetNoResponsePeers(no_response_peer_set);
 
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator 
-            iter = peers_.begin(); iter != peers_.end(); )
+            iter = no_response_peer_set.begin(); iter != no_response_peer_set.end(); ++iter)
         {
-            if (iter->second->LongTimeNoResponse())
+            // 普通的tracker也会返回UdpServer，所以ippool_中可能有UdpServer
+            ippool_->OnDisConnect(iter->first, true);
+
+            if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
             {
-                // 普通的tracker也会返回UdpServer，所以ippool_中可能有UdpServer
-                ippool_->OnDisConnect(iter->first, true);
-
-                if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-                {
-                    udpserver_pool_->OnDisConnect(iter->first, true);
-                }
-
-                DelPeer((iter++)->second);
+                udpserver_pool_->OnDisConnect(iter->first, true);
             }
-            else
-            {
-                if (connect_level >= MEDIUM)
-                {
-                    if (iter->second->GetConnectedTimeInMillseconds() >= 15000)
-                    {
-                        // only kick peers which are connected longer than 15 seconds
-                        peer_kick_map.insert(std::make_pair(KickLiveConnectionIndicator(iter->second), iter->second));
-                    }
-                }
 
-                ++iter;
-            }
+            DelPeer(iter->first);
+        }
+
+        std::multimap<KickLiveConnectionIndicator, LivePeerConnection::p> peer_kick_map;
+
+        if (connect_level >= MEDIUM)
+        {
+            live_connection_manager_.GetKickMap(peer_kick_map);
         }
 
         boost::int32_t kick_count = 0;
@@ -637,14 +598,14 @@ namespace p2sp
         else if (connect_level <= MEDIUM)
         {
             // make sure to kick at least one "bad" connection
-            kick_count = peers_.size() + 1 - p2p_max_connect_count_;
+            kick_count = GetConnectedPeersCount() + 1 - p2p_max_connect_count_;
         }
         else
         {
             assert(connect_level == HIGH);
 
             // kick peers more aggressively in case of urgency
-            kick_count = peers_.size() - p2p_max_connect_count_ * 3 / 4;
+            kick_count = GetConnectedPeersCount() - p2p_max_connect_count_ * 3 / 4;
         }        
 
         if (kick_count > 0)
@@ -665,7 +626,7 @@ namespace p2sp
 
                 ippool_->OnDisConnect(iter->second->GetEndpoint(), true);
 
-                DelPeer(iter->second);
+                DelPeer(iter->second->GetEndpoint());
                 iter++;
             }
         }
@@ -673,21 +634,8 @@ namespace p2sp
 
     void LiveP2PDownloader::OnUdpRecv(protocol::Packet const & packet)
     {
-        // 统计速度时不只包括SubPiecePacket，而是包括收到的所有的包
-        boost::uint8_t connect_type = protocol::CONNECT_LIVE_PEER;
-        if (peers_.find(packet.end_point) != peers_.end())
-        {
-            if (peers_[packet.end_point]->GetConnectType() == protocol::CONNECT_LIVE_PEER)
-            {
-                p2p_speed_info_.SubmitDownloadedBytes(packet.length());
-            }
-            else
-            {
-                assert(peers_[packet.end_point]->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER);
-                connect_type = protocol::CONNECT_LIVE_UDPSERVER;
-                udp_server_speed_info_.SubmitDownloadedBytes(packet.length());
-            }
-        }
+        // 统计
+        OnUdpPacketStatistic(packet);
 
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
@@ -715,25 +663,11 @@ namespace p2sp
         else if (packet.PacketAction == protocol::LiveAnnouncePacket::Action)
         {
             // 收到annouce回包 (0xC1)
-            if (peers_.find(packet.end_point) != peers_.end())
-            {
-                LivePeerConnection::p peer_connection = peers_.find(packet.end_point)->second;
-                peer_connection->OnAnnounce((protocol::LiveAnnouncePacket const &)packet);
-            }
-            return;
+            live_connection_manager_.OnAnnouncePacket((protocol::LiveAnnouncePacket const &)packet);
         }
         else if (packet.PacketAction == protocol::LiveSubPiecePacket::Action)
         {
             // 收到数据包
-            if (connect_type == protocol::CONNECT_LIVE_PEER)
-            {
-                p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
-            }
-            else
-            {
-                assert(connect_type == protocol::CONNECT_LIVE_UDPSERVER);
-                udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
-            }
             const protocol::LiveSubPiecePacket & subpiece_packet = (const protocol::LiveSubPiecePacket &)packet;
 
             live_subpiece_request_manager_.OnSubPiece(subpiece_packet);
@@ -741,17 +675,6 @@ namespace p2sp
             if (false == HasSubPiece(subpiece_packet.sub_piece_info_))
             {
                 ++total_received_subpiece_count_;
-
-                if (connect_type == protocol::CONNECT_LIVE_UDPSERVER)
-                {
-                    statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(subpiece_packet.sub_piece_length_);
-                    total_udpserver_data_bytes_ += subpiece_packet.sub_piece_length_;
-                }
-                else
-                {
-                    statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(subpiece_packet.sub_piece_length_);
-                    total_p2p_data_bytes_ += subpiece_packet.sub_piece_length_;
-                }
 
                 protocol::LiveSubPieceBuffer buffer(subpiece_packet.sub_piece_content_,
                     subpiece_packet.sub_piece_length_);
@@ -764,19 +687,8 @@ namespace p2sp
         else if (packet.PacketAction == protocol::ErrorPacket::Action)
         {
             // 收到Error报文
-            if (peers_.find(packet.end_point) != peers_.end())
-            {
-                protocol::ErrorPacket error_packet = (const protocol::ErrorPacket &) packet;
-                if (error_packet.error_code_ == protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID ||
-                    error_packet.error_code_ == protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID)
-                {
-                    // 正在Announce 或则 请求Subpiece
-                    // 对方没有该资源 或者 我被T了
-                    LivePeerConnection::p peer_connection = peers_.find(packet.end_point)->second;
-                    DelPeer(peer_connection);
-                }
-            }
-            else
+            live_connection_manager_.OnErrorPacket((const protocol::ErrorPacket &)packet);
+            if (!HasPeer(packet.end_point))
             {
                 // 还没连上，说明对方没有该资源
                 ippool_->OnConnectFailed(packet.end_point);
@@ -785,72 +697,75 @@ namespace p2sp
         }
         else if (packet.PacketAction == protocol::PeerInfoPacket::Action)
         {
-            if (peers_.find(packet.end_point) != peers_.end())
-            {
-                const protocol::PeerInfoPacket peer_info_packet = (const protocol::PeerInfoPacket &)packet;
-
-                statistic::PEER_INFO peer_info(peer_info_packet.peer_info_.download_connected_count_, peer_info_packet.peer_info_.upload_connected_count_,
-                    peer_info_packet.peer_info_.upload_speed_, peer_info_packet.peer_info_.max_upload_speed_, peer_info_packet.peer_info_.rest_playable_time_,
-                    peer_info_packet.peer_info_.lost_rate_, peer_info_packet.peer_info_.redundancy_rate_);
-
-                peers_[packet.end_point]->UpdatePeerInfo(peer_info);
-            }
+            live_connection_manager_.OnPeerInfoPacket((const protocol::PeerInfoPacket &)packet);
         }
         else if (packet.PacketAction == protocol::CloseSessionPacket::Action)
         {
-            for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-                iter != peers_.end(); ++iter)
+            if (live_connection_manager_.HasPeer(packet.end_point))
             {
-                if (iter->first == packet.end_point)
+                if (live_connection_manager_.IsLiveUdpServer(packet.end_point))
                 {
-                    if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-                    {
-                        udpserver_pool_->OnDisConnect(iter->second->GetEndpoint(), false);
-                    }
-
-                    ippool_->OnDisConnect(iter->second->GetEndpoint(), false);
-
-                    DelPeer(iter->second);
-                    break;
+                    udpserver_pool_->OnDisConnect(packet.end_point, false);
                 }
+                ippool_->OnDisConnect(packet.end_point, false);
+                DelPeer(packet.end_point);
             }
+        }
+    }
+
+    void LiveP2PDownloader::OnUdpPacketStatistic(protocol::Packet const & packet)
+    {
+        if (live_connection_manager_.IsLivePeer(packet.end_point))
+        {
+            p2p_speed_info_.SubmitDownloadedBytes(packet.length());
+
+            if (packet.PacketAction != protocol::LiveSubPiecePacket::Action)
+            {
+                return;
+            }
+
+            const protocol::LiveSubPiecePacket & subpiece_packet = (const protocol::LiveSubPiecePacket &)packet;
+            p2p_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+
+            if (HasSubPiece(subpiece_packet.sub_piece_info_))
+            {
+                return;
+            }
+
+            statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(subpiece_packet.sub_piece_length_);
+            total_p2p_data_bytes_ += subpiece_packet.sub_piece_length_;
+        }
+        else if (live_connection_manager_.IsLiveUdpServer(packet.end_point))
+        {
+            udp_server_speed_info_.SubmitDownloadedBytes(packet.length());
+
+            if (packet.PacketAction != protocol::LiveSubPiecePacket::Action)
+            {
+                return;
+            }
+
+            udp_server_subpiece_speed_info_.SubmitDownloadedBytes(LIVE_SUB_PIECE_SIZE);
+
+            const protocol::LiveSubPiecePacket & subpiece_packet = (const protocol::LiveSubPiecePacket &)packet;
+
+            if (HasSubPiece(subpiece_packet.sub_piece_info_))
+            {
+                return;
+            }
+
+            statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(subpiece_packet.sub_piece_length_);
+            total_udpserver_data_bytes_ += subpiece_packet.sub_piece_length_;
         }
     }
 
     void LiveP2PDownloader::AddPeer(LivePeerConnection__p peer_connection)
     {
-        if (!is_running_)
-        {
-            return;
-        }
-
-        if (peers_.find(peer_connection->GetEndpoint()) == peers_.end())
-        {
-            peers_[peer_connection->GetEndpoint()] = peer_connection;
-            if (peer_connection->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-            {
-                ++connected_udpserver_count_;
-            }
-        }
+        live_connection_manager_.AddPeer(peer_connection);
     }
 
-    void LiveP2PDownloader::DelPeer(LivePeerConnection__p peer_connection)
+    void LiveP2PDownloader::DelPeer(const boost::asio::ip::udp::endpoint & endpoint)
     {
-        if (!is_running_ || !peer_connection)
-        {
-            return;
-        }
-
-        if (peers_.find(peer_connection->GetEndpoint()) != peers_.end())
-        {
-            peer_connection->Stop();
-            peers_.erase(peer_connection->GetEndpoint());
-            if (peer_connection->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-            {
-                assert(connected_udpserver_count_ > 0);
-                --connected_udpserver_count_;
-            }
-        }
+        live_connection_manager_.DelPeer(endpoint);
     }
 
     void LiveP2PDownloader::OnBlockComplete(const protocol::LiveSubPieceInfo & live_block)
@@ -984,49 +899,25 @@ namespace p2sp
 
     void LiveP2PDownloader::DeleteAllUdpServer()
     {
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-            iter != peers_.end();)
+        udpserver_pool_->DisConnectAll();
+
+        std::set<boost::asio::ip::udp::endpoint> udp_server_endpoint_set;
+
+        live_connection_manager_.GetUdpServerEndpoints(udp_server_endpoint_set);
+
+        for (std::set<boost::asio::ip::udp::endpoint>::iterator iter = udp_server_endpoint_set.begin();
+            iter != udp_server_endpoint_set.end(); ++iter)
         {
-            if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-            {
-                assert(connected_udpserver_count_ > 0);
-                --connected_udpserver_count_;
+            // 有可能把UdpServer当做普通的peer来连了，所以需要在ippool_中去尝试disconnect
+            ippool_->OnDisConnect(*iter, true);
 
-                // 有可能把UdpServer当做普通的peer来连了，所以需要在ippool_中去尝试disconnect
-                ippool_->OnDisConnect(iter->first, true);
-
-                peers_.erase(iter++);
-            }
-            else
-            {
-                ++iter;
-            }
+            live_connection_manager_.DelPeer(*iter);
         }
     }
 
     bool LiveP2PDownloader::IsAheadOfMostPeers() const
     {
-        boost::uint32_t large_bitmap_peer_count = 0;
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
-            {
-                continue;
-            }
-
-            if (iter->second->GetBlockBitmapSize() > 1)
-            {
-                ++large_bitmap_peer_count;
-
-                if (large_bitmap_peer_count >= 2)
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+        return live_connection_manager_.IsAheadOfMostPeers();
     }
 
     void LiveP2PDownloader::SubmitUdpServerDownloadBytes(boost::uint32_t bytes)
@@ -1078,7 +969,7 @@ namespace p2sp
 
     void LiveP2PDownloader::SendPeerInfo()
     {
-        protocol::PeerInfo peer_info(peers_.size(),
+        protocol::PeerInfo peer_info(GetConnectedPeersCount(),
             statistic::UploadStatisticModule::Inst()->GetUploadCount(),
             statistic::UploadStatisticModule::Inst()->GetUploadSpeed(),
             UploadModule::Inst()->GetMaxUploadSpeedIncludeSameSubnet(),
@@ -1088,8 +979,9 @@ namespace p2sp
 
         protocol::PeerInfoPacket peer_info_packet(protocol::Packet::NewTransactionID(), protocol::PEER_VERSION, peer_info);
 
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator 
+            iter = live_connection_manager_.GetPeers().begin();
+            iter != live_connection_manager_.GetPeers().end(); ++iter)
         {
             peer_info_packet.end_point = iter->first;
             DoSendPacket(peer_info_packet);
@@ -1100,13 +992,7 @@ namespace p2sp
     {
         boost::uint32_t total_request = total_request_subpiece_count_;
         boost::uint32_t total_receive = GetTotalUnusedSubPieceCount();
-        boost::uint32_t requesting_count = 0;
-
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            requesting_count += iter->second->GetPeerConnectionInfo().Requesting_Count;
-        }
+        boost::uint32_t requesting_count = live_connection_manager_.GetRequestingCount();
 
         if (total_request_subpiece_count_ <= requesting_count + total_receive)
         {
@@ -1159,138 +1045,26 @@ namespace p2sp
 
     void LiveP2PDownloader::GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & selected_peers)
     {
-        std::vector<boost::shared_ptr<LivePeerConnection> > large_upload_ability_peers;
-        for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> >::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            if (iter->second->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_ >=
-                iter->second->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_ + live_exchange_large_upload_ability_delim_)
-            {
-                large_upload_ability_peers.push_back(iter->second);
-            }
-        }
-
-        if (large_upload_ability_peers.size() > live_exchange_large_upload_ability_max_count_)
-        {
-            std::sort(large_upload_ability_peers.begin(), large_upload_ability_peers.end(), &LiveP2PDownloader::CompareBasedOnUploadAbility);
-        }
-
-        SelectPeers(selected_peers, large_upload_ability_peers, live_exchange_large_upload_ability_max_count_);
+        live_connection_manager_.GetCandidatePeerInfosBasedOnUploadAbility(selected_peers);
     }
 
     void LiveP2PDownloader::GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & selected_peers)
     {
-        std::vector<boost::shared_ptr<LivePeerConnection> > large_upload_peers;
-
-        for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<LivePeerConnection> >::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            if (iter->second->GetSpeedInfoEx().RecentDownloadSpeed >= live_exchange_large_upload_to_me_delim_)
-            {
-                large_upload_peers.push_back(iter->second);
-            }
-        }
-
-        if (large_upload_peers.size() > live_exchange_large_upload_to_me_max_count_)
-        {
-            std::sort(large_upload_peers.begin(), large_upload_peers.end(), &LiveP2PDownloader::CompareBasedOnUploadSpeed);
-        }
-
-        SelectPeers(selected_peers, large_upload_peers, live_exchange_large_upload_to_me_max_count_);
-    }
-
-    void LiveP2PDownloader::SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,
-        const std::vector<boost::shared_ptr<LivePeerConnection> > & sorted_peers, boost::uint32_t to_select_peers_count)
-    {
-        boost::uint32_t selected_peers_count = 0;
-        for (size_t i = 0; i < sorted_peers.size(); ++i)
-        {
-            if (selected_peers_count == to_select_peers_count)
-            {
-                break;
-            }
-
-            if (selected_peers.find(sorted_peers[i]->GetCandidatePeerInfo()) == selected_peers.end())
-            {
-                ++selected_peers_count;
-                selected_peers.insert(sorted_peers[i]->GetCandidatePeerInfo());
-            }
-        }
-    }
-
-    bool LiveP2PDownloader::CompareBasedOnUploadAbility(boost::shared_ptr<LivePeerConnection> const & lhs,
-        boost::shared_ptr<LivePeerConnection> const & rhs)
-    {
-        boost::int32_t lhs_upload_ability = lhs->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_
-            - lhs->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_;
-
-        boost::int32_t rhs_upload_ability = rhs->GetPeerConnectionInfo().RealTimePeerInfo.max_upload_speed_
-            - rhs->GetPeerConnectionInfo().RealTimePeerInfo.mine_upload_speed_;
-
-        if (lhs_upload_ability != rhs_upload_ability)
-        {
-            return lhs_upload_ability > rhs_upload_ability;
-        }
-
-        return lhs < rhs;
-    }
-
-    bool LiveP2PDownloader::CompareBasedOnUploadSpeed(boost::shared_ptr<LivePeerConnection> const & lhs,
-        boost::shared_ptr<LivePeerConnection> const & rhs)
-    {
-        if (lhs->GetSpeedInfoEx().RecentDownloadSpeed != rhs->GetSpeedInfoEx().RecentDownloadSpeed)
-        {
-            return lhs->GetSpeedInfoEx().RecentDownloadSpeed > rhs->GetSpeedInfoEx().RecentDownloadSpeed;
-        }
-
-        return lhs < rhs;
+        live_connection_manager_.GetCandidatePeerInfosBasedOnUploadSpeed(selected_peers);
     }
 
     boost::uint32_t LiveP2PDownloader::GetReverseOrderSubPiecePacketCount() const
     {
-        boost::uint32_t reverse_order_packet_count = 0;
-
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            reverse_order_packet_count += iter->second->GetReverseOrderSubPiecePacketCount();
-        }
-
-        return reverse_order_packet_count;
+        return live_connection_manager_.GetReverseOrderSubPiecePacketCount();
     }
 
     boost::uint32_t LiveP2PDownloader::GetTotalReceivedSubPiecePacketCount() const
     {
-        boost::uint32_t total_received_packet_count = 0;
-
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            total_received_packet_count += iter->second->GetTotalReceivedSubPiecePacketCount();
-        }
-
-        return total_received_packet_count;
+        return live_connection_manager_.GetTotalReceivedSubPiecePacketCount();
     }
 
     boost::uint32_t LiveP2PDownloader::GetMinFirstBlockID() const
     {
-        boost::uint32_t min_first_block_id = std::numeric_limits<uint32_t>::max();
-
-        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
-            iter != peers_.end(); ++iter)
-        {
-            if (min_first_block_id > iter->second->GetPeerConnectionInfo().FirstLiveBlockId &&
-                iter->second->GetPeerConnectionInfo().FirstLiveBlockId != 0)
-            {
-                min_first_block_id = iter->second->GetPeerConnectionInfo().FirstLiveBlockId;
-            }
-        }
-
-        if (min_first_block_id == std::numeric_limits<uint32_t>::max())
-        {
-            min_first_block_id = 0;
-        }
-
-        return min_first_block_id;
+        return live_connection_manager_.GetMinFirstBlockID();
     }
 }

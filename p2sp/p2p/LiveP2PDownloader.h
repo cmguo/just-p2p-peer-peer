@@ -4,7 +4,6 @@
 #include "p2sp/download/Downloader.h"
 #include "p2sp/download/SwitchControllerInterface.h"
 #include "p2sp/p2p/LiveAssigner.h"
-#include "p2sp/p2p/LivePeerConnection.h"
 #include "p2sp/p2p/LiveSubPieceRequestManager.h"
 #include "p2sp/p2p/IpPool.h"
 #include "p2sp/p2p/Exchanger.h"
@@ -13,6 +12,7 @@
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 #include "p2sp/p2p/LiveSubPieceCountManager.h"
+#include "p2sp/p2p/LiveConnectionManager.h"
 
 namespace storage
 {
@@ -31,9 +31,6 @@ namespace p2sp
     class PeerConnector;
     typedef boost::shared_ptr<PeerConnector> PeerConnector__p;
 
-    class LivePeerConnection;
-    typedef boost::shared_ptr<LivePeerConnection> LivePeerConnection__p;
-
     class LiveP2PDownloader;
     typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
 
@@ -45,59 +42,6 @@ namespace p2sp
         MEDIUM = 1,
         HIGH = 2
     };
-
-    struct KickLiveConnectionIndicator
-    {   
-        uint32_t last_minute_speed_in_bytes_;
-        uint32_t block_bitmap_empty_in_millseconds_;
-
-        bool ShouldKick() const
-        {
-            return block_bitmap_empty_in_millseconds_ > 0 &&
-                last_minute_speed_in_bytes_ == 0;
-        }
-
-        KickLiveConnectionIndicator(const LivePeerConnection__p connection)
-        {
-            this->last_minute_speed_in_bytes_ = connection->GetSpeedInfo().MinuteDownloadSpeed;
-            this->block_bitmap_empty_in_millseconds_ = connection->GetBitmapEmptyTimeInMillseconds();
-        }
-    };
-
-    inline bool operator<(const KickLiveConnectionIndicator& x, const KickLiveConnectionIndicator& y)
-    {
-        if (x.block_bitmap_empty_in_millseconds_ > 0 &&
-            y.block_bitmap_empty_in_millseconds_ == 0)
-        {
-            // x empty, y not empty
-            return true;
-        }
-
-        if (x.block_bitmap_empty_in_millseconds_ == 0 &&
-            y.block_bitmap_empty_in_millseconds_ > 0)
-        {
-            // x not empty, y empty
-            return false;
-        }
-
-        if (x.block_bitmap_empty_in_millseconds_ > 0 &&
-            y.block_bitmap_empty_in_millseconds_ > 0)
-        {
-            // both empty
-            if (x.last_minute_speed_in_bytes_ == 0 &&
-                y.last_minute_speed_in_bytes_ == 0)
-            {
-                // both no speed; compare empty time
-                return x.block_bitmap_empty_in_millseconds_ > y.block_bitmap_empty_in_millseconds_;
-            }
-
-            // kick first if less speed
-            return x.last_minute_speed_in_bytes_ < y.last_minute_speed_in_bytes_;
-        }
-
-        // both non empty; kick first if less speed
-        return x.last_minute_speed_in_bytes_ < y.last_minute_speed_in_bytes_;
-    }
 
     class LiveP2PDownloader
         : public LiveDownloader
@@ -193,16 +137,19 @@ namespace p2sp
 
         void OnUdpRecv(protocol::Packet const & packet);
 
+        void OnUdpPacketStatistic(protocol::Packet const & packet);
+
         void AddPeer(LivePeerConnection__p peer_connection);
-        void DelPeer(LivePeerConnection__p peer_connection);
+        void DelPeer(const boost::asio::ip::udp::endpoint & endpoint);
+
         const std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> & GetPeers()
         {
-            return peers_;
+            return live_connection_manager_.GetPeers();
         }
 
-        bool HasPeer(boost::asio::ip::udp::endpoint end_point)
+        bool HasPeer(const boost::asio::ip::udp::endpoint & end_point)
         {
-            return peers_.find(end_point) != peers_.end();
+            return live_connection_manager_.HasPeer(end_point);
         }
 
         bool HasSubPiece(const protocol::LiveSubPieceInfo & sub_piece);
@@ -268,19 +215,10 @@ namespace p2sp
         void SendPeerInfo();
         bool IsInUdpServerProtectTimeWhenStart();
 
-        int32_t GetDownloadablePeersCount() const;
+        uint32_t GetDownloadablePeersCount() const;
 
         void GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & candidate_peers);
         void GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & candidate_peers);
-
-        static bool CompareBasedOnUploadAbility(boost::shared_ptr<LivePeerConnection> const & lhs,
-            boost::shared_ptr<LivePeerConnection> const & rhs);
-
-        static bool CompareBasedOnUploadSpeed(boost::shared_ptr<LivePeerConnection> const & lhs,
-            boost::shared_ptr<LivePeerConnection> const & rhs);
-
-        void SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,
-            const std::vector<boost::shared_ptr<LivePeerConnection> > & sorted_peers, boost::uint32_t to_select_peers_count);
 
     public:
         bool is_running_;
@@ -289,7 +227,10 @@ namespace p2sp
         IpPool__p ippool_;
         Exchanger__p exchanger_;
         PeerConnector__p connector_;
+
+        LiveConnectionManger live_connection_manager_;
         std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> peers_;
+
         bool is_p2p_pausing_;
         boost::int32_t p2p_max_connect_count_;
 
@@ -354,10 +295,6 @@ namespace p2sp
         boost::uint32_t live_connect_low_normal_threshold_;
         boost::uint32_t live_connect_normal_high_threshold_;
 
-        boost::uint32_t live_exchange_large_upload_ability_delim_;
-        boost::uint32_t live_exchange_large_upload_ability_max_count_;
-        boost::uint32_t live_exchange_large_upload_to_me_delim_;
-        boost::uint32_t live_exchange_large_upload_to_me_max_count_;
         boost::uint32_t live_exchange_interval_in_second_;
 
         framework::timer::TickCounter live_exchange_tick_counter_;
@@ -398,7 +335,7 @@ namespace p2sp
 
     inline uint32_t LiveP2PDownloader::GetConnectedPeersCount()
     {
-        return peers_.size();
+        return live_connection_manager_.GetConnectedPeersCount();
     }
 
     inline uint32_t LiveP2PDownloader::GetPooledPeersCount()

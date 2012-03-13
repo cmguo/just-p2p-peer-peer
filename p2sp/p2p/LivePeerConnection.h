@@ -11,6 +11,9 @@ namespace p2sp
     class LiveDownloadDriver;
     typedef boost::shared_ptr<LiveDownloadDriver> LiveDownloadDriver__p;
 
+    class LiveP2PDownloader;
+    typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
+
     class LivePeerConnection
         : public boost::enable_shared_from_this<LivePeerConnection>
 #ifdef DUMP_OBJECT
