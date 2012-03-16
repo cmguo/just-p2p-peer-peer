@@ -133,9 +133,6 @@ namespace p2sp
             p2sp::P2PModule::Inst()->OnLiveP2PDownloaderCreated(live_p2p_downloader_);
         }
 
-        // 启动BlockRequestManager
-        live_block_request_manager_.Start(shared_from_this());
-
         // 直播状态机
         live_switch_controller_.Start(shared_from_this());
         
@@ -202,8 +199,6 @@ namespace p2sp
 
         live_switch_controller_.Stop();
 
-        live_block_request_manager_.Stop();
-
         proxy_connection_.reset();
 
         if (bufferring_monitor_)
@@ -244,13 +239,56 @@ namespace p2sp
 
     bool LiveDownloadDriver::RequestNextBlock(LiveDownloader__p downloader)
     {
-        if (!live_block_request_manager_.GetNextBlockForDownload(playing_position_.GetBlockId(), downloader))
+        boost::uint32_t start_block_id = playing_position_.GetBlockId();
+        while(1)
         {
-            // 没有可下载的Block
-            return false;
+            // 申请一片Block去下载
+            protocol::LiveSubPieceInfo live_block;
+            GetInstance()->GetNextIncompleteBlock(start_block_id, live_block);
+
+#ifdef USE_MEMORY_POOL
+            // TODO: 如果使用内存池增加限制分配的逻辑，防止因为内存不足，卡住不播
+            if (protocol::LiveSubPieceContent::get_left_capacity() < 2048 &&
+                live_block.GetBlockId() > GetPlayingPosition().GetBlockId())
+            {
+                return false;
+            }
+#endif
+
+            if (!live_block_request_manager_.IsRequesting(live_block.GetBlockId()))
+            {
+                // Block不在请求
+                // 可以下载，加入
+                LOG(__DEBUG, "live_download", "Not Requesting, Add id = " << live_block.GetBlockId());
+                live_block_request_manager_.AddBlockTask(live_block, downloader);
+                return true;
+            }
+            else
+            {
+                // Block正在请求
+                if (live_block_request_manager_.IsTimeout(live_block.GetBlockId(), downloader))
+                {
+                    // 超时了
+                    LOG(__DEBUG, "live_download", "Requesting & timeout Add id = " << live_block.GetBlockId());
+
+                    // 再删除任务记录, 同时删除相应的downloader的block_task_
+                    live_block_request_manager_.RemoveBlockTask(live_block.GetBlockId());
+
+                    // 再加入
+                    live_block_request_manager_.AddBlockTask(live_block, downloader);
+                    return true;
+                }
+                else
+                {
+                    // 还没有超时
+                    // 不能下载，寻找下一片
+                    start_block_id += GetInstance()->GetLiveInterval();
+                }
+            }
         }
 
-        return true;
+        assert(false);
+        return false;
     }
 
     bool LiveDownloadDriver::OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,

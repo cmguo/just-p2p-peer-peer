@@ -18,9 +18,6 @@ namespace p2sp
 #endif
     {
     public:
-        void Start(LiveDownloadDriver__p live_download_driver);
-        void Stop();
-        bool GetNextBlockForDownload(boost::uint32_t request_block_id, LiveDownloader__p download);
         void AddBlockTask(const protocol::LiveSubPieceInfo & live_block, LiveDownloader__p & download);
         void RemoveBlockTask(boost::uint32_t block_id);
         // 判断LiveBlockInfoEx是否正在下载
@@ -30,7 +27,6 @@ namespace p2sp
         bool IsTimeout(const boost::uint32_t block_id, const LiveDownloader__p & request_download);
 
     private:
-        LiveDownloadDriver__p live_download_driver_;
         std::map<boost::uint32_t, LiveBlockTask__p> live_block_requesting_map_;
     };
 
