@@ -192,6 +192,8 @@ namespace p2sp
 
         boost::uint32_t udpserver_maximum_requests_;
 
+        framework::timer::TickCounter receive_announce_tick_counter_;
+
     };
 }
 

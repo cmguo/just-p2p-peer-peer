@@ -15,6 +15,8 @@ namespace p2sp
     {
         is_running_ = true;
         end_point_ = end_point;
+        receive_announce_tick_counter_.start();
+
         DoAnnounce();
         speed_info_.Start();
 
@@ -28,6 +30,7 @@ namespace p2sp
     void LivePeerConnection::Stop()
     {
         speed_info_.Stop();
+        receive_announce_tick_counter_.stop();
         is_running_ = false;
     }
 
@@ -40,8 +43,12 @@ namespace p2sp
         {
             no_response_time_ += 1000;
 
-            // 请求Announce
-            DoAnnounce();
+            if (connect_type_ != protocol::CONNECT_LIVE_UDPSERVER ||
+                receive_announce_tick_counter_.elapsed() >= BootStrapGeneralConfig::Inst()->GetIntervalOfRequestingAnnounceFromUdpserver() * 1000)
+            {
+                // 请求Announce
+                DoAnnounce();
+            }
 
             // 更新window_size_
             boost::int32_t last_window_size = window_size_;
@@ -105,6 +112,8 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
+
+        receive_announce_tick_counter_.reset();
 
         bool block_bitmap_empty_before_update = block_bitmap_.empty();
 

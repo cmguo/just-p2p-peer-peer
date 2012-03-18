@@ -78,6 +78,7 @@ namespace p2sp
         , max_rest_playable_time_(120)
         , min_rest_playable_time_(60)
         , prevent_http_predownload(true)
+        , interval_of_requesting_announce_from_udpserver_(5)
     {
     }
 
@@ -203,7 +204,8 @@ namespace p2sp
                 ("config.fbt", po::value<uint32_t>()->default_value(fall_behind_seconds_threshold_))
                 ("config.maxlive2t", po::value<uint32_t>()->default_value(max_rest_playable_time_))
                 ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_))
-                ("config.phpd", po::value<bool>()->default_value(prevent_http_predownload));
+                ("config.phpd", po::value<bool>()->default_value(prevent_http_predownload))
+                ("config.ira", po::value<uint32_t>()->default_value(interval_of_requesting_announce_from_udpserver_));
 
             std::istringstream config_stream(config_string);
 
@@ -272,6 +274,7 @@ namespace p2sp
             max_rest_playable_time_ = vm["config.maxlive2t"].as<uint32_t>();
             min_rest_playable_time_ = vm["config.minlive2t"].as<uint32_t>();
             prevent_http_predownload = vm["config.phpd"].as<bool>();
+            interval_of_requesting_announce_from_udpserver_ = vm["config.ira"].as<uint32_t>();
 
             if (save_to_disk)
             {

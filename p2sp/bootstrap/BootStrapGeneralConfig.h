@@ -317,6 +317,11 @@ namespace p2sp
             return prevent_http_predownload;
         }
 
+        boost::uint32_t GetIntervalOfRequestingAnnounceFromUdpserver() const
+        {
+            return interval_of_requesting_announce_from_udpserver_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -512,6 +517,9 @@ namespace p2sp
 
         //是否在获取tindy-drag的过程中禁止http下载以节省带宽
         bool prevent_http_predownload;
+
+        // 在收到Announce回包后，对UdpServer进行Announce的时间间隔
+        boost::uint32_t interval_of_requesting_announce_from_udpserver_;
     };
 }
 #endif
