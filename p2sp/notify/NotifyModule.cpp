@@ -859,7 +859,10 @@ namespace p2sp
                 // 统计在线任务数
                 CalTaskComplete();
                 // 发送KeepAlive包
-                DoSendKeepAlive();
+                if (is_join_success_)
+                {
+                    DoSendKeepAlive();
+                }
             }
             else
             {
