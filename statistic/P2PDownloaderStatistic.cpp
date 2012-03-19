@@ -125,7 +125,7 @@ namespace statistic
     // Attach & Detach
 
     PeerConnectionStatistic::p P2PDownloaderStatistic::AttachPeerConnectionStatistic(
-        const boost::asio::ip::udp::endpoint& end_point)
+        boost::asio::ip::udp::endpoint end_point)
     {
         PeerConnectionStatistic::p peer_connection_info_;
 

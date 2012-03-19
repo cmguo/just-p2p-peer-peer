@@ -44,7 +44,7 @@ namespace statistic
         // Attach & Detach
 
         PeerConnectionStatistic::p AttachPeerConnectionStatistic(
-            const boost::asio::ip::udp::endpoint& end_point);
+            boost::asio::ip::udp::endpoint end_point);
 
         bool DetachPeerConnectionStatistic(
             const boost::asio::ip::udp::endpoint& end_point);

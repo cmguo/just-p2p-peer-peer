@@ -15,13 +15,16 @@ namespace p2sp
             return;
         }
 
+        if (!p2p_downloader_->GetStatistic())
+        {
+            assert(false);
+            base::util::DoCrash(100);
+            return;
+        }
+
         statistic_ = p2p_downloader_->GetStatistic()->AttachPeerConnectionStatistic(endpoint_);
 
         assert(statistic_);
-        if (!statistic_)
-        {
-            statistic_ = p2p_downloader_->GetStatistic()->AttachPeerConnectionStatistic(endpoint_);
-        }
 
         is_running_ = true;
         peer_version_ =  protocol::PEER_VERSION;
