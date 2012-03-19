@@ -844,6 +844,7 @@ namespace p2sp
                         else
                             ChangeTo3200(true);
 
+                        GetGlobalDataProvider()->NoticeLeave2000();
                         continue;
                     }
 

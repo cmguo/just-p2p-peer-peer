@@ -114,6 +114,7 @@ namespace p2sp
         , speed_limit_in_KBps_(P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT)
         , is_pragmainfo_noticed_(false)
         , bwtype_(JBW_NORMAL)
+        , http_download_reason_(INVALID)
         , rest_play_time_(-1)
 #ifndef PEER_PC_CLIENT
         // ppbox 版本默认高速模式
@@ -139,6 +140,11 @@ namespace p2sp
         , is_sn_added_(false)
         , vip_level_(NO_VIP)
         , is_drag_(false)
+        , is_preroll_(false)
+        ,total_http_start_downloadbyte_(0)
+        ,total_download_byte_2000_(-1)
+        ,total_download_byte_2300_(-1)
+        ,position_after_drag_(0)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -538,6 +544,7 @@ namespace p2sp
         HttpDownloader::p downloader;
 
         PlayInfo::p play_info = proxy_connection_->GetPlayInfo();
+        position_after_drag_ = proxy_connection_->GetPlayingPosition();
         if (true == is_open_service_ && instance_->IsComplete() && (openservice_head_length_ > 0 || 
             IsPush() || (play_info && play_info->GetStartPosition() == 0)))
         {
@@ -738,6 +745,17 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
+
+        if(switch_control_mode_ == SwitchController::CONTROL_MODE_VIDEO_OPENSERVICE)
+        {
+            DoCDNFlowStatistic();
+        }
+        else
+        {
+            //在不为openservice状态机的情况下，不对http启动下载数据及原因进行统计，将下载原因置为无效
+            http_download_reason_ = INVALID;
+        }
+
 
 #ifdef NEED_TO_POST_MESSAGE
         SendDacStopData();
@@ -1279,6 +1297,16 @@ namespace p2sp
         // T1: VIP
         info.vip = vip_level_;
 
+        // U1: 由http启动下载造成的CDN流量
+        info.total_http_start_download_bytes = total_http_start_downloadbyte_;
+
+        // V1: 记录导致http启动下载的原因
+        info.http_start_download_reason = (uint32_t)http_download_reason_;
+       
+
+        // W1: 是否是跨集预下载
+        info.preroll = is_preroll_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1331,6 +1359,10 @@ namespace p2sp
         log_stream << "&R1=" << (uint32_t)info.is_push;
         log_stream << "&S1=" << (uint32_t)info.instance_is_push;
         log_stream << "&T1=" << (uint32_t)info.vip;
+
+        log_stream << "&U1=" << (uint32_t)info.total_http_start_download_bytes;
+        log_stream << "&V1=" << (uint32_t)info.http_start_download_reason;
+        log_stream << "&W1=" << (uint32_t)info.preroll;
 
         string log = log_stream.str();
 
@@ -2806,6 +2838,21 @@ namespace p2sp
             avg_http_download_speed_in2300_ = (int32_t)(http_download_bytes * 
                 1000.0  / download_time_counter_.elapsed());
         }
+
+        //只有在本次http下载是http启动下载，才将流量统计到2300下载字节数中
+        //需注意当状态机从2000走向3200再走向2300后，此时走出2300同样会导致2300的统计字节不为-1，
+        //但因为此时计算http_start_download_byte_不需要该值，所以可以忽略不计
+        if (total_download_byte_2300_ == -1)
+        {
+            if (total_download_byte_2000_ > 0)
+            {
+                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytes() - total_download_byte_2000_;
+            }
+            else
+            {
+                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytes();
+            }
+        }
     }
 
     void DownloadDriver::SetDragHttpStatus(int32_t status)
@@ -2926,5 +2973,119 @@ namespace p2sp
                 }
             }
         }
+    }
+
+    void DownloadDriver::DoCDNFlowStatistic()
+    {
+        boost::uint32_t total_bytes = GetStatistic()->GetTotalHttpDataBytes();
+        bool is_real_drag = is_head_only_ || (position_after_drag_ != 0 && is_drag_ == true) || openservice_start_position_ !=0;
+        bool normal_launch = !is_real_drag && !is_drag_;   //正常下载启动状态
+        bool predownload = !is_real_drag && is_drag_;       //预下载状态
+        bool none_rid = !GetP2PControlTarget();             //没有取得rid
+        switch(GetBWType())
+        {
+            //http_only带宽类型下，http启动下载的数据就是全部http下载的数据
+        case JBW_HTTP_ONLY:
+            total_http_start_downloadbyte_ = total_bytes;
+            break;
+            //http_more与http_prefered带宽类型下，openservice状态机在没有获得rid时优先启动2000，此后在获得rid的情况下转向2300
+            //此时http启动下载的数据为2000状态下下载的数据加上启动进入2300下载的数据
+        case JBW_HTTP_MORE:
+        case JBW_HTTP_PREFERRED:
+            if (total_download_byte_2300_ < 0)
+            {
+                total_http_start_downloadbyte_ = total_bytes;
+            }
+
+            if (total_download_byte_2300_ >= 0)
+            {
+                if (total_download_byte_2000_ >= 0)
+                {
+                    total_http_start_downloadbyte_ = total_download_byte_2300_ + total_download_byte_2000_;
+                }
+                else
+                {
+                    total_http_start_downloadbyte_ = total_download_byte_2300_;
+                }
+            }
+
+            break;
+            //在带宽为normal的情况下，另分四种情况计算http启动下载数据
+            //正常启动下载时，状态机在没有获得rid下进入2000，获得rid后转向3200，此时http启动下载的数据就是2000状态下载的数据
+            //预下载情况下，状态机优先进入2300状态，没有获得rid时则保持在2000状态，此时http启动下载的数据就是2000、2300两种状态一共下载的数据
+            //拖动下载状态机行为与预下载一直，因此计算方法也一样
+            //没有获得rid的情况下，http启动下载的数据就是全部http下载的数据
+        case JBW_NORMAL:
+            //正常启动下载
+            if (normal_launch && !none_rid)
+            {
+                if (total_download_byte_2000_ >= 0)
+                {
+                    total_http_start_downloadbyte_  = total_download_byte_2000_;
+                }
+                else
+                {
+                    total_http_start_downloadbyte_ = 0;
+                }
+            }
+
+            //预下载与拖动
+            if ((predownload || is_real_drag) && !none_rid)
+            {
+                if (total_download_byte_2300_ < 0)
+                {
+                    total_http_start_downloadbyte_ = total_bytes;
+                }
+                else
+                {
+                    if (total_download_byte_2000_ < 0)
+                    {
+                        total_http_start_downloadbyte_ = total_download_byte_2300_;
+                    }
+                    else
+                    {
+                        total_http_start_downloadbyte_ = total_download_byte_2000_ + total_download_byte_2300_;
+                    }
+                }
+            }
+
+            //没有获得rid
+            if (none_rid)
+            {
+                total_http_start_downloadbyte_ = total_bytes;
+            }
+
+            break;
+        default:
+            break;
+        }
+
+        //记录本次导致http启动下载的原因
+        if(normal_launch)
+        {
+            http_download_reason_ = NORMAL_LAUNCH;
+        }
+
+        if(predownload)
+        {
+            http_download_reason_ = PREDOWNLOAD;
+        }
+
+        if(is_real_drag)
+        {
+            http_download_reason_ = DRAG;
+        }
+
+        if(none_rid && GetBWType() != JBW_HTTP_ONLY)
+        {
+            http_download_reason_ = NONE_RID;
+        }
+    }
+
+    void DownloadDriver::NoticeLeave2000()
+    {
+        assert(GetBWType() != JBW_HTTP_ONLY);
+
+        total_download_byte_2000_ = GetStatistic()->GetTotalHttpDataBytes();
     }
 }

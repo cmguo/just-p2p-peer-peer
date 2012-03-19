@@ -431,6 +431,33 @@ namespace p2sp
         return false;
     }
 
+    bool PlayInfo::ParseIsPreroll(const network::Uri& uri, bool& is_preroll)
+    {
+        string is_preroll_str = uri.getparameter("preroll");
+        if (is_preroll_str.length() > 0)
+        {
+            int type;
+            boost::system::error_code ec = framework::string::parse2(is_preroll_str, type);
+            if (!ec)
+            {
+                is_preroll = (type > 0);
+                return true;
+            }
+            else
+            {
+                if (boost::algorithm::iequals(is_preroll_str, "true") || boost::algorithm::iequals(is_preroll_str, "yes")) {
+                    is_preroll = true;
+                    return true;
+                }
+                if (boost::algorithm::iequals(is_preroll_str, "false") || boost::algorithm::iequals(is_preroll_str, "no")) {
+                    is_preroll = false;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     PlayInfo::p PlayInfo::Parse(const string& url)
     {
         network::Uri uri(url);
@@ -537,6 +564,10 @@ namespace p2sp
 
             // 解析客户端请求中的vip字段
             ParseVip(uri, play_info->vip_);
+
+            if (false == ParseIsPreroll(uri, play_info->is_preroll_)) {
+                play_info->is_preroll_ = 0;
+            }
             
             ParseBakHosts(uri, play_info->bak_hosts_);
             LOGX(__DEBUG, "proxy", "Parse BWType = " << play_info->bwtype_);

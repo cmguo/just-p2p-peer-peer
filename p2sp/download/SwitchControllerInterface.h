@@ -183,6 +183,7 @@ namespace p2sp
         virtual void SetAcclerateStatus(boost::int32_t status) = 0;
         virtual JumpBWType GetBWType() = 0;
         virtual void NoticeLeave2300() = 0;
+        virtual void NoticeLeave2000() = 0;
         virtual void SetDragHttpStatus(int32_t status) = 0;
 
         virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets() = 0;

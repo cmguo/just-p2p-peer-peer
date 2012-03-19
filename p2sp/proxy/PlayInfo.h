@@ -103,6 +103,8 @@ namespace p2sp
 
         boost::uint32_t GetBWType() const {return bwtype_;}
 
+        bool GetPreroll() const { return is_preroll_; }
+
         boost::int32_t GetSendSpeedLimit() const
         {
             return send_speed_limit_;
@@ -165,6 +167,8 @@ namespace p2sp
 
         static bool ParseVip(const network::Uri & uri, boost::uint32_t & is_vip);
 
+        static bool ParseIsPreroll(const network::Uri& uri, bool& is_preroll);
+
         // 解析一个频道所有的rid
         static void ParseLiveRids(const network::Uri& uri, vector<RID> & rid_s);
         // 解析所有rid对应的码流
@@ -202,6 +206,7 @@ namespace p2sp
             , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
             , live_replay_(false)
             , live_pause_(false)
+            , is_preroll_(false)
         {
         }
 
@@ -228,6 +233,7 @@ namespace p2sp
         std::vector<std::string> bak_hosts_;
         boost::shared_ptr<RangeInfo> range_info_;
         boost::uint32_t vip_;
+        bool is_preroll_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid

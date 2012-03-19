@@ -818,6 +818,7 @@ namespace p2sp
             download_driver_->SetBWType((JumpBWType)play_info->GetBWType());
             download_driver_->SetBakHosts(play_info->GetBakHosts());
             download_driver_->SetVipLevel((VIP_LEVEL)play_info->GetVip());
+            download_driver_->SetPreroll(play_info->GetPreroll());
             P();
             P();
 

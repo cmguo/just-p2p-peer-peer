@@ -73,6 +73,9 @@ namespace p2sp
         bool                  is_push;                              // R1: 是否是push任务
         bool                  instance_is_push;                     // S1: 是否是push下载的任务，用于判断命中率
         boost::uint32_t       vip;                                  // T1: VIP
+        boost::int32_t        total_http_start_download_bytes;      // U1: 由http启动下载字节数
+        boost::uint32_t       http_start_download_reason;           // V1: 记录导致http启动下载的原因
+        bool                  preroll;                              // W1: 记录是否是客户端跨集预下载
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
@@ -220,6 +223,7 @@ namespace p2sp
         void ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status);
 
         void RestrictSendListLength(uint32_t postion,vector<protocol::SubPieceBuffer>&buffers);
+        void SetPreroll(bool is_preroll) {is_preroll_ = is_preroll;}
 
     public:
         //////////////////////////////////////////////////////////////////////////
@@ -245,6 +249,7 @@ namespace p2sp
         virtual void SetAcclerateStatus(boost::int32_t status);
         virtual JumpBWType GetBWType() {return bwtype_;}
         virtual void NoticeLeave2300();
+        virtual void NoticeLeave2000();
         virtual void SetDragHttpStatus(int32_t status);
         virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets();
         virtual void ReportUseBakHost() {bak_host_status_ = BAK_HOST_GREAT;}
@@ -283,6 +288,9 @@ namespace p2sp
 
         // SN
         void SNStrategy();
+
+        void DoCDNFlowStatistic();
+
 
     protected:
         // IDownloadDriver 接口消息
@@ -403,6 +411,7 @@ namespace p2sp
         boost::int32_t accelerate_http_speed;
         boost::int32_t accelerate_status_;
         JumpBWType bwtype_;
+        bool is_preroll_;       //标记是否跨集预下载
 
         bool disable_smart_speed_limit_;
 
@@ -435,6 +444,20 @@ namespace p2sp
         bool is_sn_added_;
 
         boost::uint32_t vip_level_;
+
+        enum Http_Start_Download_Reason
+        {
+            NORMAL_LAUNCH = 0,
+            PREDOWNLOAD,                                           //拖动后下载当前播放段的下一段定义为预下载
+            DRAG,
+            NONE_RID,                                              //表示因没有取到RID而导致http下载，不包含BWType是httponly的情况
+            INVALID                                                //不是使用OpenServiceVideoMode状态机，不统计导致http启动下载原因
+        } http_download_reason_;
+
+        boost::uint32_t total_http_start_downloadbyte_;            //http启动下载引起的CDN数据总量
+        boost::uint32_t position_after_drag_;                       //接收起始播放位置，用于判断实际拖动
+        boost::int32_t total_download_byte_2000_;                  //http启动下载阶段2000状态下载数据总量
+        boost::int32_t total_download_byte_2300_;                  //http启动下载阶段2300状态下载数据总量
 
     private:
         DownloadDriver(
