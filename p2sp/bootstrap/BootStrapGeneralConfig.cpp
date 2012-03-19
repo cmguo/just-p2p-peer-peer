@@ -78,6 +78,15 @@ namespace p2sp
         , max_rest_playable_time_(120)
         , min_rest_playable_time_(60)
         , prevent_http_predownload(true)
+        , max_ratio_of_upload_to_download_delim_(800)
+        , large_ratio_of_upload_to_download_delim_(600)
+        , ratio_of_large_upload_times_to_total_times_delim_(60)
+        , upload_connection_count_delim_(10)
+        , not_strict_ratio_delim_of_upload_speed_to_datarate_(600)
+        , min_interval_of_cdn_acceleration_delim_(300)
+        , use_cdn_to_accelerate_based_on_history_(true)
+        , max_times_of_record_(50)
+        , min_times_of_record_(3)
         , interval_of_requesting_announce_from_udpserver_(5)
     {
     }
@@ -205,6 +214,15 @@ namespace p2sp
                 ("config.maxlive2t", po::value<uint32_t>()->default_value(max_rest_playable_time_))
                 ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_))
                 ("config.phpd", po::value<bool>()->default_value(prevent_http_predownload))
+                ("config.maxrutd", po::value<uint32_t>()->default_value(max_ratio_of_upload_to_download_delim_))
+                ("config.lrutd", po::value<uint32_t>()->default_value(large_ratio_of_upload_to_download_delim_))
+                ("config.rlut", po::value<uint32_t>()->default_value(ratio_of_large_upload_times_to_total_times_delim_))
+                ("config.ucc", po::value<uint32_t>()->default_value(upload_connection_count_delim_))
+                ("config.nsrdutd", po::value<uint32_t>()->default_value(not_strict_ratio_delim_of_upload_speed_to_datarate_))
+                ("config.minica", po::value<uint32_t>()->default_value(min_interval_of_cdn_acceleration_delim_))
+                ("config.uca", po::value<bool>()->default_value(use_cdn_to_accelerate_based_on_history_))
+                ("config.maxtr", po::value<uint32_t>()->default_value(max_times_of_record_))
+                ("config.mintr", po::value<uint32_t>()->default_value(min_times_of_record_))
                 ("config.ira", po::value<uint32_t>()->default_value(interval_of_requesting_announce_from_udpserver_));
 
             std::istringstream config_stream(config_string);
@@ -274,6 +292,15 @@ namespace p2sp
             max_rest_playable_time_ = vm["config.maxlive2t"].as<uint32_t>();
             min_rest_playable_time_ = vm["config.minlive2t"].as<uint32_t>();
             prevent_http_predownload = vm["config.phpd"].as<bool>();
+            max_ratio_of_upload_to_download_delim_ = vm["config.maxrutd"].as<uint32_t>();
+            large_ratio_of_upload_to_download_delim_ = vm["config.lrutd"].as<uint32_t>();
+            ratio_of_large_upload_times_to_total_times_delim_ = vm["config.rlut"].as<uint32_t>();
+            upload_connection_count_delim_ = vm["config.ucc"].as<uint32_t>();
+            not_strict_ratio_delim_of_upload_speed_to_datarate_ = vm["config.nsrdutd"].as<uint32_t>();
+            min_interval_of_cdn_acceleration_delim_ = vm["config.minica"].as<uint32_t>();
+            use_cdn_to_accelerate_based_on_history_ = vm["config.uca"].as<bool>();
+            max_times_of_record_ = vm["config.maxtr"].as<uint32_t>();
+            min_times_of_record_ = vm["config.mintr"].as<uint32_t>();
             interval_of_requesting_announce_from_udpserver_ = vm["config.ira"].as<uint32_t>();
 
             if (save_to_disk)

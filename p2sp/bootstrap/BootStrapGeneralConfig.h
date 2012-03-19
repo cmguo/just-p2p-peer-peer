@@ -317,6 +317,51 @@ namespace p2sp
             return prevent_http_predownload;
         }
 
+        boost::uint32_t GetMaxRatioOfUploadToDownloadDelim() const
+        {
+            return max_ratio_of_upload_to_download_delim_;
+        }
+
+        boost::uint32_t GetLargeRatioOfUploadToDownloadDelim() const
+        {
+            return large_ratio_of_upload_to_download_delim_;
+        }
+
+        boost::uint32_t GetRatioOfLargeUploadTimesToTotalTimesDelim() const
+        {
+            return ratio_of_large_upload_times_to_total_times_delim_;
+        }
+
+        boost::uint32_t GetUploadConnectionCountDelim() const
+        {
+            return upload_connection_count_delim_;
+        }
+
+        boost::uint32_t GetNotStrictRatioDelimOfUploadToDatarate() const
+        {
+            return not_strict_ratio_delim_of_upload_speed_to_datarate_;
+        }
+
+        boost::uint32_t GetMinIntervalOfCdnAccelerationDelim() const
+        {
+            return min_interval_of_cdn_acceleration_delim_;
+        }
+
+        bool GetUseCdnToAccelerateBasedOnHistory() const
+        {
+            return use_cdn_to_accelerate_based_on_history_;
+        }
+
+        boost::uint32_t GetMinTimesOfRecord() const
+        {
+            return min_times_of_record_;
+        }
+
+        boost::uint32_t GetMaxTimesOfRecord() const
+        {
+            return max_times_of_record_;
+        }
+
         boost::uint32_t GetIntervalOfRequestingAnnounceFromUdpserver() const
         {
             return interval_of_requesting_announce_from_udpserver_;
@@ -517,6 +562,34 @@ namespace p2sp
 
         //是否在获取tindy-drag的过程中禁止http下载以节省带宽
         bool prevent_http_predownload;
+
+        // 如果有一次历史上传下载比大于该值，则认为上传足够多
+        boost::uint32_t max_ratio_of_upload_to_download_delim_;
+
+        // 如果历史上传下载比大于该值，则认为上传还可以
+        boost::uint32_t large_ratio_of_upload_to_download_delim_;
+
+        // 上传下载比还可以的次数占总次数比例的阈值
+        boost::uint32_t ratio_of_large_upload_times_to_total_times_delim_;
+
+        // 当满足以下三个条件时，才认为当前需要切换到CDN加速模式
+        // IPPool 不小于desirable_live_ippool_size_
+        // 当前上传连接大于该值
+        boost::uint32_t upload_connection_count_delim_;
+        // 当前上传速度大于码流率的该倍
+        boost::uint32_t not_strict_ratio_delim_of_upload_speed_to_datarate_;
+
+        // 两次提前切换到CDN加速模式之间相隔的最小时间
+        boost::uint32_t min_interval_of_cdn_acceleration_delim_;
+
+        // 是否利用历史值来决定提前使用CD_加速
+        bool use_cdn_to_accelerate_based_on_history_;
+
+        // 历史记录的最大次数
+        boost::uint32_t max_times_of_record_;
+
+        // 历史记录有效的最小次数
+        boost::uint32_t min_times_of_record_;
 
         // 在收到Announce回包后，对UdpServer进行Announce的时间间隔
         boost::uint32_t interval_of_requesting_announce_from_udpserver_;

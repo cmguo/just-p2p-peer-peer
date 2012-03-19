@@ -141,6 +141,14 @@ namespace p2sp
             return true;
         }
 
+        if (BootStrapGeneralConfig::Inst()->GetUseCdnToAccelerateBasedOnHistory() &&
+            BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload() &&
+            live_download_driver_->ShouldUseCdnToAccelerate())
+        {
+            changed_to_http_because_of_large_upload_ = true;
+            return true;
+        }
+
         if (is_started_)
         {
             if (rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetP2PRestPlayableTimeDelim() + time_of_advancing_switching_to_http &&

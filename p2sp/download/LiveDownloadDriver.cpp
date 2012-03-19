@@ -11,6 +11,7 @@
 #include "WindowsMessage.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
+#include "p2sp/config/Config.h";
 
 namespace p2sp
 {
@@ -19,6 +20,8 @@ namespace p2sp
     boost::uint32_t LiveDownloadDriver::s_id_ = 0;
 
     const boost::uint8_t LiveDownloadDriver::InitialChangedToP2PConditionWhenStart = 255;
+
+    const std::string LiveDownloadDriver::RatioOfUploadToDownload = "r";
 
     LiveDownloadDriver::LiveDownloadDriver(boost::asio::io_service &io_svc, p2sp::ProxyConnection__p proxy_connetction)
         : io_svc_(io_svc)
@@ -58,7 +61,12 @@ namespace p2sp
         , changed_to_p2p_condition_when_start_(InitialChangedToP2PConditionWhenStart)
         , is_notify_restart_(false)
         , max_push_data_interval_(0)
+        , total_upload_bytes_when_using_cdn_because_of_large_upload_(0)
+        , is_history_upload_good_(false)
     {
+        history_record_count_ = BootStrapGeneralConfig::Inst()->GetMaxTimesOfRecord();
+        LoadConfig();
+        tick_counter_since_last_advance_using_cdn_.start();
     }
 
     void LiveDownloadDriver::StartBufferringMonitor()
@@ -181,9 +189,15 @@ namespace p2sp
         {
             time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
             download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
+
+            total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
+                upload_bytes_when_changed_to_cdn_because_of_large_upload_;
         }
 
         SendDacStopData();
+
+        UpdateHistoryRecordFile();
+        Config::Inst()->SaveConfig();
 
         live_instance_->DetachDownloadDriver(shared_from_this());
 
@@ -214,6 +228,8 @@ namespace p2sp
 #endif
 
         BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
+
+        tick_counter_since_last_advance_using_cdn_.stop();
 
         download_time_.stop();
     }
@@ -741,6 +757,7 @@ namespace p2sp
         // Z1: 总共收到的数据包的个数
         // A2: 收到的逆序数据包的个数
         // B2: 带宽
+        // C2: 因为大上传时使用CDN期间的上传量
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -871,6 +888,7 @@ namespace p2sp
         }
 
         info.BandWidth = statistic::StatisticModule::Inst()->GetBandWidth();
+        info.UploadBytesWhenUsingCDNBecauseOfLargeUpload = total_upload_bytes_when_using_cdn_because_of_large_upload_;
 
         std::ostringstream log_stream;
 
@@ -946,6 +964,7 @@ namespace p2sp
         log_stream << "&Z1=" << info.TotalReceivedSubPiecePacketCount;
         log_stream << "&A2=" << info.ReverseSubPiecePacketCount;
         log_stream << "&B2=" << info.BandWidth;
+        log_stream << "&C2=" << info.UploadBytesWhenUsingCDNBecauseOfLargeUpload;
 
         string log = log_stream.str();
 
@@ -1039,6 +1058,8 @@ namespace p2sp
         use_cdn_tick_counter_.reset();
         http_download_bytes_when_changed_to_cdn_ = live_http_downloader_->GetSpeedInfo().TotalDownloadBytes;
         using_cdn_because_of_large_upload_ = true;
+
+        upload_bytes_when_changed_to_cdn_because_of_large_upload_ = statistic::StatisticModule::Inst()->GetUploadDataBytes();
     }
 
     void LiveDownloadDriver::SetUseP2P()
@@ -1046,6 +1067,9 @@ namespace p2sp
         time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
         download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
         using_cdn_because_of_large_upload_ = false;
+
+        total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
+            upload_bytes_when_changed_to_cdn_because_of_large_upload_;
     }
 
     void LiveDownloadDriver::SubmitChangedToP2PCondition(boost::uint8_t condition)
@@ -1155,5 +1179,118 @@ namespace p2sp
         }
 
         return false;
+    }
+
+    void LiveDownloadDriver::LoadConfig()
+    {
+        std::map<std::string, boost::uint32_t> config_count;
+        config_count.insert(std::make_pair(RatioOfUploadToDownload, history_record_count_));
+        Config::Inst()->SetConfigCount(config_count);
+        Config::Inst()->LoadConfig();
+
+        Config::Inst()->GetConfig(RatioOfUploadToDownload, ratio_of_upload_to_download_on_history_);
+
+        CalcHistoryUploadStatus();
+    }
+
+    void LiveDownloadDriver::UpdateHistoryRecordFile()
+    {
+        bool is_popular = IsPopular();
+        bool have_used_cdn_to_accelerate_long_enough = HaveUsedCdnToAccelerateLongEnough();
+
+        if (!is_popular && !have_used_cdn_to_accelerate_long_enough)
+        {
+            return;
+        }
+
+        if (is_popular && download_time_.elapsed() < 60 * 1000 && !have_used_cdn_to_accelerate_long_enough)
+        {
+            return;
+        }
+
+        if (have_used_cdn_to_accelerate_long_enough)
+        {
+            boost::uint32_t total_download_bytes_in_thory = GetDataRate() * time_elapsed_use_cdn_because_of_large_upload_ / 1000;
+
+            assert (total_download_bytes_in_thory != 0);
+
+            if (download_bytes_use_cdn_because_of_large_upload_ < total_download_bytes_in_thory)
+            {
+                download_bytes_use_cdn_because_of_large_upload_ = total_download_bytes_in_thory;
+            }
+
+            boost::uint32_t ratio_of_upload_to_download = total_upload_bytes_when_using_cdn_because_of_large_upload_ * 100 /
+                download_bytes_use_cdn_because_of_large_upload_;
+
+            Config::Inst()->AddConfig(RatioOfUploadToDownload, ratio_of_upload_to_download);
+        }
+        else
+        {
+            Config::Inst()->AddConfig(RatioOfUploadToDownload, 0);
+        }
+    }
+
+    void LiveDownloadDriver::CalcHistoryUploadStatus()
+    {
+        if (ratio_of_upload_to_download_on_history_.size() < BootStrapGeneralConfig::Inst()->GetMinTimesOfRecord())
+        {
+            is_history_upload_good_ = false;
+        }
+        else
+        {
+            boost::uint32_t max_ratio_of_upload_to_download = 0;
+            boost::uint32_t large_ratio_count = 0;
+
+            for (boost::uint32_t i = 0; i < ratio_of_upload_to_download_on_history_.size(); ++i)
+            {
+                if (max_ratio_of_upload_to_download < ratio_of_upload_to_download_on_history_[i])
+                {
+                    max_ratio_of_upload_to_download = ratio_of_upload_to_download_on_history_[i];
+                }
+
+                if (ratio_of_upload_to_download_on_history_[i] > BootStrapGeneralConfig::Inst()->GetLargeRatioOfUploadToDownloadDelim())
+                {
+                    ++large_ratio_count;
+                }
+            }
+
+            is_history_upload_good_ = (max_ratio_of_upload_to_download > BootStrapGeneralConfig::Inst()->GetMaxRatioOfUploadToDownloadDelim() ||
+                large_ratio_count * 100 >= InitialChangedToP2PConditionWhenStart * BootStrapGeneralConfig::Inst()->GetRatioOfLargeUploadTimesToTotalTimesDelim());
+        }
+    }
+
+    bool LiveDownloadDriver::ShouldUseCdnToAccelerate()
+    {
+        if (!is_history_upload_good_)
+        {
+            return false;
+        }
+
+        if (times_of_use_cdn_because_of_large_upload_ != 0 &&
+            tick_counter_since_last_advance_using_cdn_.elapsed() < BootStrapGeneralConfig::Inst()->GetMinIntervalOfCdnAccelerationDelim() * 1000)
+        {
+            return false;
+        }
+
+        if (live_p2p_downloader_ && live_p2p_downloader_->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize() &&
+            statistic::UploadStatisticModule::Inst()->GetUploadCount() > BootStrapGeneralConfig::Inst()->GetUploadConnectionCountDelim() &&
+            statistic::UploadStatisticModule::Inst()->GetUploadSpeed() > GetDataRate() * BootStrapGeneralConfig::Inst()->GetNotStrictRatioDelimOfUploadToDatarate() / 100)
+        {
+            tick_counter_since_last_advance_using_cdn_.reset();
+            return true;
+        }
+
+        return false;
+    }
+
+    bool LiveDownloadDriver::IsPopular() const
+    {
+        return live_p2p_downloader_ && live_p2p_downloader_->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize();
+    }
+
+    bool LiveDownloadDriver::HaveUsedCdnToAccelerateLongEnough() const
+    {
+        return times_of_use_cdn_because_of_large_upload_ > 0 &&
+            time_elapsed_use_cdn_because_of_large_upload_ > 30 * 1000;
     }
 }

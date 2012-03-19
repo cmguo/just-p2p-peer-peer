@@ -148,6 +148,11 @@ namespace p2sp
         void SetReceiveConnectPacket(boost::shared_ptr<storage::LiveInstance> instance);
         void SetSendSubPiecePacket(boost::shared_ptr<storage::LiveInstance> instance);
 
+        const std::string & GetConfigPath() const
+        {
+            return ppva_config_path_;
+        }
+
     private:
         boost::asio::io_service & io_svc_;
 

@@ -97,6 +97,7 @@ namespace p2sp
         boost::uint32_t         TotalReceivedSubPiecePacketCount;
         boost::uint32_t         ReverseSubPiecePacketCount;
         boost::uint32_t         BandWidth;
+        boost::uint32_t         UploadBytesWhenUsingCDNBecauseOfLargeUpload;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver
@@ -298,6 +299,8 @@ namespace p2sp
 
         bool DoesFallBehindTooMuch() const;
 
+        bool ShouldUseCdnToAccelerate();
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -310,6 +313,12 @@ namespace p2sp
         void StartBufferringMonitor();
 
         void JumpOrSwitchIfNeeded();
+
+        void LoadConfig();
+        void UpdateHistoryRecordFile();
+        void CalcHistoryUploadStatus();
+        bool IsPopular() const;
+        bool HaveUsedCdnToAccelerateLongEnough() const;
 
     private:
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
@@ -416,6 +425,17 @@ namespace p2sp
         boost::uint32_t p2p_protect_time_when_start_;
 
         std::vector<boost::uint32_t> rest_playable_times_;
+
+        boost::uint32_t upload_bytes_when_changed_to_cdn_because_of_large_upload_;
+        boost::uint32_t total_upload_bytes_when_using_cdn_because_of_large_upload_;
+
+        vector<boost::uint32_t> ratio_of_upload_to_download_on_history_;
+
+        bool is_history_upload_good_;
+        framework::timer::TickCounter tick_counter_since_last_advance_using_cdn_;
+        boost::uint32_t history_record_count_;
+
+        static const std::string RatioOfUploadToDownload;
 
     private:
         // statistic

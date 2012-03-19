@@ -77,7 +77,7 @@ namespace p2sp
 
         if (x.should_use_firstly_ != y.should_use_firstly_)
         {
-            return x.should_use_firstly_ < y.should_use_firstly_;
+            return x.should_use_firstly_ > y.should_use_firstly_;
         }
 
         if (x.tracker_priority_ != y.tracker_priority_)
