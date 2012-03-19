@@ -5,6 +5,7 @@
 #include "p2sp/proxy/ProxyModule.h"
 #include "struct/UdpBuffer.h"
 #include "framework/string/Md5.h"
+#include <fstream>
 #include "Config.h"
 
 const boost::uint32_t Config::InvalidNumber = std::numeric_limits<boost::uint32_t>::max();
