@@ -36,7 +36,18 @@ namespace network
                     "<!DOCTYPE cross-domain-policy"
                     "SYSTEM \"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd\">"
                     "<cross-domain-policy>"
-                    "<allow-access-from domain=\"*\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pplive.com\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pplive.net\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pplive.cn\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pplive.com.cn\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pplive.net.cn\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pp.tv\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.pptv.com\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.sina.com.cn\" to-ports=\"*\"/>"
+                    "<allow-access-from domain=\"*.123yun.net\" to-ports=\"*\"/>"
+                    // 下面两条是为了和酷狗兼容，因为酷狗也监听了843端口，并且允许下面两个域的访问
+                    "<allow-access-from domain=\"*.kugou.com\" to-ports=\"*\"/>"    
+                    "<allow-access-from domain=\"localhost\" to-ports=\"*\"/>"
                     "</cross-domain-policy>"
                     ;
 
@@ -53,7 +64,7 @@ namespace network
 
                 send_list_.push_back(response);
 
-                // �������֮��Ͽ�����
+                // 发送完成之后断开连接
                 TcpSend(response, true);
 
                 request_.consume(bytes_transferred);
@@ -78,7 +89,7 @@ namespace network
                 assert(false);
             }
 
-            // ��δ������\r\n\r\n���꣬��ỹ�����һ�λص�
+            // 将未解析的\r\n\r\n读完，否会还会产生一次回调
             request_.consume(4);
 
             DoRecv();

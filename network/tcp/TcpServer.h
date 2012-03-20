@@ -53,12 +53,6 @@ namespace network
                 return false;
             }
 
-            if (packet_handlers_.empty())
-            {
-                assert(false);
-                return false;
-            }
-
             StartAccept();
             return true;
         }

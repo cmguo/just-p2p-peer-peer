@@ -74,6 +74,7 @@ namespace p2sp
     AppModule::AppModule()
         : is_running_(false)
         , tcp_server_(global_io_svc())
+        , tcp_server_843_(global_io_svc())
     {
     }
 
@@ -229,6 +230,10 @@ namespace p2sp
                 break;
             }
         }
+
+        // 监听843端口，为flash p2p提供socket master policy file.
+        // 参考http://macromedia.com/cn/devnet/flashplayer/articles/fplayer9_security.html
+        tcp_server_843_.Start(843);
 
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 

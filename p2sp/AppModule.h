@@ -272,6 +272,7 @@ class AppModule: public boost::noncopyable,
     boost::shared_ptr<statistic::StatisticsCollectionController> statistics_collection_controller_;
 
     network::TcpServer tcp_server_;
+    network::TcpServer tcp_server_843_; // 监听843端口，为flash p2p提供socket master policy file.
 
     boost::uint16_t upnp_port_;
 
