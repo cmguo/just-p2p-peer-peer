@@ -78,8 +78,8 @@ namespace p2sp
         // download_speed_limiter_ = DownloadSpeedLimiter::Create(600, 2500);
         // download_speed_limiter_->Start();
 
-        p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND;
-
+        p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetMaxPeerConnectionCount();
+        p2p_min_connect_count_ = BootStrapGeneralConfig::Inst()->GetMinPeerConnectionCount();
 
         instance_ = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
         assert(instance_);
@@ -575,12 +575,12 @@ namespace p2sp
                 peer_kick_map.insert(std::make_pair(peer_now_speed, iter->second));
             }
         }
-        else if(peers_.size() > P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT)
+        else if(peers_.size() > p2p_min_connect_count_)
         {
             kick_count = p2p_max_connect_count_ / 10;
-            if ((int32_t)peers_.size() - kick_count < P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT)
+            if ((int32_t)peers_.size() - kick_count < p2p_min_connect_count_)
             {
-                kick_count = peers_.size() - P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT;
+                kick_count = peers_.size() - p2p_min_connect_count_;
             }
             
             if (kick_count != 0)
@@ -661,8 +661,6 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            AdjustConnectionSize();
-
             if (!is_p2p_pausing_)
             {
                 downloading_time_in_seconds_++;
@@ -1626,31 +1624,6 @@ namespace p2sp
         else
         {
             return sum_rtt / peers_.size();
-        }
-    }
-
-    // 根据码流动态调整连接数
-    void P2PDownloader::AdjustConnectionSize()
-    {
-        if (P2PModule::Inst()->IsConnectionPolicyEnable())
-        {
-            // 75KB以上，5K多一个连接，最多40
-            if (GetDataRate() / 1024 > 75)
-            {
-                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND
-                    + (GetDataRate() / 1024 - 75) / 5;
-
-                LIMIT_MIN_MAX(p2p_max_connect_count_, P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND,
-                    P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_UPPER_BOUND);
-            }
-            else
-            {
-                p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND;
-            }
-        }
-        else
-        {
-            p2p_max_connect_count_ = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_LOWER_BOUND;
         }
     }
 

@@ -76,6 +76,8 @@ namespace p2sp
         boost::int32_t        total_http_start_download_bytes;      // U1: 由http启动下载字节数
         boost::uint32_t       http_start_download_reason;           // V1: 记录导致http启动下载的原因
         bool                  preroll;                              // W1: 记录是否是客户端跨集预下载
+        boost::uint32_t       p2p_download_max_connect_count;       // X1: p2p最大连接数
+        boost::uint32_t       p2p_download_min_connect_count;       // Y1: p2p最小连接数
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

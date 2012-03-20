@@ -95,10 +95,16 @@ namespace p2sp
                 return;
             }
 
+
+
             for (uint32_t i = 0; i != info_size; ++i)
             {
                 protocol::TRACKER_INFO ti;
-                assert(ia);
+
+                if (!ia)
+                {
+                    return;
+                }
 
                 ia >> ti.StationNo;  // = framework::io::BytesToUI16(p_buf); p_buf += 2;
                 ia >> ti.Reserve;

@@ -1307,6 +1307,15 @@ namespace p2sp
         // W1: 是否是跨集预下载
         info.preroll = is_preroll_;
 
+        if (p2p_downloader_)
+        {
+            // X1: p2p最大连接数
+            info.p2p_download_max_connect_count = p2p_downloader_->GetP2PMaxConnectionCount();
+            // Y1: p2p最小连接数
+            info.p2p_download_min_connect_count = p2p_downloader_->GetP2PMinConnectionCount();
+        }
+        
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1363,6 +1372,9 @@ namespace p2sp
         log_stream << "&U1=" << (uint32_t)info.total_http_start_download_bytes;
         log_stream << "&V1=" << (uint32_t)info.http_start_download_reason;
         log_stream << "&W1=" << (uint32_t)info.preroll;
+
+        log_stream << "&X1=" << (uint32_t)info.p2p_download_max_connect_count;
+        log_stream << "&Y1=" << (uint32_t)info.p2p_download_min_connect_count;
 
         string log = log_stream.str();
 

@@ -367,6 +367,16 @@ namespace p2sp
             return interval_of_requesting_announce_from_udpserver_;
         }
 
+        boost::uint32_t GetMaxPeerConnectionCount() const
+        {
+            return p2p_download_max_connect_count_bound;
+        }
+
+        boost::uint32_t GetMinPeerConnectionCount() const
+        {
+            return p2p_download_min_connect_count_bound;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -593,6 +603,12 @@ namespace p2sp
 
         // 在收到Announce回包后，对UdpServer进行Announce的时间间隔
         boost::uint32_t interval_of_requesting_announce_from_udpserver_;
+
+        //最大peer连接数
+        boost::uint32_t p2p_download_max_connect_count_bound;
+
+        //最小peer连接数
+        boost::uint32_t p2p_download_min_connect_count_bound;
     };
 }
 #endif

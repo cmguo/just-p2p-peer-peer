@@ -197,11 +197,11 @@ namespace p2sp
 
         void InitSnList(const std::list<boost::asio::ip::udp::endpoint> & sn_list);
 
+        boost::uint32_t GetP2PMaxConnectionCount() const {return p2p_max_connect_count_; }
+        boost::uint32_t GetP2PMinConnectionCount() const {return p2p_min_connect_count_; }
+
     private:
         void DoList();
-
-        // 根据码流动态调整连接数
-        void AdjustConnectionSize();
 
         void KickSnConnection();
 
@@ -244,7 +244,8 @@ namespace p2sp
         uint32_t active_peer_count_;
         // p2p下载的距离，指当前下载的最后一片piece和第一片piece之间的piece数
         uint16_t non_consistent_size_;
-        boost::int32_t p2p_max_connect_count_;
+        boost::uint32_t p2p_max_connect_count_;
+        boost::uint32_t p2p_min_connect_count_;
 
         // download speed limiter
         DownloadSpeedLimiter download_speed_limiter_;

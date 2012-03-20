@@ -88,6 +88,8 @@ namespace p2sp
         , max_times_of_record_(50)
         , min_times_of_record_(3)
         , interval_of_requesting_announce_from_udpserver_(5)
+        ,p2p_download_max_connect_count_bound(40)
+        ,p2p_download_min_connect_count_bound(5)
     {
     }
 
@@ -223,7 +225,9 @@ namespace p2sp
                 ("config.uca", po::value<bool>()->default_value(use_cdn_to_accelerate_based_on_history_))
                 ("config.maxtr", po::value<uint32_t>()->default_value(max_times_of_record_))
                 ("config.mintr", po::value<uint32_t>()->default_value(min_times_of_record_))
-                ("config.ira", po::value<uint32_t>()->default_value(interval_of_requesting_announce_from_udpserver_));
+                ("config.ira", po::value<uint32_t>()->default_value(interval_of_requesting_announce_from_udpserver_))
+                ("config.maxcon", po::value<uint32_t>()->default_value(p2p_download_max_connect_count_bound))
+                ("config.mincon", po::value<uint32_t>()->default_value(p2p_download_min_connect_count_bound));
 
             std::istringstream config_stream(config_string);
 
@@ -302,6 +306,8 @@ namespace p2sp
             max_times_of_record_ = vm["config.maxtr"].as<uint32_t>();
             min_times_of_record_ = vm["config.mintr"].as<uint32_t>();
             interval_of_requesting_announce_from_udpserver_ = vm["config.ira"].as<uint32_t>();
+            p2p_download_max_connect_count_bound = vm["config.maxcon"].as<uint32_t>();
+            p2p_download_min_connect_count_bound = vm["config.mincon"].as<uint32_t>();
 
             if (save_to_disk)
             {
