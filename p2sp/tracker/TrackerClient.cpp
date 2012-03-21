@@ -283,6 +283,7 @@ namespace p2sp
         boost::uint16_t stun_port;
         StunModule::Inst()->GetStunEndpoint(stun_ip, stun_port);
 
+        boost::uint32_t stun_detect_ip = statistic::StatisticModule::Inst()->GetLocalPeerInfo().DetectIP;
         boost::uint16_t stun_detect_port = statistic::StatisticModule::Inst()->GetLocalPeerInfo().DetectUdpPort;
 
         LoadLocalIPs(real_ips);
@@ -306,6 +307,7 @@ namespace p2sp
                 local_udp_port,
                 stun_ip,
                 stun_port,
+                stun_detect_ip,
                 stun_detect_port,
                 real_ips,
                 update_resource_set,
