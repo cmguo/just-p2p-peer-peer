@@ -196,6 +196,8 @@ namespace p2sp
                 upload_bytes_when_changed_to_cdn_because_of_large_upload_;
         }
 
+        live_p2p_downloader_->CalcDacDataBeforeStop();
+
         SendDacStopData();
 
         SaveHistoryConfig();
@@ -781,6 +783,14 @@ namespace p2sp
         // A2: 收到的逆序数据包的个数
         // B2: 带宽
         // C2: 因为大上传时使用CDN期间的上传量
+        // D2: 在需要使用UdpServer时，已经list到的UdpServer个数的最小值
+        // E2: 在需要使用UdpServer时，已经list到的UdpServer个数的最大值
+        // F2: 在每次使用UdpServer期间，连接上的UdpServer的平均值的最小值
+        // G2: 在每次使用UdpServer期间，连接上的UdpServer的平均值的最大值
+        // H2: 在每次使用UdpServer期间，收到Announce的次数的最小值
+        // I2: 在每次使用UdpServer期间，收到Announce的次数的最大值
+        // J2: 在每次使用UdpServer期间，收到/请求的最小值
+        // K2: 在每次使用UdpServer期间，收到/请求的最大值
 
         LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -913,6 +923,29 @@ namespace p2sp
         info.BandWidth = statistic::StatisticModule::Inst()->GetBandWidth();
         info.UploadBytesWhenUsingCDNBecauseOfLargeUpload = total_upload_bytes_when_using_cdn_because_of_large_upload_;
 
+        if (live_p2p_downloader_)
+        {
+            info.MinUdpServerCountWhenNeeded = live_p2p_downloader_->GetUdpServerCountWhenNeeded().Min();
+            info.MaxUdpServerCountWhenNeeded = live_p2p_downloader_->GetUdpServerCountWhenNeeded().Max();
+            info.MinConnectUdpServerCountWhenNeeded = live_p2p_downloader_->GetConnectUdpServerCountWhenNeeded().Min();
+            info.MaxConnectUdpServerCountWhenNeeded = live_p2p_downloader_->GetConnectUdpServerCountWhenNeeded().Max();
+            info.MinAnnounceResponseFromUdpServer = live_p2p_downloader_->GetAnnounceResponseFromUdpServer().Min();
+            info.MaxAnnounceResponseFromUdpServer = live_p2p_downloader_->GetAnnounceResponseFromUdpServer().Max();
+            info.MinRatioOfResponseToRequestFromUdpserver = live_p2p_downloader_->GetRatioOfResponseToRequestFromUdpserver().Min();
+            info.MaxRatioOfResponseToRequestFromUdpserver = live_p2p_downloader_->GetRatioOfResponseToRequestFromUdpserver().Max();
+        }
+        else
+        {
+            info.MinUdpServerCountWhenNeeded = 0;
+            info.MaxUdpServerCountWhenNeeded = 0;
+            info.MinConnectUdpServerCountWhenNeeded = 0;
+            info.MaxConnectUdpServerCountWhenNeeded = 0;
+            info.MinAnnounceResponseFromUdpServer = 0;
+            info.MaxAnnounceResponseFromUdpServer = 0;
+            info.MinRatioOfResponseToRequestFromUdpserver = 0;
+            info.MaxRatioOfResponseToRequestFromUdpserver = 0;
+        }
+
         std::ostringstream log_stream;
 
         log_stream << "C=";
@@ -988,6 +1021,14 @@ namespace p2sp
         log_stream << "&A2=" << info.ReverseSubPiecePacketCount;
         log_stream << "&B2=" << info.BandWidth;
         log_stream << "&C2=" << info.UploadBytesWhenUsingCDNBecauseOfLargeUpload;
+        log_stream << "&D2=" << info.MinUdpServerCountWhenNeeded;
+        log_stream << "&E2=" << info.MaxUdpServerCountWhenNeeded;
+        log_stream << "&F2=" << info.MinConnectUdpServerCountWhenNeeded;
+        log_stream << "&G2=" << info.MaxConnectUdpServerCountWhenNeeded;
+        log_stream << "&H2=" << info.MinAnnounceResponseFromUdpServer;
+        log_stream << "&I2=" << info.MaxAnnounceResponseFromUdpServer;
+        log_stream << "&J2=" << info.MinRatioOfResponseToRequestFromUdpserver;
+        log_stream << "&K2=" << info.MaxRatioOfResponseToRequestFromUdpserver;
 
         string log = log_stream.str();
 

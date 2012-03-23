@@ -134,6 +134,10 @@ namespace p2sp
         static bool CompareBasedOnUploadSpeed(boost::shared_ptr<LivePeerConnection> const & lhs,
             boost::shared_ptr<LivePeerConnection> const & rhs);
 
+        bool IsFromUdpServer(const boost::asio::ip::udp::endpoint & end_point);
+        void ClearSubPiecesRequestdToUdpServer();
+        boost::uint32_t GetSubPieceRequestedToUdpServerCount() const;
+
     private:
         void SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,
             const std::vector<boost::shared_ptr<LivePeerConnection> > & sorted_peers, boost::uint32_t to_select_peers_count);

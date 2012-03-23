@@ -312,6 +312,11 @@ namespace p2sp
             return;
         }
 
+        if (IsUdpServer())
+        {
+            subpieces_requested_to_udpserver_.insert(subpieces.begin(), subpieces.end());
+        }
+
         accumulative_subpieces_requested_ += subpieces.size();
 
         boost::uint32_t copy_count = subpieces.size() / 2;
@@ -633,5 +638,15 @@ namespace p2sp
     boost::uint32_t LivePeerConnection::GetTotalReceivedSubPiecePacketCount() const
     {
         return total_received_packet_count_;
+    }
+
+    void LivePeerConnection::ClearSubPiecesRequestedToUdpServer()
+    {
+        subpieces_requested_to_udpserver_.clear();
+    }
+
+    void LivePeerConnection::GetSubPieceRequestedToUdpServer(std::set<protocol::LiveSubPieceInfo> & subpieces_requested_to_udpserver) const
+    {
+        subpieces_requested_to_udpserver.insert(subpieces_requested_to_udpserver_.begin(), subpieces_requested_to_udpserver_.end());
     }
 }

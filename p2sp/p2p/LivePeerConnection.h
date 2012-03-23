@@ -94,6 +94,8 @@ namespace p2sp
 
         boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
         boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
+        void GetSubPieceRequestedToUdpServer(std::set<protocol::LiveSubPieceInfo> & subpieces_requested_to_udpserver) const;
+        void ClearSubPiecesRequestedToUdpServer();
 
         int GetServiceScore() const;
 
@@ -199,6 +201,8 @@ namespace p2sp
         boost::uint32_t udpserver_maximum_requests_;
 
         framework::timer::TickCounter receive_announce_tick_counter_;
+
+        std::set<protocol::LiveSubPieceInfo> subpieces_requested_to_udpserver_;
 
         size_t announce_requests_;
         size_t announce_responses_;

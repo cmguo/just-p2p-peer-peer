@@ -222,11 +222,6 @@ namespace p2sp
             }
         }
 
-        // 预分配
-        live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_, is_p2p_pausing_);
-        
-        live_connection_manager_.OnP2PTimer(times);
-
         if (times % 4 == 0)
         {
             bool tmp_should_use_udpserver = should_use_udpserver_;
@@ -242,11 +237,13 @@ namespace p2sp
                     switch (use_udpserver_reason_)
                     {
                     case URGENT:
-                        ++times_of_use_udpserver_because_of_urgent_;
+                        WillUseUdpServerBecauseOfUrgent();
                         break;
+
                     case LARGE_UPLOAD:
-                        ++times_of_use_udpserver_because_of_large_upload_;
+                        WillUseUdpServerBecauseOfLargeUpload();
                         break;
+
                     default:
                         break;
                     }
@@ -258,11 +255,13 @@ namespace p2sp
                     switch (use_udpserver_reason_)
                     {
                     case URGENT:
-                        time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+                        WillNotUseUdpServerBecauseOfNotUrgent();
                         break;
+
                     case LARGE_UPLOAD:
-                        time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+                        WillNotUseUdpServerBecauseOfSmallUpload();
                         break;
+
                     default:
                         break;
                     }
@@ -279,7 +278,14 @@ namespace p2sp
                     DeleteAllUdpServer();
                 }
             }
+
+            UpdateUsingUdpServerStatus();
         }
+
+        // 预分配
+        live_assigner_.OnP2PTimer(times, GetConnectLevel() == HIGH, should_use_udpserver_, is_p2p_pausing_);
+
+        live_connection_manager_.OnP2PTimer(times);
 
         assert(send_peer_info_packet_interval_in_second_ != 0);
 
@@ -695,6 +701,10 @@ namespace p2sp
         {
             // 收到annouce回包 (0xC1)
             live_connection_manager_.OnAnnouncePacket((protocol::LiveAnnouncePacket const &)packet);
+            if (live_connection_manager_.IsFromUdpServer(packet.end_point))
+            {
+                ++total_announce_response_from_udpserver_this_time_;
+            }
         }
         else if (packet.PacketAction == protocol::LiveSubPiecePacket::Action)
         {
@@ -711,6 +721,11 @@ namespace p2sp
                     subpiece_packet.sub_piece_length_);
 
                 live_instance_->AddSubPiece(subpiece_packet.sub_piece_info_, buffer);
+
+                if (live_connection_manager_.IsFromUdpServer(packet.end_point))
+                {
+                    subpieces_responsed_from_udpserver_.insert(subpiece_packet.sub_piece_info_);
+                }
             }
 
             ++total_unused_subpiece_count_;
@@ -877,15 +892,6 @@ namespace p2sp
 
     void LiveP2PDownloader::CheckShouldUseUdpServer()
     {
-        // 剩余时间小，使用UdpServer来补带宽
-        if (GetRestTimeInSeconds() < urgent_rest_playable_time_delim_ && !IsInUdpServerProtectTimeWhenStart())
-        {
-            use_udpserver_reason_ = URGENT;
-            should_use_udpserver_ = true;
-            should_connect_udpserver_ = true;
-            return;
-        }
-
         if (GetRestTimeInSeconds() < urgent_rest_playable_time_delim_ + 2 && !IsInUdpServerProtectTimeWhenStart())
         {
             should_connect_udpserver_ = true;
@@ -895,6 +901,21 @@ namespace p2sp
             should_connect_udpserver_ = false;
         }
 
+        if (is_p2p_pausing_)
+        {
+            should_use_udpserver_ = false;
+            return;
+        }
+
+        // 剩余时间小，使用UdpServer来补带宽
+        if (GetRestTimeInSeconds() < urgent_rest_playable_time_delim_ && !IsInUdpServerProtectTimeWhenStart())
+        {
+            use_udpserver_reason_ = URGENT;
+            should_use_udpserver_ = true;
+            should_connect_udpserver_ = true;
+            return;
+        }
+
         // 上传足够大，剩余时间足够大，并且跟视野中的peer相比，跑的足够靠前，使用UdpServer来快速分发
         if (live_download_driver_->IsUploadSpeedLargeEnough() &&
             live_download_driver_->GetRestPlayableTime() > live_download_driver_->GetRestPlayTimeDelim() &&
@@ -902,6 +923,7 @@ namespace p2sp
         {
             use_udpserver_reason_ = LARGE_UPLOAD;
             should_use_udpserver_ = true;
+            should_connect_udpserver_ = true;
             return;
         }
 
@@ -1107,5 +1129,93 @@ namespace p2sp
     boost::uint32_t LiveP2PDownloader::GetMinFirstBlockID() const
     {
         return live_connection_manager_.GetMinFirstBlockID();
+    }
+
+    void LiveP2PDownloader::UpdateUsingUdpServerStatus()
+    {
+        if (!should_use_udpserver_ || (should_use_udpserver_ && use_udpserver_reason_ != URGENT))
+        {
+            return;
+        }
+
+        total_connect_udpserver_count_this_time_ += live_connection_manager_.GetConnectedUdpServerCount();
+    }
+
+    void LiveP2PDownloader::WillUseUdpServerBecauseOfUrgent()
+    {
+        ++times_of_use_udpserver_because_of_urgent_;
+
+        udpserver_count_when_needed_.Update(udpserver_pool_->GetPeerCount());
+
+        total_connect_udpserver_count_this_time_ = 0;
+        total_announce_response_from_udpserver_this_time_ = 0;
+
+        live_connection_manager_.ClearSubPiecesRequestdToUdpServer();
+        subpieces_responsed_from_udpserver_.clear();
+    }
+
+    void LiveP2PDownloader::WillUseUdpServerBecauseOfLargeUpload()
+    {
+        ++times_of_use_udpserver_because_of_large_upload_;
+    }
+
+    void LiveP2PDownloader::WillNotUseUdpServerBecauseOfNotUrgent()
+    {
+        time_elapsed_use_udpserver_because_of_urgent_ += use_udpserver_tick_counter_.elapsed();
+
+        if (use_udpserver_tick_counter_.elapsed() < 1000)
+        {
+            return;
+        }
+
+        boost::uint32_t average_connect_udpserver_count = static_cast<boost::uint32_t>(total_connect_udpserver_count_this_time_ * 10 /
+            static_cast<float>((use_udpserver_tick_counter_.elapsed() / 1000.0)));
+
+        connect_udpserver_count_when_needed_.Update(average_connect_udpserver_count);
+
+        boost::uint32_t average_announce_response_from_udpserver = static_cast<boost::uint32_t>(total_announce_response_from_udpserver_this_time_ * 10 /
+            static_cast<float>((use_udpserver_tick_counter_.elapsed() / 1000.0)));
+
+        announce_response_from_udpserver_.Update(average_announce_response_from_udpserver);
+
+        if (subpieces_responsed_from_udpserver_.size() != 0)
+        {
+            boost::uint32_t ratio_of_response_to_request = live_connection_manager_.GetSubPieceRequestedToUdpServerCount() * 100 /
+                subpieces_responsed_from_udpserver_.size();
+            ratio_of_response_to_request_from_udpserver_.Update(ratio_of_response_to_request);
+        }
+    }
+
+    void LiveP2PDownloader::WillNotUseUdpServerBecauseOfSmallUpload()
+    {
+        time_elapsed_use_udpserver_because_of_large_upload_ += use_udpserver_tick_counter_.elapsed();
+    }
+
+    const NumericRange<boost::uint32_t> & LiveP2PDownloader::GetUdpServerCountWhenNeeded() const
+    {
+        return udpserver_count_when_needed_;
+    }
+
+    const NumericRange<boost::uint32_t> & LiveP2PDownloader::GetConnectUdpServerCountWhenNeeded() const
+    {
+        return connect_udpserver_count_when_needed_;
+    }
+
+    const NumericRange<boost::uint32_t> & LiveP2PDownloader::GetAnnounceResponseFromUdpServer() const
+    {
+        return announce_response_from_udpserver_;
+    }
+
+    const NumericRange<boost::uint32_t> & LiveP2PDownloader::GetRatioOfResponseToRequestFromUdpserver() const
+    {
+        return ratio_of_response_to_request_from_udpserver_;
+    }
+
+    void LiveP2PDownloader::CalcDacDataBeforeStop()
+    {
+        if (should_use_udpserver_ && use_udpserver_reason_ == URGENT)
+        {
+            WillNotUseUdpServerBecauseOfNotUrgent();
+        }
     }
 }

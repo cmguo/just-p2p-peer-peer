@@ -99,6 +99,14 @@ namespace p2sp
         boost::uint32_t         ReverseSubPiecePacketCount;
         boost::uint32_t         BandWidth;
         boost::uint32_t         UploadBytesWhenUsingCDNBecauseOfLargeUpload;
+        boost::uint32_t         MinUdpServerCountWhenNeeded;
+        boost::uint32_t         MaxUdpServerCountWhenNeeded;
+        boost::uint32_t         MinConnectUdpServerCountWhenNeeded;
+        boost::uint32_t         MaxConnectUdpServerCountWhenNeeded;
+        boost::uint32_t         MinAnnounceResponseFromUdpServer;
+        boost::uint32_t         MaxAnnounceResponseFromUdpServer;
+        boost::uint32_t         MinRatioOfResponseToRequestFromUdpserver;
+        boost::uint32_t         MaxRatioOfResponseToRequestFromUdpserver;
     } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class ILiveDownloadDriver

@@ -367,4 +367,41 @@ namespace p2sp
 
         return lhs < rhs;
     }
+
+    bool LiveConnectionManger::IsFromUdpServer(const boost::asio::ip::udp::endpoint & end_point)
+    {
+        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator peer = peers_.find(end_point);
+        if (peer != peers_.end())
+        {
+            LivePeerConnection::p peer_connection = peer->second;
+            return peer_connection->IsUdpServer();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    void LiveConnectionManger::ClearSubPiecesRequestdToUdpServer()
+    {
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator iter = peers_.begin();
+            iter != peers_.end();
+            ++iter)
+        {
+            iter->second->ClearSubPiecesRequestedToUdpServer();
+        }
+    }
+
+    boost::uint32_t LiveConnectionManger::GetSubPieceRequestedToUdpServerCount() const
+    {
+        std::set<protocol::LiveSubPieceInfo> subpiece_requested_to_udpserver;
+        for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
+            iter != peers_.end();
+            ++iter)
+        {
+            iter->second->GetSubPieceRequestedToUdpServer(subpiece_requested_to_udpserver);
+        }
+
+        return subpiece_requested_to_udpserver.size();
+    }
 }

@@ -43,6 +43,44 @@ namespace p2sp
         HIGH = 2
     };
 
+    template<typename size>
+    class NumericRange
+    {
+    public:
+        NumericRange()
+        {
+            max_ = 0;
+            min_ = std::numeric_limits<size>::max();
+        }
+
+        size Min() const
+        {
+            return min_ <= max_ ? min_ : 0;
+        }
+
+        size Max() const
+        {
+            return min_ <= max_ ? max_ : 0;
+        }
+
+        void Update(size value)
+        {
+            if (min_ > value)
+            {
+                min_ = value;
+            }
+
+            if (max_ < value)
+            {
+                max_ = value;
+            }
+        }
+
+    private:
+        size min_;
+        size max_;
+    };
+
     class LiveP2PDownloader
         : public LiveDownloader
         , public IP2PControlTarget
@@ -206,6 +244,14 @@ namespace p2sp
 
         void OnBlockComplete(const protocol::LiveSubPieceInfo & live_block);
 
+        // for dac stop data
+        const NumericRange<boost::uint32_t> & GetUdpServerCountWhenNeeded() const;
+        const NumericRange<boost::uint32_t> & GetConnectUdpServerCountWhenNeeded() const;
+        const NumericRange<boost::uint32_t> & GetAnnounceResponseFromUdpServer() const;
+        const NumericRange<boost::uint32_t> & GetRatioOfResponseToRequestFromUdpserver() const;
+
+        void CalcDacDataBeforeStop();
+
     private:
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
@@ -221,6 +267,12 @@ namespace p2sp
 
         void GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & candidate_peers);
         void GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & candidate_peers);
+
+        void UpdateUsingUdpServerStatus();
+        void WillUseUdpServerBecauseOfUrgent();
+        void WillUseUdpServerBecauseOfLargeUpload();
+        void WillNotUseUdpServerBecauseOfNotUrgent();
+        void WillNotUseUdpServerBecauseOfSmallUpload();
 
     public:
         bool is_running_;
@@ -313,6 +365,24 @@ namespace p2sp
         boost::uint32_t total_received_subpiece_count_;  // 收到的subpiece个数（不包括冗余的）
         boost::uint32_t total_p2p_data_bytes_;  // P2P总下载
         boost::uint32_t total_udpserver_data_bytes_;  // 从UdpServer下载的字节数
+
+        // 在需要连接UdpServer时，已经list到的UdpServer的数目的范围
+        NumericRange<boost::uint32_t> udpserver_count_when_needed_;
+
+        // 在每次使用UdpServer期间，连接上的UdpServer的平均值的范围
+        NumericRange<boost::uint32_t> connect_udpserver_count_when_needed_;
+        // 在每次使用UdpServer期间，连接上的UdpServer的个数的总和
+        boost::uint32_t total_connect_udpserver_count_this_time_;
+
+        // 在每次使用UdpServer期间，收到Announce的次数的范围
+        NumericRange<boost::uint32_t> announce_response_from_udpserver_;
+        // 在每次使用UdpServer期间，连接上的UdpServer的个数的总和
+        boost::uint32_t total_announce_response_from_udpserver_this_time_;
+
+        // 在每次使用UdpServer期间，收到/请求的范围
+        NumericRange<boost::uint32_t> ratio_of_response_to_request_from_udpserver_;
+
+        std::set<protocol::LiveSubPieceInfo> subpieces_responsed_from_udpserver_;
     };
 
     inline statistic::SPEED_INFO LiveP2PDownloader::GetSpeedInfo()
