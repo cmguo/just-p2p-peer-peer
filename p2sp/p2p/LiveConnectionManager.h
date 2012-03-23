@@ -78,7 +78,7 @@ namespace p2sp
         void Stop();
 
         void AddPeer(LivePeerConnection__p peer_connection);
-        void DelPeer(const boost::asio::ip::udp::endpoint & endpoint);
+        LivePeerConnection__p DelPeer(const boost::asio::ip::udp::endpoint & endpoint);
 
         bool HasPeer(const boost::asio::ip::udp::endpoint & end_point) const;
         bool IsLivePeer(const boost::asio::ip::udp::endpoint & end_point) const;

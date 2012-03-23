@@ -50,6 +50,11 @@ namespace p2sp
                 DoAnnounce();
             }
 
+            if (max_download_speed_ < GetSpeedInfo().NowDownloadSpeed)
+            {
+                max_download_speed_ = GetSpeedInfo().NowDownloadSpeed;
+            }
+
             // 更新window_size_
             boost::int32_t last_window_size = window_size_;
 
@@ -101,6 +106,7 @@ namespace p2sp
         protocol::LiveRequestAnnouncePacket live_request_annouce_packet(protocol::Packet::NewTransactionID(), 
             p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
 
+        ++announce_requests_;
         for(int32_t i = 0; i < announce_copies; i++)
         {
             p2p_downloader_->DoSendPacket(live_request_annouce_packet);
@@ -113,6 +119,7 @@ namespace p2sp
         if (false == is_running_)
             return;
 
+        ++announce_responses_;
         receive_announce_tick_counter_.reset();
 
         bool block_bitmap_empty_before_update = block_bitmap_.empty();
@@ -305,6 +312,8 @@ namespace p2sp
             return;
         }
 
+        accumulative_subpieces_requested_ += subpieces.size();
+
         boost::uint32_t copy_count = subpieces.size() / 2;
 
         LIMIT_MIN_MAX(copy_count, 1, 3);
@@ -342,6 +351,57 @@ namespace p2sp
         peer_connection_info_.Sent_Count += packet.sub_piece_infos_.size();
 
         request_subpiece_count_ += packet.sub_piece_infos_.size();
+    }
+
+    int LivePeerConnection::GetServiceScore() const
+    {
+        if (announce_requests_ == 0)
+        {
+            return 0;
+        }
+
+        if (announce_responses_ == 0)
+        {
+            if (announce_requests_ >= 3)
+            {
+                return -1;
+            }
+
+            return 0;
+        }
+
+        if (accumulative_subpieces_requested_ == 0)
+        {
+            return 0;
+        }
+
+        //曾经向该peer请求过数据
+
+        if (accumulative_subpieces_requested_ < 10)
+        {
+            //请求数过小，不作负面评价
+            if (peer_connection_info_.Received_Count > accumulative_subpieces_requested_/2)
+            {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        //请求过足够过数据，可根据速度来作或正面或负面评价
+        if (peer_connection_info_.Received_Count == 0 || peer_connection_info_.Received_Count*4 < accumulative_subpieces_requested_)
+        {
+            return -1;
+        }
+
+        boost::uint32_t data_rate = p2p_downloader_->GetDownloadDriver()->GetDataRate();
+        int score = 0;
+        if (data_rate > 10*1000)
+        {
+            score = static_cast<int>(0.7 + static_cast<double>(max_download_speed_)/data_rate);
+        }
+
+        return score;
     }
 
     bool LivePeerConnection::HasSubPieceInBitmap(const protocol::LiveSubPieceInfo & subpiece)

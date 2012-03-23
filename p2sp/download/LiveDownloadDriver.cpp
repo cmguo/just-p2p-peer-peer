@@ -11,7 +11,7 @@
 #include "WindowsMessage.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
-#include "p2sp/config/Config.h";
+#include "p2sp/config/Config.h"
 
 namespace p2sp
 {
@@ -21,7 +21,9 @@ namespace p2sp
 
     const boost::uint8_t LiveDownloadDriver::InitialChangedToP2PConditionWhenStart = 255;
 
-    const std::string LiveDownloadDriver::RatioOfUploadToDownload = "r";
+    const std::string LiveDownloadDriver::LiveHistorySettings::RatioOfUploadToDownload = "r";
+    const std::string LiveDownloadDriver::LiveHistorySettings::UdpServerScore = "uss";
+    const std::string LiveDownloadDriver::LiveHistorySettings::UdpServerIpAddress = "usia";
 
     LiveDownloadDriver::LiveDownloadDriver(boost::asio::io_service &io_svc, p2sp::ProxyConnection__p proxy_connetction)
         : io_svc_(io_svc)
@@ -196,8 +198,7 @@ namespace p2sp
 
         SendDacStopData();
 
-        UpdateHistoryRecordFile();
-        Config::Inst()->SaveConfig();
+        SaveHistoryConfig();
 
         live_instance_->DetachDownloadDriver(shared_from_this());
 
@@ -232,6 +233,28 @@ namespace p2sp
         tick_counter_since_last_advance_using_cdn_.stop();
 
         download_time_.stop();
+    }
+
+    void LiveDownloadDriver::SaveHistoryConfig() 
+    {
+        UpdateCdnAccelerationHistory();
+
+        std::vector<boost::uint32_t> udp_server_ip_address_on_history, udp_server_score_on_history;
+
+        std::map<boost::uint32_t, boost::uint32_t> udpservers_score_history = udpservers_score_history_.GetServicesScore(history_record_count_);
+        for(std::map<boost::uint32_t, boost::uint32_t>::const_iterator iter = udpservers_score_history.begin();
+            iter != udpservers_score_history.end();
+            ++iter)
+        {
+            udp_server_ip_address_on_history.push_back(iter->first);
+            udp_server_score_on_history.push_back(iter->second);
+        }
+
+        Config::Inst()->SetConfig(LiveHistorySettings::RatioOfUploadToDownload, ratio_of_upload_to_download_on_history_);
+        Config::Inst()->SetConfig(LiveHistorySettings::UdpServerIpAddress, udp_server_ip_address_on_history);
+        Config::Inst()->SetConfig(LiveHistorySettings::UdpServerScore, udp_server_score_on_history);
+
+        Config::Inst()->SaveConfig();
     }
 
     LiveHttpDownloader__p LiveDownloadDriver::GetHTTPControlTarget()
@@ -1184,16 +1207,25 @@ namespace p2sp
     void LiveDownloadDriver::LoadConfig()
     {
         std::map<std::string, boost::uint32_t> config_count;
-        config_count.insert(std::make_pair(RatioOfUploadToDownload, history_record_count_));
+        config_count.insert(std::make_pair(LiveHistorySettings::RatioOfUploadToDownload, history_record_count_));
+        config_count.insert(std::make_pair(LiveHistorySettings::UdpServerIpAddress, history_record_count_));
+        config_count.insert(std::make_pair(LiveHistorySettings::UdpServerScore, history_record_count_));
+
         Config::Inst()->SetConfigCount(config_count);
         Config::Inst()->LoadConfig();
 
-        Config::Inst()->GetConfig(RatioOfUploadToDownload, ratio_of_upload_to_download_on_history_);
+        Config::Inst()->GetConfig(LiveHistorySettings::RatioOfUploadToDownload, ratio_of_upload_to_download_on_history_);
+
+        std::vector<boost::uint32_t> udp_server_ip_address_on_history, udp_server_score_on_history;
+        Config::Inst()->GetConfig(LiveHistorySettings::UdpServerIpAddress, udp_server_ip_address_on_history);
+        Config::Inst()->GetConfig(LiveHistorySettings::UdpServerScore, udp_server_score_on_history);
+        
+        udpservers_score_history_.Initialize(udp_server_ip_address_on_history, udp_server_score_on_history);
 
         CalcHistoryUploadStatus();
     }
 
-    void LiveDownloadDriver::UpdateHistoryRecordFile()
+    void LiveDownloadDriver::UpdateCdnAccelerationHistory()
     {
         bool is_popular = IsPopular();
         bool have_used_cdn_to_accelerate_long_enough = HaveUsedCdnToAccelerateLongEnough();
@@ -1208,6 +1240,7 @@ namespace p2sp
             return;
         }
 
+        boost::uint32_t ratio_of_upload_to_download = 0;
         if (have_used_cdn_to_accelerate_long_enough)
         {
             boost::uint32_t total_download_bytes_in_thory = GetDataRate() * time_elapsed_use_cdn_because_of_large_upload_ / 1000;
@@ -1219,15 +1252,21 @@ namespace p2sp
                 download_bytes_use_cdn_because_of_large_upload_ = total_download_bytes_in_thory;
             }
 
-            boost::uint32_t ratio_of_upload_to_download = total_upload_bytes_when_using_cdn_because_of_large_upload_ * 100 /
+            ratio_of_upload_to_download = total_upload_bytes_when_using_cdn_because_of_large_upload_ * 100 /
                 download_bytes_use_cdn_because_of_large_upload_;
+        }
 
-            Config::Inst()->AddConfig(RatioOfUploadToDownload, ratio_of_upload_to_download);
-        }
-        else
-        {
-            Config::Inst()->AddConfig(RatioOfUploadToDownload, 0);
-        }
+        ratio_of_upload_to_download_on_history_.push_back(ratio_of_upload_to_download);
+    }
+
+    void LiveDownloadDriver::UpdateUdpServerServiceScore(const boost::asio::ip::udp::endpoint& udp_server, int service_score)
+    {
+        udpservers_score_history_.UpdateServiceScore(udp_server, service_score);
+    }
+
+    const std::map<boost::uint32_t, boost::uint32_t> LiveDownloadDriver::GetUdpServerServiceScore() const
+    {
+        return udpservers_score_history_.GetServicesScore(0);
     }
 
     void LiveDownloadDriver::CalcHistoryUploadStatus()

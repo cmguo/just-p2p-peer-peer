@@ -42,7 +42,7 @@ namespace p2sp
     /// 连接相关的索引键
     struct ConnectIndicator
     {
-        protocol::SocketAddr key_;
+        std::string key_;
         uint32_t next_time_to_connect_;
         bool is_connecting_;
         bool is_connected_;
@@ -52,6 +52,8 @@ namespace p2sp
         uint32_t last_active_time_;
 
         bool should_use_firstly_;
+
+        size_t peer_score_;
 
         // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
@@ -90,7 +92,12 @@ namespace p2sp
             return x.last_active_time_ > y.last_active_time_;
         }
 
-        return x.key_ < y.key_;
+        if (x.peer_score_ != y.peer_score_)
+        {
+            return x.peer_score_ > y.peer_score_;
+        }
+
+        return x.key_.compare(y.key_) > 0;
     }
 
     /// 活跃相关的索引键
@@ -117,9 +124,9 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<CandidatePeer> p;
-        static p create(const protocol::CandidatePeerInfo& peer, bool should_use_firstly)
+        static p create(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score)
         {
-            return p(new CandidatePeer(peer, should_use_firstly));
+            return p(new CandidatePeer(peer, should_use_firstly, peer_score));
         }
     public:
         /// 上一次活跃时间
@@ -148,6 +155,8 @@ namespace p2sp
         size_t connections_attempted_;
 
         bool should_use_firstly_;
+
+        size_t peer_score_;
 
     public:
         // 属性
@@ -241,6 +250,7 @@ namespace p2sp
             connect_protect_time_index_ = peer->connect_protect_time_index_;
             connections_attempted_ = peer->connections_attempted_;
             should_use_firstly_ = peer->should_use_firstly_;
+            peer_score_ = peer->peer_score_;
 
             if (UploadPriority != 1)
             {
@@ -249,7 +259,7 @@ namespace p2sp
         }
 
     private:
-        CandidatePeer(const protocol::CandidatePeerInfo& peer, bool should_use_firstly)
+        CandidatePeer(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score)
             : protocol::CandidatePeerInfo(peer)
             , last_active_time_(framework::timer::TickCounter::tick_count())
             , last_exchage_time_(0)
@@ -261,6 +271,7 @@ namespace p2sp
             , connect_protect_time_count_(0), connect_protect_time_index_(0)
             , connections_attempted_(0)
             , should_use_firstly_(should_use_firstly)
+            , peer_score_(peer_score)
         {
         }
     };

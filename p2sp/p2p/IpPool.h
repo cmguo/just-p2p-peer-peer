@@ -16,6 +16,17 @@ namespace p2sp
 
     struct IPPoolIndexUpdating;
 
+    class PeersScoreCalculator
+    {
+    public:
+        virtual size_t GetPeerScore(const protocol::SocketAddr& endpoint) const
+        {
+            return 0;
+        }
+
+        virtual ~PeersScoreCalculator(){}
+    };
+
     class IpPool
         : public boost::noncopyable
         , public boost::enable_shared_from_this<IpPool>
@@ -33,6 +44,8 @@ namespace p2sp
         void Stop();
         // 操作
         void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly);
+        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly, const PeersScoreCalculator& score_calculator);
+
         bool GetForConnect(protocol::CandidatePeerInfo& peer, bool is_udpserver = false);
         bool GetForExchange(protocol::CandidatePeerInfo& peer);
         uint32_t GetPeerCount() const { return candidate_peers_.size();}

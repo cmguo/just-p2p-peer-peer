@@ -20,6 +20,13 @@ namespace p2sp
 
     class ConnectingPeer;
 
+    class IConnectTimeoutHandler
+    {
+    public:
+        virtual void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point) = 0;
+        virtual ~IConnectTimeoutHandler(){}
+    };
+
     class PeerConnector
         : public boost::noncopyable
         , public boost::enable_shared_from_this<PeerConnector>
@@ -32,7 +39,7 @@ namespace p2sp
         }
     public:
         // 启停
-        void Start();
+        void Start(boost::shared_ptr<IConnectTimeoutHandler> connect_timeout_handler = boost::shared_ptr<IConnectTimeoutHandler>());
         void Stop();
         // 操作
         void Connect(const protocol::CandidatePeerInfo& candidate_peer_info);
@@ -55,6 +62,8 @@ namespace p2sp
         std::map<boost::asio::ip::udp::endpoint, ConnectingPeer::p> connecting_peers_;    // 正在发起连接的 Peers
         // 状态
         volatile bool is_running_;
+
+        boost::shared_ptr<IConnectTimeoutHandler> connect_timeout_handler_;
     private:
         // 构造
         PeerConnector(IP2PControlTarget::p p2p_downloader, IpPool__p ippool)

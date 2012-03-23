@@ -14,6 +14,7 @@
 #include "p2sp/download/LiveRestTimeTracker.h"
 #include "statistic/LiveDownloadDriverStatistic.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
+#include "UdpServersScoreHistory.h"
 
 namespace storage
 {
@@ -301,6 +302,10 @@ namespace p2sp
 
         bool ShouldUseCdnToAccelerate();
 
+        void UpdateUdpServerServiceScore(const boost::asio::ip::udp::endpoint& udp_server, int service_score);
+
+        const std::map<boost::uint32_t, boost::uint32_t> GetUdpServerServiceScore() const;
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -315,10 +320,12 @@ namespace p2sp
         void JumpOrSwitchIfNeeded();
 
         void LoadConfig();
-        void UpdateHistoryRecordFile();
+        void UpdateCdnAccelerationHistory();
         void CalcHistoryUploadStatus();
         bool IsPopular() const;
         bool HaveUsedCdnToAccelerateLongEnough() const;
+
+        void SaveHistoryConfig();
 
     private:
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
@@ -429,13 +436,20 @@ namespace p2sp
         boost::uint32_t upload_bytes_when_changed_to_cdn_because_of_large_upload_;
         boost::uint32_t total_upload_bytes_when_using_cdn_because_of_large_upload_;
 
-        vector<boost::uint32_t> ratio_of_upload_to_download_on_history_;
+        std::vector<boost::uint32_t> ratio_of_upload_to_download_on_history_;
+        UdpServersScoreHistory udpservers_score_history_;
 
         bool is_history_upload_good_;
         framework::timer::TickCounter tick_counter_since_last_advance_using_cdn_;
         boost::uint32_t history_record_count_;
 
-        static const std::string RatioOfUploadToDownload;
+        class LiveHistorySettings
+        {
+        public:
+            static const std::string RatioOfUploadToDownload;
+            static const std::string UdpServerScore;
+            static const std::string UdpServerIpAddress;
+        };
 
     private:
         // statistic

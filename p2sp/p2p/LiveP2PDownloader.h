@@ -46,6 +46,7 @@ namespace p2sp
     class LiveP2PDownloader
         : public LiveDownloader
         , public IP2PControlTarget
+        , public IConnectTimeoutHandler
         , public boost::enable_shared_from_this<LiveP2PDownloader>
 #ifdef DUMP_OBJECT
         , public count_object_allocate<LiveP2PDownloader>
@@ -98,6 +99,7 @@ namespace p2sp
         virtual uint32_t GetMaxConnectCount();
         virtual bool IsLive() {return true;}
 
+        void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point);
     public:
         void Start();
         void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver);

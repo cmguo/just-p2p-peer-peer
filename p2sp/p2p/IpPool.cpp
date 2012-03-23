@@ -126,12 +126,18 @@ namespace p2sp
 
     void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly)
     {
+        AddCandidatePeers(peers, should_use_firstly, PeersScoreCalculator());
+    }
+
+    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly, const PeersScoreCalculator& score_calculator)
+    {
         if (is_running_ == false) return;
 
         // 遍历要添加的所有的 CandidatePeer
         for (std::vector<protocol::CandidatePeerInfo>::const_iterator iter = peers.begin(); iter != peers.end(); iter ++)
         {
-            CandidatePeer::p peer = CandidatePeer::create(*iter, should_use_firstly && should_use_exchange_peers_firstly_);
+            size_t peer_score = score_calculator.GetPeerScore(iter->GetDetectSocketAddr());
+            CandidatePeer::p peer = CandidatePeer::create(*iter, should_use_firstly && should_use_exchange_peers_firstly_, peer_score);
 
             if (true == IsSelf(peer))
             {

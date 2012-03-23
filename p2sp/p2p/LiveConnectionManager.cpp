@@ -27,14 +27,14 @@ namespace p2sp
         }
     }
 
-    void LiveConnectionManger::DelPeer(const boost::asio::ip::udp::endpoint & endpoint)
+    LivePeerConnection__p LiveConnectionManger::DelPeer(const boost::asio::ip::udp::endpoint & endpoint)
     {
         std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::iterator
             iter = peers_.find(endpoint);
 
         if (iter == peers_.end())
         {
-            return;
+            return LivePeerConnection__p();
         }
 
         if (iter->second->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
@@ -44,7 +44,10 @@ namespace p2sp
         }
 
         iter->second->Stop();
+
+        LivePeerConnection__p peer_to_remove = iter->second;
         peers_.erase(endpoint);
+        return peer_to_remove;
     }
 
     bool LiveConnectionManger::HasPeer(const boost::asio::ip::udp::endpoint & end_point) const

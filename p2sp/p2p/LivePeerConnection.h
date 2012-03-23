@@ -95,6 +95,8 @@ namespace p2sp
         boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
         boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
 
+        int GetServiceScore() const;
+
     private:
         // 构造
         LivePeerConnection(LiveP2PDownloader__p p2p_downloader, boost::uint8_t connect_type) 
@@ -120,6 +122,10 @@ namespace p2sp
             live_maximum_window_size_ = BootStrapGeneralConfig::Inst()->GetLiveMaximumWindowSize();
             udpserver_maximum_window_size_ = BootStrapGeneralConfig::Inst()->GetUdpServerMaximumWindow();
             udpserver_maximum_requests_ = BootStrapGeneralConfig::Inst()->GetUdpServerMaximumRequests();
+            announce_requests_ = 0;
+            announce_responses_ = 0;
+            accumulative_subpieces_requested_ = 0;
+            max_download_speed_ = 0;
         }
 
         void DoAnnounce();
@@ -194,6 +200,10 @@ namespace p2sp
 
         framework::timer::TickCounter receive_announce_tick_counter_;
 
+        size_t announce_requests_;
+        size_t announce_responses_;
+        size_t accumulative_subpieces_requested_;
+        size_t max_download_speed_;
     };
 }
 

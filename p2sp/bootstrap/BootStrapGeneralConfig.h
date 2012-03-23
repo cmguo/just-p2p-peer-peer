@@ -377,6 +377,11 @@ namespace p2sp
             return p2p_download_min_connect_count_bound;
         }
 
+        bool UdpServerUsageHistoryEnabled() const
+        {
+            return udp_server_usage_history_enabled_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -609,6 +614,9 @@ namespace p2sp
 
         //最小peer连接数
         boost::uint32_t p2p_download_min_connect_count_bound;
+
+        //是否根据udpserver的历史使用情况来优选使用过去服务得较好的udpserver
+        bool udp_server_usage_history_enabled_;
     };
 }
 #endif

@@ -182,17 +182,22 @@ void Config::GenerateConfig()
     }
 }
 
-void Config::AddConfig(const std::string & name, boost::uint32_t data)
+void Config::SetConfig(const std::string & name, const std::vector<boost::uint32_t> & data)
 {
     assert(config_count_.find(name) != config_count_.end());
-    assert(config_[name].size() <= config_count_[name]);
 
-    if (config_[name].size() == config_count_[name])
+    config_[name].clear();
+
+    size_t start = 0;
+    if (data.size() > config_count_[name])
     {
-        config_[name].pop_front();
+        start = data.size() - config_count_[name];
     }
 
-    config_[name].push_back(data);
+    for(size_t i = start; i < data.size(); ++i)
+    {
+        config_[name].push_back(data[i]);
+    }
 }
 
 void Config::GetConfig(const std::string & name, std::vector<boost::uint32_t> & datas)

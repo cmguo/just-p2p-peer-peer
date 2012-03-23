@@ -22,12 +22,14 @@
 namespace p2sp
 {
     FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
-    void PeerConnector::Start()
+    void PeerConnector::Start(boost::shared_ptr<IConnectTimeoutHandler> connect_timeout_handler)
     {
         if (is_running_ == true) return;
         P2P_INFO("PeerConnector::Start");
 
         is_running_ = true;
+
+        connect_timeout_handler_ = connect_timeout_handler;
 
         assert(connecting_peers_.size() == 0);
     }
@@ -42,6 +44,8 @@ namespace p2sp
 
         p2p_downloader_.reset();
         ippool_.reset();
+
+        connect_timeout_handler_.reset();
 
         is_running_ = false;
     }
@@ -164,6 +168,10 @@ namespace p2sp
             {
                 LOGX(__DEBUG, "conn", "Connect Timeout, P2PDownloader: " << shared_from_this() << ", Endpoint: " << iter->first);
                 ippool_->OnConnectTimeout(iter->first);
+                if (connect_timeout_handler_)
+                {
+                    connect_timeout_handler_->OnConnectTimeout(iter->first);
+                }
 
                 connecting_peers_.erase(iter++);
             }

@@ -75,7 +75,7 @@ namespace p2sp
 
         // UdpServer Connector
         udpserver_connector_ = PeerConnector::create(shared_from_this(), udpserver_pool_);
-        udpserver_connector_->Start();
+        udpserver_connector_->Start(shared_from_this());
 
         // Assigner
         live_assigner_.Start(shared_from_this());
@@ -295,12 +295,43 @@ namespace p2sp
         }
     }
 
+    class UdpServerHistoricalScoreCalculator
+        : public PeersScoreCalculator
+    {
+    private:
+        std::map<boost::uint32_t, boost::uint32_t> historical_score_;
+    public:
+        UdpServerHistoricalScoreCalculator(LiveDownloadDriver__p live_download_driver)
+        {
+            historical_score_ = live_download_driver->GetUdpServerServiceScore();
+        }
+
+        size_t GetPeerScore(const protocol::SocketAddr& socket_address) const
+        {
+            std::map<boost::uint32_t, boost::uint32_t>::const_iterator iter = historical_score_.find(socket_address.IP);
+            if (iter != historical_score_.end())
+            {
+                return iter->second;
+            }
+
+            return static_cast<size_t>(UdpServerScore::DefaultUdpServerScore);
+        }
+    };
+
     // 查询到的节点加入IPPool
     void LiveP2PDownloader::AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver)
     {
         if (is_live_udpserver)
         {
-            udpserver_pool_->AddCandidatePeers(peers, false);
+            if (BootStrapGeneralConfig::Inst()->UdpServerUsageHistoryEnabled())
+            {
+                UdpServerHistoricalScoreCalculator score_calculator(live_download_driver_);
+                udpserver_pool_->AddCandidatePeers(peers, false, score_calculator);
+            }
+            else
+            {
+                udpserver_pool_->AddCandidatePeers(peers, false);
+            }
         }
         else
         {
@@ -765,7 +796,11 @@ namespace p2sp
 
     void LiveP2PDownloader::DelPeer(const boost::asio::ip::udp::endpoint & endpoint)
     {
-        live_connection_manager_.DelPeer(endpoint);
+        LivePeerConnection__p removed_peer = live_connection_manager_.DelPeer(endpoint);
+        if (removed_peer && removed_peer->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
+        {
+            live_download_driver_->UpdateUdpServerServiceScore(endpoint, removed_peer->GetServiceScore());
+        }
     }
 
     void LiveP2PDownloader::OnBlockComplete(const protocol::LiveSubPieceInfo & live_block)
@@ -897,6 +932,12 @@ namespace p2sp
         }
     }
 
+    void LiveP2PDownloader::OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point)
+    {
+        //这个handler只处理udpserver的connect timeout
+        live_download_driver_->UpdateUdpServerServiceScore(end_point, -2);
+    }
+
     void LiveP2PDownloader::DeleteAllUdpServer()
     {
         udpserver_pool_->DisConnectAll();
@@ -908,10 +949,10 @@ namespace p2sp
         for (std::set<boost::asio::ip::udp::endpoint>::iterator iter = udp_server_endpoint_set.begin();
             iter != udp_server_endpoint_set.end(); ++iter)
         {
+            const boost::asio::ip::udp::endpoint& udpserver_endpoint = *iter;
             // 有可能把UdpServer当做普通的peer来连了，所以需要在ippool_中去尝试disconnect
-            ippool_->OnDisConnect(*iter, true);
-
-            live_connection_manager_.DelPeer(*iter);
+            ippool_->OnDisConnect(udpserver_endpoint, true);
+            DelPeer(udpserver_endpoint);
         }
     }
 

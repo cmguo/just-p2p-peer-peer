@@ -8,7 +8,7 @@ public:
 
     void GetConfig(const std::string & name, std::vector<boost::uint32_t> & datas);
     void SetConfigCount(const std::map<std::string, boost::uint32_t> & config_count);
-    void AddConfig(const std::string & name, boost::uint32_t data);
+    void SetConfig(const std::string & name, const std::vector<boost::uint32_t> & data);
     void LoadConfig();
     void SaveConfig();
 
