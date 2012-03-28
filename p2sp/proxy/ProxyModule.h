@@ -87,6 +87,9 @@ namespace p2sp
         void QueryProgressBitmap(string url, char * bitmap, boost::uint32_t * bitmap_size,
             boost::function<void ()> result_handler);
 
+        void QueryDownloadProgress2(string url, boost::uint32_t start_pos, boost::uint32_t * last_pos,
+            boost::function<void ()> result_handler);
+
         void SetRestPlayTime(RID rid, boost::uint32_t rest_play_time);
         void SetRestPlayTimeByUrl(string url, boost::uint32_t rest_play_time_in_millisecond);
         void SetDownloadMode(RID rid, boost::uint32_t download_mode);

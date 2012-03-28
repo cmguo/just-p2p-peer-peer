@@ -584,6 +584,15 @@ typedef
 void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_len,
                                         char * bitmap, boost::uint32_t * bitmap_size);
 
+// 用于客户端预下载查询是否下载完成
+// 输入某个start下载位置，返回从start连续的数据的末尾
+// 原有的QueryDownloadProgress是通过RID串查询的，只有很老的客户端才会用
+void PEER_API QueryDownloadProgress2(const char * url, boost::uint32_t url_len,
+                                boost::uint32_t start_pos, boost::uint32_t * last_pos);
+typedef
+void (PEER_API * LPQUERYDOWNLOADPROGRESS2)(const char * url, boost::uint32_t url_len,
+                                      boost::uint32_t start_pos, boost::uint32_t * last_pos);
+
 /**
 * 函数接口
 */
@@ -662,7 +671,8 @@ typedef struct _NETINTERFACE{
     LPQUERYDOWNLOADPROGRESSBYURLNEW QueryDownloadProgressByUrlNew;
     // version 0, 24
     LPQUERYPROGRESSBITMAP QueryProgressBitmap;
-    boost::uint32_t                Reserved4[37];
+    LPQUERYDOWNLOADPROGRESS QueryDownloadProgress2;
+    boost::uint32_t                Reserved4[36];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)

@@ -660,6 +660,45 @@ namespace p2sp
         result_handler();
     }
 
+    void ProxyModule::QueryDownloadProgress2(string url, boost::uint32_t start_pos, boost::uint32_t * last_pos, 
+        boost::function<void ()> result_handler)
+    {
+        if (!is_running_)
+        {
+            result_handler();
+            return;
+        }
+
+        string filename = ParseOpenServiceFileName(network::Uri(url));
+
+        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+
+        if (!inst)
+        {
+            inst = boost::dynamic_pointer_cast<storage::Instance>(
+                storage::Storage::Inst()->GetInstanceByFileName(filename));
+
+            if (!inst)
+            {
+                result_handler();
+                return;
+            }  
+        }
+
+        protocol::PieceInfoEx piece_info;
+        if (inst->GetNextPieceForDownload(start_pos, piece_info))
+        {
+            boost::uint32_t block_size = inst->GetBlockSize();
+            *last_pos = piece_info.GetPosition(block_size);
+        }
+        else
+        {
+            *last_pos = inst->GetFileLength();
+        }
+
+        result_handler();
+    }
+
     void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void(boost::int32_t)> result_handler)
     {
         if (false == is_running_) {
