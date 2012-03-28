@@ -671,7 +671,7 @@ typedef struct _NETINTERFACE{
     LPQUERYDOWNLOADPROGRESSBYURLNEW QueryDownloadProgressByUrlNew;
     // version 0, 24
     LPQUERYPROGRESSBITMAP QueryProgressBitmap;
-    LPQUERYDOWNLOADPROGRESS QueryDownloadProgress2;
+    LPQUERYDOWNLOADPROGRESS2 QueryDownloadProgress2;
     boost::uint32_t                Reserved4[36];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
