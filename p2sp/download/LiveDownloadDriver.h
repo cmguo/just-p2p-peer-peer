@@ -15,6 +15,7 @@
 #include "statistic/LiveDownloadDriverStatistic.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "UdpServersScoreHistory.h"
+#include "p2sp/download/LiveDataRateManager.h"
 
 namespace storage
 {
@@ -44,71 +45,6 @@ namespace p2sp
     class LiveP2PDownloader;
     typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
 
-    typedef struct _LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
-    {
-        vector<RID>             ResourceIDs;            // 资源ID
-        boost::uint32_t         PeerVersion[4];         // 内核版本：major, minor, micro, extra
-        vector<boost::uint32_t> DataRates;              // 码流率
-        string                  OriginalUrl;            // Url
-        boost::uint32_t         P2PDownloadBytes;       // P2P下载字节数(不包括UdpServer)
-        boost::uint32_t         HttpDownloadBytes;      // Http下载字节数
-        boost::uint32_t         TotalDownloadBytes;     // 总下载字节数
-        boost::uint32_t         AvgP2PDownloadSpeed;    // P2P平均速度
-        boost::uint32_t         MaxP2PDownloadSpeed;    // P2P最大速度
-        boost::uint32_t         MaxHttpDownloadSpeed;   // Http最大速度
-        boost::uint32_t         ConnectedPeerCount;     // 连接上的节点数目
-        boost::uint32_t         QueriedPeerCount;       // 查询到的节点数目
-        boost::uint32_t         StartPosition;          // 开始播放点
-        boost::uint32_t         JumpTimes;              // 跳跃次数
-        boost::uint32_t         NumOfCheckSumFailedPieces;// 校验失败的piece个数
-        boost::uint32_t         SourceType;             //
-        RID                     ChannelID;              // 频道ID
-        boost::uint32_t         UdpDownloadBytes;       // 从UdpServer下载的字节数
-        boost::uint32_t         MaxUdpServerDownloadSpeed;  // 从UdpServer下载的最大速度
-        boost::uint32_t         UploadBytes;            // 上传字节数
-        boost::uint32_t         DownloadTime;           // 下载时间
-        boost::uint32_t         TimesOfUseCdnBecauseLargeUpload;
-        boost::uint32_t         TimeElapsedUseCdnBecauseLargeUpload;
-        boost::uint32_t         DownloadBytesUseCdnBecauseLargeUpload;
-        boost::uint32_t         TimesOfUseUdpServerBecauseUrgent;
-        boost::uint32_t         TimeElapsedUseUdpServerBecauseUrgent;
-        boost::uint32_t         DownloadBytesUseUdpServerBecauseUrgent;
-        boost::uint32_t         TimesOfUseUdpServerBecauseLargeUpload;
-        boost::uint32_t         TimeElapsedUseUdpServerBecauseLargeUpload;
-        boost::uint32_t         DownloadBytesUseUdpServerBecauseLargeUpload;
-        boost::uint32_t         MaxUploadSpeedIncludeSameSubnet;
-        boost::uint32_t         MaxUploadSpeedExcludeSameSubnet;
-        boost::uint32_t         MaxUnlimitedUploadSpeedInRecord;
-        boost::uint8_t          ChangeToP2PConditionWhenStart;
-        boost::uint32_t         ChangedToHttpTimesWhenUrgent;
-        boost::uint32_t         BlockTimesWhenUseHttpUnderUrgentSituation;
-        boost::uint32_t         MaxUploadSpeedDuringThisConnection;
-        boost::uint32_t         AverageUploadConnectionCount;
-        boost::uint32_t         TimeOfReceivingFirstConnectRequest;
-        boost::uint32_t         TimeOfSendingFirstSubPiece;
-        boost::uint32_t         TimeOfNonblankUploadConnections;
-        boost::uint8_t          NatType;
-        boost::uint32_t         HttpDownloadBytesWhenStart;
-        boost::uint32_t         UploadBytesDuringThisConnection;
-        boost::uint32_t         IsNotifyRestart;
-        boost::uint32_t         MaxPushDataInterval;
-        boost::uint32_t         AverageOfRestPlayableTime;
-        boost::uint32_t         VarianceOfRestPlayableTime;
-        boost::uint32_t         AverageConnectPeersCountInMinute;
-        boost::uint32_t         TotalReceivedSubPiecePacketCount;
-        boost::uint32_t         ReverseSubPiecePacketCount;
-        boost::uint32_t         BandWidth;
-        boost::uint32_t         UploadBytesWhenUsingCDNBecauseOfLargeUpload;
-        boost::uint32_t         MinUdpServerCountWhenNeeded;
-        boost::uint32_t         MaxUdpServerCountWhenNeeded;
-        boost::uint32_t         MinConnectUdpServerCountWhenNeeded;
-        boost::uint32_t         MaxConnectUdpServerCountWhenNeeded;
-        boost::uint32_t         MinAnnounceResponseFromUdpServer;
-        boost::uint32_t         MaxAnnounceResponseFromUdpServer;
-        boost::uint32_t         MinRatioOfResponseToRequestFromUdpserver;
-        boost::uint32_t         MaxRatioOfResponseToRequestFromUdpserver;
-    } LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
-
     class ILiveDownloadDriver
     {
     public:
@@ -116,95 +52,6 @@ namespace p2sp
         virtual storage::LivePosition & GetPlayingPosition() = 0;
         virtual bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs, uint8_t progress_percentage) = 0;
         virtual ~ILiveDownloadDriver(){ }
-    };
-
-    class DataRateManager
-    {
-    public:
-        void Start(const vector<RID>& rids, const vector<boost::uint32_t>& data_rate_s)
-        {
-            assert(rids.size() > 0);
-            assert(rids.size() == data_rate_s.size());
-            rid_s_ = rids;
-            current_data_rate_pos_ = 0;
-            data_rate_s_ = data_rate_s;
-            timer_.start();
-        }
-        RID GetCurrentRID()
-        {
-            assert(current_data_rate_pos_ < rid_s_.size());
-            return rid_s_[current_data_rate_pos_];
-        }
-
-        // TODO: 跳转中心拿到的播放点与PMS最前的播放点的差距是否能超过 16 + 4 * current_data_rate_pos_
-        bool SwitchToHigherDataRateIfNeeded(uint32_t rest_time_in_seconds)
-        {
-            boost::uint32_t last_pos = current_data_rate_pos_;
-            if (timer_.elapsed() > 30*1000 && rest_time_in_seconds > 16 + 4 * current_data_rate_pos_)
-            {
-                current_data_rate_pos_++;
-                if (current_data_rate_pos_ > rid_s_.size() - 1)
-                {
-                    current_data_rate_pos_ = rid_s_.size() - 1;
-                }
-            }
-
-            if (last_pos != current_data_rate_pos_)
-            {
-                timer_.reset();
-                return true;
-            }
-
-            return false;
-        }
-
-        bool SwitchToLowerDataRateIfNeeded(uint32_t rest_time_in_seconds)
-        {
-            boost::uint32_t last_pos = current_data_rate_pos_;
-            if (timer_.elapsed() > 20*1000 && rest_time_in_seconds < 8 + 4 * current_data_rate_pos_)
-            {
-                if (current_data_rate_pos_ != 0)
-                {
-                    current_data_rate_pos_--;
-                }
-            }
-
-            if (last_pos != current_data_rate_pos_)
-            {
-                timer_.reset();
-                return true;
-            }
-
-            return false;
-        }
-
-        boost::uint32_t GetCurrentDataRatePos() const
-        {
-            return current_data_rate_pos_;
-        }
-
-        boost::uint32_t GetCurrentDefaultDataRate() const
-        {
-            assert(current_data_rate_pos_ < data_rate_s_.size());
-            return data_rate_s_[current_data_rate_pos_];
-        }
-
-        const vector<boost::uint32_t>& GetDataRates() const
-        {
-            return data_rate_s_;
-        }
-
-        const vector<RID>& GetRids() const
-        {
-            return rid_s_;
-        }
-
-    private:
-        vector<RID> rid_s_;
-        framework::timer::TickCounter timer_;
-        boost::uint32_t current_data_rate_pos_;
-        // 码流率
-        vector<boost::uint32_t> data_rate_s_;
     };
 
     class LiveDownloadDriver
@@ -348,7 +195,7 @@ namespace p2sp
         
         LiveSwitchController live_switch_controller_;
 
-        DataRateManager data_rate_manager_;
+        LiveDataRateManager data_rate_manager_;
 
         framework::timer::PeriodicTimer timer_;
         uint32_t elapsed_seconds_since_started_;

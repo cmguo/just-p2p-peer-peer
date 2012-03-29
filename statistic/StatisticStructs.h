@@ -806,13 +806,13 @@ namespace statistic
         boost::uint8_t  IsPlayingPositionBlockFull; // 正在推给播放器的这一片Block是否满
         boost::uint32_t LivePointBlockId;              // 直播点的Block ID
         boost::uint32_t DataRateLevel;                  // 码流等级
-        boost::int32_t P2PFailedTimes;                  // P2P下载失败的次数
-        boost::uint8_t HttpSpeedStatus;                 // Http速度状态(0, 1, 2分别代表fast, checking, slow)
-        boost::uint8_t HttpStatus;                      // Http状态(unknown, good, bad)
-        boost::uint8_t P2PStatus;                       // P2P状态(unknown, good, bad)
+        boost::int32_t reserved1;
+        boost::uint8_t reserved2;
+        boost::uint8_t reserved3;
+        boost::uint8_t reserved4;
         boost::uint32_t JumpTimes;                      // 跳跃了多少次
         boost::uint32_t NumOfChecksumFailedPieces;      // 校验失败的piece个数
-        boost::uint8_t Is3200P2PSlow;                   // 3200状态下P2P是否慢
+        boost::uint8_t reserved5;
         RID ChannelID;                                  // 频道ID
         boost::uint32_t TotalUdpServerDataBytes;        // 从UdpServer下载的字节数
         boost::uint8_t PmsStatus;                       // 0代表正常，1代表不正常
@@ -868,13 +868,13 @@ namespace statistic
             ar & IsPlayingPositionBlockFull;
             ar & LivePointBlockId;
             ar & DataRateLevel;
-            ar & P2PFailedTimes;
-            ar & HttpSpeedStatus;
-            ar & HttpStatus;
-            ar & P2PStatus;
+            ar & reserved1;
+            ar & reserved2;
+            ar & reserved3;
+            ar & reserved4;
             ar & JumpTimes;
             ar & NumOfChecksumFailedPieces;
-            ar & Is3200P2PSlow;
+            ar & reserved5;
             ar & ChannelID;
             ar & TotalUdpServerDataBytes;
             ar & PmsStatus;

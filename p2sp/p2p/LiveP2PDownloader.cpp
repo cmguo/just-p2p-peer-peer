@@ -778,7 +778,6 @@ namespace p2sp
                 return;
             }
 
-            statistic::DACStatisticModule::Inst()->SubmitLiveP2PDownloadBytes(subpiece_packet.sub_piece_length_);
             total_p2p_data_bytes_ += subpiece_packet.sub_piece_length_;
         }
         else if (live_connection_manager_.IsLiveUdpServer(packet.end_point))
@@ -799,7 +798,6 @@ namespace p2sp
                 return;
             }
 
-            statistic::DACStatisticModule::Inst()->SubmitLiveUdpServerDownloadBytes(subpiece_packet.sub_piece_length_);
             total_udpserver_data_bytes_ += subpiece_packet.sub_piece_length_;
         }
     }

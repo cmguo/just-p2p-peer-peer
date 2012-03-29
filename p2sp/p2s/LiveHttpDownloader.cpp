@@ -265,8 +265,6 @@ namespace p2sp
 
         http_speed_info_.SubmitDownloadedBytes(buffer.Length());
 
-        statistic::DACStatisticModule::Inst()->SubmitLiveHttpDownloadBytes(buffer.Length());
-
         LOG(__DEBUG, "", "Receive subpiece from http, block id = " << block_tasks_.front().GetBlockId()
             << ", subpiece index = " << subpiece_index);
 

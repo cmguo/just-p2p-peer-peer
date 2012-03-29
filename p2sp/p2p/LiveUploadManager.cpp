@@ -239,8 +239,6 @@ namespace p2sp
 
                 ProxyModule::Inst()->SetSendSubPiecePacket(live_inst);
 
-                statistic::DACStatisticModule::Inst()->SubmitLiveP2PUploadBytes(LIVE_SUB_PIECE_SIZE);
-
                 connections_management_.GetPeerUploadInfo(packet.end_point).speed_info.SubmitUploadedBytes(LIVE_SUB_PIECE_SIZE);
             }
             else

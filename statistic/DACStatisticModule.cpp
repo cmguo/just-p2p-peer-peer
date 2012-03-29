@@ -41,7 +41,6 @@ namespace statistic
     void DACStatisticModule::Start()
     {
         is_running_ = true;
-        live_dac_statistic_info_.Clear();
         timer_.start();
     }
 
@@ -89,11 +88,8 @@ namespace statistic
             {
 #ifdef NEED_TO_POST_MESSAGE
                 SendDacUploadMessage();
-                // TODO: 暂时先去掉，提交的日志内容暂时可能不是很有意义，需要重新考虑
-                //SendLiveDacMessage();
 #endif
                 ResetDacUploadData();
-                ResetLiveDacData();
             }
         }
     }
@@ -201,84 +197,4 @@ namespace statistic
         upload_discard_byte_ = 0;
         idle_time_ = 0;
     }
-
-    void DACStatisticModule::SendLiveDacMessage()
-    {
-#ifdef NEED_TO_POST_MESSAGE
-
-        // 内核周期性提交直播数据日志的格式
-        // A：接口类别，固定为*(TODO(emma): 确定下来固定为几)
-        // B: 用户的ID
-        // C：peer版本
-        // D: P2P下载速度
-        // E: Http下载速度
-        // F：P2P下载字节数(B)
-        // G：HTTP下载字节数(B)
-        // H: P2P下载的时间
-        // I: Http下载的时间
-        // J: P2P上传速度
-        // K: P2P上传字节数(B)
-        // L: 上传带宽(B)
-        // M: 码流率等级
-        // N: 播放点
-        // O: 直播点
-        // P: 剩余时间
-        // Q: 连接上的节点数
-        // R: 查询到的节点数
-        // S: 频道ID
-        // T: 从UdpServer下载的字节数(B)
-
-        live_dac_statistic_info_.PeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
-        live_dac_statistic_info_.PeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
-        live_dac_statistic_info_.PeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
-        live_dac_statistic_info_.PeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
-        live_dac_statistic_info_.UploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
-        live_dac_statistic_info_.P2PDownloadSpeed = live_dac_statistic_info_.P2PDownloadTimeInSecond == 0 ?
-            0 : live_dac_statistic_info_.P2PDownloadBytes / live_dac_statistic_info_.P2PDownloadTimeInSecond;
-        live_dac_statistic_info_.HttpDownloadSpeed = live_dac_statistic_info_.HttpDownloadTimeInsecond == 0 ?
-            0 : live_dac_statistic_info_.HTTPDownloadBytes / live_dac_statistic_info_.HttpDownloadTimeInsecond;
-        live_dac_statistic_info_.P2PUploadSpeed = live_dac_statistic_info_.P2PUploadBytes / (m_IntervalTime * 60);
-
-        // 创建提交DAC的日志字符串
-        ostringstream log_stream;
-
-        log_stream << "C=" << live_dac_statistic_info_.PeerVersion[0] << "." << live_dac_statistic_info_.PeerVersion[1] << "."
-            << live_dac_statistic_info_.PeerVersion[2] << "." << live_dac_statistic_info_.PeerVersion[3];
-        log_stream << "&D=" << live_dac_statistic_info_.P2PDownloadSpeed;
-        log_stream << "&E=" << live_dac_statistic_info_.HttpDownloadSpeed;
-        log_stream << "&F=" << live_dac_statistic_info_.P2PDownloadBytes;
-        log_stream << "&G=" << live_dac_statistic_info_.HTTPDownloadBytes;
-        log_stream << "&H=" << live_dac_statistic_info_.P2PDownloadTimeInSecond;
-        log_stream << "&I=" << live_dac_statistic_info_.HttpDownloadTimeInsecond;
-        log_stream << "&J=" << live_dac_statistic_info_.P2PUploadSpeed;
-        log_stream << "&K=" << live_dac_statistic_info_.P2PUploadBytes;
-        log_stream << "&L=" << live_dac_statistic_info_.UploadBandWidthInBytes;
-        log_stream << "&M=" << live_dac_statistic_info_.DataRateLevel;
-        log_stream << "&N=" << live_dac_statistic_info_.PlayingPosition;
-        log_stream << "&O=" << live_dac_statistic_info_.LivePosition;
-        log_stream << "&P=" << live_dac_statistic_info_.RestPlayTime;
-        log_stream << "&Q=" << live_dac_statistic_info_.ConnectedPeers;
-        log_stream << "&R=" << live_dac_statistic_info_.QueryedPeers;
-        log_stream << "&S=" << live_dac_statistic_info_.ChannelID;
-        log_stream << "&T=" << live_dac_statistic_info_.UdpServerDownloadBytes;
-        string log = log_stream.str();
-
-        DebugLog("%s", log.c_str());
-
-        LPPERIOD_DAC_STATISTIC_INFO upload_data =
-            MessageBufferManager::Inst()->NewStruct<PERIOD_DAC_STATISTIC_INFO>();
-        memset(upload_data, 0, sizeof(PERIOD_DAC_STATISTIC_INFO));
-
-        upload_data->uSize = sizeof(PERIOD_DAC_STATISTIC_INFO);
-        strncpy(upload_data->szLog, log.c_str(), sizeof(upload_data->szLog) - 1);
-
-        WindowsMessage::Inst().PostWindowsMessage(UM_PERIOD_DAC_LIVE_STATISTIC, (WPARAM)0, (LPARAM)upload_data);
-#endif
-    }
-
-    void DACStatisticModule::ResetLiveDacData()
-    {
-        live_dac_statistic_info_.Clear();
-    }
-
 }

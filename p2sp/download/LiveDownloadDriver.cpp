@@ -12,6 +12,7 @@
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
 #include "p2sp/config/Config.h"
+#include "LiveDacStopDataStruct.h"
 
 namespace p2sp
 {
@@ -411,33 +412,6 @@ namespace p2sp
             UpdateStatisticInfo();
             statistic_->UpdateShareMemory();
 #endif
-
-            // DAC Log
-            statistic::DACStatisticModule::Inst()->SubmitDataRateLevel(data_rate_manager_.GetCurrentDataRatePos());
-            statistic::DACStatisticModule::Inst()->SubmitPlayingPosition(playing_position_.GetBlockId());
-            statistic::DACStatisticModule::Inst()->SubmitLivePosition(live_instance_->GetCurrentLivePoint().GetBlockId());
-            statistic::DACStatisticModule::Inst()->SubmitRestPlayTime(GetRestPlayableTime());
-            statistic::DACStatisticModule::Inst()->SubmitChannelID(channel_id_);
-            if (live_p2p_downloader_)
-            {
-                statistic::DACStatisticModule::Inst()->SubmitConnectedPeers(live_p2p_downloader_->GetConnectedPeersCount());
-                statistic::DACStatisticModule::Inst()->SubmitQueryedPeers(live_p2p_downloader_->GetPooledPeersCount());
-            }
-            else
-            {
-                statistic::DACStatisticModule::Inst()->SubmitConnectedPeers(0);
-                statistic::DACStatisticModule::Inst()->SubmitQueryedPeers(0);
-            }
-
-            if (live_http_downloader_ && !live_http_downloader_->IsPausing())
-            {
-                statistic::DACStatisticModule::Inst()->SubmitHttpDownloadTime(pointer->interval());
-            }
-            if (live_p2p_downloader_ && !live_p2p_downloader_->IsPausing())
-            {
-                statistic::DACStatisticModule::Inst()->SubmitP2PDownloadTime(pointer->interval());
-            }
-
             if (http_download_max_speed_ < live_http_downloader_->GetSpeedInfo().NowDownloadSpeed)
             {
                 http_download_max_speed_ = live_http_downloader_->GetSpeedInfo().NowDownloadSpeed;
@@ -667,22 +641,6 @@ namespace p2sp
         // data rate level
         live_download_driver_statistic_info_.DataRateLevel = data_rate_manager_.GetCurrentDataRatePos();
 
-        // 目前没有关于状态机的信息，所以都填0
-        // P2P failed times
-        live_download_driver_statistic_info_.P2PFailedTimes = 0;
-
-        // 2300 http speed status
-        live_download_driver_statistic_info_.HttpSpeedStatus = 0;
-
-        // http status
-        live_download_driver_statistic_info_.HttpStatus = 0;
-
-        // p2p status
-        live_download_driver_statistic_info_.P2PStatus = 0;
-
-        // is 3200 p2p slow
-        live_download_driver_statistic_info_.Is3200P2PSlow = 0;
-
         // jump times
         live_download_driver_statistic_info_.JumpTimes = jump_times_;
 
@@ -726,8 +684,6 @@ namespace p2sp
     void LiveDownloadDriver::SendDacStopData()
     {
 #ifdef NEED_TO_POST_MESSAGE
-
-        // 内核在看完一个直播频道后提交的数据
         // A: 接口类别，固定为*(TODO(emma): 确定下来固定为几)
         // B: 用户的ID
         // C: 资源ID(不同码流的rid以@符号隔开)
@@ -792,7 +748,7 @@ namespace p2sp
         // J2: 在每次使用UdpServer期间，收到/请求的最小值
         // K2: 在每次使用UdpServer期间，收到/请求的最大值
 
-        LIVE_DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
+        LIVE_DAC_STOP_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
         info.DataRates = data_rate_manager_.GetDataRates();
 
@@ -946,91 +902,7 @@ namespace p2sp
             info.MaxRatioOfResponseToRequestFromUdpserver = 0;
         }
 
-        std::ostringstream log_stream;
-
-        log_stream << "C=";
-        for (boost::uint32_t i = 0; i < info.ResourceIDs.size(); ++i)
-        {
-            if (i != 0)
-            {
-                log_stream << "@";
-            }
-            log_stream << info.ResourceIDs[i].to_string();
-        }
-
-        log_stream << "&D=" << info.PeerVersion[0] << "." << info.PeerVersion[1] << "."
-            << info.PeerVersion[2] << "." << info.PeerVersion[3];
-
-        log_stream << "&E=";
-        for (boost::uint32_t i = 0; i < info.DataRates.size(); ++i)
-        {
-            if (i != 0)
-            {
-                log_stream << "@";
-            }
-            log_stream << info.DataRates[i];
-        }
-
-        log_stream << "&F=" << info.OriginalUrl;
-        log_stream << "&G=" << info.P2PDownloadBytes;
-        log_stream << "&H=" << info.HttpDownloadBytes;
-        log_stream << "&I=" << info.TotalDownloadBytes;
-        log_stream << "&J=" << info.AvgP2PDownloadSpeed;
-        log_stream << "&K=" << info.MaxP2PDownloadSpeed;
-        log_stream << "&L=" << info.MaxHttpDownloadSpeed;
-        log_stream << "&M=" << info.ConnectedPeerCount;
-        log_stream << "&N=" << info.QueriedPeerCount;
-        log_stream << "&O=" << info.StartPosition;
-        log_stream << "&P=" << info.JumpTimes;
-        log_stream << "&Q=" << info.NumOfCheckSumFailedPieces;
-        log_stream << "&R=" << info.SourceType;
-        log_stream << "&S=" << info.ChannelID;
-        log_stream << "&T=" << info.UdpDownloadBytes;
-        log_stream << "&U=" << info.MaxUdpServerDownloadSpeed;
-        log_stream << "&V=" << info.UploadBytes;
-        log_stream << "&W=" << info.DownloadTime;
-        log_stream << "&X=" << info.TimesOfUseCdnBecauseLargeUpload;
-        log_stream << "&Y=" << info.TimeElapsedUseCdnBecauseLargeUpload;
-        log_stream << "&Z=" << info.DownloadBytesUseCdnBecauseLargeUpload;
-        log_stream << "&A1=" << info.TimesOfUseUdpServerBecauseUrgent;
-        log_stream << "&B1=" << info.TimeElapsedUseUdpServerBecauseUrgent;
-        log_stream << "&C1=" << info.DownloadBytesUseUdpServerBecauseUrgent;
-        log_stream << "&D1=" << info.TimesOfUseUdpServerBecauseLargeUpload;
-        log_stream << "&E1=" << info.TimeElapsedUseUdpServerBecauseLargeUpload;
-        log_stream << "&F1=" << info.DownloadBytesUseUdpServerBecauseLargeUpload;
-        log_stream << "&G1=" << info.MaxUploadSpeedIncludeSameSubnet;
-        log_stream << "&H1=" << info.MaxUploadSpeedExcludeSameSubnet;
-        log_stream << "&I1=" << info.MaxUnlimitedUploadSpeedInRecord;
-        log_stream << "&J1=" << (uint32_t)info.ChangeToP2PConditionWhenStart;
-        log_stream << "&K1=" << info.ChangedToHttpTimesWhenUrgent;
-        log_stream << "&L1=" << info.BlockTimesWhenUseHttpUnderUrgentSituation;
-        log_stream << "&M1=" << info.MaxUploadSpeedDuringThisConnection;
-        log_stream << "&N1=" << info.AverageUploadConnectionCount;
-        log_stream << "&O1=" << info.TimeOfReceivingFirstConnectRequest;
-        log_stream << "&P1=" << info.TimeOfSendingFirstSubPiece;
-        log_stream << "&Q1=" << info.TimeOfNonblankUploadConnections;
-        log_stream << "&R1=" << (uint32_t)info.NatType;
-        log_stream << "&S1=" << info.HttpDownloadBytesWhenStart;
-        log_stream << "&T1=" << info.UploadBytesDuringThisConnection;
-        log_stream << "&U1=" << info.IsNotifyRestart;
-        log_stream << "&V1=" << info.MaxPushDataInterval;
-        log_stream << "&W1=" << info.AverageOfRestPlayableTime;
-        log_stream << "&X1=" << info.VarianceOfRestPlayableTime;
-        log_stream << "&Y1=" << info.AverageConnectPeersCountInMinute;
-        log_stream << "&Z1=" << info.TotalReceivedSubPiecePacketCount;
-        log_stream << "&A2=" << info.ReverseSubPiecePacketCount;
-        log_stream << "&B2=" << info.BandWidth;
-        log_stream << "&C2=" << info.UploadBytesWhenUsingCDNBecauseOfLargeUpload;
-        log_stream << "&D2=" << info.MinUdpServerCountWhenNeeded;
-        log_stream << "&E2=" << info.MaxUdpServerCountWhenNeeded;
-        log_stream << "&F2=" << info.MinConnectUdpServerCountWhenNeeded;
-        log_stream << "&G2=" << info.MaxConnectUdpServerCountWhenNeeded;
-        log_stream << "&H2=" << info.MinAnnounceResponseFromUdpServer;
-        log_stream << "&I2=" << info.MaxAnnounceResponseFromUdpServer;
-        log_stream << "&J2=" << info.MinRatioOfResponseToRequestFromUdpserver;
-        log_stream << "&K2=" << info.MaxRatioOfResponseToRequestFromUdpserver;
-
-        string log = log_stream.str();
+        string log = info.ToString();
 
         DebugLog("%s", log.c_str());
 
