@@ -578,7 +578,9 @@ namespace p2sp
             spec_rid.from_string(str_rid);
 
             // 取出待发送的Peer
-            protocol::CandidatePeerInfo candidate_peer_info = peer_to_connect_[hops_ % peer_to_connect_.size()];
+            boost::uint32_t index = hops_ % peer_to_connect_.size();
+            protocol::CandidatePeerInfo candidate_peer_info = peer_to_connect_[index];
+            peer_to_connect_.erase(peer_to_connect_.begin() + index);
             hops_ *= 3;
 
             LOGX(__DEBUG, "notify", "取出待发送的Peer IP = " <<  candidate_peer_info.IP);

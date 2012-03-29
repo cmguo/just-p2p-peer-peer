@@ -116,7 +116,7 @@ namespace p2sp
         std::map<boost::uint32_t, TASK_RECORD> task_map_;
 
         // 待加入节点列表
-        std::deque<protocol::CandidatePeerInfo> peer_to_connect_;
+        std::vector<protocol::CandidatePeerInfo> peer_to_connect_;
 
         // 服务器
         boost::asio::ip::udp::endpoint server_endpoint_;
