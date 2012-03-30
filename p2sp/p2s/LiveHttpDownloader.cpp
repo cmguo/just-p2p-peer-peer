@@ -13,12 +13,10 @@ namespace p2sp
     FRAMEWORK_LOGGER_DECLARE_MODULE("live_p2s");
 
     LiveHttpDownloader::LiveHttpDownloader(
-        boost::asio::io_service & io_svc, 
-        const protocol::UrlInfo &url_info, 
+        const string & url, 
         const RID & rid,
         LiveDownloadDriver__p live_download_driver)
-        : io_svc_(io_svc)
-        , rid_(rid.to_string())
+        : rid_(rid.to_string())
         , live_download_driver_(live_download_driver)
         , status_(closed)
         , sleep_timer_(global_second_timer(), 1000, boost::bind(&LiveHttpDownloader::OnTimerElapsed, this, &sleep_timer_))
@@ -27,7 +25,7 @@ namespace p2sp
         , is_pms_status_good_(true)
         , is_http_pausing_(true)
     {
-        network::Uri uri(url_info.url_);
+        network::Uri uri(url);
         pms_url_domain_ = uri.getdomain();
         pms_url_path_ = uri.getpath();
         boost::system::error_code ec = framework::string::parse2(uri.getport(), pms_url_port_);
@@ -148,7 +146,7 @@ namespace p2sp
                 http_client_->Close();
             }
 
-            http_client_ = HttpClient<protocol::LiveSubPieceContent>::create(io_svc_, pms_url_domain_,
+            http_client_ = HttpClient<protocol::LiveSubPieceContent>::create(global_io_svc(), pms_url_domain_,
                 pms_url_port_, MakeRequstPath(block_tasks_.front().GetBlockId()), "", 0, 0, false);
             http_client_->SetHandler(shared_from_this());
 

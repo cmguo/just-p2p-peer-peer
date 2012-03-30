@@ -21,18 +21,16 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveHttpDownloader> p;
-        static p Create(boost::asio::io_service & io_svc, 
-            const protocol::UrlInfo &url_info, 
+        static p Create(const string & url, 
             const RID & rid,
             LiveDownloadDriver__p live_download_driver)
         {
-            return p(new LiveHttpDownloader(io_svc, url_info, rid, live_download_driver));
+            return p(new LiveHttpDownloader(url, rid, live_download_driver));
         }
 
     private:
         LiveHttpDownloader(
-                boost::asio::io_service & io_svc, 
-                const protocol::UrlInfo &url_info, 
+                const string & url, 
                 const RID & rid,
                 LiveDownloadDriver__p live_download_driver);
 
@@ -94,7 +92,6 @@ namespace p2sp
         void OnError(); 
 
     private:
-        boost::asio::io_service & io_svc_;
         LiveDownloadDriver__p live_download_driver_;
         network::HttpClient<protocol::LiveSubPieceContent>::p http_client_;
 

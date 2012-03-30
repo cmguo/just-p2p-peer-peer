@@ -73,7 +73,7 @@ namespace p2sp
         LiveDownloadDriver(boost::asio::io_service & io_svc, ProxyConnection__p proxy_connetction);
 
     public:
-        void Start(const protocol::UrlInfo& url_info, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval, bool replay,
+        void Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval, bool replay,
             const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype, uint32_t unique_id);
         void Stop();
 
@@ -217,7 +217,7 @@ namespace p2sp
         static boost::uint32_t s_id_;
         boost::uint32_t id_;
 
-        protocol::UrlInfo url_info_;
+        string url_;
 
         boost::uint32_t jump_times_;
 

@@ -93,7 +93,7 @@ namespace p2sp
         }
     }
 
-    void LiveDownloadDriver::Start(const protocol::UrlInfo& url_info, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
+    void LiveDownloadDriver::Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
         const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, uint32_t unique_id)
     {
         data_rate_manager_.Start(rids, data_rate_s);
@@ -103,7 +103,7 @@ namespace p2sp
 
         replay_ = replay;
 
-        url_info_ = url_info;
+        url_ = url;
 
         source_type_ = source_type;
 
@@ -129,7 +129,7 @@ namespace p2sp
         live_instance_->SetCurrentLivePoint(storage::LivePosition(start_position));
 
         // 创建HttpDownloader
-        live_http_downloader_ = LiveHttpDownloader::Create(io_svc_, url_info, 
+        live_http_downloader_ = LiveHttpDownloader::Create(url_, 
             data_rate_manager_.GetCurrentRID(), shared_from_this());
 
         live_http_downloader_->Start();
@@ -153,7 +153,7 @@ namespace p2sp
         live_download_driver_statistic_info_.ResourceID = live_instance_->GetRID();
         live_download_driver_statistic_info_.ChannelID = channel_id;
         live_download_driver_statistic_info_.UniqueID = unique_id;
-        framework::string::Url::truncate_to(url_info.url_, live_download_driver_statistic_info_.OriginalUrl);
+        framework::string::Url::truncate_to(url_, live_download_driver_statistic_info_.OriginalUrl);
         statistic_ = statistic::StatisticModule::Inst()->AttachLiveDownloadDriverStatistic(id_);
         assert(statistic_);
         statistic_->Start(shared_from_this());
@@ -757,11 +757,10 @@ namespace p2sp
         info.PeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
         info.PeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
 
-        string originalUrl(url_info_.url_);
-        u_int pos = originalUrl.find_first_of('/');
-        pos = originalUrl.find_first_of('/', pos + 1);
-        pos = originalUrl.find_first_of('/', pos + 1);
-        info.OriginalUrl = string(originalUrl, 0, pos);
+        u_int pos = url_.find_first_of('/');
+        pos = url_.find_first_of('/', pos + 1);
+        pos = url_.find_first_of('/', pos + 1);
+        info.OriginalUrl = string(url_, 0, pos);
 
         info.P2PDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalP2PDataBytes() : 0;
         info.HttpDownloadBytes = live_http_downloader_ ? live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;

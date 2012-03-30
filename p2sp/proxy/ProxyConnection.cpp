@@ -1935,7 +1935,7 @@ namespace p2sp
         proxy_sender_->Start();
 
         live_download_driver_ = LiveDownloadDriver::create(io_svc_, shared_from_this());
-        live_download_driver_->Start(play_info->GetUrlInfo(), play_info->GetLiveRIDs(),
+        live_download_driver_->Start(play_info->GetUrlInfo().url_, play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
             play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID());
 
