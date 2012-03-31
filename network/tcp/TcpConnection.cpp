@@ -1,6 +1,7 @@
 #include "Common.h"
 #include "p2sp/AppModule.h"
 #include "network/HttpRequest.h"
+#include "network/tcp/CrossDomainConfig.h"
 #include <boost/algorithm/string.hpp>
 
 namespace network
@@ -31,25 +32,7 @@ namespace network
             
             if (boost::algorithm::istarts_with(request_string, "<policy-file-request/>") == true)
             {
-                string cross_domain_xml =
-                    "<?xml version=\"1.0\"?>"
-                    "<!DOCTYPE cross-domain-policy"
-                    "SYSTEM \"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd\">"
-                    "<cross-domain-policy>"
-                    "<allow-access-from domain=\"*.pplive.com\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pplive.net\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pplive.cn\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pplive.com.cn\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pplive.net.cn\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pp.tv\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.pptv.com\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.sina.com.cn\" to-ports=\"*\"/>"
-                    "<allow-access-from domain=\"*.123yun.net\" to-ports=\"*\"/>"
-                    // 下面两条是为了和酷狗兼容，因为酷狗也监听了843端口，并且允许下面两个域的访问
-                    "<allow-access-from domain=\"*.kugou.com\" to-ports=\"*\"/>"    
-                    "<allow-access-from domain=\"localhost\" to-ports=\"*\"/>"
-                    "</cross-domain-policy>"
-                    ;
+                string cross_domain_xml = CrossDomainConfig::GetInstance()->GetCrossDomainString();
 
                 boost::shared_ptr<boost::asio::streambuf> response 
                     = boost::shared_ptr<boost::asio::streambuf> (new boost::asio::streambuf());

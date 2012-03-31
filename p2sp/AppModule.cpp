@@ -25,6 +25,7 @@
 #include "statistic/BufferringMonitor.h"
 #include "statistic/StatisticsReporter.h"
 #include "downloadcenter/DownloadCenterModule.h"
+#include "network/tcp/CrossDomainConfig.h"
 #ifdef AUTO_SVN_VERSION
 #include "autopeerversion.hpp"
 #else
@@ -266,6 +267,9 @@ namespace p2sp
                 appmodule_start_interface->config_path_));
 
         statistics_collection_controller_->Start();
+
+        //读取crossdomain配置文件
+        network::CrossDomainConfig::GetInstance()->LoadConfig();
 
         LOG(__DEBUG, "app", "Start Finish!");
 
