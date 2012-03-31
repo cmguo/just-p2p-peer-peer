@@ -152,6 +152,11 @@ namespace statistic
 
         void SetEmptySubpieceDistance(uint32_t empty_subpiece_distance);
 
+        boost::uint32_t GetConnectionStatisticSize() const
+        {
+            return peer_connection_statistic_map_.size();
+        }
+
     private:
 
         //////////////////////////////////////////////////////////////////////////
