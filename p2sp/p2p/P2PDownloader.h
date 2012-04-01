@@ -200,6 +200,11 @@ namespace p2sp
         boost::uint32_t GetP2PMaxConnectionCount() const {return p2p_max_connect_count_; }
         boost::uint32_t GetP2PMinConnectionCount() const {return p2p_min_connect_count_; }
 
+        boost::uint32_t GetSNSize() const
+        {
+            return sn_.size();
+        }
+
     private:
         void DoList();
 

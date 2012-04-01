@@ -219,7 +219,7 @@ namespace p2sp
                 P2PDownloader__p p2p_downloader = boost::dynamic_pointer_cast<P2PDownloader>(p2p_downloader_);
 
                 assert(p2p_downloader->GetStatistic()->GetConnectionStatisticSize() == 
-                    p2p_downloader->GetConnectedPeersCount());
+                    p2p_downloader->GetConnectedPeersCount() + p2p_downloader->GetSNSize());
 
                 if (p2p_downloader->GetStatistic()->GetConnectionStatisticSize() >=
                     p2p_downloader->GetStatistic()->GetMaxP2PConnectionCount())
