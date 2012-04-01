@@ -101,7 +101,7 @@ namespace p2sp
         }
 
         // 当前播放点进行Announce
-        boost::uint32_t request_block_id = p2p_downloader_->GetDownloadDriver()->GetPlayingPosition().GetBlockId();
+        boost::uint32_t request_block_id = p2p_downloader_->GetPlayingPosition().GetBlockId();
 
         protocol::LiveRequestAnnouncePacket live_request_annouce_packet(protocol::Packet::NewTransactionID(), 
             p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
@@ -399,7 +399,7 @@ namespace p2sp
             return -1;
         }
 
-        boost::uint32_t data_rate = p2p_downloader_->GetDownloadDriver()->GetDataRate();
+        boost::uint32_t data_rate = p2p_downloader_->GetDataRate();
         int score = 0;
         if (data_rate > 10*1000)
         {

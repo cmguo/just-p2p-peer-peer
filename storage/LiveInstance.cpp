@@ -7,7 +7,7 @@
 #include "IStorage.h"
 #include "LiveInstance.h"
 #include "LivePosition.h"
-#include <p2sp/download/LiveDownloadDriver.h>
+#include <p2sp/download/LiveStream.h>
 #include "LiveAnnounceMapBuilder.h"
 
 using namespace base;
@@ -68,10 +68,10 @@ namespace storage
     {
         // PushDataToDownloaderDriver可能导致码流切换
         // 会把当前的DownloadDriver从download_drivers_删除
-        for (std::set<ILiveDownloadDriverPointer>::iterator iter = download_drivers_.begin(); 
-             iter != download_drivers_.end(); )
+        for (std::set<ILiveStreamPointer>::iterator iter = live_streams_.begin(); 
+             iter != live_streams_.end(); )
         {
-            std::set<ILiveDownloadDriverPointer>::iterator dd_iter = iter++;
+            std::set<ILiveStreamPointer>::iterator dd_iter = iter++;
             PushDataToDownloaderDriver(*dd_iter);
         }
     }
@@ -82,7 +82,7 @@ namespace storage
         builder.Build(request_block_id);
     }
 
-    void LiveInstance::PushDataToDownloaderDriver(ILiveDownloadDriverPointer download_driver)
+    void LiveInstance::PushDataToDownloaderDriver(ILiveStreamPointer download_driver)
     {
         LivePosition& current_play_position = download_driver->GetPlayingPosition();
 
@@ -137,9 +137,9 @@ namespace storage
         }
     }
 
-    bool LiveInstance::SendSubPieces(ILiveDownloadDriverPointer download_driver, boost::uint16_t last_subpiece_index)
+    bool LiveInstance::SendSubPieces(ILiveStreamPointer live_stream, boost::uint16_t last_subpiece_index)
     {
-        const LivePosition current_play_position = download_driver->GetPlayingPosition();
+        const LivePosition current_play_position = live_stream->GetPlayingPosition();
         
         if (current_play_position.GetSubPieceIndex() == 0 && last_subpiece_index == 0)
         {
@@ -148,7 +148,7 @@ namespace storage
 
         assert(current_play_position.GetSubPieceIndex() <= last_subpiece_index);
 
-        bool is_first_block = current_play_position.GetBlockId() == download_driver->GetStartPosition().GetBlockId();
+        bool is_first_block = current_play_position.GetBlockId() == live_stream->GetStartPosition().GetBlockId();
 
         uint16_t start_subpiece_index = current_play_position.GetSubPieceIndex();
         //block的第一个subpiece不推送
@@ -175,7 +175,7 @@ namespace storage
             RemoveFlashHeader(subpiece_buffers);
         }
 
-        return download_driver->OnRecvLivePiece(current_play_position.GetBlockId(), subpiece_buffers, block_progress_percentage);
+        return live_stream->OnRecvLivePiece(current_play_position.GetBlockId(), subpiece_buffers, block_progress_percentage);
     }
 
     void LiveInstance::RemoveFlashHeader(std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers)
@@ -197,29 +197,29 @@ namespace storage
         }
     }
 
-    void LiveInstance::AttachDownloadDriver(ILiveDownloadDriverPointer download_driver)
+    void LiveInstance::AttachStream(p2sp::ILiveStreamPointer live_stream)
     {
-        STORAGE_DEBUG_LOG("AttachDownloadDriver " << download_driver);
+        STORAGE_DEBUG_LOG("AttachDownloadDriver " << live_stream);
 
-        download_drivers_.insert(download_driver);
+        live_streams_.insert(live_stream);
 
         stop_timer_.stop();
     }
 
-    void LiveInstance::DetachDownloadDriver(ILiveDownloadDriverPointer download_driver)
+    void LiveInstance::DetachStream(p2sp::ILiveStreamPointer live_stream)
     {
-        STORAGE_DEBUG_LOG("DeAttachDownloadDirver " << download_driver);
+        STORAGE_DEBUG_LOG("DeAttachDownloadDirver " << live_stream);
 
-        std::set<ILiveDownloadDriverPointer>::iterator iter = download_drivers_.find(download_driver);
-        if (iter == download_drivers_.end())
+        std::set<p2sp::ILiveStreamPointer>::iterator iter = live_streams_.find(live_stream);
+        if (iter == live_streams_.end())
         {
             assert(false);
             return;
         }
 
-        download_drivers_.erase(iter);
+        live_streams_.erase(iter);
 
-        if (download_drivers_.size() == 0)
+        if (live_streams_.size() == 0)
         {
             stop_timer_.start();
         }
@@ -243,8 +243,8 @@ namespace storage
     void LiveInstance::GetAllPlayPoints(std::vector<LivePosition>& play_points) const
     {
         play_points.clear();
-        for(std::set<p2sp::ILiveDownloadDriverPointer>::const_iterator iter = download_drivers_.begin();
-            iter != download_drivers_.end();
+        for(std::set<p2sp::ILiveStreamPointer>::const_iterator iter = live_streams_.begin();
+            iter != live_streams_.end();
             ++iter)
         {
             play_points.push_back((*iter)->GetPlayingPosition());

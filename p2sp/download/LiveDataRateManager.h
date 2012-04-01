@@ -12,9 +12,8 @@ namespace p2sp
         bool SwitchToHigherDataRateIfNeeded(uint32_t rest_time_in_seconds);
         bool SwitchToLowerDataRateIfNeeded(uint32_t rest_time_in_seconds);
 
+        boost::uint32_t GetLastDataRatePos() const;
         boost::uint32_t GetCurrentDataRatePos() const;
-
-        boost::uint32_t GetCurrentDefaultDataRate() const;
 
         const vector<boost::uint32_t>& GetDataRates() const;
 
@@ -24,6 +23,7 @@ namespace p2sp
         vector<RID> rid_s_;
         framework::timer::TickCounter timer_;
         boost::uint32_t current_data_rate_pos_;
+        boost::uint32_t last_data_rate_pos_;
         vector<boost::uint32_t> data_rate_s_;
     };
 }

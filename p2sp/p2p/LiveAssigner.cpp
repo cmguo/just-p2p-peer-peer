@@ -96,7 +96,7 @@ namespace p2sp
                 }
             }
 
-            if (!p2p_downloader_->GetDownloadDriver()->RequestNextBlock(p2p_downloader_))
+            if (!p2p_downloader_->RequestNextBlock())
             {
                 break;
             }

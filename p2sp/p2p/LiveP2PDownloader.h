@@ -13,6 +13,7 @@
 
 #include "p2sp/p2p/LiveSubPieceCountManager.h"
 #include "p2sp/p2p/LiveConnectionManager.h"
+//#include "p2sp/download/LiveStream.h"
 
 namespace storage
 {
@@ -34,7 +35,8 @@ namespace p2sp
     class LiveP2PDownloader;
     typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
 
-    class LiveDownloadDriver;
+    class LiveStream;
+    typedef boost::shared_ptr<LiveStream> LiveStream__p;
 
     enum LIVE_CONNECT_LEVEL
     {
@@ -92,13 +94,13 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveP2PDownloader> p;
-        static p Create(const RID& rid, LiveDownloadDriver__p live_download_driver, storage::LiveInstance__p live_instance)
+        static p Create(const RID& rid, LiveStream__p live_stream)
         {
-            return p(new LiveP2PDownloader(rid, live_download_driver, live_instance));
+            return p(new LiveP2PDownloader(rid, live_stream));
         }
 
     private:
-        LiveP2PDownloader(const RID & rid, LiveDownloadDriver__p live_download_driver, storage::LiveInstance__p live_instance);
+        LiveP2PDownloader(const RID & rid, LiveStream__p live_stream);
 
     public:
         // 重载基类的函数
@@ -168,11 +170,6 @@ namespace p2sp
         void InitPeerConnection(LIVE_CONNECT_LEVEL connect_level);
         void KickPeerConnection(LIVE_CONNECT_LEVEL connect_level);
 
-        LiveDownloadDriver__p GetDownloadDriver()
-        {
-            return live_download_driver_;
-        }
-
         boost::uint32_t GetRestTimeInSeconds() const;
 
         void OnUdpRecv(protocol::Packet const & packet);
@@ -196,10 +193,7 @@ namespace p2sp
 
         void SetBlockCountMap(boost::uint32_t block_id, std::vector<boost::uint16_t> subpiece_count);
 
-        storage::LiveInstance__p GetInstance()
-        {
-            return live_instance_;
-        }
+        storage::LiveInstance__p GetInstance() const;
 
         bool HasSubPieceCount(boost::uint32_t piece_id);
         boost::uint16_t GetSubPieceCount(boost::uint32_t block_id);
@@ -252,6 +246,10 @@ namespace p2sp
 
         void CalcDacDataBeforeStop();
 
+        bool RequestNextBlock();
+        boost::uint32_t GetDataRate() const;
+        storage::LivePosition & GetPlayingPosition() const;
+
     private:
         void DoList();
         LIVE_CONNECT_LEVEL GetConnectLevel();
@@ -288,9 +286,7 @@ namespace p2sp
         bool is_p2p_pausing_;
         boost::int32_t p2p_max_connect_count_;
 
-        LiveDownloadDriver__p live_download_driver_;
-
-        storage::LiveInstance__p live_instance_;
+        LiveStream__p live_stream_;
 
         LiveSubPieceRequestManager live_subpiece_request_manager_;
 

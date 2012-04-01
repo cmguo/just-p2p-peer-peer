@@ -30,33 +30,17 @@ namespace statistic
 
 namespace p2sp
 {
-    class Downloader;
-    typedef boost::shared_ptr<Downloader> Downloader__p;
-
     class LiveDownloader;
     typedef boost::shared_ptr<LiveDownloader> LiveDownloader__p;
 
     class ProxyConnection;
     typedef boost::shared_ptr<ProxyConnection> ProxyConnection__p;
 
-    class LiveHttpDownloader;
-    typedef boost::shared_ptr<LiveHttpDownloader> LiveHttpDownloader__p;
-
-    class LiveP2PDownloader;
-    typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
-
-    class ILiveDownloadDriver
-    {
-    public:
-        virtual const storage::LivePosition & GetStartPosition() = 0;
-        virtual storage::LivePosition & GetPlayingPosition() = 0;
-        virtual bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs, uint8_t progress_percentage) = 0;
-        virtual ~ILiveDownloadDriver(){ }
-    };
+    class LiveStream;
+    typedef boost::shared_ptr<LiveStream> LiveStream__p;
 
     class LiveDownloadDriver
-        : public ILiveDownloadDriver
-        , public boost::enable_shared_from_this<LiveDownloadDriver>
+        : public boost::enable_shared_from_this<LiveDownloadDriver>
         , public ConfigUpdateListener
 #ifdef DUMP_OBJECT
         , public count_object_allocate<LiveDownloadDriver>
@@ -77,15 +61,10 @@ namespace p2sp
             const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype, uint32_t unique_id);
         void Stop();
 
-        bool RequestNextBlock(LiveDownloader__p downloader);
-
         bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
             uint8_t progress_percentage);
 
-        void OnBlockComplete(const protocol::LiveSubPieceInfo & live_block);
-        void OnBlockTimeout(const protocol::LiveSubPieceInfo & live_block);
-
-        storage::LiveInstance__p GetInstance();
+        storage::LiveInstance__p GetInstance() const;
 
         // 获得起始播放点
         const storage::LivePosition & GetStartPosition();
@@ -104,11 +83,6 @@ namespace p2sp
             return unique_id_;
         }
 
-        boost::uint32_t GetLiveInterval() const
-        {
-            return live_instance_->GetLiveInterval();
-        }
-
         virtual void OnConfigUpdated();
 
         boost::uint8_t GetLostRate() const;
@@ -124,15 +98,13 @@ namespace p2sp
         void SetRestTimeInSecond(boost::uint32_t rest_time_in_second);
 
     public:
-        LiveHttpDownloader__p GetHTTPControlTarget();
-        LiveP2PDownloader__p GetP2PControlTarget();
+        LiveHttpDownloader__p GetHTTPControlTarget() const;
+        LiveP2PDownloader__p GetP2PControlTarget() const;
         void SetSwitchState(boost::int32_t h, boost::int32_t p);
         boost::uint32_t GetRestPlayableTime();
         JumpBWType GetBWType() {return bwtype_;}
-        boost::uint32_t GetDataRate();
+        boost::uint32_t GetDataRate() const;
 
-        bool ShouldUseCDNWhenLargeUpload() const;
-        boost::uint32_t GetRestPlayTimeDelim() const;
         bool IsUploadSpeedLargeEnough();
         bool IsUploadSpeedSmallEnough();
         bool GetUsingCdnTimeAtLeastWhenLargeUpload() const;
@@ -187,11 +159,7 @@ namespace p2sp
         boost::asio::io_service & io_svc_;
         ProxyConnection__p proxy_connection_;
 
-        storage::LiveInstance__p live_instance_;
-
-        LiveHttpDownloader__p live_http_downloader_;
-        LiveP2PDownloader__p live_p2p_downloader_;
-        LiveBlockRequestManager live_block_request_manager_;
+        vector<LiveStream__p> live_streams_;
         
         LiveSwitchController live_switch_controller_;
 
@@ -240,8 +208,6 @@ namespace p2sp
         FILE *fp_;
 #endif
 
-        bool use_cdn_when_large_upload_;
-        boost::uint32_t rest_play_time_delim_;
         boost::uint32_t ratio_delim_of_upload_speed_to_datarate_;
         boost::uint32_t small_ratio_delim_of_upload_speed_to_datarate_;
         boost::uint32_t using_cdn_time_at_least_when_large_upload_;
@@ -328,19 +294,9 @@ namespace p2sp
 #endif
     };
 
-    inline boost::uint32_t LiveDownloadDriver::GetDataRate()
-    {
-        if (live_instance_->GetDataRate() == 0)
-        {
-            return data_rate_manager_.GetCurrentDefaultDataRate();
-        }
-
-        return live_instance_->GetDataRate();
-    }
-
     inline boost::uint8_t LiveDownloadDriver::IsPlayingPositionBlockFull() const
     {
-        return live_instance_->HasCompleteBlock(playing_position_.GetBlockId());
+        return GetInstance()->HasCompleteBlock(playing_position_.GetBlockId());
     }
 
 #ifndef STATISTIC_OFF

@@ -8,8 +8,8 @@
 
 namespace p2sp
 {
-    class LiveDownloadDriver;
-    typedef boost::shared_ptr<LiveDownloadDriver> LiveDownloadDriver__p;
+    class LiveStream;
+    typedef boost::shared_ptr<LiveStream> LiveStream__p;
 
     class LiveHttpDownloader
         : public LiveDownloader
@@ -23,16 +23,16 @@ namespace p2sp
         typedef boost::shared_ptr<LiveHttpDownloader> p;
         static p Create(const string & url, 
             const RID & rid,
-            LiveDownloadDriver__p live_download_driver)
+            LiveStream__p live_stream)
         {
-            return p(new LiveHttpDownloader(url, rid, live_download_driver));
+            return p(new LiveHttpDownloader(url, rid, live_stream));
         }
 
     private:
         LiveHttpDownloader(
                 const string & url, 
                 const RID & rid,
-                LiveDownloadDriver__p live_download_driver);
+                LiveStream__p live_stream);
 
         enum StatusEnum
         {
@@ -92,7 +92,7 @@ namespace p2sp
         void OnError(); 
 
     private:
-        LiveDownloadDriver__p live_download_driver_;
+        LiveStream__p live_stream_;
         network::HttpClient<protocol::LiveSubPieceContent>::p http_client_;
 
         string rid_;

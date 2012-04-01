@@ -1,7 +1,7 @@
 #include "Common.h"
 #include "network/Uri.h"
 #include "LiveHttpDownloader.h"
-#include "p2sp/download/LiveDownloadDriver.h"
+#include "p2sp/download/LiveStream.h"
 #include "statistic/DACStatisticModule.h"
 
 using network::HttpClient;
@@ -15,9 +15,9 @@ namespace p2sp
     LiveHttpDownloader::LiveHttpDownloader(
         const string & url, 
         const RID & rid,
-        LiveDownloadDriver__p live_download_driver)
+        LiveStream__p live_stream)
         : rid_(rid.to_string())
-        , live_download_driver_(live_download_driver)
+        , live_stream_(live_stream)
         , status_(closed)
         , sleep_timer_(global_second_timer(), 1000, boost::bind(&LiveHttpDownloader::OnTimerElapsed, this, &sleep_timer_))
         , http_status_(0)
@@ -47,7 +47,7 @@ namespace p2sp
     void LiveHttpDownloader::Stop()
     {
         is_running_ = false;
-        live_download_driver_.reset();
+        live_stream_.reset();
         http_speed_info_.Stop();
     }
 
@@ -64,7 +64,7 @@ namespace p2sp
 
             while (!block_tasks_.empty())
             {
-                live_download_driver_->OnBlockTimeout(block_tasks_.front());
+                live_stream_->RemoveBlockTask(block_tasks_.front());
             }
 
             if (http_client_)
@@ -259,7 +259,7 @@ namespace p2sp
 
         uint16_t subpiece_index = file_offset / LIVE_SUB_PIECE_SIZE;
 
-        live_download_driver_->GetInstance()->AddSubPiece(protocol::LiveSubPieceInfo(block_tasks_.front().GetBlockId(), subpiece_index), buffer);
+        live_stream_->GetInstance()->AddSubPiece(protocol::LiveSubPieceInfo(block_tasks_.front().GetBlockId(), subpiece_index), buffer);
 
         http_speed_info_.SubmitDownloadedBytes(buffer.Length());
 
@@ -299,7 +299,7 @@ namespace p2sp
         // 删除当前任务
         status_ = closed;
 
-        live_download_driver_->OnBlockComplete(block_tasks_.front());
+        live_stream_->RemoveBlockTask(block_tasks_.front());
 
         if (!block_tasks_.empty())
         {
@@ -321,7 +321,7 @@ namespace p2sp
         
         while (!block_tasks_.empty())
         {
-            live_download_driver_->OnBlockTimeout(block_tasks_.front());
+            live_stream_->RemoveBlockTask(block_tasks_.front());
         }
     }
 
@@ -330,9 +330,9 @@ namespace p2sp
         http_client_->Close();
         status_ = sleeping;
 
-        if (live_download_driver_->GetRestPlayableTime() > 2 * live_download_driver_->GetLiveInterval())
+        if (live_stream_->GetRestPlayableTimeInSecond() > 2 * live_stream_->GetInstance()->GetLiveInterval())
         {
-            sleep_timer_.interval(live_download_driver_->GetLiveInterval()*1000);
+            sleep_timer_.interval(live_stream_->GetInstance()->GetLiveInterval()*1000);
         }
         else
         {
@@ -344,7 +344,7 @@ namespace p2sp
 
     void LiveHttpDownloader::RequestNextBlock()
     {
-        live_download_driver_->RequestNextBlock(shared_from_this());
+        live_stream_->RequestNextBlock(shared_from_this());
     }
 
     void LiveHttpDownloader::RequestSubPiece()
@@ -352,7 +352,7 @@ namespace p2sp
         assert(!block_tasks_.empty());
 
         // 当前block 已经完成，无需再使用HTTP下载当前block
-        if (live_download_driver_->GetInstance()->HasCompleteBlock(block_tasks_.begin()->GetBlockId()))
+        if (live_stream_->GetInstance()->HasCompleteBlock(block_tasks_.begin()->GetBlockId()))
         {
             OnComplete();
             return;

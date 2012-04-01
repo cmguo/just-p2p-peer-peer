@@ -10,8 +10,8 @@
 
 namespace p2sp
 {
-    class ILiveDownloadDriver;
-    typedef boost::shared_ptr<ILiveDownloadDriver> ILiveDownloadDriverPointer;
+    class ILiveStream;
+    typedef boost::shared_ptr<ILiveStream> ILiveStreamPointer;
 }
 
 namespace storage
@@ -64,11 +64,11 @@ namespace storage
         //另外这个结果不一定正确，调用者（比如Upload Manager）如果在乎的话，应该额外查询IsBlockHeaderValid(block_id)来进行核实.
         uint32_t GetBlockSizeInBytes(uint32_t block_id) const;
 
-        void AttachDownloadDriver(p2sp::ILiveDownloadDriverPointer download_driver);
+        void AttachStream(p2sp::ILiveStreamPointer live_stream);
 
-        //在卸掉最后一个download driver时，会启动一个timer，在timer到时后LiveInstance
+        //在卸掉最后一个livestream时，会启动一个timer，在timer到时后LiveInstance
         //才会从Storage的lookup table中移除。这样做的目的是为了让这个peer还能继续为直播上传一段时间。
-        void DetachDownloadDriver(p2sp::ILiveDownloadDriverPointer download_driver);
+        void DetachStream(p2sp::ILiveStreamPointer live_stream);
 
         RID GetRID() const { return cache_manager_.GetRID(); }
         void GetSubPiece(protocol::LiveSubPieceInfo subpiece_info, protocol::LiveSubPieceBuffer & subpiece_buffer) const;
@@ -93,14 +93,14 @@ namespace storage
 
     private:
         void PushDataToDownloaderDrivers();
-        void PushDataToDownloaderDriver(p2sp::ILiveDownloadDriverPointer download_driver);
-        bool SendSubPieces(p2sp::ILiveDownloadDriverPointer download_driver, boost::uint16_t last_subpiece_index);
+        void PushDataToDownloaderDriver(p2sp::ILiveStreamPointer live_streams);
+        bool SendSubPieces(p2sp::ILiveStreamPointer live_streams, boost::uint16_t last_subpiece_index);
         void RemoveFlashHeader(std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers);
         void OnTimerElapsed(framework::timer::Timer * timer);
 
     private:
         LiveCacheManager cache_manager_;
-        std::set<p2sp::ILiveDownloadDriverPointer> download_drivers_;
+        std::set<p2sp::ILiveStreamPointer> live_streams_;
         framework::timer::PeriodicTimer play_timer_;
 
         boost::shared_ptr<ILiveInstanceStoppedListener> stopped_event_listener_;

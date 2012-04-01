@@ -13,6 +13,7 @@
 #include "p2sp/tracker/TrackerModule.h"
 #include "p2sp/config/Config.h"
 #include "LiveDacStopDataStruct.h"
+#include "p2sp/download/LiveStream.h"
 
 namespace p2sp
 {
@@ -40,8 +41,6 @@ namespace p2sp
         , source_type_(PlayInfo::SOURCE_LIVE_DEFAULT)
         , bwtype_(JBW_NORMAL)
         , elapsed_seconds_since_started_(0)
-        , use_cdn_when_large_upload_(false)
-        , rest_play_time_delim_(25)
         , ratio_delim_of_upload_speed_to_datarate_(200)
         , times_of_use_cdn_because_of_large_upload_(0)
         , time_elapsed_use_cdn_because_of_large_upload_(0)
@@ -75,14 +74,14 @@ namespace p2sp
     void LiveDownloadDriver::StartBufferringMonitor()
     {
         elapsed_seconds_since_started_ = 0;
-        if (live_instance_ && 
-            false == live_instance_->GetRID().is_empty())
+        if (GetInstance() && 
+            false == GetInstance()->GetRID().is_empty())
         {
-            bufferring_monitor_ = AppModule::Inst()->CreateBufferringMonitor(live_instance_->GetRID());
+            bufferring_monitor_ = AppModule::Inst()->CreateBufferringMonitor(GetInstance()->GetRID());
         }
         else
         {
-            if (!live_instance_)
+            if (!GetInstance())
             {
                 LOG(__DEBUG, "live_download", __FUNCTION__ << " live_instance_ is NULL.");
             }
@@ -121,28 +120,13 @@ namespace p2sp
 
         // TODO: 选取合适的码流开始播放
 
-        // 创建Instance
-        live_instance_ = boost::dynamic_pointer_cast<storage::LiveInstance>(
-            storage::Storage::Inst()->CreateLiveInstance(data_rate_manager_.GetCurrentRID(), live_interval));
-
-        live_instance_->AttachDownloadDriver(shared_from_this());
-        live_instance_->SetCurrentLivePoint(storage::LivePosition(start_position));
-
-        // 创建HttpDownloader
-        live_http_downloader_ = LiveHttpDownloader::Create(url_, 
-            data_rate_manager_.GetCurrentRID(), shared_from_this());
-
-        live_http_downloader_->Start();
-        live_http_downloader_->Pause();
-
-        if (bwtype_ != JBW_HTTP_ONLY)
+        for (boost::uint32_t i = 0; i < rids.size(); ++i)
         {
-            // 创建P2PDownloader
-            live_p2p_downloader_ = LiveP2PDownloader::Create(data_rate_manager_.GetCurrentRID(), shared_from_this(), live_instance_);
-            live_p2p_downloader_->Start();
-
-            p2sp::P2PModule::Inst()->OnLiveP2PDownloaderCreated(live_p2p_downloader_);
+            LiveStream__p live_stream = LiveStream::Create(shared_from_this(), url_, rids[i], live_interval, data_rate_s[i]);
+            live_streams_.push_back(live_stream);
         }
+
+        live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->Start(start_position);
 
         // 直播状态机
         live_switch_controller_.Start(shared_from_this());
@@ -150,7 +134,7 @@ namespace p2sp
 #ifndef STATISTIC_OFF
         live_download_driver_statistic_info_.Clear();
         live_download_driver_statistic_info_.LiveDownloadDriverID = id_;
-        live_download_driver_statistic_info_.ResourceID = live_instance_->GetRID();
+        live_download_driver_statistic_info_.ResourceID = GetInstance()->GetRID();
         live_download_driver_statistic_info_.ChannelID = channel_id;
         live_download_driver_statistic_info_.UniqueID = unique_id;
         framework::string::Url::truncate_to(url_, live_download_driver_statistic_info_.OriginalUrl);
@@ -183,37 +167,36 @@ namespace p2sp
 
         tick_count_since_last_recv_subpiece_.stop();
 
-        if (live_p2p_downloader_)
+        if (GetP2PControlTarget())
         {
-            live_p2p_downloader_->CalcTimeOfUsingUdpServerWhenStop();
+            GetP2PControlTarget()->CalcTimeOfUsingUdpServerWhenStop();
         }
 
         if (using_cdn_because_of_large_upload_)
         {
             time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
-            download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
+            download_bytes_use_cdn_because_of_large_upload_ += GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
 
             total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
                 upload_bytes_when_changed_to_cdn_because_of_large_upload_;
         }
 
-        live_p2p_downloader_->CalcDacDataBeforeStop();
+        if (GetP2PControlTarget())
+        {
+            GetP2PControlTarget()->CalcDacDataBeforeStop();
+        }
 
         SendDacStopData();
 
         SaveHistoryConfig();
 
-        live_instance_->DetachDownloadDriver(shared_from_this());
-
-        live_http_downloader_->Stop();
-        live_http_downloader_.reset();
-
-        if (live_p2p_downloader_)
+        for (vector<LiveStream__p>::iterator iter = live_streams_.begin();
+            iter != live_streams_.end(); ++iter)
         {
-            live_p2p_downloader_->Stop();
-            P2PModule::Inst()->OnLiveP2PDownloaderDestroyed(live_p2p_downloader_);
-            live_p2p_downloader_.reset();
+            (*iter)->Stop();
         }
+
+        live_streams_.clear();
 
         live_switch_controller_.Stop();
 
@@ -260,78 +243,15 @@ namespace p2sp
         Config::Inst()->SaveConfig();
     }
 
-    LiveHttpDownloader__p LiveDownloadDriver::GetHTTPControlTarget()
+    LiveHttpDownloader__p LiveDownloadDriver::GetHTTPControlTarget() const
     {
-        if (live_http_downloader_)
-        {
-            return live_http_downloader_;
-        }
-
-        return LiveHttpDownloader__p();
+        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetHttpDownloader();
     }
 
-    LiveP2PDownloader__p LiveDownloadDriver::GetP2PControlTarget()
+    LiveP2PDownloader__p LiveDownloadDriver::GetP2PControlTarget() const
     {
-        if (live_p2p_downloader_)
-        {
-            return live_p2p_downloader_;
-        }
-        return LiveP2PDownloader__p();
+        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetP2PDownloader();
     } 
-
-    bool LiveDownloadDriver::RequestNextBlock(LiveDownloader__p downloader)
-    {
-        boost::uint32_t start_block_id = playing_position_.GetBlockId();
-        while(1)
-        {
-            // 申请一片Block去下载
-            protocol::LiveSubPieceInfo live_block;
-            GetInstance()->GetNextIncompleteBlock(start_block_id, live_block);
-
-#ifdef USE_MEMORY_POOL
-            // TODO: 如果使用内存池增加限制分配的逻辑，防止因为内存不足，卡住不播
-            if (protocol::LiveSubPieceContent::get_left_capacity() < 2048 &&
-                live_block.GetBlockId() > GetPlayingPosition().GetBlockId())
-            {
-                return false;
-            }
-#endif
-
-            if (!live_block_request_manager_.IsRequesting(live_block.GetBlockId()))
-            {
-                // Block不在请求
-                // 可以下载，加入
-                LOG(__DEBUG, "live_download", "Not Requesting, Add id = " << live_block.GetBlockId());
-                live_block_request_manager_.AddBlockTask(live_block, downloader);
-                return true;
-            }
-            else
-            {
-                // Block正在请求
-                if (live_block_request_manager_.IsTimeout(live_block.GetBlockId(), downloader))
-                {
-                    // 超时了
-                    LOG(__DEBUG, "live_download", "Requesting & timeout Add id = " << live_block.GetBlockId());
-
-                    // 再删除任务记录, 同时删除相应的downloader的block_task_
-                    live_block_request_manager_.RemoveBlockTask(live_block.GetBlockId());
-
-                    // 再加入
-                    live_block_request_manager_.AddBlockTask(live_block, downloader);
-                    return true;
-                }
-                else
-                {
-                    // 还没有超时
-                    // 不能下载，寻找下一片
-                    start_block_id += GetInstance()->GetLiveInterval();
-                }
-            }
-        }
-
-        assert(false);
-        return false;
-    }
 
     bool LiveDownloadDriver::OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
         uint8_t progress_percentage)
@@ -372,19 +292,9 @@ namespace p2sp
         return proxy_connection_->OnRecvLivePiece(block_id, app_buffers);
     }
 
-    storage::LiveInstance__p LiveDownloadDriver::GetInstance()
+    storage::LiveInstance__p LiveDownloadDriver::GetInstance() const
     {
-        return live_instance_;
-    }
-
-    void LiveDownloadDriver::OnBlockComplete(const protocol::LiveSubPieceInfo & live_block)
-    {
-        live_block_request_manager_.RemoveBlockTask(live_block.GetBlockId());
-    }
-
-    void LiveDownloadDriver::OnBlockTimeout(const protocol::LiveSubPieceInfo & live_block)
-    {
-        live_block_request_manager_.RemoveBlockTask(live_block.GetBlockId());
+        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetInstance();
     }
 
     // 获得起始播放点
@@ -412,21 +322,21 @@ namespace p2sp
             UpdateStatisticInfo();
             statistic_->UpdateShareMemory();
 #endif
-            if (http_download_max_speed_ < live_http_downloader_->GetSpeedInfo().NowDownloadSpeed)
+            if (http_download_max_speed_ < GetHTTPControlTarget()->GetSpeedInfo().NowDownloadSpeed)
             {
-                http_download_max_speed_ = live_http_downloader_->GetSpeedInfo().NowDownloadSpeed;
+                http_download_max_speed_ = GetHTTPControlTarget()->GetSpeedInfo().NowDownloadSpeed;
             }
 
-            if (live_p2p_downloader_)
+            if (GetP2PControlTarget())
             {
-                if (p2p_download_max_speed_ < live_p2p_downloader_->GetSpeedInfo().NowDownloadSpeed)
+                if (p2p_download_max_speed_ < GetP2PControlTarget()->GetSpeedInfo().NowDownloadSpeed)
                 {
-                    p2p_download_max_speed_ = live_p2p_downloader_->GetSpeedInfo().NowDownloadSpeed;
+                    p2p_download_max_speed_ = GetP2PControlTarget()->GetSpeedInfo().NowDownloadSpeed;
                 }
 
-                if (udp_server_max_speed_ < live_p2p_downloader_->GetUdpServerSpeedInfo().NowDownloadSpeed)
+                if (udp_server_max_speed_ < GetP2PControlTarget()->GetUdpServerSpeedInfo().NowDownloadSpeed)
                 {
-                    udp_server_max_speed_ = live_p2p_downloader_->GetUdpServerSpeedInfo().NowDownloadSpeed;
+                    udp_server_max_speed_ = GetP2PControlTarget()->GetUdpServerSpeedInfo().NowDownloadSpeed;
                 }
             }
 
@@ -440,7 +350,7 @@ namespace p2sp
                     if (data_rate > 0)
                     {
                         storage::LivePosition live_position = GetPlayingPosition();
-                        uint32_t bufferring_position_in_seconds = live_position.GetBlockId()*live_instance_->GetLiveInterval() + 
+                        uint32_t bufferring_position_in_seconds = live_position.GetBlockId()*GetInstance()->GetLiveInterval() + 
                             live_position.GetSubPieceIndex()*storage::HeaderSubPiece::Constants::SubPieceSizeInBytes/data_rate;
                         bufferring_monitor_->BufferringOccurs(bufferring_position_in_seconds);
                     }
@@ -462,8 +372,8 @@ namespace p2sp
             rest_playable_times_.push_back(GetRestPlayableTime());
 
             if (tick_count_since_last_recv_subpiece_.elapsed() > 180 * 1000 && !is_notify_restart_
-                && ((live_http_downloader_ && !live_http_downloader_->IsPausing()) ||
-                (live_p2p_downloader_ && !live_p2p_downloader_->IsPausing())))
+                && ((GetHTTPControlTarget() && !GetHTTPControlTarget()->IsPausing()) ||
+                (GetP2PControlTarget() && !GetP2PControlTarget()->IsPausing())))
             {
 #ifdef PEER_PC_CLIENT
                 WindowsMessage::Inst().PostWindowsMessage(UM_LIVE_RESTART, NULL, NULL);
@@ -482,13 +392,13 @@ namespace p2sp
 
     void LiveDownloadDriver::JumpTo(const storage::LivePosition & new_playing_position)
     {
-        assert(new_playing_position.GetBlockId() % live_instance_->GetLiveInterval() == 0);
+        assert(new_playing_position.GetBlockId() % GetInstance()->GetLiveInterval() == 0);
 
         // 改变播放位置
         playing_position_ = new_playing_position;
 
         // 跳跃算法启用时，需要把剩余时间重新计算
-        rest_time_tracker_.Start(playing_position_.GetBlockId(), live_instance_->GetLiveInterval());
+        rest_time_tracker_.Start(playing_position_.GetBlockId(), GetInstance()->GetLiveInterval());
     }
 
     void LiveDownloadDriver::OnDataRateChanged()
@@ -497,50 +407,35 @@ namespace p2sp
         // 如果A->B->A，而切换前 A 对应的LiveInstance的校验计算结果>0，而且全部切换的时间小于120秒，
         // 那A对应的LiveInstance还在缓存中而被重用，因而A的校验次数会被重复统计。
         // 我们认为偏大的值可以接受，所以在这没有精确计算校验失败次数
-        checksum_failed_times_ += live_instance_->GetChecksumFailedTimes();
+        checksum_failed_times_ += live_streams_[data_rate_manager_.GetLastDataRatePos()]->GetInstance()->GetChecksumFailedTimes();
 
-        // 切换Instance
-        int32_t live_interval = live_instance_->GetLiveInterval();
-
-        storage::LivePosition live_point = live_instance_->GetCurrentLivePoint();
-
-        live_instance_->DetachDownloadDriver(shared_from_this());
-
-        live_instance_ = boost::dynamic_pointer_cast<storage::LiveInstance>(
-            storage::Storage::Inst()->CreateLiveInstance(data_rate_manager_.GetCurrentRID(), live_interval));
-
-        live_instance_->AttachDownloadDriver(shared_from_this());
-
-        live_instance_->SetCurrentLivePoint(live_point);
-
-        // 切换LiveHttpDownloader
-        // 这时live_http_downloader_的堆栈在OnRecvHttpDataSucced
-        // 切换码流仅仅是切换RID,这样下次去连接就是用另外一个RID了
-        live_http_downloader_->OnDataRateChanged(data_rate_manager_.GetCurrentRID());
-
-        // 切换P2PDownloader
-        // 这个live_p2p_downloader_的堆栈在OnUdpRecv
-        // 切换码流需要把当前码流对应的P2PDownloader删除
-        // 同时新建一个P2PDownloader插入P2PModule
-        if (live_p2p_downloader_)
+        bool http_paused = live_streams_[data_rate_manager_.GetLastDataRatePos()]->GetHttpDownloader()->IsPausing();
+        bool p2p_paused = true;
+        
+        if (live_streams_[data_rate_manager_.GetLastDataRatePos()]->GetP2PDownloader())
         {
-            bool p2p_paused = live_p2p_downloader_->IsPausing();
+            live_streams_[data_rate_manager_.GetLastDataRatePos()]->GetP2PDownloader()->IsPausing();
+            p2p_paused = false;
+        }
 
-            live_p2p_downloader_->Pause();
-            live_p2p_downloader_->Stop();
-            P2PModule::Inst()->OnLiveP2PDownloaderDestroyed(live_p2p_downloader_);
-            live_p2p_downloader_.reset();
+        for (vector<LiveStream__p>::iterator iter = live_streams_.begin();
+            iter != live_streams_.end(); ++iter)
+        {
+            (*iter)->Stop();
+        }
 
-            live_p2p_downloader_ = LiveP2PDownloader::Create(data_rate_manager_.GetCurrentRID(), shared_from_this(), live_instance_);
-            live_p2p_downloader_->Start();
+        live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->Start(GetPlayingPosition().GetBlockId());
 
-            p2sp::P2PModule::Inst()->OnLiveP2PDownloaderCreated(live_p2p_downloader_);
+        // HttpDownloader的下载状态恢复
+        if (!http_paused)
+        {
+            GetHTTPControlTarget()->Resume();
+        }
 
-            // P2PDownloader的下载状态恢复
-            if (!p2p_paused)
-            {
-                live_p2p_downloader_->Resume();
-            }
+        // P2PDownloader的下载状态恢复
+        if (!p2p_paused)
+        {
+            GetP2PControlTarget()->Resume();
         }
     }
 
@@ -554,55 +449,55 @@ namespace p2sp
     void LiveDownloadDriver::UpdateStatisticInfo()
     {
         // rid
-        live_download_driver_statistic_info_.ResourceID = live_instance_->GetRID();
+        live_download_driver_statistic_info_.ResourceID = GetInstance()->GetRID();
 
         // speed info
-        live_download_driver_statistic_info_.LiveHttpSpeedInfo = live_http_downloader_->GetSpeedInfo();
-        live_download_driver_statistic_info_.LiveP2PSpeedInfo = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetSpeedInfo() : statistic::SPEED_INFO();
-        live_download_driver_statistic_info_.LiveP2PSubPieceSpeedInfo = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetSubPieceSpeedInfo() : statistic::SPEED_INFO();
+        live_download_driver_statistic_info_.LiveHttpSpeedInfo = GetHTTPControlTarget()->GetSpeedInfo();
+        live_download_driver_statistic_info_.LiveP2PSpeedInfo = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetSpeedInfo() : statistic::SPEED_INFO();
+        live_download_driver_statistic_info_.LiveP2PSubPieceSpeedInfo = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetSubPieceSpeedInfo() : statistic::SPEED_INFO();
 
         // http status code
-        live_download_driver_statistic_info_.LastHttpStatusCode = live_http_downloader_->GetHttpStatusCode();
+        live_download_driver_statistic_info_.LastHttpStatusCode = GetHTTPControlTarget()->GetHttpStatusCode();
 
         // switch state
         live_download_driver_statistic_info_.http_state = switch_state_http_;
         live_download_driver_statistic_info_.p2p_state = switch_state_p2p_;
 
         // peer count
-        live_download_driver_statistic_info_.PeerCount = live_p2p_downloader_ ? live_p2p_downloader_->GetConnectedPeersCount() : 0;
+        live_download_driver_statistic_info_.PeerCount = GetP2PControlTarget() ? GetP2PControlTarget()->GetConnectedPeersCount() : 0;
 
         // ip pool
-        live_download_driver_statistic_info_.IpPoolPeerCount = live_p2p_downloader_ ? live_p2p_downloader_->GetPooledPeersCount() : 0;
+        live_download_driver_statistic_info_.IpPoolPeerCount = GetP2PControlTarget() ? GetP2PControlTarget()->GetPooledPeersCount() : 0;
 
         // total unused subpiece count
-        live_download_driver_statistic_info_.TotalUnusedSubPieceCount = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetTotalUnusedSubPieceCount() : 0;
+        live_download_driver_statistic_info_.TotalUnusedSubPieceCount = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetTotalUnusedSubPieceCount() : 0;
 
         // total all request subpiece count
-        live_download_driver_statistic_info_.TotalAllRequestSubPieceCount = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetTotalAllRequestSubPieceCount() : 0;
+        live_download_driver_statistic_info_.TotalAllRequestSubPieceCount = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetTotalAllRequestSubPieceCount() : 0;
 
         // total recieved subpiece count
-        live_download_driver_statistic_info_.TotalRecievedSubPieceCount = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetTotalRecievedSubPieceCount() : 0;
+        live_download_driver_statistic_info_.TotalRecievedSubPieceCount = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetTotalRecievedSubPieceCount() : 0;
 
         // total request subpiece count
-        live_download_driver_statistic_info_.TotalRequestSubPieceCount = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetTotalRequestSubPieceCount() : 0;
+        live_download_driver_statistic_info_.TotalRequestSubPieceCount = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetTotalRequestSubPieceCount() : 0;
 
         // total p2p data bytes
-        live_download_driver_statistic_info_.TotalP2PDataBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalP2PDataBytes() : 0;
+        live_download_driver_statistic_info_.TotalP2PDataBytes = GetP2PControlTarget() ? GetP2PControlTarget()->GetTotalP2PDataBytes() : 0;
 
         // cache size
-        live_download_driver_statistic_info_.CacheSize = live_instance_->GetCacheSize();
+        live_download_driver_statistic_info_.CacheSize = GetInstance()->GetCacheSize();
 
         // first cache block id
-        live_download_driver_statistic_info_.CacheFirstBlockId = live_instance_->GetCacheFirstBlockId();
+        live_download_driver_statistic_info_.CacheFirstBlockId = GetInstance()->GetCacheFirstBlockId();
 
         // last cache block id
-        live_download_driver_statistic_info_.CacheLastBlockId = live_instance_->GetCacheLastBlockId();
+        live_download_driver_statistic_info_.CacheLastBlockId = GetInstance()->GetCacheLastBlockId();
 
         // playing position
         live_download_driver_statistic_info_.PlayingPosition = playing_position_.GetBlockId();
@@ -617,10 +512,10 @@ namespace p2sp
         live_download_driver_statistic_info_.IsPlayingPositionBlockFull = IsPlayingPositionBlockFull();
 
         // peer connection info
-        if (live_p2p_downloader_)
+        if (GetP2PControlTarget())
         {
             const std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<p2sp::LivePeerConnection> > & peer_connections
-                = live_p2p_downloader_->GetPeers();
+                = GetP2PControlTarget()->GetPeers();
 
             int i = 0;
             for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<p2sp::LivePeerConnection> >::const_iterator iter
@@ -636,7 +531,7 @@ namespace p2sp
 #endif
 
         // live point block id
-        live_download_driver_statistic_info_.LivePointBlockId = live_instance_->GetCurrentLivePoint().GetBlockId();
+        live_download_driver_statistic_info_.LivePointBlockId = GetInstance()->GetCurrentLivePoint().GetBlockId();
 
         // data rate level
         live_download_driver_statistic_info_.DataRateLevel = data_rate_manager_.GetCurrentDataRatePos();
@@ -646,18 +541,18 @@ namespace p2sp
 
         // checksum failed
         live_download_driver_statistic_info_.NumOfChecksumFailedPieces =
-            checksum_failed_times_ + live_instance_->GetChecksumFailedTimes();
+            checksum_failed_times_ + GetInstance()->GetChecksumFailedTimes();
 
         // udp server download bytes
-        live_download_driver_statistic_info_.TotalUdpServerDataBytes = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
+        live_download_driver_statistic_info_.TotalUdpServerDataBytes = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetTotalUdpServerDataBytes() : 0;
 
         // pms status
-        live_download_driver_statistic_info_.PmsStatus = live_http_downloader_->GetPmsStatus() ? 0 : 1;
+        live_download_driver_statistic_info_.PmsStatus = GetHTTPControlTarget()->GetPmsStatus() ? 0 : 1;
 
         // udpserver speed
-        live_download_driver_statistic_info_.UdpServerSpeedInfo = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetUdpServerSpeedInfo() : statistic::SPEED_INFO();
+        live_download_driver_statistic_info_.UdpServerSpeedInfo = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetUdpServerSpeedInfo() : statistic::SPEED_INFO();
 
         // pause
         live_download_driver_statistic_info_.IsPaused = rest_time_tracker_.IsPaused() ? 1 : 0;
@@ -666,18 +561,18 @@ namespace p2sp
         live_download_driver_statistic_info_.IsReplay = replay_ ? 1 : 0;
 
         // missing subpiece count of first block
-        live_download_driver_statistic_info_.MissingSubPieceCountOfFirstBlock = live_instance_->GetMissingSubPieceCount(playing_position_.GetBlockId());
+        live_download_driver_statistic_info_.MissingSubPieceCountOfFirstBlock = GetInstance()->GetMissingSubPieceCount(playing_position_.GetBlockId());
 
         // exist subpiece count of first block
-        live_download_driver_statistic_info_.ExistSubPieceCountOfFirstBlock = live_instance_->GetExistSubPieceCount(playing_position_.GetBlockId());
+        live_download_driver_statistic_info_.ExistSubPieceCountOfFirstBlock = GetInstance()->GetExistSubPieceCount(playing_position_.GetBlockId());
 
         // peer 一秒的速度
-        live_download_driver_statistic_info_.P2PPeerSpeedInSecond = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetSubPieceSpeedInfoEx().SecondDownloadSpeed : 0;
+        live_download_driver_statistic_info_.P2PPeerSpeedInSecond = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetSubPieceSpeedInfoEx().SecondDownloadSpeed : 0;
 
         // udpserver 一秒的速度
-        live_download_driver_statistic_info_.P2PUdpServerSpeedInSecond = live_p2p_downloader_ ?
-            live_p2p_downloader_->GetUdpServerSpeedInfoEx().SecondDownloadSpeed : 0;
+        live_download_driver_statistic_info_.P2PUdpServerSpeedInSecond = GetP2PControlTarget() ?
+            GetP2PControlTarget()->GetUdpServerSpeedInfoEx().SecondDownloadSpeed : 0;
     }
 #endif
 
@@ -762,20 +657,20 @@ namespace p2sp
         pos = url_.find_first_of('/', pos + 1);
         info.OriginalUrl = string(url_, 0, pos);
 
-        info.P2PDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalP2PDataBytes() : 0;
-        info.HttpDownloadBytes = live_http_downloader_ ? live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;
-        info.UdpDownloadBytes = live_p2p_downloader_ ? live_p2p_downloader_->GetTotalUdpServerDataBytes() : 0;
+        info.P2PDownloadBytes = GetP2PControlTarget() ? GetP2PControlTarget()->GetTotalP2PDataBytes() : 0;
+        info.HttpDownloadBytes = GetHTTPControlTarget() ? GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes : 0;
+        info.UdpDownloadBytes = GetP2PControlTarget() ? GetP2PControlTarget()->GetTotalUdpServerDataBytes() : 0;
         info.TotalDownloadBytes = info.P2PDownloadBytes + info.HttpDownloadBytes + info.UdpDownloadBytes;
-        info.AvgP2PDownloadSpeed = live_p2p_downloader_ ? live_p2p_downloader_->GetSpeedInfo().AvgDownloadSpeed : 0;
+        info.AvgP2PDownloadSpeed = GetP2PControlTarget() ? GetP2PControlTarget()->GetSpeedInfo().AvgDownloadSpeed : 0;
         info.MaxHttpDownloadSpeed = http_download_max_speed_;
         info.MaxP2PDownloadSpeed = p2p_download_max_speed_;
 
-        info.ConnectedPeerCount = live_p2p_downloader_ ? live_p2p_downloader_->GetConnectedPeersCount() : 0;
-        info.QueriedPeerCount = live_p2p_downloader_ ? live_p2p_downloader_->GetPooledPeersCount() : 0;
+        info.ConnectedPeerCount = GetP2PControlTarget() ? GetP2PControlTarget()->GetConnectedPeersCount() : 0;
+        info.QueriedPeerCount = GetP2PControlTarget() ? GetP2PControlTarget()->GetPooledPeersCount() : 0;
 
         info.StartPosition = start_position_.GetBlockId();
         info.JumpTimes = jump_times_;
-        info.NumOfCheckSumFailedPieces = checksum_failed_times_ + live_instance_->GetChecksumFailedTimes();
+        info.NumOfCheckSumFailedPieces = checksum_failed_times_ + GetInstance()->GetChecksumFailedTimes();
 
         info.SourceType = source_type_;
         info.ChannelID = channel_id_;
@@ -789,14 +684,14 @@ namespace p2sp
         info.TimeElapsedUseCdnBecauseLargeUpload = time_elapsed_use_cdn_because_of_large_upload_;
         info.DownloadBytesUseCdnBecauseLargeUpload = download_bytes_use_cdn_because_of_large_upload_;
 
-        if (live_p2p_downloader_)
+        if (GetP2PControlTarget())
         {
-            info.TimesOfUseUdpServerBecauseUrgent = live_p2p_downloader_->GetTimesOfUseUdpServerBecauseOfUrgent();
-            info.TimeElapsedUseUdpServerBecauseUrgent = live_p2p_downloader_->GetTimeElapsedUseUdpServerBecauseOfUrgent();
-            info.DownloadBytesUseUdpServerBecauseUrgent = live_p2p_downloader_->GetDownloadBytesUseUdpServerBecauseOfUrgent();
-            info.TimesOfUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetTimesOfUseUdpServerBecauseOfLargeUpload();
-            info.TimeElapsedUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetTimeElapsedUseUdpServerBecauseOfLargeUpload();
-            info.DownloadBytesUseUdpServerBecauseLargeUpload = live_p2p_downloader_->GetDownloadBytesUseUdpServerBecauseOfLargeUpload();
+            info.TimesOfUseUdpServerBecauseUrgent = GetP2PControlTarget()->GetTimesOfUseUdpServerBecauseOfUrgent();
+            info.TimeElapsedUseUdpServerBecauseUrgent = GetP2PControlTarget()->GetTimeElapsedUseUdpServerBecauseOfUrgent();
+            info.DownloadBytesUseUdpServerBecauseUrgent = GetP2PControlTarget()->GetDownloadBytesUseUdpServerBecauseOfUrgent();
+            info.TimesOfUseUdpServerBecauseLargeUpload = GetP2PControlTarget()->GetTimesOfUseUdpServerBecauseOfLargeUpload();
+            info.TimeElapsedUseUdpServerBecauseLargeUpload = GetP2PControlTarget()->GetTimeElapsedUseUdpServerBecauseOfLargeUpload();
+            info.DownloadBytesUseUdpServerBecauseLargeUpload = GetP2PControlTarget()->GetDownloadBytesUseUdpServerBecauseOfLargeUpload();
         }
         else
         {
@@ -835,8 +730,8 @@ namespace p2sp
 
         if (changed_to_p2p_condition_when_start_ == InitialChangedToP2PConditionWhenStart)
         {
-            info.HttpDownloadBytesWhenStart = live_http_downloader_ ?
-                live_http_downloader_->GetSpeedInfo().TotalDownloadBytes : 0;
+            info.HttpDownloadBytesWhenStart = GetHTTPControlTarget() ?
+                GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes : 0;
         }
         else
         {
@@ -859,15 +754,15 @@ namespace p2sp
         info.VarianceOfRestPlayableTime = CalcVarianceOfRestPlayableTime(info.AverageOfRestPlayableTime);
 
         info.AverageConnectPeersCountInMinute = 0;
-        if (live_p2p_downloader_ && download_time_.elapsed() > 2000)
+        if (GetP2PControlTarget() && download_time_.elapsed() > 2000)
         {
-            info.AverageConnectPeersCountInMinute = live_p2p_downloader_->GetTotalConnectPeersCount() * 60 / (download_time_.elapsed() / 1000);
+            info.AverageConnectPeersCountInMinute = GetP2PControlTarget()->GetTotalConnectPeersCount() * 60 / (download_time_.elapsed() / 1000);
         }
 
-        if (live_p2p_downloader_)
+        if (GetP2PControlTarget())
         {
-            info.TotalReceivedSubPiecePacketCount = live_p2p_downloader_->GetTotalReceivedSubPiecePacketCount();
-            info.ReverseSubPiecePacketCount = live_p2p_downloader_->GetReverseOrderSubPiecePacketCount();
+            info.TotalReceivedSubPiecePacketCount = GetP2PControlTarget()->GetTotalReceivedSubPiecePacketCount();
+            info.ReverseSubPiecePacketCount = GetP2PControlTarget()->GetReverseOrderSubPiecePacketCount();
         }
         else
         {
@@ -878,16 +773,16 @@ namespace p2sp
         info.BandWidth = statistic::StatisticModule::Inst()->GetBandWidth();
         info.UploadBytesWhenUsingCDNBecauseOfLargeUpload = total_upload_bytes_when_using_cdn_because_of_large_upload_;
 
-        if (live_p2p_downloader_)
+        if (GetP2PControlTarget())
         {
-            info.MinUdpServerCountWhenNeeded = live_p2p_downloader_->GetUdpServerCountWhenNeeded().Min();
-            info.MaxUdpServerCountWhenNeeded = live_p2p_downloader_->GetUdpServerCountWhenNeeded().Max();
-            info.MinConnectUdpServerCountWhenNeeded = live_p2p_downloader_->GetConnectUdpServerCountWhenNeeded().Min();
-            info.MaxConnectUdpServerCountWhenNeeded = live_p2p_downloader_->GetConnectUdpServerCountWhenNeeded().Max();
-            info.MinAnnounceResponseFromUdpServer = live_p2p_downloader_->GetAnnounceResponseFromUdpServer().Min();
-            info.MaxAnnounceResponseFromUdpServer = live_p2p_downloader_->GetAnnounceResponseFromUdpServer().Max();
-            info.MinRatioOfResponseToRequestFromUdpserver = live_p2p_downloader_->GetRatioOfResponseToRequestFromUdpserver().Min();
-            info.MaxRatioOfResponseToRequestFromUdpserver = live_p2p_downloader_->GetRatioOfResponseToRequestFromUdpserver().Max();
+            info.MinUdpServerCountWhenNeeded = GetP2PControlTarget()->GetUdpServerCountWhenNeeded().Min();
+            info.MaxUdpServerCountWhenNeeded = GetP2PControlTarget()->GetUdpServerCountWhenNeeded().Max();
+            info.MinConnectUdpServerCountWhenNeeded = GetP2PControlTarget()->GetConnectUdpServerCountWhenNeeded().Min();
+            info.MaxConnectUdpServerCountWhenNeeded = GetP2PControlTarget()->GetConnectUdpServerCountWhenNeeded().Max();
+            info.MinAnnounceResponseFromUdpServer = GetP2PControlTarget()->GetAnnounceResponseFromUdpServer().Min();
+            info.MaxAnnounceResponseFromUdpServer = GetP2PControlTarget()->GetAnnounceResponseFromUdpServer().Max();
+            info.MinRatioOfResponseToRequestFromUdpserver = GetP2PControlTarget()->GetRatioOfResponseToRequestFromUdpserver().Min();
+            info.MaxRatioOfResponseToRequestFromUdpserver = GetP2PControlTarget()->GetRatioOfResponseToRequestFromUdpserver().Max();
         }
         else
         {
@@ -931,9 +826,9 @@ namespace p2sp
         {
             bool is_jump = false;
 
-            if (playing_position_.GetBlockId() + 90 < live_instance_->GetCurrentLivePoint().GetBlockId())
+            if (playing_position_.GetBlockId() + 90 < GetInstance()->GetCurrentLivePoint().GetBlockId())
             {
-                JumpTo(storage::LivePosition(live_instance_->GetCurrentLivePoint().GetBlockId() - 2 * live_instance_->GetLiveInterval()));
+                JumpTo(storage::LivePosition(GetInstance()->GetCurrentLivePoint().GetBlockId() - 2 * GetInstance()->GetLiveInterval()));
 
                 is_jump = true;
             }
@@ -955,21 +850,9 @@ namespace p2sp
 
     void LiveDownloadDriver::OnConfigUpdated()
     {
-        use_cdn_when_large_upload_ = BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload();
-        rest_play_time_delim_ = BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim();
         ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetRatioDelimOfUploadSpeedToDatarate();
         small_ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetSmallRatioDelimOfUploadSpeedToDatarate();
         using_cdn_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
-    }
-
-    bool LiveDownloadDriver::ShouldUseCDNWhenLargeUpload() const
-    {
-        return use_cdn_when_large_upload_;
-    }
-
-    boost::uint32_t LiveDownloadDriver::GetRestPlayTimeDelim() const
-    {
-        return rest_play_time_delim_;
     }
 
     bool LiveDownloadDriver::IsUploadSpeedLargeEnough()
@@ -991,7 +874,7 @@ namespace p2sp
     {
         ++times_of_use_cdn_because_of_large_upload_;
         use_cdn_tick_counter_.reset();
-        http_download_bytes_when_changed_to_cdn_ = live_http_downloader_->GetSpeedInfo().TotalDownloadBytes;
+        http_download_bytes_when_changed_to_cdn_ = GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes;
         using_cdn_because_of_large_upload_ = true;
 
         upload_bytes_when_changed_to_cdn_because_of_large_upload_ = statistic::StatisticModule::Inst()->GetUploadDataBytes();
@@ -1000,7 +883,7 @@ namespace p2sp
     void LiveDownloadDriver::SetUseP2P()
     {
         time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
-        download_bytes_use_cdn_because_of_large_upload_ += live_http_downloader_->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
+        download_bytes_use_cdn_because_of_large_upload_ += GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
         using_cdn_because_of_large_upload_ = false;
 
         total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
@@ -1011,8 +894,8 @@ namespace p2sp
     {
         changed_to_p2p_condition_when_start_ = condition;
 
-        assert(live_http_downloader_);
-        http_download_bytes_when_start_ = live_http_downloader_->GetSpeedInfo().TotalDownloadBytes;
+        assert(GetHTTPControlTarget());
+        http_download_bytes_when_start_ = GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes;
     }
 
     void LiveDownloadDriver::SubmitChangedToHttpTimesWhenUrgent(boost::uint32_t times)
@@ -1027,22 +910,22 @@ namespace p2sp
 
     boost::uint8_t LiveDownloadDriver::GetLostRate() const
     {
-        return live_p2p_downloader_ ? live_p2p_downloader_->GetLostRate() : 0;
+        return GetP2PControlTarget() ? GetP2PControlTarget()->GetLostRate() : 0;
     }
 
     boost::uint8_t LiveDownloadDriver::GetRedundancyRate() const
     {
-        return live_p2p_downloader_ ? live_p2p_downloader_->GetRedundancyRate() : 0;
+        return GetP2PControlTarget() ? GetP2PControlTarget()->GetRedundancyRate() : 0;
     }
 
     boost::uint32_t LiveDownloadDriver::GetTotalRequestSubPieceCount() const
     {
-        return live_p2p_downloader_ ? live_p2p_downloader_->GetTotalRequestSubPieceCount() : 0;
+        return GetP2PControlTarget() ? GetP2PControlTarget()->GetTotalRequestSubPieceCount() : 0;
     }
 
     boost::uint32_t LiveDownloadDriver::GetTotalRecievedSubPieceCount() const
     {
-        return live_p2p_downloader_ ? live_p2p_downloader_->GetTotalRecievedSubPieceCount() : 0;
+        return GetP2PControlTarget() ? GetP2PControlTarget()->GetTotalRecievedSubPieceCount() : 0;
     }
 
     void LiveDownloadDriver::SetReceiveConnectPacket()
@@ -1107,8 +990,8 @@ namespace p2sp
 
     bool LiveDownloadDriver::DoesFallBehindTooMuch() const
     {
-        if (live_p2p_downloader_ &&
-            playing_position_.GetBlockId() + BootStrapGeneralConfig::Inst()->GetFallBehindSecondsThreshold() < live_p2p_downloader_->GetMinFirstBlockID())
+        if (GetP2PControlTarget() &&
+            playing_position_.GetBlockId() + BootStrapGeneralConfig::Inst()->GetFallBehindSecondsThreshold() < GetP2PControlTarget()->GetMinFirstBlockID())
         {
             return true;
         }
@@ -1223,7 +1106,7 @@ namespace p2sp
             return false;
         }
 
-        if (live_p2p_downloader_ && live_p2p_downloader_->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize() &&
+        if (GetP2PControlTarget() && GetP2PControlTarget()->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize() &&
             statistic::UploadStatisticModule::Inst()->GetUploadCount() > BootStrapGeneralConfig::Inst()->GetUploadConnectionCountDelim() &&
             statistic::UploadStatisticModule::Inst()->GetUploadSpeed() > GetDataRate() * BootStrapGeneralConfig::Inst()->GetNotStrictRatioDelimOfUploadToDatarate() / 100)
         {
@@ -1236,12 +1119,17 @@ namespace p2sp
 
     bool LiveDownloadDriver::IsPopular() const
     {
-        return live_p2p_downloader_ && live_p2p_downloader_->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize();
+        return GetP2PControlTarget() && GetP2PControlTarget()->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize();
     }
 
     bool LiveDownloadDriver::HaveUsedCdnToAccelerateLongEnough() const
     {
         return times_of_use_cdn_because_of_large_upload_ > 0 &&
             time_elapsed_use_cdn_because_of_large_upload_ > 30 * 1000;
+    }
+
+    boost::uint32_t LiveDownloadDriver::GetDataRate() const
+    {
+        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetDataRate();
     }
 }
