@@ -351,6 +351,11 @@ namespace p2sp
     {
         assert(!block_tasks_.empty());
 
+        if (!is_running_)
+        {
+            return;
+        }
+
         // 当前block 已经完成，无需再使用HTTP下载当前block
         if (live_stream_->GetInstance()->HasCompleteBlock(block_tasks_.begin()->GetBlockId()))
         {

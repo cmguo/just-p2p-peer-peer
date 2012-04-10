@@ -233,9 +233,10 @@ namespace p2sp
         if (live_rid_index_.find(packet.resource_id_) != live_rid_index_.end())
         {
             for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.lower_bound(packet.resource_id_);
-                iter != live_rid_index_.upper_bound(packet.resource_id_); ++iter)
+                iter != live_rid_index_.upper_bound(packet.resource_id_); )
             {
-                iter->second->OnUdpRecv(packet);
+                // LiveP2PDownloader收到数据之后，可能会触发多码率切换的逻辑
+                (iter++)->second->OnUdpRecv(packet);
             }
         }
         else if (packet.PacketAction == protocol::PeerExchangePacket::Action)
