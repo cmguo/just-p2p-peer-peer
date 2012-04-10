@@ -382,6 +382,11 @@ namespace p2sp
             return udp_server_usage_history_enabled_;
         }
 
+        bool AutoSwitchStream() const
+        {
+            return auto_switch_stream_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -617,6 +622,9 @@ namespace p2sp
 
         //是否根据udpserver的历史使用情况来优选使用过去服务得较好的udpserver
         bool udp_server_usage_history_enabled_;
+
+        // 是否启用二代直播的多码率自动切换
+        bool auto_switch_stream_;
     };
 }
 #endif

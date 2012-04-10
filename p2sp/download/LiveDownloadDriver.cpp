@@ -841,8 +841,9 @@ namespace p2sp
 
         // 码流切换算法
         // 1. 当前block的数据必须全部发送完毕
-        if (data_rate_manager_.SwitchToHigherDataRateIfNeeded(GetRestPlayableTime()) ||
-            data_rate_manager_.SwitchToLowerDataRateIfNeeded(GetRestPlayableTime()))
+        if (BootStrapGeneralConfig::Inst()->AutoSwitchStream() && (
+            data_rate_manager_.SwitchToHigherDataRateIfNeeded(GetRestPlayableTime()) ||
+            data_rate_manager_.SwitchToLowerDataRateIfNeeded(GetRestPlayableTime())))
         {
             OnDataRateChanged();
         }
