@@ -71,7 +71,7 @@ namespace p2sp
         }
 
         storage::LiveInstance::p live_inst =
-            boost::dynamic_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
+            boost::static_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
 
         if (!live_inst)
         {
@@ -124,7 +124,7 @@ namespace p2sp
 
         connections_management_.UpdateConnectionHeartbeat(packet.end_point);
 
-        storage::LiveInstance::p live_inst = boost::dynamic_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
+        storage::LiveInstance::p live_inst = boost::static_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
         if (!live_inst)
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
@@ -203,7 +203,7 @@ namespace p2sp
             return;
         }
 
-        storage::LiveInstance::p live_inst = boost::dynamic_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
+        storage::LiveInstance::p live_inst = boost::static_pointer_cast<storage::LiveInstance>(storage::Storage::Inst()->GetLiveInstanceByRid(packet.resource_id_));
         if (!live_inst)
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID);

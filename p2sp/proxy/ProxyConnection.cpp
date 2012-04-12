@@ -1834,7 +1834,7 @@ namespace p2sp
             protocol::RidInfo local_rid_info = rid_info;
             if (false == local_rid_info.HasRID()) 
             {
-                storage::Instance::p temp_inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->CreateInstance(url_info));
+                storage::Instance::p temp_inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->CreateInstance(url_info));
                 if (temp_inst->HasRID()) 
                 {
                     temp_inst->GetRidInfo(local_rid_info);

@@ -235,7 +235,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
+        instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
 
@@ -426,7 +426,7 @@ namespace p2sp
         if (is_open_service_ && !rid_info_.HasRID())
         {
             // 使用文件名为索引查询RID
-            Instance::p temp_instance = boost::dynamic_pointer_cast<storage::Instance>(
+            Instance::p temp_instance = boost::static_pointer_cast<storage::Instance>(
                 Storage::Inst()->GetInstanceByFileName(openservice_file_name_));
 
             if (temp_instance && temp_instance->HasRID())
@@ -436,7 +436,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, rid_info_));
+        instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, rid_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
         if (!instance_->IsComplete()) {
@@ -664,7 +664,7 @@ namespace p2sp
         }
 
         // 在 Storage 里面 创建资源实例
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
+        instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_));
         assert(instance_);
         instance_->SetIsOpenService(is_open_service_);
 
@@ -861,7 +861,7 @@ namespace p2sp
             std::list<UrlHttpDownloaderPair>::iterator iter = std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(original_url_info_.url_));
             if (iter != url_indexer_.end())
             {
-                HttpDownloader::p org_http_downloader_ = iter->http_downloader_;  // boost::shared_dynamic_cast<HttpDownloader>(iter->second);
+                HttpDownloader::p org_http_downloader_ = iter->http_downloader_;
                 lpDownloadDriverStopData->ulOtherServerDownloadBytes = speed_info.TotalDownloadBytes
                     - org_http_downloader_->GetStatistics()->GetSpeedInfo().TotalDownloadBytes;
             }
@@ -1677,7 +1677,7 @@ namespace p2sp
             protocol::UrlInfo url_info_;
             downloader->GetUrlInfo(url_info_);
             Storage::Inst()->RemoveUrlInfo(url_info_);
-            instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(url_info_, true));
+            instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(url_info_, true));
             instance_->SetIsOpenService(is_open_service_);
             instance_->AttachDownloadDriver(shared_from_this());
             instance_->SetFileLength(file_length);
@@ -1700,7 +1700,7 @@ namespace p2sp
             url_indexer_.clear();
             downloaders_.insert(downloader);
             p2p_downloader_.reset();
-            url_indexer_.push_back(UrlHttpDownloaderPair(url_info_.url_, boost::shared_dynamic_cast<HttpDownloader>(downloader)));
+            url_indexer_.push_back(UrlHttpDownloaderPair(url_info_.url_, boost::static_pointer_cast<HttpDownloader>(downloader)));
             // start
             switch_controller_ = SwitchController::Create(shared_from_this());
             switch_controller_->Start(switch_control_mode_);
@@ -1885,7 +1885,7 @@ namespace p2sp
         }
         boost::int32_t flag = instance_->GetRidOriginFlag();
         instance_->DettachDownloadDriver(shared_from_this());
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, true));
+        instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, true));
         instance_->SetIsOpenService(is_open_service_);
         instance_->AttachDownloadDriver(shared_from_this());
         instance_->SetRidOriginFlag(flag);

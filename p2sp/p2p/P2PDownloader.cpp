@@ -81,7 +81,7 @@ namespace p2sp
         p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetMaxPeerConnectionCount();
         p2p_min_connect_count_ = BootStrapGeneralConfig::Inst()->GetMinPeerConnectionCount();
 
-        instance_ = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
+        instance_ = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
         assert(instance_);
         if (!instance_)
             return;
@@ -980,7 +980,7 @@ namespace p2sp
             if (peers_.find(packet.end_point) != peers_.end())
             {
                 assert(peers_[packet.end_point]);
-                PeerConnection::p peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+                PeerConnection::p peer_connection = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
                 assert(peer_connection);
                 if (peer_connection)
                 {
@@ -996,7 +996,7 @@ namespace p2sp
             std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator peer = peers_.find(packet.end_point);
             if (peer != peers_.end())
             {
-                PeerConnection::p peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peer->second);
+                PeerConnection::p peer_connection = boost::static_pointer_cast<PeerConnection>(peer->second);
                 peer_connection->OnRIDInfoResponse((protocol::RIDInfoResponsePacket const &)packet);
             }
             return;
@@ -1693,7 +1693,7 @@ namespace p2sp
             for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter = sn_.begin();
                 iter != sn_.end(); ++iter)
             {
-                boost::shared_ptr<SNConnection> sn = boost::dynamic_pointer_cast<SNConnection>(iter->second);
+                boost::shared_ptr<SNConnection> sn = boost::static_pointer_cast<SNConnection>(iter->second);
                 sn->Start();
                 AddPeer(iter->second);
             }

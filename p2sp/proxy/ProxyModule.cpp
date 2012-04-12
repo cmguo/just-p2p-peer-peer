@@ -575,7 +575,7 @@ namespace p2sp
             result_handler(0, 0);
             return;
         }
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
         if (!inst)
         {
             LOGX(__DEBUG, "downloadcenter", "No Such RID: " << rid);
@@ -600,10 +600,10 @@ namespace p2sp
 
         string filename = ParseOpenServiceFileName(network::Uri(url));
 
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
         if (!inst)
         {
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
+            inst = boost::static_pointer_cast<storage::Instance>(
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
             if (!inst)
             {
@@ -641,11 +641,11 @@ namespace p2sp
 
         string filename = ParseOpenServiceFileName(network::Uri(url));
 
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
 
         if (!inst)
         {
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
+            inst = boost::static_pointer_cast<storage::Instance>(
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
 
             if (!inst)
@@ -671,11 +671,11 @@ namespace p2sp
 
         string filename = ParseOpenServiceFileName(network::Uri(url));
 
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
 
         if (!inst)
         {
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
+            inst = boost::static_pointer_cast<storage::Instance>(
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
 
             if (!inst)
@@ -1655,7 +1655,7 @@ namespace p2sp
         boost::int32_t * failed_num, boost::function<void ()> fun)
     {
         storage::Instance::p inst = 
-            boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
+            boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
 
         if (!inst)
         {
@@ -1675,12 +1675,12 @@ namespace p2sp
         boost::int32_t * failed_num, boost::function<void ()> fun)
     {
         storage::Instance::p inst = 
-            boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
+            boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByUrl(url));
 
         if (!inst)
         {
             string filename = ParseOpenServiceFileName(network::Uri(url));
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
+            inst = boost::static_pointer_cast<storage::Instance>(
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
         }
 
@@ -1725,7 +1725,7 @@ namespace p2sp
 #ifdef PEER_PC_CLIENT
     void ProxyModule::GetCompeletedFilePath(const RID & rid, string & file_path, boost::function<void ()> fun)
     {
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(
             storage::Storage::Inst()->GetInstanceByRID(rid));
         if (inst && inst->IsComplete())
         {
@@ -1737,12 +1737,12 @@ namespace p2sp
 
     void ProxyModule::GetCompeletedFilePathByUrl(const char * url, string & file_path, boost::function<void ()> fun)
     {
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(
             storage::Storage::Inst()->GetInstanceByUrl(url));
         if (!inst)
         {
             string filename = ParseOpenServiceFileName(network::Uri(url));
-            inst = boost::dynamic_pointer_cast<storage::Instance>(
+            inst = boost::static_pointer_cast<storage::Instance>(
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
         }
 

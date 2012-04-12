@@ -2174,7 +2174,7 @@ namespace storage
     {
         p2sp::RBIndex rb_index(rid, subpiece_info.block_index_);
 
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(GetInstanceByRID(rb_index.rid, false));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(GetInstanceByRID(rb_index.rid, false));
         assert(inst);
         if (!inst)
         {
@@ -2210,7 +2210,7 @@ namespace storage
 
     void Storage::UploadOneSubPiece(const RID & rid)
     {
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid, false));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid, false));
         if (inst)
         {
             inst->UploadOneSubPiece();

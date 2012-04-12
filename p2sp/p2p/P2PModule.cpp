@@ -133,7 +133,7 @@ namespace p2sp
         {
             P2PDownloader::p downloader = rid_indexer_[rid];
             storage::IStorage::p storage = storage::Storage::Inst();
-            storage::Instance::p instance = boost::dynamic_pointer_cast<storage::Instance>(storage->GetInstanceByRID(rid));
+            storage::Instance::p instance = boost::static_pointer_cast<storage::Instance>(storage->GetInstanceByRID(rid));
             assert(instance);
             assert(false == instance->GetRID().is_empty());
 

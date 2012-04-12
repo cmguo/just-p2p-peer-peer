@@ -67,7 +67,7 @@ namespace statistic
 
         stream << "&rid=" << rid_.to_string();
 
-        storage::Instance::p instance = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
+        storage::Instance::p instance = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
         string resource_name = "<unknown resource>";
         if (instance)
         {

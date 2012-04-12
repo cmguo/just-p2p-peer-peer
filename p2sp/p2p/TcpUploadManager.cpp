@@ -93,7 +93,7 @@ namespace p2sp
 
     void TcpUploadManager::OnTcpAnnounceRequestPacket(const protocol::TcpAnnounceRequestPacket & packet)
     {
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(packet.resource_id_));
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(packet.resource_id_));
         if (!inst)
         {
             SendErrorPacket(packet, protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID);
@@ -106,7 +106,7 @@ namespace p2sp
 
     void TcpUploadManager::OnTcpSubPieceRequestPacket(const protocol::TcpSubPieceRequestPacket & packet)
     {
-        storage::Instance::p inst = boost::dynamic_pointer_cast<storage::Instance>(
+        storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(
             storage::Storage::Inst()->GetInstanceByRID(packet.resource_id_, false));
 
         if (!inst)

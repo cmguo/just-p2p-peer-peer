@@ -30,7 +30,7 @@ namespace p2sp
         }
 
         // 创建Instance
-        live_instance_ = boost::dynamic_pointer_cast<storage::LiveInstance>(
+        live_instance_ = boost::static_pointer_cast<storage::LiveInstance>(
             storage::Storage::Inst()->CreateLiveInstance(rid_, live_interval_));
 
         live_instance_->AttachStream(shared_from_this());

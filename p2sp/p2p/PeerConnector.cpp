@@ -216,10 +216,10 @@ namespace p2sp
                     return;
                 }
 
-                P2PDownloader__p p2p_downloader = boost::dynamic_pointer_cast<P2PDownloader>(p2p_downloader_);
+                P2PDownloader__p p2p_downloader = boost::static_pointer_cast<P2PDownloader>(p2p_downloader_);
 
-                assert(p2p_downloader->GetStatistic()->GetConnectionStatisticSize() == 
-                    p2p_downloader->GetConnectedPeersCount() + p2p_downloader->GetSNSize());
+                //assert(p2p_downloader->GetStatistic()->GetConnectionStatisticSize() == 
+                //    p2p_downloader->GetConnectedPeersCount() + p2p_downloader->GetSNSize());
 
                 if (p2p_downloader->GetStatistic()->GetConnectionStatisticSize() >=
                     p2p_downloader->GetStatistic()->GetMaxP2PConnectionCount())
@@ -249,7 +249,7 @@ namespace p2sp
             else
             {
                 // 直播
-                LiveP2PDownloader__p p2p_downloader = boost::dynamic_pointer_cast<LiveP2PDownloader>(p2p_downloader_);
+                LiveP2PDownloader__p p2p_downloader = boost::static_pointer_cast<LiveP2PDownloader>(p2p_downloader_);
 
                 if (p2p_downloader->HasPeer(packet.end_point))
                 {
