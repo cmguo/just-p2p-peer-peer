@@ -131,12 +131,24 @@ namespace p2sp
             return live_download_driver_;
         }
 
+        void SetUseCdnBecauseOfLargeUpload();
+        void SetUseP2P();
+        void UpdateCdnAccelerationHistory();
+        void CalcCdnAccelerationStatusWhenStop();
+        boost::uint32_t GetTimesOfUseCdnBecauseOfLargeUpload() const;
+        boost::uint32_t GetTimeElapsedUseCdnBecauseOfLargeUpload() const;
+        boost::uint32_t GetDownloadBytesUseCdnBecauseOfLargeUpload() const;
+        boost::uint32_t GetTotalUploadBytesWhenUsingCdnBecauseOfLargeUpload() const;
+
     private:
         LiveStream(LiveDownloadDriver__p live_download_driver,
             const string & url,
             const RID & rid,
             boost::uint32_t live_interval,
             boost::uint32_t default_data_rate);
+
+        bool HaveUsedCdnToAccelerateLongEnough() const;
+        bool IsPopular() const;
 
     private:
         bool is_running_;
@@ -160,6 +172,17 @@ namespace p2sp
         LiveBlockRequestManager live_block_request_manager_;
 
         storage::LiveInstance__p live_instance_;
+
+        boost::uint32_t times_of_use_cdn_because_of_large_upload_;
+        boost::uint32_t time_elapsed_use_cdn_because_of_large_upload_;
+        framework::timer::TickCounter use_cdn_tick_counter_;
+        boost::uint32_t http_download_bytes_when_changed_to_cdn_;
+        bool using_cdn_because_of_large_upload_;
+        boost::uint32_t upload_bytes_when_changed_to_cdn_because_of_large_upload_;
+        boost::uint32_t download_bytes_use_cdn_because_of_large_upload_;
+        boost::uint32_t total_upload_bytes_when_using_cdn_because_of_large_upload_;
+
+        framework::timer::TickCounter download_time_;
     };
 }
 

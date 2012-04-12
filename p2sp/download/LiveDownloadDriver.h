@@ -133,6 +133,8 @@ namespace p2sp
 
         const std::map<boost::uint32_t, boost::uint32_t> GetUdpServerServiceScore() const;
 
+        void AddCdnAccelerationHistory(boost::uint32_t ratio_of_upload_to_download);
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -147,12 +149,10 @@ namespace p2sp
         void JumpOrSwitchIfNeeded();
 
         void LoadConfig();
-        void UpdateCdnAccelerationHistory();
         void CalcHistoryUploadStatus();
-        bool IsPopular() const;
-        bool HaveUsedCdnToAccelerateLongEnough() const;
 
         void SaveHistoryConfig();
+        void CalcCdnAccelerationStatusWhenStop(boost::uint32_t data_rate_pos);
 
     private:
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
@@ -214,14 +214,9 @@ namespace p2sp
 
         framework::timer::TickCounter download_time_;
 
-        boost::uint32_t times_of_use_cdn_because_of_large_upload_;
-        boost::uint32_t time_elapsed_use_cdn_because_of_large_upload_;
-        boost::uint32_t download_bytes_use_cdn_because_of_large_upload_;
-
-        framework::timer::TickCounter use_cdn_tick_counter_;
-        boost::uint32_t http_download_bytes_when_changed_to_cdn_;
-
-        bool using_cdn_because_of_large_upload_;
+        boost::uint32_t total_times_of_use_cdn_because_of_large_upload_;
+        boost::uint32_t total_time_elapsed_use_cdn_because_of_large_upload_;
+        boost::uint32_t total_download_bytes_use_cdn_because_of_large_upload_;
 
         boost::uint8_t changed_to_p2p_condition_when_start_;
         boost::uint32_t changed_to_http_times_when_urgent_;
@@ -254,7 +249,6 @@ namespace p2sp
 
         std::vector<boost::uint32_t> rest_playable_times_;
 
-        boost::uint32_t upload_bytes_when_changed_to_cdn_because_of_large_upload_;
         boost::uint32_t total_upload_bytes_when_using_cdn_because_of_large_upload_;
 
         std::vector<boost::uint32_t> ratio_of_upload_to_download_on_history_;

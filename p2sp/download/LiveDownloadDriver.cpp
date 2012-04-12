@@ -42,11 +42,9 @@ namespace p2sp
         , bwtype_(JBW_NORMAL)
         , elapsed_seconds_since_started_(0)
         , ratio_delim_of_upload_speed_to_datarate_(200)
-        , times_of_use_cdn_because_of_large_upload_(0)
-        , time_elapsed_use_cdn_because_of_large_upload_(0)
-        , download_bytes_use_cdn_because_of_large_upload_(0)
-        , http_download_bytes_when_changed_to_cdn_(0)
-        , using_cdn_because_of_large_upload_(false)
+        , total_times_of_use_cdn_because_of_large_upload_(0)
+        , total_time_elapsed_use_cdn_because_of_large_upload_(0)
+        , total_download_bytes_use_cdn_because_of_large_upload_(0)
         , changed_to_http_times_when_urgent_(0)
         , block_times_when_use_http_under_urgent_situation_(0)
         , max_upload_speed_during_this_connection_(0)
@@ -172,14 +170,7 @@ namespace p2sp
             GetP2PControlTarget()->CalcTimeOfUsingUdpServerWhenStop();
         }
 
-        if (using_cdn_because_of_large_upload_)
-        {
-            time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
-            download_bytes_use_cdn_because_of_large_upload_ += GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
-
-            total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
-                upload_bytes_when_changed_to_cdn_because_of_large_upload_;
-        }
+        CalcCdnAccelerationStatusWhenStop(data_rate_manager_.GetCurrentDataRatePos());
 
         if (GetP2PControlTarget())
         {
@@ -223,8 +214,6 @@ namespace p2sp
 
     void LiveDownloadDriver::SaveHistoryConfig() 
     {
-        UpdateCdnAccelerationHistory();
-
         std::vector<boost::uint32_t> udp_server_ip_address_on_history, udp_server_score_on_history;
 
         std::map<boost::uint32_t, boost::uint32_t> udpservers_score_history = udpservers_score_history_.GetServicesScore(history_record_count_);
@@ -417,6 +406,8 @@ namespace p2sp
             live_streams_[data_rate_manager_.GetLastDataRatePos()]->GetP2PDownloader()->IsPausing();
             p2p_paused = false;
         }
+
+        CalcCdnAccelerationStatusWhenStop(data_rate_manager_.GetLastDataRatePos());
 
         for (vector<LiveStream__p>::iterator iter = live_streams_.begin();
             iter != live_streams_.end(); ++iter)
@@ -680,9 +671,9 @@ namespace p2sp
         info.UploadBytes = statistic::StatisticModule::Inst()->GetUploadDataBytes();
         info.DownloadTime = download_time_.elapsed() / 1000;
 
-        info.TimesOfUseCdnBecauseLargeUpload = times_of_use_cdn_because_of_large_upload_;
-        info.TimeElapsedUseCdnBecauseLargeUpload = time_elapsed_use_cdn_because_of_large_upload_;
-        info.DownloadBytesUseCdnBecauseLargeUpload = download_bytes_use_cdn_because_of_large_upload_;
+        info.TimesOfUseCdnBecauseLargeUpload = total_times_of_use_cdn_because_of_large_upload_;
+        info.TimeElapsedUseCdnBecauseLargeUpload = total_time_elapsed_use_cdn_because_of_large_upload_;
+        info.DownloadBytesUseCdnBecauseLargeUpload = total_download_bytes_use_cdn_because_of_large_upload_;
 
         if (GetP2PControlTarget())
         {
@@ -873,22 +864,12 @@ namespace p2sp
 
     void LiveDownloadDriver::SetUseCdnBecauseOfLargeUpload()
     {
-        ++times_of_use_cdn_because_of_large_upload_;
-        use_cdn_tick_counter_.reset();
-        http_download_bytes_when_changed_to_cdn_ = GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes;
-        using_cdn_because_of_large_upload_ = true;
-
-        upload_bytes_when_changed_to_cdn_because_of_large_upload_ = statistic::StatisticModule::Inst()->GetUploadDataBytes();
+        live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->SetUseCdnBecauseOfLargeUpload();
     }
 
     void LiveDownloadDriver::SetUseP2P()
     {
-        time_elapsed_use_cdn_because_of_large_upload_ += use_cdn_tick_counter_.elapsed();
-        download_bytes_use_cdn_because_of_large_upload_ += GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes - http_download_bytes_when_changed_to_cdn_;
-        using_cdn_because_of_large_upload_ = false;
-
-        total_upload_bytes_when_using_cdn_because_of_large_upload_ += statistic::StatisticModule::Inst()->GetUploadDataBytes() -
-            upload_bytes_when_changed_to_cdn_because_of_large_upload_;
+        live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->SetUseP2P();
     }
 
     void LiveDownloadDriver::SubmitChangedToP2PCondition(boost::uint8_t condition)
@@ -1021,40 +1002,6 @@ namespace p2sp
         CalcHistoryUploadStatus();
     }
 
-    void LiveDownloadDriver::UpdateCdnAccelerationHistory()
-    {
-        bool is_popular = IsPopular();
-        bool have_used_cdn_to_accelerate_long_enough = HaveUsedCdnToAccelerateLongEnough();
-
-        if (!is_popular && !have_used_cdn_to_accelerate_long_enough)
-        {
-            return;
-        }
-
-        if (is_popular && download_time_.elapsed() < 60 * 1000 && !have_used_cdn_to_accelerate_long_enough)
-        {
-            return;
-        }
-
-        boost::uint32_t ratio_of_upload_to_download = 0;
-        if (have_used_cdn_to_accelerate_long_enough)
-        {
-            boost::uint32_t total_download_bytes_in_thory = GetDataRate() * time_elapsed_use_cdn_because_of_large_upload_ / 1000;
-
-            assert (total_download_bytes_in_thory != 0);
-
-            if (download_bytes_use_cdn_because_of_large_upload_ < total_download_bytes_in_thory)
-            {
-                download_bytes_use_cdn_because_of_large_upload_ = total_download_bytes_in_thory;
-            }
-
-            ratio_of_upload_to_download = total_upload_bytes_when_using_cdn_because_of_large_upload_ * 100 /
-                download_bytes_use_cdn_because_of_large_upload_;
-        }
-
-        ratio_of_upload_to_download_on_history_.push_back(ratio_of_upload_to_download);
-    }
-
     void LiveDownloadDriver::UpdateUdpServerServiceScore(const boost::asio::ip::udp::endpoint& udp_server, int service_score)
     {
         udpservers_score_history_.UpdateServiceScore(udp_server, service_score);
@@ -1101,7 +1048,7 @@ namespace p2sp
             return false;
         }
 
-        if (times_of_use_cdn_because_of_large_upload_ != 0 &&
+        if (live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetTimesOfUseCdnBecauseOfLargeUpload() != 0 &&
             tick_counter_since_last_advance_using_cdn_.elapsed() < BootStrapGeneralConfig::Inst()->GetMinIntervalOfCdnAccelerationDelim() * 1000)
         {
             return false;
@@ -1118,19 +1065,25 @@ namespace p2sp
         return false;
     }
 
-    bool LiveDownloadDriver::IsPopular() const
-    {
-        return GetP2PControlTarget() && GetP2PControlTarget()->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize();
-    }
-
-    bool LiveDownloadDriver::HaveUsedCdnToAccelerateLongEnough() const
-    {
-        return times_of_use_cdn_because_of_large_upload_ > 0 &&
-            time_elapsed_use_cdn_because_of_large_upload_ > 30 * 1000;
-    }
-
     boost::uint32_t LiveDownloadDriver::GetDataRate() const
     {
         return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetDataRate();
+    }
+
+    void LiveDownloadDriver::AddCdnAccelerationHistory(boost::uint32_t ratio_of_upload_to_download)
+    {
+        ratio_of_upload_to_download_on_history_.push_back(ratio_of_upload_to_download);
+    }
+
+    void LiveDownloadDriver::CalcCdnAccelerationStatusWhenStop(boost::uint32_t data_rate_pos)
+    {
+        live_streams_[data_rate_pos]->CalcCdnAccelerationStatusWhenStop();
+
+        live_streams_[data_rate_pos]->UpdateCdnAccelerationHistory();
+
+        total_times_of_use_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetTimesOfUseCdnBecauseOfLargeUpload();
+        total_time_elapsed_use_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetTimeElapsedUseCdnBecauseOfLargeUpload();
+        total_download_bytes_use_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetDownloadBytesUseCdnBecauseOfLargeUpload();
+        total_upload_bytes_when_using_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetTotalUploadBytesWhenUsingCdnBecauseOfLargeUpload();
     }
 }
