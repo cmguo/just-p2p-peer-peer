@@ -108,7 +108,6 @@ namespace network
     private:
         boost::asio::ip::tcp::socket socket_;
         boost::asio::streambuf request_;
-        boost::asio::streambuf response_;
         uint32_t sended_bytes_;
         std::deque<base::AppBuffer> send_list_;
         framework::timer::OnceTimer recv_timer_;
