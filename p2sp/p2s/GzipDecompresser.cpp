@@ -12,7 +12,7 @@ namespace p2sp
     void GzipDecompresser::Start(boost::shared_ptr<IDecompressListener> handler)
     {
         handler_ = handler;
-        is_header_decompress_ = false;
+        is_decompress_complete_ = false;
     }
 
     void GzipDecompresser::Stop()
@@ -24,19 +24,19 @@ namespace p2sp
     bool GzipDecompresser::OnRecvData(protocol::SubPieceBuffer const & buffer, 
         uint32_t file_offset, uint32_t content_offset)
     {
-        assert(!is_header_decompress_);
+        assert(!is_decompress_complete_);
 
         if (file_offset >= 512*1024)
         {
             return true;
         }
 
-        if (!is_header_decompress_)
+        if (!is_decompress_complete_)
         {
             Decompress(buffer.Data(), buffer.Length());
         }
         
-        if (is_header_decompress_)
+        if (is_decompress_complete_)
         {
             if (handler_)
             {
@@ -85,7 +85,7 @@ namespace p2sp
             case Z_STREAM_END:
                 buffer->Length(SUB_PIECE_SIZE - stream_.avail_out);
                 inflateEnd(&stream_);
-                is_header_decompress_ = true;
+                is_decompress_complete_ = true;
                 return;
             case Z_NEED_DICT:
                 ret = Z_DATA_ERROR;

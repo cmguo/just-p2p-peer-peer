@@ -923,6 +923,9 @@ namespace p2sp
 
             if (!gzip_decompresser_.OnRecvData(buffer, file_offset, content_offset))
             {
+                // 请求MP4头部，并且服务器返回的MP4头部被GZIP压缩
+                // 统计压缩后的网络传输流量
+                downloader_->GetDownloadDriver()->GetStatistic()->SubmitHttpDataBytes(buffer.Length());
                 HttpRecvSubPiece();
             }
             else
@@ -1453,7 +1456,13 @@ namespace p2sp
         // if (sub_piece_info_.GetPosition(block_size_) >= piece_info_ex_.GetPosition(block_size_))
         if (false == downloader_->GetDownloadDriver()->GetInstance()->HasSubPiece(sub_piece_info))
         {
-            downloader_->GetDownloadDriver()->GetStatistic()->SubmitHttpDataBytes(buffer.Length());
+            // 只有请求MP4头部才会有可能被压缩
+            // 只有MP4头部被解压成功，这里才不统计下载字节数（因为之前已经统计过）
+            if (!gzip_decompresser_.IsDecompressComplete())
+            {
+                downloader_->GetDownloadDriver()->GetStatistic()->SubmitHttpDataBytes(buffer.Length());
+            }
+
             if (downloader_->GetDownloadDriver()->IsOpenService())
             {
                 statistic::DACStatisticModule::Inst()->SubmitHttpDownloadBytes(buffer.Length());
