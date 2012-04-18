@@ -387,6 +387,16 @@ namespace p2sp
             return auto_switch_stream_;
         }
 
+        boost::uint32_t MaxSNListSize() const
+        {
+            return max_sn_list_size_;
+        }
+
+        boost::uint32_t GetSNRequestNumber() const
+        {
+            return sn_request_number_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -620,11 +630,17 @@ namespace p2sp
         //最小peer连接数
         boost::uint32_t p2p_download_min_connect_count_bound;
 
+        //最大SN list size
+        boost::uint32_t max_sn_list_size_;
+
         //是否根据udpserver的历史使用情况来优选使用过去服务得较好的udpserver
         bool udp_server_usage_history_enabled_;
 
         // 是否启用二代直播的多码率自动切换
         bool auto_switch_stream_;
+
+        //单次向SN请求包个数
+        boost::uint32_t sn_request_number_;
     };
 }
 #endif

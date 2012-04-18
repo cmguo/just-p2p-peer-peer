@@ -1728,8 +1728,9 @@ namespace p2sp
     void P2PDownloader::InitSnList(const std::list<boost::asio::ip::udp::endpoint> & sn_list)
     {
         sn_pool_object_.Add(sn_list);
+        boost::uint32_t max_sn_list_sz = BootStrapGeneralConfig::Inst()->MaxSNListSize();
 
-        while (sn_.size() < MAX_SN_LIST_SIZE && sn_pool_object_.IsHaveReserveSn())
+        while (sn_.size() < max_sn_list_sz && sn_pool_object_.IsHaveReserveSn())
         {
             boost::shared_ptr<SNConnection> sn_connection = 
                 SNConnection::create(shared_from_this(), sn_pool_object_.GetReserveSn());

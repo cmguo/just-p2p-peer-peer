@@ -48,8 +48,6 @@ namespace p2sp
     class DownloadDriver;
     typedef boost::shared_ptr<DownloadDriver> DownloadDriver__p;
 
-    const boost::uint32_t MAX_SN_LIST_SIZE = 4;
-
     class P2PDownloader
         : public VodDownloader
         , public IP2PControlTarget

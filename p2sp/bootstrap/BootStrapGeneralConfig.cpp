@@ -88,10 +88,12 @@ namespace p2sp
         , max_times_of_record_(50)
         , min_times_of_record_(3)
         , interval_of_requesting_announce_from_udpserver_(5)
-        ,p2p_download_max_connect_count_bound(40)
-        ,p2p_download_min_connect_count_bound(5)
-        ,udp_server_usage_history_enabled_(true)
+        , p2p_download_max_connect_count_bound(40)
+        , p2p_download_min_connect_count_bound(5)
+        , udp_server_usage_history_enabled_(true)
         , auto_switch_stream_(false)
+        , max_sn_list_size_(4)
+        , sn_request_number_(20)
     {
     }
 
@@ -232,6 +234,8 @@ namespace p2sp
                 ("config.mincon", po::value<uint32_t>()->default_value(p2p_download_min_connect_count_bound))
                 ("config.usuhe", po::value<bool>()->default_value(udp_server_usage_history_enabled_))
                 ("config.ass", po::value<bool>()->default_value(auto_switch_stream_))
+                ("config.maxsnls", po::value<uint32_t>()->default_value(max_sn_list_size_))
+                ("config.snrc", po::value<uint32_t>()->default_value(sn_request_number_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -315,6 +319,8 @@ namespace p2sp
             p2p_download_min_connect_count_bound = vm["config.mincon"].as<uint32_t>();
             udp_server_usage_history_enabled_ = vm["config.usuhe"].as<bool>();
             auto_switch_stream_ = vm["config.ass"].as<bool>();
+            max_sn_list_size_ = vm["config.maxsnls"].as<uint32_t>();
+            sn_request_number_ = vm["config.snrc"].as<uint32_t>();
 
             if (save_to_disk)
             {

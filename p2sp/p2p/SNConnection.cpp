@@ -71,10 +71,11 @@ namespace p2sp
     void SNConnection::RequestTillFullWindow(bool need_check)
     {
         curr_time_out_ = statistic_->GetAverageRTT() + p2p_downloader_->GetRTTPlus();
+        boost::uint32_t sn_request_number = BootStrapGeneralConfig::Inst()->GetSNRequestNumber();
 
         while (requesting_count_ < window_size_ && !task_queue_.empty())
         {
-            RequestSubPieces(20, 2, false);
+            RequestSubPieces(sn_request_number, 2, false);
         }
     }
 
