@@ -1223,7 +1223,7 @@ namespace p2sp
 
     boost::uint32_t LiveP2PDownloader::GetDataRate() const
     {
-        return live_stream_->GetDataRate();
+        return live_stream_->GetDataRateInBytes();
     }
 
     storage::LivePosition & LiveP2PDownloader::GetPlayingPosition() const

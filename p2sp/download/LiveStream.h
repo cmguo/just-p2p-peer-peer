@@ -117,11 +117,11 @@ namespace p2sp
             return live_download_driver_->GetDownloadTime();
         }
 
-        boost::uint32_t GetDataRate() const
+        boost::uint32_t GetDataRateInBytes() const
         {
             if (live_instance_->GetDataRate() == 0)
             {
-                return default_data_rate_;
+                return default_data_rate_in_kbps_ / 8 * 1024;
             }
             return live_instance_->GetDataRate();
         }
@@ -159,7 +159,7 @@ namespace p2sp
 
         boost::uint32_t live_interval_;
 
-        boost::uint32_t default_data_rate_;
+        boost::uint32_t default_data_rate_in_kbps_;
 
         JumpBWType bwtype_;
 

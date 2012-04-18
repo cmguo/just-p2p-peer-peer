@@ -1067,7 +1067,7 @@ namespace p2sp
 
     boost::uint32_t LiveDownloadDriver::GetDataRate() const
     {
-        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetDataRate();
+        return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetDataRateInBytes();
     }
 
     void LiveDownloadDriver::AddCdnAccelerationHistory(boost::uint32_t ratio_of_upload_to_download)

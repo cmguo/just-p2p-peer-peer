@@ -17,7 +17,7 @@ namespace p2sp
         , url_(url)
         , rid_(rid)
         , live_interval_(live_interval)
-        , default_data_rate_(default_data_rate)
+        , default_data_rate_in_kbps_(default_data_rate)
         , is_running_(false)
         , times_of_use_cdn_because_of_large_upload_(0)
         , time_elapsed_use_cdn_because_of_large_upload_(0)
@@ -196,7 +196,7 @@ namespace p2sp
         boost::uint32_t ratio_of_upload_to_download = 0;
         if (have_used_cdn_to_accelerate_long_enough)
         {
-            boost::uint32_t total_download_bytes_in_theory = GetDataRate() * time_elapsed_use_cdn_because_of_large_upload_ / 1000;
+            boost::uint32_t total_download_bytes_in_theory = GetDataRateInBytes() * time_elapsed_use_cdn_because_of_large_upload_ / 1000;
 
             if (total_download_bytes_in_theory == 0)
             {
