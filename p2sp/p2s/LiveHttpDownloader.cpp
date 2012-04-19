@@ -344,7 +344,12 @@ namespace p2sp
 
     void LiveHttpDownloader::RequestNextBlock()
     {
-        live_stream_->RequestNextBlock(shared_from_this());
+        // 在OnBlockTimeout中，会异步Resume，如果这个时候恰好码率切换
+        // live_stream_可能为空，但是仅仅在这里需要判断
+        if (live_stream_)
+        {
+            live_stream_->RequestNextBlock(shared_from_this());
+        }
     }
 
     void LiveHttpDownloader::RequestSubPiece()
