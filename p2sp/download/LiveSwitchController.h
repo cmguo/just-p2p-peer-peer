@@ -35,7 +35,7 @@ namespace p2sp
     {
     public:
         LiveSwitchController();
-        void Start(LiveDownloadDriver__p live_download_driver);
+        void Start(LiveDownloadDriver__p live_download_driver, bool is_too_near_from_last_vv_of_same_channel);
         void Stop();
     private:
         void ChangeTo3200();
@@ -81,6 +81,8 @@ namespace p2sp
         bool changed_to_http_because_of_large_upload_;
 
         bool blocked_this_time_;
+
+        bool is_too_near_from_last_vv_of_same_channel_;
 
         enum ChangedToP2PCondition
         {

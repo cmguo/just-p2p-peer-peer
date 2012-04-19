@@ -397,6 +397,21 @@ namespace p2sp
             return sn_request_number_;
         }
 
+        bool GetShouldJudgeSwitchingDatarateManually() const
+        {
+            return should_judge_switching_datarate_manually_;
+        }
+
+        boost::uint32_t GetIntervalOfTwoVVDelim() const
+        {
+            return interval_of_two_vv_delim_;
+        }
+
+        boost::uint32_t GetRestPlayableTimeDelimWhenSwitching() const
+        {
+            return rest_playable_time_delim_when_switching_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -641,6 +656,15 @@ namespace p2sp
 
         //单次向SN请求包个数
         boost::uint32_t sn_request_number_;
+
+        // 根据channel id上一次结束距下一次开始的时间间隔来判断是不是手动切换码流
+        bool should_judge_switching_datarate_manually_;
+
+        // 相同channel id的两次播放间隔小于这个值则认为是手动切换码流，单位毫秒
+        boost::uint32_t interval_of_two_vv_delim_;
+
+        // 手动切换码流时，如果剩余时间小于这个值，则http启动
+        boost::uint32_t rest_playable_time_delim_when_switching_;
     };
 }
 #endif

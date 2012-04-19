@@ -156,6 +156,9 @@ namespace p2sp
             return ppva_config_path_;
         }
 
+        void UpdateStopTime(const RID & channel_id);
+        bool TryGetTimeElapsedSinceStop(const RID & channel_id, boost::uint32_t & time_elapsed) const;
+
     private:
         boost::asio::io_service & io_svc_;
 
@@ -183,6 +186,9 @@ namespace p2sp
         // 是否对客户端下载电影的连接限速
         // 用于获取play, dt, drag
         bool is_limit_download_connection_;
+
+        std::map<RID, boost::uint32_t> time_elapsed_since_stop_;
+        framework::timer::TickCounter tick_counter_;
 
     private:
         static ProxyModule::p inst_;

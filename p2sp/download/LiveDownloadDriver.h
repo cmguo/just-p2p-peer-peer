@@ -58,7 +58,9 @@ namespace p2sp
 
     public:
         void Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval, bool replay,
-            const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype, uint32_t unique_id);
+            const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype,
+            uint32_t unique_id, bool is_too_near_from_last_vv_of_same_channel);
+
         void Stop();
 
         bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,

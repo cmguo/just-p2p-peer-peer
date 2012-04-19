@@ -130,6 +130,8 @@ namespace p2sp
 
    //     proxy_timer_ = framework::timer::PeriodicTimer::create(250, shared_from_this());
         proxy_timer_.start();
+
+        tick_counter_.start();
     }
 
     void ProxyModule::Stop()
@@ -159,6 +161,8 @@ namespace p2sp
         is_running_ = false;
 
         inst_.reset();
+
+        tick_counter_.stop();
     }
 
     void ProxyModule::OnTimerElapsed(framework::timer::Timer * pointer)
@@ -1892,5 +1896,25 @@ namespace p2sp
             }
             break;
         }
+    }
+
+    void ProxyModule::UpdateStopTime(const RID & channel_id)
+    {
+        time_elapsed_since_stop_[channel_id] = tick_counter_.elapsed();
+    }
+
+    bool ProxyModule::TryGetTimeElapsedSinceStop(const RID & channel_id, boost::uint32_t & time_elapsed) const
+    {
+        std::map<RID, boost::uint32_t>::const_iterator iter = time_elapsed_since_stop_.find(channel_id);
+
+        if (iter != time_elapsed_since_stop_.end())
+        {
+            assert(tick_counter_.elapsed() >= iter->second);
+            time_elapsed = tick_counter_.elapsed() - iter->second;
+
+            return true;
+        }
+
+        return false;
     }
 }

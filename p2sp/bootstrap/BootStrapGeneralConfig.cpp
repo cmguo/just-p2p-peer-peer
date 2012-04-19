@@ -94,6 +94,9 @@ namespace p2sp
         , auto_switch_stream_(false)
         , max_sn_list_size_(4)
         , sn_request_number_(20)
+        , should_judge_switching_datarate_manually_(true)
+        , interval_of_two_vv_delim_(5 * 1000)
+        , rest_playable_time_delim_when_switching_(10)
     {
     }
 
@@ -236,6 +239,9 @@ namespace p2sp
                 ("config.ass", po::value<bool>()->default_value(auto_switch_stream_))
                 ("config.maxsnls", po::value<uint32_t>()->default_value(max_sn_list_size_))
                 ("config.snrc", po::value<uint32_t>()->default_value(sn_request_number_))
+                ("config.jsd", po::value<bool>()->default_value(should_judge_switching_datarate_manually_))
+                ("config.i2vv", po::value<uint32_t>()->default_value(interval_of_two_vv_delim_))
+                ("config.rpts", po::value<uint32_t>()->default_value(rest_playable_time_delim_when_switching_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -321,6 +327,9 @@ namespace p2sp
             auto_switch_stream_ = vm["config.ass"].as<bool>();
             max_sn_list_size_ = vm["config.maxsnls"].as<uint32_t>();
             sn_request_number_ = vm["config.snrc"].as<uint32_t>();
+            should_judge_switching_datarate_manually_ = vm["config.jsd"].as<bool>();
+            interval_of_two_vv_delim_ = vm["config.i2vv"].as<uint32_t>();
+            rest_playable_time_delim_when_switching_ = vm["config.rpts"].as<uint32_t>();
 
             if (save_to_disk)
             {

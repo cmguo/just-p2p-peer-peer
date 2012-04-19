@@ -91,7 +91,8 @@ namespace p2sp
     }
 
     void LiveDownloadDriver::Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
-        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, uint32_t unique_id)
+        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, uint32_t unique_id,
+        bool is_too_near_from_last_vv_of_same_channel)
     {
         data_rate_manager_.Start(rids, data_rate_s);
         start_position_.SetBlockId(start_position);
@@ -127,7 +128,7 @@ namespace p2sp
         live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->Start(start_position);
 
         // 直播状态机
-        live_switch_controller_.Start(shared_from_this());
+        live_switch_controller_.Start(shared_from_this(), is_too_near_from_last_vv_of_same_channel);
         
 #ifndef STATISTIC_OFF
         live_download_driver_statistic_info_.Clear();

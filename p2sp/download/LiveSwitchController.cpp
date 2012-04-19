@@ -16,9 +16,10 @@ namespace p2sp
 
     }
 
-    void LiveSwitchController::Start(LiveDownloadDriver__p live_download_driver)
+    void LiveSwitchController::Start(LiveDownloadDriver__p live_download_driver, bool is_too_near_from_last_vv_of_same_channel)
     {
         live_download_driver_ = live_download_driver;
+        is_too_near_from_last_vv_of_same_channel_ = is_too_near_from_last_vv_of_same_channel;
 
         assert(GetHTTPControlTarget() || GetP2PControlTarget());
 
@@ -378,6 +379,16 @@ namespace p2sp
     {
         if (is_started_)
         {
+            if (BootStrapGeneralConfig::Inst()->GetShouldJudgeSwitchingDatarateManually() && is_too_near_from_last_vv_of_same_channel_
+                && live_download_driver_->GetRestPlayableTime() < BootStrapGeneralConfig::Inst()->GetRestPlayableTimeDelimWhenSwitching())
+            {
+                if (GetHTTPControlTarget())
+                {
+                    ChangeTo2300();
+                    return;
+                }
+            }
+
             if (BootStrapGeneralConfig::Inst()->GetShouldUseBWType() && GetHTTPControlTarget() && GetP2PControlTarget())
             {
                 // bwtype = JBW_NORMAL p2p启动

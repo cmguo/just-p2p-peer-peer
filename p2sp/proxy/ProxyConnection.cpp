@@ -231,6 +231,11 @@ namespace p2sp
 
         will_stop_ = true;
 
+        if (IsLiveConnection())
+        {
+            ProxyModule::Inst()->UpdateStopTime(live_download_driver_->GetChannelId());
+        }
+
         StopDownloadDriver();
 
 //         MainThread::Post(
@@ -1934,10 +1939,22 @@ namespace p2sp
         proxy_sender_ = LiveProxySender::create(http_server_socket_);
         proxy_sender_->Start();
 
+        boost::uint32_t time_elapsed_since_stop;
+        bool is_two_vv_of_same_channel_too_near = false;
+
+        if (ProxyModule::Inst()->TryGetTimeElapsedSinceStop(play_info->GetChannelID(), time_elapsed_since_stop))
+        {
+            if (time_elapsed_since_stop < BootStrapGeneralConfig::Inst()->GetIntervalOfTwoVVDelim())
+            {
+                is_two_vv_of_same_channel_too_near = true;
+            }
+        }
+
         live_download_driver_ = LiveDownloadDriver::create(io_svc_, shared_from_this());
         live_download_driver_->Start(play_info->GetUrlInfo().url_, play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
-            play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID());
+            play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID(),
+            is_two_vv_of_same_channel_too_near);
 
         if (play_info->GetRestTimeInMillisecond() > 0)
         {
