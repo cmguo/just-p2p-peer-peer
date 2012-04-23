@@ -1740,35 +1740,19 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
 /*
  * 开始对所有下载视频的连接限速
  * 用于客户端获取Play, DT, Drag
+ * 接口已经废除
  */
 void PEER_API StartLimitDownloadConnection()
 {
-    LOGX(__DEBUG, "interface", "StartLimitDownloadConnection");
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartLimitDownloadConnection, p2sp::ProxyModule::Inst()));
 }
 
 /*
  * 开始对所有下载视频的连接限速
  * 用于客户端获取Play, DT, Drag之后，恢复原来的下载策略
+ * 接口已经废除
  */
 void PEER_API StopLimitDownloadConnection()
 {
-    LOGX(__DEBUG, "interface", "StopLimitDownloadConnection");
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StopLimitDownloadConnection, p2sp::ProxyModule::Inst()));
 }
 
 // 获得Peer统计的用户带宽值

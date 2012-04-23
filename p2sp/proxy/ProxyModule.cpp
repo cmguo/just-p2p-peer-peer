@@ -40,7 +40,6 @@ namespace p2sp
         , proxy_timer_(global_250ms_timer(), 250, boost::bind(&ProxyModule::OnTimerElapsed, this, &proxy_timer_))
         , speed_query_counter_(false)
         , is_running_(false)
-        , is_limit_download_connection_(false)
     {
     }
 
@@ -1378,32 +1377,6 @@ namespace p2sp
         }
     }
 
-    // 开始限制下载电影的请求速度
-    void ProxyModule::StartLimitDownloadConnection()
-    {
-        // 原来采用类似引用计数的机制，客户端暂时保证是一个start对应一个stop
-        // 现在出于质量的考虑，改成true false形式
-        is_limit_download_connection_ = true;
-
-        // 禁用上传
-        P2PModule::Inst()->SetUploadSwitch(true);
-
-        GlobalSpeedLimit();
-    }
-
-    // 停止限制下载电影的请求速度
-    void ProxyModule::StopLimitDownloadConnection()
-    {
-        // 原来采用类似引用计数的机制，客户端暂时保证是一个start对应一个stop
-        // 现在出于质量的考虑，改成true false形式
-        is_limit_download_connection_ = false;
-
-        // 启用上传
-        P2PModule::Inst()->SetUploadSwitch(false);
-
-        GlobalSpeedLimit();
-    }
-
     // 设置内核推送数据的速度
     void ProxyModule::SetSendSpeedLimitByUrl(string url, boost::int32_t send_speed_limit)
     {
@@ -1457,178 +1430,78 @@ namespace p2sp
             }
         }
 
-        if (is_limit_download_connection_)
-        {
-            // 客户端已经除去网页预留带宽模式了
-            assert(false);
+        // 无需为网页预留带宽
 
-            // 网页预留带宽模式
+        // 点播视频不限速
+        for (std::set<ProxyConnection::p>::iterator i = play_vod_connections.begin();
+            i != play_vod_connections.end(); ++i)
+        {
+            // 启用智能限速，恢复原来的现场(高速模式也会恢复)
+            (*i)->GetDownloadDriver()->EnableSmartSpeedLimit();
+        }
+
+        // 下载请求集合不为空，需要对下载请求限速
+        if (!download_connections.empty())
+        {
             if (!play_vod_connections.empty())
             {
-                // 正在看点播
-                boost::int32_t total_data_rate_in_bps = 0;
-                for (std::set<ProxyConnection::p>::iterator iter = play_vod_connections.begin();
+                // 点播请求集合不为空，表示正在看点播
+                boost::int32_t total_limit_in_KBps = 0;
+                bool is_exist_fast_mode = false;
+
+                for (std::set<ProxyConnection__p>::iterator iter = play_vod_connections.begin();
                     iter != play_vod_connections.end(); ++iter)
                 {
-                    total_data_rate_in_bps += (*iter)->GetDownloadDriver()->GetDataRate();
-                }
-
-                if (bandwidth - 25*1024 > total_data_rate_in_bps)
-                {
-                    if (play_vod_connections.size() == 1)
+                    if ((*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::FAST_MODE ||
+                        (*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::SMART_MODE &&
+                        (*iter)->GetDownloadDriver()->GetRestPlayableTime() < 30*1000)
                     {
-                        // 只有一个播放, 按照min(带宽-25KB，码流*1.4，码流 + 40)限速
-                        std::set<ProxyConnection::p>::iterator iter = play_vod_connections.begin();
-                        (*iter)->GetDownloadDriver()->DisableSmartSpeedLimit();
-
-                        boost::int32_t speed_limit = std::min(bandwidth / 1024 - 25,
-                            std::min(
-                            (boost::int32_t)((*iter)->GetDownloadDriver()->GetDataRate() / 1024 * 1.4),
-                            (boost::int32_t)((*iter)->GetDownloadDriver()->GetDataRate() / 1024 + 40)));
-
-                        (*iter)->GetDownloadDriver()->SetSpeedLimitInKBps(speed_limit);
-
-                        // 写共享内存
-                        if ((*iter)->GetDownloadDriver()->GetStatistic())
-                        {
-                            (*iter)->GetDownloadDriver()->GetStatistic()->SetSmartPara(
-                                (*iter)->GetDownloadDriver()->GetRestPlayableTime(), bandwidth,
-                                speed_limit);
-                        }
+                        // 存在高速模式
+                        is_exist_fast_mode = true;
+                        break;
                     }
                     else
                     {
-                        // 一个以上的播放，按照每个播放的码流限速
-                        for (std::set<ProxyConnection::p>::iterator iter = play_vod_connections.begin();
-                            iter != play_vod_connections.end(); ++iter)
-                        {
-                            // 禁止智能限速，防止速度被智能限速刷掉
-                            (*iter)->GetDownloadDriver()->DisableSmartSpeedLimit();
-                            (*iter)->GetDownloadDriver()->SetSpeedLimitInKBps(
-                                (*iter)->GetDownloadDriver()->GetDataRate() / 1024);
-
-                            // 写共享内存，在Peermonitor上显示下载的限速
-                            if ((*iter)->GetDownloadDriver()->GetStatistic())
-                            {
-                                (*iter)->GetDownloadDriver()->GetStatistic()->SetSmartPara(
-                                    (*iter)->GetDownloadDriver()->GetRestPlayableTime(), bandwidth,
-                                    (*iter)->GetDownloadDriver()->GetDataRate() / 1024);
-                            }
-                        }
+                        total_limit_in_KBps += ((*iter)->GetDownloadDriver()->GetDataRate() / 1024 +
+                            (*iter)->GetDownloadDriver()->GetSpeedLimitInKBps()) / 2;
                     }
+                }
+
+                if (is_exist_fast_mode)
+                {
+                    // 高速模式
+                    download_speed_limit_in_KBps = 1;
                 }
                 else
                 {
-                    boost::int32_t speed_limit_in_Kbps = (bandwidth - 25*1024) / 1024 / play_vod_connections.size();
-                    for (std::set<ProxyConnection::p>::iterator iter = play_vod_connections.begin();
-                        iter != play_vod_connections.end(); ++iter)
+                    // 智能限速模式
+                    if (bandwidth / 1024 > total_limit_in_KBps)
                     {
-                        // 禁止智能限速，防止速度被智能限速刷掉
-                        (*iter)->GetDownloadDriver()->DisableSmartSpeedLimit();
-                        (*iter)->GetDownloadDriver()->SetSpeedLimitInKBps(speed_limit_in_Kbps);
-
-                        // 写共享内存，在Peermonitor上显示下载的限速
-                        if ((*iter)->GetDownloadDriver()->GetStatistic())
-                        {
-                            (*iter)->GetDownloadDriver()->GetStatistic()->SetSmartPara(
-                                (*iter)->GetDownloadDriver()->GetRestPlayableTime(), bandwidth,
-                                speed_limit_in_Kbps);
-
-                        }
-                    }
-                }
-
-                download_speed_limit_in_KBps = 1;
-            }
-            else if (is_watch_live)
-            {
-                // 正在看直播
-                download_speed_limit_in_KBps = 1;
-            }
-            else
-            {
-                // 不在观看，75%带宽平分给下载
-                if (!download_connections.empty())
-                {
-                    download_speed_limit_in_KBps = bandwidth * 3/4 / 1024 / download_connections.size();
-                }
-            }
-        }
-        else
-        {
-            // 无需为网页预留带宽
-
-            // 点播视频不限速
-            for (std::set<ProxyConnection::p>::iterator i = play_vod_connections.begin();
-                i != play_vod_connections.end(); ++i)
-            {
-                // 启用智能限速，恢复原来的现场(高速模式也会恢复)
-                (*i)->GetDownloadDriver()->EnableSmartSpeedLimit();
-            }
-
-            // 下载请求集合不为空，需要对下载请求限速
-            if (!download_connections.empty())
-            {
-                if (!play_vod_connections.empty())
-                {
-                    // 点播请求集合不为空，表示正在看点播
-                    boost::int32_t total_limit_in_KBps = 0;
-                    bool is_exist_fast_mode = false;
-
-                    for (std::set<ProxyConnection__p>::iterator iter = play_vod_connections.begin();
-                        iter != play_vod_connections.end(); ++iter)
-                    {
-                        if ((*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::FAST_MODE ||
-                            (*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::SMART_MODE &&
-                            (*iter)->GetDownloadDriver()->GetRestPlayableTime() < 30*1000)
-                        {
-                            // 存在高速模式
-                            is_exist_fast_mode = true;
-                            break;
-                        }
-                        else
-                        {
-                            total_limit_in_KBps += ((*iter)->GetDownloadDriver()->GetDataRate() / 1024 +
-                                (*iter)->GetDownloadDriver()->GetSpeedLimitInKBps()) / 2;
-                        }
-                    }
-
-                    if (is_exist_fast_mode)
-                    {
-                        // 高速模式
-                        download_speed_limit_in_KBps = 1;
-                    }
-                    else
-                    {
-                        // 智能限速模式
-                        if (bandwidth / 1024 > total_limit_in_KBps)
-                        {
-                            download_speed_limit_in_KBps =
-                                (bandwidth / 1024 - total_limit_in_KBps) / download_connections.size();
-                        }
-                        else
-                        {
-                            LIMIT_MIN(download_speed_limit_in_KBps, 1);
-                        }
-                    }
-                }
-                else if (is_watch_live)
-                {
-                    // 正在看直播
-                    if (bandwidth / 1024 > 70)
-                    {
-                        download_speed_limit_in_KBps = (bandwidth / 1024 - 70) / download_connections.size();
+                        download_speed_limit_in_KBps =
+                            (bandwidth / 1024 - total_limit_in_KBps) / download_connections.size();
                     }
                     else
                     {
                         LIMIT_MIN(download_speed_limit_in_KBps, 1);
                     }
                 }
+            }
+            else if (is_watch_live)
+            {
+                // 正在看直播
+                if (bandwidth / 1024 > 70)
+                {
+                    download_speed_limit_in_KBps = (bandwidth / 1024 - 70) / download_connections.size();
+                }
                 else
                 {
-                    // 不在观看，不限速
-                    download_speed_limit_in_KBps = -1;
+                    LIMIT_MIN(download_speed_limit_in_KBps, 1);
                 }
+            }
+            else
+            {
+                // 不在观看，不限速
+                download_speed_limit_in_KBps = -1;
             }
         }
 

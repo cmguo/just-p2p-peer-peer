@@ -473,6 +473,7 @@ void (PEER_API * LPSETDOWNLOADMODE)(const char * lpwszRID, boost::uint32_t nRIDL
 /*
  * 开始对所有下载视频的连接限速
  * 用于客户端获取Play, DT, Drag
+ * 接口已经废除
  */
 void         PEER_API StartLimitDownloadConnection();
 typedef
@@ -481,6 +482,7 @@ void         (PEER_API * LPSTARTLIMITDOWNLOADCONNECTION)();
 /*
  * 开始对所有下载视频的连接限速
  * 用于客户端获取Play, DT, Drag之后，恢复原来的下载策略
+ * 接口已经废除
  */
 void         PEER_API StopLimitDownloadConnection();
 typedef

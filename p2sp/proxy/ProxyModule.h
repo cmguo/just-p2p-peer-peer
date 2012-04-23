@@ -118,10 +118,7 @@ namespace p2sp
         void LoadHistoricalMaxDownloadSpeed();
         void SaveHistoricalMaxDownloadSpeed();
 
-        // 开始限制下载电影的请求速度
-        void StartLimitDownloadConnection();
-        // 停止限制下载电影的请求速度
-        void StopLimitDownloadConnection();
+
         // 设置内核推送数据的速度
         void SetSendSpeedLimitByUrl(string url, boost::int32_t send_speed_limit);
         // 全局限速管理
@@ -182,10 +179,6 @@ namespace p2sp
         int last_rest_time_;
         // 状态
         volatile bool is_running_;
-
-        // 是否对客户端下载电影的连接限速
-        // 用于获取play, dt, drag
-        bool is_limit_download_connection_;
 
         std::map<RID, boost::uint32_t> time_elapsed_since_stop_;
         framework::timer::TickCounter tick_counter_;
