@@ -167,11 +167,9 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 
 void PEER_API Clearup()
 {
-//    global_io_svc().post(boost::bind(&p2sp::AppModule::Stop, p2sp::AppModule::Inst()));
+    global_io_svc().post(boost::bind(&p2sp::AppModule::Stop, p2sp::AppModule::Inst()));
 
     MainThread::Stop();
-
-    p2sp::AppModule::Inst()->Stop();
 
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().PostWindowsMessage(UM_CLEARUP_SUCCED, NULL, NULL);
