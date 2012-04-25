@@ -360,8 +360,11 @@ namespace storage
         resource_p_.reset();
         url_info_s_.clear();
 
-        global_io_svc().post(boost::bind(&Storage::OnResourceCloseFinish, Storage::Inst_Storage(), shared_from_this(),
-            resource_p, need_remove_file));
+        if (Storage::Inst_Storage())
+        {
+            global_io_svc().post(boost::bind(&Storage::OnResourceCloseFinish, Storage::Inst_Storage(), shared_from_this(),
+                resource_p, need_remove_file));
+        }
     }
 
     // 文件是否完整(是否下载完毕)

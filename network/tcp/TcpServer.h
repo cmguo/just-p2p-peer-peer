@@ -82,11 +82,13 @@ namespace network
         void HandleAccept(TcpConnection::pointer new_connection,
             const boost::system::error_code& error)
         {
-            if (!error)
+            if (error)
             {
-                new_connection->DoRecv();
+                return;
+                
             }
 
+            new_connection->DoRecv();
             StartAccept();
         }
     private:

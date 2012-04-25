@@ -59,7 +59,8 @@ void WindowsMainThread::StopThread()
 {
     global_io_svc().stop();
 
-    WaitForSingleObject(ios_thread, INFINITE);
+    WaitForSingleObject(ios_thread, 2*1000);
+    TerminateThread(ios_thread, 0);
     CloseHandle(ios_thread);
 }
 

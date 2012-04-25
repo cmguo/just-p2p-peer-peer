@@ -57,6 +57,10 @@ namespace p2sp
     {
         SaveHistoricalMaxUploadSpeed();
         live_upload_manager_->Stop();
+
+        network_quality_monitor_->Stop();
+
+        inst_.reset();
     }
 
     bool UploadModule::TryHandlePacket(const protocol::Packet & packet)
