@@ -114,14 +114,10 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
         lpParam->bHttpProxyEnabled != 0
         );
 
-    if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
-    {
-        p2sp::AppModule::Inst()->Stop();
-    }
-    else
-    {
-        MainThread::Start();
-    }
+    global_io_svc().post(boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), 
+        boost::ref(global_io_svc()), appmodule_start_interface));
+    MainThread::Start();
+
 }
 #else
 // PPBOX兼容接口
