@@ -73,6 +73,58 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 //
 //////////////////////////////////////////////////////////////////////////
 
+// helper
+struct Event
+{
+    typedef boost::shared_ptr<Event> p;
+public:
+    static p Create()
+    {
+        return p(new Event());
+    }
+    virtual ~Event()
+    {
+        Notify();
+    }
+    void Wait()
+    {
+        boost::unique_lock<boost::mutex> lock(mutex_);
+
+        while (!data_ready_)
+        {
+            cond_.wait(lock);
+        }
+    }
+    void Notify()
+    {
+        {
+            boost::lock_guard<boost::mutex> lock(mutex_);
+            data_ready_ = true;
+        }
+        cond_.notify_one();
+    }
+private:
+    Event()
+    {
+        data_ready_ = false;
+    }
+
+    boost::condition_variable cond_;
+    boost::mutex mutex_;
+    bool data_ready_;
+};
+
+struct SimpleResult
+{
+    Event::p event_;
+
+    SimpleResult(Event::p e) : event_(e) {}
+    void result_handler()
+    {
+        event_->Notify();
+    }
+};
+
 bool IsProxyModuleStarted()
 {
     return ProxyModule::Inst() &&
@@ -91,9 +143,6 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
 #if (defined _DEBUG || defined DEBUG)
     framework::logger::glog.load_config(conf);
 #endif
-
-    ((framework::timer::AsioTimerManager &)global_second_timer()).start();
-    ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
 
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
@@ -114,10 +163,16 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
         lpParam->bHttpProxyEnabled != 0
         );
 
+    Event::p event_wait = Event::Create();
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
     global_io_svc().post(boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), 
-        boost::ref(global_io_svc()), appmodule_start_interface));
+        boost::ref(global_io_svc()), appmodule_start_interface, fun));
+
     MainThread::Start();
 
+    event_wait->Wait();
 }
 #else
 // PPBOX兼容接口
@@ -593,58 +648,6 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
         url, speed_in_KBps));
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
-
-// helper
-struct Event
-{
-    typedef boost::shared_ptr<Event> p;
-    public:
-    static p Create()
-    {
-        return p(new Event());
-    }
-    virtual ~Event()
-    {
-        Notify();
-    }
-    void Wait()
-    {
-        boost::unique_lock<boost::mutex> lock(mutex_);
-
-        while (!data_ready_)
-        {
-            cond_.wait(lock);
-        }
-    }
-    void Notify()
-    {
-        {
-            boost::lock_guard<boost::mutex> lock(mutex_);
-            data_ready_ = true;
-        }
-        cond_.notify_one();
-    }
-    private:
-    Event()
-    {
-        data_ready_ = false;
-    }
-
-    boost::condition_variable cond_;
-    boost::mutex mutex_;
-    bool data_ready_;
-};
-
-struct SimpleResult
-{
-    Event::p event_;
-
-    SimpleResult(Event::p e) : event_(e) {}
-    void result_handler()
-    {
-        event_->Notify();
-    }
-};
 
 struct DownloadProgressResult
 {

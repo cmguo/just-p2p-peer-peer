@@ -59,6 +59,7 @@ namespace p2sp
         live_upload_manager_->Stop();
 
         network_quality_monitor_->Stop();
+        network_quality_monitor_.reset();
 
         inst_.reset();
     }

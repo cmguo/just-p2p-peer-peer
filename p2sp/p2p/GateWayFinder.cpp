@@ -55,6 +55,7 @@ namespace p2sp
         if (ping_client_)
         {
             ping_client_->CancelAll();
+            ping_client_.reset();
         }
 
         is_running_ = false;

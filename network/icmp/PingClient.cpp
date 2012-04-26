@@ -124,6 +124,10 @@ namespace network
         else
         {
             DebugLog("PingClient::HandleReceive error:%s\n", error_code.message().c_str());
+            if (error_code.value() == 995)
+            {
+                return;
+            }
         }
         
         recv_buffer_.consume(bytes_transfered);

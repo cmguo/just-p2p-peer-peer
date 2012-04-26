@@ -83,14 +83,19 @@ namespace p2sp
 
     bool AppModule::Start(
         boost::asio::io_service & io_svc,
-        AppModuleStartInterface::p appmodule_start_interface)
+        AppModuleStartInterface::p appmodule_start_interface,
+        boost::function<void()> fun)
     {
         if (is_running_ == true)
         {
+            fun();
             return true;
         }
 
         is_running_ = true;
+
+        ((framework::timer::AsioTimerManager &)global_second_timer()).start();
+        ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
         
         LOG(__DEBUG, "app", "PeerVersion " << PEER_KERNEL_VERSION_STR);
         LOG(__DEBUG, "app", "AppModule::Start");
@@ -271,6 +276,8 @@ namespace p2sp
         //读取crossdomain配置文件
         network::CrossDomainConfig::GetInstance()->LoadConfig();
 
+        fun();
+
         LOG(__DEBUG, "app", "Start Finish!");
 
         return true;
@@ -284,9 +291,12 @@ namespace p2sp
             return;
         }
 
-        LOG(__EVENT, "app", "AppModule is stopping...");
+        is_running_ = false;
 
-        // PushModule::Inst()->Stop();
+        ((framework::timer::AsioTimerManager &)global_second_timer()).stop();
+        ((framework::timer::AsioTimerManager &)global_250ms_timer()).stop();
+
+        LOG(__EVENT, "app", "AppModule is stopping...");
 
         // 停止 ProxyModule 模块
         ProxyModule::Inst()->Stop();
@@ -345,13 +355,17 @@ namespace p2sp
         downloadcenter::DownloadCenterModule::Inst()->Stop();
 #endif  // #ifdef DISK_MODE
 
+        PushModule::Inst()->Stop();
+
+#ifdef NOTIFY_ON
+        p2sp::NotifyModule::Inst()->Stop();
+#endif
+
         if (statistics_collection_controller_)
         {
             statistics_collection_controller_->Stop();
         }
         
-        is_running_ = false;
-
         if (udp_server_)
         {
             udp_server_->Close();
