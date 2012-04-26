@@ -355,7 +355,9 @@ namespace p2sp
         downloadcenter::DownloadCenterModule::Inst()->Stop();
 #endif  // #ifdef DISK_MODE
 
+#ifdef DISK_MODE
         PushModule::Inst()->Stop();
+#endif
 
 #ifdef NOTIFY_ON
         p2sp::NotifyModule::Inst()->Stop();

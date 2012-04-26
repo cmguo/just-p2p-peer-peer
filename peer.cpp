@@ -182,9 +182,6 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     framework::logger::glog.load_config(conf);
 #endif
 
-    ((framework::timer::AsioTimerManager &)global_second_timer()).start();
-    ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
-
     LOGX(__DEBUG, "app", "StartKernel");
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
@@ -205,14 +202,16 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
         lpParam->bHttpProxyEnabled != 0
         );
 
-    if (!p2sp::AppModule::Inst()->Start(global_io_svc(), appmodule_start_interface))
-    {
-        p2sp::AppModule::Inst()->Stop();
-    }
-    else
-    {
-        MainThread::Start();
-    }
+    Event::p event_wait = Event::Create();
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+
+    global_io_svc().post(boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), 
+        boost::ref(global_io_svc()), appmodule_start_interface, fun));
+
+    MainThread::Start();
+
+    event_wait->Wait();
 }
 #endif
 
