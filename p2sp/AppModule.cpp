@@ -298,6 +298,10 @@ namespace p2sp
 
         LOG(__EVENT, "app", "AppModule is stopping...");
 
+#ifdef DISK_MODE
+        PushModule::Inst()->Stop();
+#endif
+
         // 停止 ProxyModule 模块
         ProxyModule::Inst()->Stop();
 
@@ -354,10 +358,6 @@ namespace p2sp
 #ifdef DISK_MODE
         downloadcenter::DownloadCenterModule::Inst()->Stop();
 #endif  // #ifdef DISK_MODE
-
-#ifdef DISK_MODE
-        PushModule::Inst()->Stop();
-#endif
 
 #ifdef NOTIFY_ON
         p2sp::NotifyModule::Inst()->Stop();
