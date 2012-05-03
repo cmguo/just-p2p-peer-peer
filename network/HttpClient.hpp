@@ -87,7 +87,7 @@ namespace network
         uint32_t range_begin,
         uint32_t range_end,
         bool is_accept_gzip,
-        string user_agent = "")
+        string user_agent)
     {
         Uri uri(url);
         string host = uri.getdomain();
@@ -112,7 +112,7 @@ namespace network
         uint32_t range_begin,
         uint32_t range_end,
         bool is_accept_gzip,
-        string user_agent = "")
+        string user_agent)
     {
         if (!http_request_demo)
         {
@@ -174,7 +174,7 @@ namespace network
         uint32_t range_begin,
         uint32_t range_end,
         bool is_accept_gzip,
-        string user_agent = "")
+        string user_agent)
     {
         return boost::shared_ptr<HttpClient<ContentType> >
             (new HttpClient<ContentType>(io_svc, domain, port, request, refer_url, range_begin, range_end, is_accept_gzip));
