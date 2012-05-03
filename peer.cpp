@@ -648,89 +648,6 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
 
-struct DownloadProgressResult
-{
-    Event::p event_;
-    boost::int32_t download_progress_;
-    boost::int32_t total_size_;
-    public:
-    DownloadProgressResult(Event::p e) :
-        event_(e)
-    {
-    }
-    void result_handler(boost::int32_t download_progress, boost::int32_t total_size)
-    {
-        download_progress_ = download_progress;
-        total_size_ = total_size;
-        LOGX(__DEBUG, "struct", "Save Result: " << this << ", download_progress = " << download_progress << ", total_size = " << total_size << ", event = " << event_);
-        event_->Notify();
-        LOGX(__DEBUG, "struct", "SetEvent: " << event_);
-    }
-};
-
-struct DownloadSpeedResult
-{
-    Event::p event_;
-    boost::int32_t download_speed_;
-    public:
-    DownloadSpeedResult(Event::p e) :
-        event_(e)
-    {
-    }
-    void result_handler(boost::int32_t download_speed)
-    {
-        download_speed_ = download_speed;
-        event_->Notify();
-    }
-};
-
-struct PeerStateMachineResult
-{
-    Event::p event_;
-    boost::int32_t state_machine_;
-    boost::int32_t http_speed_;
-    boost::int32_t p2p_speed_;
-    public:
-    PeerStateMachineResult(Event::p e) : event_(e) {}
-    void result_handler (boost::int32_t state_machine, boost::int32_t http_speed, boost::int32_t p2p_speed)
-    {
-        state_machine_ = state_machine;
-        http_speed_ = http_speed;
-        p2p_speed_ = p2p_speed;
-        event_->Notify();
-    }
-};
-
-struct BasicPeerInfoResult
-{
-    Event::p event_;
-    statistic::BASICPEERINFO bpi_;
-
-    BasicPeerInfoResult(Event::p e) : event_(e) {}
-    void result_handler(const statistic::BASICPEERINFO& bpi)
-    {
-        bpi_ = bpi;
-        event_->Notify();
-    }
-};
-
-struct PeerInfoResult
-{
-    Event::p event_;
-    boost::int32_t list_count_;
-    boost::int32_t connect_count_;
-    boost::int32_t download_speed_;
-
-    PeerInfoResult(Event::p e) : event_(e) {}
-    void result_handler(boost::int32_t list_count, boost::int32_t connect_count, boost::int32_t download_speed)
-    {
-        list_count_ = list_count;
-        connect_count_ = connect_count;
-        download_speed_ = download_speed;
-        event_->Notify();
-    }
-};
-
 #ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t * pTotalSize)
 {
@@ -758,22 +675,18 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
 
-    boost::shared_ptr<DownloadProgressResult> result(new DownloadProgressResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&DownloadProgressResult::result_handler, result, _1,
-        _2);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
 
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDownloadProgress, p2sp::ProxyModule::Inst(), rid, fun));
+    boost::int32_t download_progress;
+    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDownloadProgress, p2sp::ProxyModule::Inst(), rid, fun, pTotalSize, &download_progress));
 
     event_wait->Wait();
 
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << result->download_progress_ << ", total_size = " << result->total_size_);
-    if (NULL != pTotalSize)
-    {
-        *pTotalSize = result->total_size_;
-    }
-    return result->download_progress_;
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << download_progress << ", total_size = " << pTotalSize);
+    return download_progress;
 }
 #else
 // PPBox兼容QueryDownloadProgress接口
@@ -804,22 +717,18 @@ boost::int32_t PEER_API QueryDownloadProgress(char const * lpszRID, boost::uint3
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
 
-    boost::shared_ptr<DownloadProgressResult> result(new DownloadProgressResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&DownloadProgressResult::result_handler, result, _1,
-        _2);
+    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&SimpleResult::result_handler, result);
 
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDownloadProgress, p2sp::ProxyModule::Inst(), rid, fun));
+    boost::int32_t download_progress;
+    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDownloadProgress, p2sp::ProxyModule::Inst(), rid, fun, pTotalSize, download_progress));
 
     event_wait->Wait();
 
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << result->download_progress_ << ", total_size = " << result->total_size_);
-    if (NULL != pTotalSize)
-    {
-        *pTotalSize = result->total_size_;
-    }
-    return result->download_progress_;
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << download_progress << ", total_size = " << Ptotal_size);
+    download_progress;
 }
 #endif
 
@@ -855,19 +764,20 @@ boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint3
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadSpeedResult> result(new DownloadSpeedResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t)> fun = boost::bind(&DownloadSpeedResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    boost::int32_t download_speed;
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeed, p2sp::ProxyModule::Inst(), rid, fun)
+        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeed, p2sp::ProxyModule::Inst(), rid, fun, &download_speed)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << result->download_speed_);
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
 
-    return result->download_speed_;
+    return download_speed;
 }
 #else
 // PPBox兼容QueryDownloadSpeed接口
@@ -897,18 +807,19 @@ boost::int32_t PEER_API QueryDownloadSpeed(char const * lpszRID, boost::uint32_t
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadSpeedResult> result(new DownloadSpeedResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t)> fun = boost::bind(&DownloadSpeedResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    boost::int32_t download_speed;
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeed, p2sp::ProxyModule::Inst(), rid, fun)
+        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeed, p2sp::ProxyModule::Inst(), rid, fun, &download_speed)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << result->download_speed_);
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
-    return result->download_speed_;
+    return download_speed;
 }
 #endif
 
@@ -1004,18 +915,19 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadSpeedResult> result(new DownloadSpeedResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t)> fun = boost::bind(&DownloadSpeedResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    boost::int32_t download_speed;
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeedByUrl, p2sp::ProxyModule::Inst(), url_str, fun)
+        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeedByUrl, p2sp::ProxyModule::Inst(), url_str, fun, &download_speed)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << result->download_speed_);
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
-    return result->download_speed_;
+    return download_speed;
 }
 #else
 // PPBox兼容QueryDownloadSpeedByUrl接口
@@ -1040,18 +952,19 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(char const * lpszUrl, boost::uin
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<DownloadSpeedResult> result(new DownloadSpeedResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "struct", "ResultHolder: " << result);
 
-    boost::function<void(boost::int32_t)> fun = boost::bind(&DownloadSpeedResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    boost::int32_t download_speed;
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeedByUrl, p2sp::ProxyModule::Inst(), url_str, fun)
+        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeedByUrl, p2sp::ProxyModule::Inst(), url_str, fun, &download_speed)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << result->download_speed_);
+    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
-    return result->download_speed_;
+    return download_speed;
 }
 #endif
 
@@ -1117,21 +1030,17 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<PeerStateMachineResult> result(new PeerStateMachineResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
-    boost::function<void(int, int, int)> fun = boost::bind(&PeerStateMachineResult::result_handler, result, _1, _2, _3);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachine, p2sp::ProxyModule::Inst(), rid, fun)
+        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachine, p2sp::ProxyModule::Inst(), rid, fun, &peer_state)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
-    // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
-
-    peer_state.state_machine_ = result->state_machine_;
-    peer_state.http_speed_ = result->http_speed_;
-    peer_state.p2p_speed_ = result->p2p_speed_;
+    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
+    // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);;
 
     return peer_state;
 }
@@ -1169,21 +1078,17 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const char * lpszRID, boost::uin
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<PeerStateMachineResult> result(new PeerStateMachineResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
-    boost::function<void(int, int, int)> fun = boost::bind(&PeerStateMachineResult::result_handler, result, _1, _2, _3);
+    boost::function<void(int, int, int)> fun = boost::bind(&SimpleResult::result_handler, result);
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachine, p2sp::ProxyModule::Inst(), rid, fun)
+        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachine, p2sp::ProxyModule::Inst(), rid, fun, &peer_state)
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
+    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
     // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
-
-    peer_state.state_machine_ = result->state_machine_;
-    peer_state.http_speed_ = result->http_speed_;
-    peer_state.p2p_speed_ = result->p2p_speed_;
 
     return peer_state;
 }
@@ -1481,26 +1386,27 @@ boost::int32_t PEER_API GetBasicPeerInfo(
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<BasicPeerInfoResult> result(new BasicPeerInfoResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
     // 向StatisticModule发请求
-    boost::function<void(statistic::BASICPEERINFO)> fun = boost::bind(&BasicPeerInfoResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    statistic::BASICPEERINFO bpi;
 
     global_io_svc().post(
-        boost::bind(&statistic::StatisticModule::QueryBasicPeerInfo, statistic::StatisticModule::Inst(), fun)
+        boost::bind(&statistic::StatisticModule::QueryBasicPeerInfo, statistic::StatisticModule::Inst(), fun, &bpi)
        );
 
     event_wait->Wait();
 
-    *tcp_port = result->bpi_.tcp_port;
-    *udp_port = result->bpi_.udp_port;
-    *tracker_count = result->bpi_.tracker_count;
-    *stun_count = result->bpi_.stun_count;
-    *upload_speed = result->bpi_.upload_speed;
+    *tcp_port = bpi.tcp_port;
+    *udp_port = bpi.udp_port;
+    *tracker_count = bpi.tracker_count;
+    *stun_count = bpi.stun_count;
+    *upload_speed = bpi.upload_speed;
 
     string bs_ip_s;
-    boost::asio::ip::address_v4 addr(result->bpi_.bs_ip);
+    boost::asio::ip::address_v4 addr(bpi.bs_ip);
     boost::system::error_code ec;
     bs_ip_s = addr.to_string(ec);
 
@@ -1550,26 +1456,27 @@ boost::int32_t PEER_API GetBasicPeerInfo(
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<BasicPeerInfoResult> result(new BasicPeerInfoResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
     // 向StatisticModule发请求
-    boost::function<void(statistic::BASICPEERINFO)> fun = boost::bind(&BasicPeerInfoResult::result_handler, result, _1);
+    boost::function<void()> fun = boost::bind(&BasicPeerInfoResult::result_handler, result);
+    statistic::BASICPEERINFO bpi
 
     global_io_svc().post(
-        boost::bind(&statistic::StatisticModule::QueryBasicPeerInfo, statistic::StatisticModule::Inst(), fun)
+        boost::bind(&statistic::StatisticModule::QueryBasicPeerInfo, statistic::StatisticModule::Inst(), fun, &bpi)
        );
 
     event_wait->Wait();
 
-    *tcp_port = result->bpi_.tcp_port;
-    *udp_port = result->bpi_.udp_port;
-    *tracker_count = result->bpi_.tracker_count;
-    *stun_count = result->bpi_.stun_count;
-    *upload_speed = result->bpi_.upload_speed;
+    *tcp_port = bpi.tcp_port;
+    *udp_port = bpi.udp_port;
+    *tracker_count = bpi.tracker_count;
+    *stun_count = bpi.stun_count;
+    *upload_speed = bpi.upload_speed;
 
     string bs_ip_s;
-    boost::asio::ip::address_v4 addr(result->bpi_.bs_ip);
+    boost::asio::ip::address_v4 addr(bpi.bs_ip);
     boost::system::error_code ec;
     bs_ip_s = addr.to_string(ec);
 
@@ -1632,20 +1539,17 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
         {
             Event::p event_wait = Event::Create();
             LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-            boost::shared_ptr<PeerInfoResult> result(new PeerInfoResult(event_wait));
+            boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
             LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
-            boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> fun = boost::bind(&PeerInfoResult::result_handler, result, _1, _2, _3);
+            boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
             global_io_svc().post(
                 boost::bind(&statistic::StatisticModule::QueryPeerInfoByRid,
-                statistic::StatisticModule::Inst(), play_info->GetRidInfo().GetRID(), fun)
+                statistic::StatisticModule::Inst(), play_info->GetRidInfo().GetRID(), fun, ilistCount, iConnectCount, iAverSpeed)
                );
 
             event_wait->Wait();
 
-            *ilistCount = result->list_count_;
-            *iConnectCount = result->connect_count_;
-            *iAverSpeed = result->download_speed_;
 
             LOGX(__DEBUG, "interface", "listcount: " << *ilistCount << ", speed: " << *iAverSpeed);
         }
@@ -1702,20 +1606,16 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
         {
             Event::p event_wait = Event::Create();
             LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-            boost::shared_ptr<PeerInfoResult> result(new PeerInfoResult(event_wait));
+            boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
             LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
-            boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> fun = boost::bind(&PeerInfoResult::result_handler, result, _1, _2, _3);
+            boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
             global_io_svc().post(
                 boost::bind(&statistic::StatisticModule::QueryPeerInfoByRid,
-                statistic::StatisticModule::Inst(), play_info->GetRidInfo().GetRID(), fun)
+                statistic::StatisticModule::Inst(), play_info->GetRidInfo().GetRID(), fun, ilistCount, iConnectCount, iAverSpeed)
                );
 
             event_wait->Wait();
-
-            *ilistCount = result->list_count_;
-            *iConnectCount = result->connect_count_;
-            *iAverSpeed = result->download_speed_;
 
             LOGX(__DEBUG, "interface", "listcount: " << *ilistCount << ", speed: " << *iAverSpeed);
         }
@@ -1930,21 +1830,17 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachineByUrl(const char * url)
 
     Event::p event_wait = Event::Create();
     LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<PeerStateMachineResult> result(new PeerStateMachineResult(event_wait));
+    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     LOGX(__DEBUG, "interface", "ResultHolder: " << result);
 
-    boost::function<void(int, int, int)> fun = boost::bind(&PeerStateMachineResult::result_handler, result, _1, _2, _3);
+    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachineByUrl, p2sp::ProxyModule::Inst(), url, fun)
+        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachineByUrl, p2sp::ProxyModule::Inst(), url, fun, &peer_state)
         );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
+    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
     // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
-
-    peer_state.state_machine_ = result->state_machine_;
-    peer_state.http_speed_ = result->http_speed_;
-    peer_state.p2p_speed_ = result->p2p_speed_;
 
     return peer_state;
 }

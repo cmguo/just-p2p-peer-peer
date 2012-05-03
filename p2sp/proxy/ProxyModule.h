@@ -11,6 +11,7 @@
 #include "network/Uri.h"
 #include "struct/RidInfo.h"
 #include "struct/Structs.h"
+#include "peer.h"
 
 #include <boost/function.hpp>
 
@@ -78,11 +79,11 @@ namespace p2sp
             return proxy_connections_.size();
         }
 
-        void QueryDownloadProgress(RID rid, boost::function<void(boost::int32_t , boost::int32_t)> result_handler);
+        void QueryDownloadProgress(RID rid, boost::function<void()> result_handler, boost::int32_t *file_length, boost::int32_t *download_bytes);
         void QueryDownloadProgressByUrl(string url, boost::int32_t * file_length, boost::int32_t * downloaded_bytes,
             boost::int32_t * position, boost::function<void ()> result_handler);
-        void QueryDownloadSpeed(RID rid, boost::function<void(boost::int32_t)> result_handler);
-        void QueryDownloadSpeedByUrl(string url, boost::function<void(boost::int32_t)> result_handler);
+        void QueryDownloadSpeed(RID rid, boost::function<void()> result_handler, boost::int32_t *download_speed);
+        void QueryDownloadSpeedByUrl(string url, boost::function<void()> result_handler, boost::int32_t *download_speed);
 
         void QueryProgressBitmap(string url, char * bitmap, boost::uint32_t * bitmap_size,
             boost::function<void ()> result_handler);
@@ -96,9 +97,9 @@ namespace p2sp
         void SetDownloadModeByUrl(string url, boost::uint32_t download_mode);
 
         void QueryPeerStateMachine(RID rid, 
-            boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler);
+            boost::function<void()> result_handler,PEERSTATEMACHINE *peer_state);
         void QueryPeerStateMachineByUrl(const char * url, 
-            boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler);
+            boost::function<void()> result_handler, PEERSTATEMACHINE *peer_state);
         void QueryDragState(RID rid, boost::int32_t *state, boost::function<void ()> fun);
         void QueryDragStateByUrl(const char * url, boost::int32_t *state, boost::function<void ()> fun);
         bool IsHttpDownloading();

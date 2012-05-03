@@ -76,8 +76,10 @@ void PushDownloadTask::LimitSpeed(boost::uint32_t speed)
 PushDownloadTask::TaskState PushDownloadTask::GetTaskState()
 {
     if (state_ == TS_DOWNLOADING) {
+        boost::int32_t  total_size, download_progress;
         p2sp::ProxyModule::Inst()->QueryDownloadProgress(task_param_.rid_info_.rid_, 
-            boost::bind(&PushDownloadTask::OnDownloadProgress, shared_from_this(), _1, _2));
+            boost::function<void()>(), &total_size, &download_progress);
+        OnDownloadProgress(total_size,download_progress);
     }
     return state_;
 }

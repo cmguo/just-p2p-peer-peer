@@ -1463,30 +1463,29 @@ namespace statistic
         return upload_speed_meter_.TotalBytes();
     }
 
-    void StatisticModule::QueryBasicPeerInfo(boost::function<void(BASICPEERINFO)> result_handler)
+    void StatisticModule::QueryBasicPeerInfo(boost::function<void()> result_handler, BASICPEERINFO *bpi)
     {
-        BASICPEERINFO bpi;
-        memset(&bpi, 0, sizeof(BASICPEERINFO));
+        memset(bpi, 0, sizeof(BASICPEERINFO));
 
         if (false == is_running_)
         {
-            result_handler(bpi);
+            result_handler();
             return;
         }
 
         boost::asio::ip::address_v4 addr = bootstrap_endpoint_.address().to_v4();
 
-        bpi.bs_ip = addr.to_ulong();
-        bpi.stun_count = stun_server_infos_.size();
-        bpi.tracker_count =  statistic_info_.TrackerCount;
-        bpi.tcp_port = tcp_port_;
-        bpi.udp_port = statistic_info_.LocalPeerInfo.UdpPort;
-        bpi.upload_speed = GetSpeedInfoEx().SecondUploadSpeed;
+        bpi->bs_ip = addr.to_ulong();
+        bpi->stun_count = stun_server_infos_.size();
+        bpi->tracker_count =  statistic_info_.TrackerCount;
+        bpi->tcp_port = tcp_port_;
+        bpi->udp_port = statistic_info_.LocalPeerInfo.UdpPort;
+        bpi->upload_speed = GetSpeedInfoEx().SecondUploadSpeed;
 
-        result_handler(bpi);
+        result_handler();
     }
 
-    void StatisticModule::QueryPeerInfoByRid(RID rid, boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler)
+    void StatisticModule::QueryPeerInfoByRid(RID rid, boost::function<void()> result_handler, boost::int32_t *iListCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed)
     {
         P2PDownloadDriverStatisticMap::iterator it = p2p_downloader_statistic_map_.find(rid);
         if (it != p2p_downloader_statistic_map_.end())
@@ -1494,11 +1493,10 @@ namespace statistic
             P2PDownloaderStatistic::p p2p_stastic = it->second;
             if (p2p_stastic)
             {
-                result_handler(
-                    p2p_stastic->GetIpPoolPeerCount(),
-                    p2p_stastic->GetConnectedPeerCount(),
-                    p2p_stastic->GetSpeedInfoEx().SecondDownloadSpeed
-                   );
+                *iListCount = p2p_stastic->GetIpPoolPeerCount();
+                *iConnectCount = p2p_stastic->GetConnectedPeerCount();
+                *iAverSpeed = p2p_stastic->GetSnSpeedInfoEx().SecondDownloadSpeed;
+                result_handler();
                 return;
             }
             else
@@ -1511,6 +1509,9 @@ namespace statistic
             STAT_DEBUG("QueryPeerInfoByRid can't find rid: " << rid);
         }
 
-        result_handler(0, 0, 0);
+        *iListCount = 0;
+        *iConnectCount = 0;
+        *iAverSpeed = 0;
+        result_handler();
     }
 }

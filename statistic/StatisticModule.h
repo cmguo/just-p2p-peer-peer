@@ -282,8 +282,8 @@ namespace statistic
 //             return protocol::ACTION_NUMBER;
 //         }
 
-        void QueryBasicPeerInfo(boost::function<void(BASICPEERINFO)> result_handler);
-        void QueryPeerInfoByRid(RID rid, boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler);
+        void QueryBasicPeerInfo(boost::function<void()> result_handler, BASICPEERINFO *para_bpi);
+        void QueryPeerInfoByRid(RID rid, boost::function<void()> result_handler, boost::int32_t *iListCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed);
     private:
         bool DetachP2PDownloaderStatistic(const RID& rid);
         bool DetachDownloadDriverStatistic(int id);

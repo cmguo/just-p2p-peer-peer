@@ -571,24 +571,39 @@ namespace p2sp
         }
     }
 
-    void ProxyModule::QueryDownloadProgress(RID rid, boost::function<void(boost::int32_t , boost::int32_t)> result_handler)
+    void ProxyModule::QueryDownloadProgress(RID rid, boost::function<void()> result_handler, boost::int32_t *file_length, boost::int32_t *download_bytes)
     {
         if (false == is_running_) {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(0, 0);
+            if(result_handler)
+            {
+                 *file_length = 0;
+                 *download_bytes = 0;
+                 result_handler();
+            }
             return;
         }
         storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
         if (!inst)
         {
             LOGX(__DEBUG, "downloadcenter", "No Such RID: " << rid);
-            result_handler(0, 0);
+            if(result_handler)
+            {
+                *file_length = 0;
+                *download_bytes = 0;
+                result_handler();
+            }
             return;
         }
         uint32_t filelength = inst->GetFileLength();
         uint32_t downloaded = inst->GetDownloadBytes();
         LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", FileLength: " << filelength << ", DownloadedBytes: " << downloaded);
-        result_handler(downloaded, filelength);
+        if(result_handler)
+        {
+            *file_length = filelength;
+            *download_bytes = downloaded;
+            result_handler();
+        }
     }
 
     void ProxyModule::QueryDownloadProgressByUrl(string url, boost::int32_t * file_length, boost::int32_t * downloaded_bytes,
@@ -702,11 +717,12 @@ namespace p2sp
         result_handler();
     }
 
-    void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void(boost::int32_t)> result_handler)
+    void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void()> result_handler, boost::int32_t *download_speed)
     {
         if (false == is_running_) {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(0);
+            *download_speed = 0;
+            result_handler();
             return;
         }
         speed_query_counter_.start();
@@ -731,7 +747,8 @@ namespace p2sp
                         now_speed += dd->GetP2PDownloader()->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
                     }
                     LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", DownloadSpeed: " << now_speed);
-                    result_handler(now_speed);
+                    *download_speed = now_speed;
+                    result_handler();
                     return;
                 }
             }
@@ -741,15 +758,17 @@ namespace p2sp
             }
         }
         LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
-        result_handler(0);
+        *download_speed = 0;
+        result_handler();
     }
 
-    void ProxyModule::QueryDownloadSpeedByUrl(string url, boost::function<void(boost::int32_t)> result_handler)
+    void ProxyModule::QueryDownloadSpeedByUrl(string url, boost::function<void()> result_handler, boost::int32_t *download_speed)
     {
         if (false == is_running_) 
         {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(0);
+            *download_speed = 0;
+            result_handler();
             return;
         }
 
@@ -779,12 +798,14 @@ namespace p2sp
                     now_speed += dd->GetP2PDownloader()->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
                 }
                 LOGX(__DEBUG, "downloadcenter", "Found url: " << url << ", DownloadSpeed: " << now_speed);
-                result_handler(now_speed);
+                *download_speed = now_speed;
+                result_handler();
                 return;
             }
         }
         LOGX(__DEBUG, "downloadcenter", "Not Downloading, URL: " << url);
-        result_handler(0);
+        *download_speed = 0;
+        result_handler();
     }
 
     void ProxyModule::SetRestPlayTime(RID rid, boost::uint32_t rest_play_time)
@@ -908,12 +929,15 @@ namespace p2sp
         }
     }
 
-    void ProxyModule::QueryPeerStateMachine(RID rid, boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler)
+    void ProxyModule::QueryPeerStateMachine(RID rid, boost::function<void()> result_handler, PEERSTATEMACHINE *peer_state)
     {
         if (false == is_running_) 
         {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(-1, -1, -1);
+            peer_state->http_speed_ = -1;
+            peer_state->p2p_speed_ = -1;
+            peer_state->state_machine_ = -1;
+            result_handler();
             return;
         }
 
@@ -969,22 +993,31 @@ namespace p2sp
                     }
 
                     LOGX(__DEBUG, "proxy", "Found RID: " << rid << ", HTTP_Speed: " << http_speed << " , P2P_speed = " << p2p_speed);
-                    result_handler(state_machine, http_speed, p2p_speed);
+                    peer_state->http_speed_ = http_speed;
+                    peer_state->p2p_speed_ = p2p_speed;
+                    peer_state->state_machine_ = state_machine;
+                    result_handler();
                     return;
                 }
             }
         }
 
         LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
-        result_handler(-1, -1, -1);
+        peer_state->http_speed_ = -1;
+        peer_state->p2p_speed_ = -1;
+        peer_state->state_machine_ = -1;
+        result_handler();
     }
 
-    void ProxyModule::QueryPeerStateMachineByUrl(const char * url, boost::function<void(boost::int32_t, boost::int32_t, boost::int32_t)> result_handler)
+    void ProxyModule::QueryPeerStateMachineByUrl(const char * url, boost::function<void()> result_handler, PEERSTATEMACHINE *peer_state)
     {
         if (false == is_running_)
         {
             LOGX(__DEBUG, "downloadcenter", "Not Running!");
-            result_handler(-1, -1, -1);
+            peer_state->http_speed_ = -1;
+            peer_state->p2p_speed_ = -1;
+            peer_state->state_machine_ = -1;
+            result_handler();
             return;
         }
 
@@ -1044,14 +1077,20 @@ namespace p2sp
                     }
 
                     //LOGX(__DEBUG, "proxy", "Found RID: " << rid << ", HTTP_Speed: " << http_speed << " , P2P_speed = " << p2p_speed);
-                    result_handler(state_machine, http_speed, p2p_speed);
+                    peer_state->http_speed_ = http_speed;
+                    peer_state->p2p_speed_ = p2p_speed;
+                    peer_state->state_machine_ = state_machine;
+                    result_handler();
                     return;
                 }
             }
         }
 
         //LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
-        result_handler(-1, -1, -1);
+        peer_state->http_speed_ = -1;
+        peer_state->p2p_speed_ = -1;
+        peer_state->state_machine_ = -1;
+        result_handler();
     }
 
     void ProxyModule::QueryDragState(RID rid, boost::int32_t *state, boost::function<void ()> fun)
