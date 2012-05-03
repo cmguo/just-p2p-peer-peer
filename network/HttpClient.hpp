@@ -37,7 +37,8 @@ namespace network
         string refer_url,
         uint32_t range_begin,
         uint32_t range_end,
-        bool is_accept_gzip)
+        bool is_accept_gzip,
+        string user_agent)
         : socket_(io_svc)
         , resolver_(io_svc)
         , file_offset_(0)
@@ -69,6 +70,10 @@ namespace network
         request_info_.range_begin_ = range_begin;
         request_info_.range_end_ = range_end;
         request_info_.is_accept_gzip_ = is_accept_gzip_;
+        if (!user_agent.empty())
+        {
+            request_info_.user_agent_ = user_agent;
+        }
         // target
         target_host_ = domain;
         target_port_ = port;
@@ -81,7 +86,8 @@ namespace network
         string refer_url,
         uint32_t range_begin,
         uint32_t range_end,
-        bool is_accept_gzip)
+        bool is_accept_gzip,
+        string user_agent = "")
     {
         Uri uri(url);
         string host = uri.getdomain();
@@ -94,7 +100,7 @@ namespace network
         }
 
         string path = uri.getrequest();
-        return boost::shared_ptr<HttpClient<ContentType> >(new HttpClient<ContentType>(io_svc, host, port, path, refer_url, range_begin, range_end, is_accept_gzip));
+        return boost::shared_ptr<HttpClient<ContentType> >(new HttpClient<ContentType>(io_svc, host, port, path, refer_url, range_begin, range_end, is_accept_gzip, user_agent));
     }
 
     template <typename ContentType>
@@ -105,11 +111,12 @@ namespace network
         string refer_url,
         uint32_t range_begin,
         uint32_t range_end,
-        bool is_accept_gzip)
+        bool is_accept_gzip,
+        string user_agent = "")
     {
         if (!http_request_demo)
         {
-            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip);
+            return create(io_svc, url, refer_url, range_begin, range_end, is_accept_gzip, user_agent);
         }
         // check Pragma: Proxy = host:port
         if (false == http_request_demo->HasPragma("Proxy"))
@@ -166,7 +173,8 @@ namespace network
         string refer_url,
         uint32_t range_begin,
         uint32_t range_end,
-        bool is_accept_gzip)
+        bool is_accept_gzip,
+        string user_agent = "")
     {
         return boost::shared_ptr<HttpClient<ContentType> >
             (new HttpClient<ContentType>(io_svc, domain, port, request, refer_url, range_begin, range_end, is_accept_gzip));

@@ -788,6 +788,7 @@ namespace p2sp
             }
 
             string str_user_agent = http_request_demo_->GetProperty("User-Agent");
+            url_info.user_agent_ = str_user_agent;
             LOGX(__DEBUG, "ppdebug", "user agent - " << str_user_agent);
             if (false == save_mode_ && str_user_agent.find("PPLive-Media-Player") != string::npos)
             {
@@ -1703,7 +1704,7 @@ namespace p2sp
         return header;
     }
 
-    void ProxyConnection::OnNoticeDownloadMode(const string& url, const string& refer_url, const string& web_url, const string& qualifed_file_name)
+    void ProxyConnection::OnNoticeDownloadMode(const string& url, const string& refer_url, const string& user_agent, const string& qualifed_file_name)
     {
         if (false == is_running_) {
             return;
@@ -1714,7 +1715,6 @@ namespace p2sp
         if (true == save_mode_)
         {
             source_url_ = url;
-            web_url_ = web_url;
             qualified_file_name_ = qualifed_file_name;
 
             network::Uri uri(url);
@@ -1723,7 +1723,7 @@ namespace p2sp
                 "GET " + uri.getrequest() + " HTTP/1.1\r\n"
                 "Host: 127.0.0.1:" + port + "\r\n"
                 "Referer: " + boost::algorithm::replace_all_copy(refer_url, "\r\n", "") + "\r\n"
-                "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3 QQDownload/1.7\r\n"
+                "User-Agent: " + boost::algorithm::replace_all_copy(user_agent, "\r\n", "") + "\r\n"
                 "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
                 "Connection: close\r\n"
                 "\r\n";
@@ -1745,11 +1745,10 @@ namespace p2sp
                 protocol::UrlInfo url_info = download_driver_->GetOriginalUrlInfo();
                 LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_
                     << ", Url = " << url_info.url_
-                    << ", WebUrl = " << web_url_
                     << ", FileName = " << (qualified_file_name_));
 #ifdef DISK_MODE
                 if (qualified_file_name_.length() > 0) {
-                    storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, web_url_, qualified_file_name_);
+                    storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, "", qualified_file_name_);
                 }
 
                 LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " ProxyConnectionProcessor = " << shared_from_this());
@@ -1783,7 +1782,6 @@ namespace p2sp
             }
 
             source_url_ = (source_url.length() > 0 ? source_url : http_request->GetUrl());
-            web_url_ = web_url;
             qualified_file_name_ = qualifed_file_name;
 
             LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_);
@@ -1794,10 +1792,9 @@ namespace p2sp
                 protocol::UrlInfo url_info = download_driver_->GetOriginalUrlInfo();
                 LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_
                     << ", Url = " << url_info.url_
-                    << ", WebUrl = " << web_url_
                     << ", FileName = " << (qualified_file_name_));
 #ifdef DISK_MODE
-                storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, web_url_, qualified_file_name_);
+                storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, "", qualified_file_name_);
 
                 LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " ProxyConnectionProcessor = " << shared_from_this());
                 downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());

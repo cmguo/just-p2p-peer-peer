@@ -171,7 +171,7 @@ void        (PEER_API * LPUPOADACTION)(boost::uint32_t uAction, boost::uint32_t 
 #ifdef PEER_PC_CLIENT
 void        PEER_API  StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength,
                                   char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
-                                  char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
+                                  char const * lpszUserAgent, boost::uint32_t nUserAgentLength,           //原UserAgent参数为WebUrl，现WebUrl参数已不再使用
                                   wchar_t const * lpszFileName, boost::uint32_t nFileNameLength);
 typedef
 void        (PEER_API * LPSTARTDOWNLOAD)(char const * lpszUrl, boost::uint32_t nUrlLength,

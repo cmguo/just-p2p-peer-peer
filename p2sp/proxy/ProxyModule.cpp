@@ -347,7 +347,7 @@ namespace p2sp
         }
     }
 
-    void ProxyModule::StartDownloadFile(const string& url, const string& refer_url, const string& web_url, const string& qualified_file_name)
+    void ProxyModule::StartDownloadFile(const string& url, const string& refer_url, const string& user_agent, const string& qualified_file_name)
     {
         if (false == is_running_) {
             return;
@@ -362,7 +362,7 @@ namespace p2sp
         // start download
         ProxyConnection::p download_center_conn = ProxyConnection::create(io_svc_);
         download_center_conn->Start();
-        download_center_conn->OnNoticeDownloadMode(url, refer_url, web_url, qualified_file_name);
+        download_center_conn->OnNoticeDownloadMode(url, refer_url, user_agent, qualified_file_name);
         proxy_connections_.insert(download_center_conn);
 #endif  // #ifdef DISK_MODE
 

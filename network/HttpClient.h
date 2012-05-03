@@ -55,7 +55,8 @@ namespace network
             string refer_url,
             uint32_t range_begin,
             uint32_t range_end,
-            bool is_accept_gzip);
+            bool is_accept_gzip,
+            string user_agent = "");
 
         static p create(
             boost::asio::io_service & io_svc,
@@ -63,7 +64,8 @@ namespace network
             string refer_url,
             uint32_t range_begin,
             uint32_t range_end,
-            bool is_accept_gzip);
+            bool is_accept_gzip,
+            string user_agent = "");
 
         static p create(
             boost::asio::io_service & io_svc,
@@ -73,7 +75,8 @@ namespace network
             string refer_url,
             uint32_t range_begin,
             uint32_t range_end,
-            bool is_accept_gzip);
+            bool is_accept_gzip,
+            string user_agent = "");
 
     public:
         HttpClient(
@@ -84,7 +87,8 @@ namespace network
             string refer_url,
             uint32_t range_begin,
             uint32_t range_end,
-            bool is_accept_gzip);
+            bool is_accept_gzip,
+            string user_agent = "");
 
     public:
         void Close();

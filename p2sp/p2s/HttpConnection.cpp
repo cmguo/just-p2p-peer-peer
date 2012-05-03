@@ -209,11 +209,11 @@ namespace p2sp
             if (is_head_only_)
             {
                 boost::uint32_t gzip_range_end = ((head_length_ - 1) / SUB_PIECE_SIZE + 1) * SUB_PIECE_SIZE - 1;
-                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, gzip_range_end, true);
+                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, gzip_range_end, true, url_info_.user_agent_);
             }
             else
             {
-                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, 0, false);
+                http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, 0, false, url_info_.user_agent_);
             }
             
             LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " create http_client = " << http_client_);

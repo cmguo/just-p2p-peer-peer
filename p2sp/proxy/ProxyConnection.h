@@ -293,7 +293,6 @@ namespace p2sp
         bool is_movie_url_;
 
         string source_url_;
-        string web_url_;
         string qualified_file_name_;
         string http_request_string_;
 

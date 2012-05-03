@@ -72,6 +72,7 @@ namespace network
         uint32_t range_begin_;
         uint32_t range_end_;
         string ip_;
+        string user_agent_;
         boost::uint16_t port_;
         std::map<string, string> pragmas_;
         // template
@@ -90,6 +91,7 @@ namespace network
             , ip_("")
             , port_(80)
             , is_accept_gzip_(false)
+            , user_agent_("Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;)")
         {
         }
         string ToString();

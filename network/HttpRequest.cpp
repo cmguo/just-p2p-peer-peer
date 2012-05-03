@@ -222,7 +222,10 @@ namespace network
         }
 
         std::stringstream sstr;
-        sstr << method_ << " " << path_ << " " << version_ << "\r\n";
+        sstr << method_ << " " << path_;
+        sstr << "&agent=ppap";
+
+        sstr << " " << version_ << "\r\n";
         if (!http_request_demo_)
         {
             sstr << "Accept: */*\r\n";
@@ -235,7 +238,7 @@ namespace network
                 sstr << "Referer: " << refer_url_ << "\r\n";
             sstr << "x-flash-version: 9,0,28,0\r\n";
             sstr
-                << "User-Agent: Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;)\r\n";
+                << "User-Agent: " << user_agent_ << "\r\n";
             if (host_ != "")
                 sstr << "Host: " << host_ << "\r\n";
             sstr << "Connection: close\r\n";

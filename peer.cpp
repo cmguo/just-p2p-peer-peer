@@ -329,7 +329,7 @@ void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
 
 #ifdef PEER_PC_CLIENT
 void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
-    char const * lpszWebUrl, boost::uint32_t nWebUrlLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
+    char const * lpszUserAgent, boost::uint32_t nUserAgentLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
 {
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
@@ -346,10 +346,10 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
         lpszReferUrl = "";
         nReferUrlLength = 0;
     }
-    if (NULL == lpszWebUrl || 0 == nWebUrlLength)
+    if (NULL == lpszUserAgent || 0 == nUserAgentLength)
     {
-        lpszWebUrl = "";
-        nWebUrlLength = 0;
+        lpszUserAgent = "";
+        nUserAgentLength = 0;
     }
     if (NULL == lpszFileName || 0 == nFileNameLength)
     {
@@ -359,7 +359,7 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
 
     string url(lpszUrl, nUrlLength);
     string refer_url(lpszReferUrl, nReferUrlLength);
-    string web_url(lpszWebUrl, nWebUrlLength);
+    string user_agent(lpszUserAgent, nUserAgentLength);
     string qualified_file_name(base::ws2s(std::wstring(lpszFileName, nFileNameLength)));
 
     LOGX(__DEBUG, "struct", "\n\tUrl = " << url << "\n\tReferer = " << refer_url << "\n\tWebUrl = " << web_url);
@@ -372,7 +372,7 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
     }
 
     global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFile, p2sp::ProxyModule::Inst(), url,
-        refer_url, web_url, qualified_file_name));
+        refer_url, user_agent, qualified_file_name));
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
 #else
