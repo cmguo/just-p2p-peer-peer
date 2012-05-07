@@ -1445,6 +1445,8 @@ namespace p2sp
         ProxyConnection::p vod_connection;
         boost::int32_t bandwidth = statistic::StatisticModule::Inst()->GetBandWidth();
         boost::int32_t download_speed_limit_in_KBps = 0;
+        boost::int32_t material_download_speed_limit_inKBps = 0;                //素材下载限速
+        boost::int32_t material_download_count = 0;
 
         for (std::set<ProxyConnection::p>::iterator i = proxy_connections_.begin();
             i != proxy_connections_.end(); ++i)
@@ -1465,12 +1467,15 @@ namespace p2sp
                 {
                     (*i)->GetDownloadDriver()->DisableSmartSpeedLimit();
                     download_connections.insert(*i);
+                    if ((*i)->GetPlayInfo() && (*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE)      //素材下载
+                    {
+                        ++material_download_count;
+                    }
                 }
             }
         }
 
         // 无需为网页预留带宽
-
         // 点播视频不限速
         for (std::set<ProxyConnection::p>::iterator i = play_vod_connections.begin();
             i != play_vod_connections.end(); ++i)
@@ -1524,6 +1529,7 @@ namespace p2sp
                         LIMIT_MIN(download_speed_limit_in_KBps, 1);
                     }
                 }
+                material_download_speed_limit_inKBps = download_speed_limit_in_KBps;
             }
             else if (is_watch_live)
             {
@@ -1536,11 +1542,17 @@ namespace p2sp
                 {
                     LIMIT_MIN(download_speed_limit_in_KBps, 1);
                 }
+                material_download_speed_limit_inKBps = download_speed_limit_in_KBps;
             }
             else
             {
                 // 不在观看，不限速
                 download_speed_limit_in_KBps = -1;
+                if (material_download_count != 0)
+                {
+                    material_download_speed_limit_inKBps = bandwidth * 3 / 4 / 1024 / material_download_count;
+                    LimitMinMax(material_download_speed_limit_inKBps, 10, 30);
+                }                
             }
         }
 
@@ -1556,10 +1568,19 @@ namespace p2sp
             else
 #endif
             {
-                (*i)->GetDownloadDriver()->SetSpeedLimitInKBps(download_speed_limit_in_KBps);
+                boost::int32_t speed_limit;
+                if((*i)->GetPlayInfo() && ((*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE))
+                {
+                    speed_limit = material_download_speed_limit_inKBps;
+                }
+                else
+                {
+                    speed_limit = download_speed_limit_in_KBps;
+                }
+                (*i)->GetDownloadDriver()->SetSpeedLimitInKBps(speed_limit);
                 if ((*i)->GetDownloadDriver()->GetStatistic())
                 {
-                    (*i)->GetDownloadDriver()->GetStatistic()->SetSmartPara(0, bandwidth, download_speed_limit_in_KBps);
+                    (*i)->GetDownloadDriver()->GetStatistic()->SetSmartPara(0, bandwidth, speed_limit);
                 }
             }            
         }
