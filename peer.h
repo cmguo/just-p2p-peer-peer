@@ -143,16 +143,9 @@ typedef
 void        (PEER_API    * LPOPENUPNPSUCCED)(boost::uint32_t ip, boost::uint16_t udp_port, boost::uint16_t tcp_port);
 
 // 设置Url对应的文件名
-#ifdef PEER_PC_CLIENT
 void        PEER_API    SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, wchar_t const * lptszFileName, boost::uint32_t nFileNameLength);
 typedef
 void        (PEER_API    * LPSETURLFILENAME)(char const * lpszUrl, boost::uint32_t nUrlLength, wchar_t const * lptszFileName, boost::uint32_t nFileNameLength);
-#else
-// PPBOX兼容SetUrlFileName接口
-void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszFileName, boost::uint32_t nFileNameLength);
-typedef
-void (PEER_API * LPSETURLFILENAME)(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszFileName, boost::uint32_t nFileNameLength);
-#endif
 
 // 向Peer上传特定操作的次数
 void        PEER_API  UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes);
@@ -168,7 +161,6 @@ void        (PEER_API * LPUPOADACTION)(boost::uint32_t uAction, boost::uint32_t 
  * @param WebUrl 下载html页面的地址
  * @param FileName 文件保存的完整路径
  */
-#ifdef PEER_PC_CLIENT
 void        PEER_API  StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength,
                                   char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
                                   char const * lpszUserAgent, boost::uint32_t nUserAgentLength,           //原UserAgent参数为WebUrl，现WebUrl参数已不再使用
@@ -178,18 +170,6 @@ void        (PEER_API * LPSTARTDOWNLOAD)(char const * lpszUrl, boost::uint32_t n
                                   char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
                                   char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
                                   wchar_t const * lpszFileName, boost::uint32_t nFileNameLength);
-#else
-// PPBOX兼容StartDownload接口
-void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength,
-                            char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
-                            char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                            char const * lpszFileName, boost::uint32_t nFileNameLength);
-typedef
-void (PEER_API * LPSTARTDOWNLOAD)(char const * lpszUrl, boost::uint32_t nUrlLength,
-                            char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
-                            char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                            char const * lpszFileName, boost::uint32_t nFileNameLength);
-#endif
 /**
  * 开始下载某个请求
  *
@@ -198,7 +178,6 @@ void (PEER_API * LPSTARTDOWNLOAD)(char const * lpszUrl, boost::uint32_t nUrlLeng
  * @param RequestHeader 请求头部
  * @param FileName 文件名(包含文件扩展名, 不包含路径)
  */
-#ifdef PEER_PC_CLIENT
 void        PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength,
                                    char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
                                    char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength,
@@ -208,18 +187,6 @@ void        (PEER_API * LPSTARTDOWNLOADEX)(char const * lpszUrl, boost::uint32_t
                                          char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
                                          char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength,
                                          wchar_t const * lpszFileName, boost::uint32_t nFileNameLength);
-#else
-// PPBOX兼容StartDownloadEx接口
-void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength,
-                              char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                              char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength,
-                              char const * lpszFileName, boost::uint32_t nFileNameLength);
-typedef
-void (PEER_API * LPSTARTDOWNLOADEX)(char const * lpszUrl, boost::uint32_t nUrlLength,
-                                    char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                                    char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength,
-                                    char const * lpszFileName, boost::uint32_t nFileNameLength);
-#endif
 
 /**
  * 通知停止下载某个url
@@ -281,83 +248,41 @@ void        (PEER_API * LPSETMAXUPLOADCACHESIZEINMB)(boost::uint32_t nMaxUploadC
  * pTotalSize：对应资源的总字节数，如果为空，可以不用返回。
  * 返回值：当前下载总字节数
  */
-#ifdef PEER_PC_CLIENT
 boost::int32_t         PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t *pTotalSize);
 typedef
 boost::int32_t        (PEER_API * LPQUERYDOWNLOADPROGRESS)(wchar_t const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t *pTotalSize);
-#else
-// PPBox兼容QueryDownloadProgress接口
-boost::int32_t PEER_API QueryDownloadProgress(char const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t *pTotalSize);
-typedef
-boost::int32_t (PEER_API * LPQUERYDOWNLOADPROGRESS)(char const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t *pTotalSize);
-#endif
 
 /**
  * lpwszRID：对应资源的RID，UTF16编码
  * 返回值：当前下载速度（以字节为单位）
  */
-#ifdef PEER_PC_CLIENT
 boost::int32_t         PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint32_t nRIDLength);
 typedef
 boost::int32_t         (PEER_API * LPQUERYDOWNLOADSPEED)(wchar_t const * lpszRID, boost::uint32_t nRIDLength);
-#else
-// PPBox兼容QueryDownloadSpeed接口
-boost::int32_t PEER_API QueryDownloadSpeed(char const * lpszRID, boost::uint32_t nRIDLength);
-typedef
-boost::int32_t (PEER_API * LPQUERYDOWNLOADSPEED)(char const * lpszRID, boost::uint32_t nRIDLength);
-#endif
 
 /**
  * lpwszURL：对应资源的URL，UTF16编码
  * 返回值：当前下载进度（以字节为单位）
  */
-#ifdef PEER_PC_CLIENT
 boost::int32_t         PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *pTotalSize);
 typedef
 boost::int32_t         (PEER_API * LPQUERYDOWNLOADPROGRESSBYURL)(wchar_t const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *pTotalSize);
-#else
-// PPBox兼容QueryDownloadProgressByUrl接口
-boost::int32_t PEER_API QueryDownloadProgressByUrl(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *pTotalSize);
-typedef
-boost::int32_t (PEER_API * LPQUERYDOWNLOADPROGRESSBYURL)(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *pTotalSize);
-#endif
 
-#ifdef PEER_PC_CLIENT
 boost::int32_t         PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszUrl, boost::uint32_t nUrlLength);
 typedef
 boost::int32_t         (PEER_API * LPQUERYDOWNLOADSPEEDBYURL)(wchar_t const * lpszUrl, boost::uint32_t nUrlLength);
-#else
-// PPBox兼容QueryDownloadSpeedByUrl接口
-boost::int32_t PEER_API QueryDownloadSpeedByUrl(char const * lpszUrl, boost::uint32_t nUrlLength);
-typedef
-boost::int32_t (PEER_API * LPQUERYDOWNLOADSPEEDBYURL)(char const * lpszUrl, boost::uint32_t nUrlLength);
-#endif
 
 void         PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * web_url, boost::uint32_t weburl_len);
 typedef
 void         (PEER_API * LPSETWEBURL)(const char * url, boost::uint32_t url_len, const char * web_url, boost::uint32_t weburl_len);
 
-#ifdef PEER_PC_CLIENT
 PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const wchar_t * lpwszRID, boost::uint32_t nRIDLength);
 typedef
 PEERSTATEMACHINE (PEER_API * LPQUERYPEERSTATEMACHINE)(const wchar_t * lpwszRID, boost::uint32_t nRIDLength);
-#else
-// PPBox兼容QueryPeerStateMachine接口
-PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const char * lpszRID, boost::uint32_t nRIDLength);
-typedef
-PEERSTATEMACHINE (PEER_API * LPQUERYPEERSTATEMACHINE)(const char * lpszRID, boost::uint32_t nRIDLength);
-#endif
 
-#ifdef PEER_PC_CLIENT
 void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state);
 typedef
 void (PEER_API * LPQUERYDRAGPEERSTATE)(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state);
-#else
-// PPBox兼容QueryDragPeerState接口
-void PEER_API QueryDragPeerState(const char * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state);
-typedef
-void (PEER_API * LPQUERYDRAGPEERSTATE)(const char * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state);
-#endif
 
 void         PEER_API NotifyTaskStatusChange(boost::uint32_t task_id, boost::uint32_t task_status);
 typedef
@@ -394,7 +319,6 @@ void        (PEER_API *LPSETPEERSTATE)(boost::uint32_t nPeerState);
 /**
 * 获取peer基本信息
 */
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API GetBasicPeerInfo(
                             boost::int32_t *tcp_port,
                             boost::int32_t *udp_port,
@@ -415,43 +339,14 @@ boost::int32_t (PEER_API *LPGETBASICPEERINFO)(
                                  boost::int32_t *stun_count,
                                  boost::int32_t *upload_speed
                                 );
-#else
-// PPBox兼容GetBasicPeerInfo接口
-boost::int32_t PEER_API GetBasicPeerInfo(
-                                boost::int32_t *tcp_port,
-                                boost::int32_t *udp_port,
-                                char * bs_ip,
-                                boost::int32_t bs_ip_len,
-                                boost::int32_t *tracker_count,
-                                boost::int32_t *stun_count,
-                                boost::int32_t *upload_speed
-                               );
-typedef
-boost::int32_t (PEER_API *LPGETBASICPEERINFO)(
-    boost::int32_t *tcp_port,
-    boost::int32_t *udp_port,
-    char * bs_ip,
-    boost::int32_t bs_ip_len,
-    boost::int32_t *tracker_count,
-    boost::int32_t *stun_count,
-    boost::int32_t *upload_speed
-   );
-#endif
 /**
 * 通过绿色通道下载串查询p2p下载信息
 * start = 1表示开始下载
 * start = 0表示查询
 */
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const wchar_t * strURL);
 typedef
 boost::int32_t (PEER_API *LPGETPEERINFO)(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const wchar_t * strURL);
-#else
-// PPBox兼容GetPeerInfo接口
-boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const char * strURL);
-typedef
-boost::int32_t (PEER_API *LPGETPEERINFO)(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const char * strURL);
-#endif
 
 /*
 * download_mode:
@@ -459,16 +354,9 @@ boost::int32_t (PEER_API *LPGETPEERINFO)(boost::int32_t start, boost::int32_t *i
 * 1 高速下载模式
 * 2 柔和下载模式
 */
-#ifdef PEER_PC_CLIENT
 void         PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode);
 typedef
 void         (PEER_API * LPSETDOWNLOADMODE)(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode);
-#else
-// PPBox兼容接口
-void PEER_API SetDownloadMode(const char * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode);
-typedef
-void (PEER_API * LPSETDOWNLOADMODE)(const char * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode);
-#endif
 
 /*
  * 开始对所有下载视频的连接限速

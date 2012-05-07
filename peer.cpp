@@ -137,52 +137,16 @@ bool IsProxyModuleStarted()
 
 #ifdef PEER_PC_CLIENT
 void PEER_API Startup(LPWSTARTPARAM lpParam)
-{
-    LOGX(__DEBUG, "app", "StartKernel");
-
-#if (defined _DEBUG || defined DEBUG)
-    framework::logger::glog.load_config(conf);
-#endif
-
-#ifdef NEED_TO_POST_MESSAGE
-    WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
-#endif
-
-    p2sp::AppModuleStartInterface::p appmodule_start_interface = p2sp::AppModuleStartInterface::create(
-        lpParam->usUdpPort,
-        lpParam->usHttpProxyPort,
-        string(lpParam->aIndexServer[0].szIndexDomain),
-        lpParam->aIndexServer[0].usIndexPort,
-        lpParam->bUseDisk != 0,
-        lpParam->ullDiskLimit,
-        string (base::ws2s(lpParam->wszDiskPath)),
-        string(lpParam->szPeerGuid, 32),
-        string(base::ws2s(lpParam->wszConfigPath)),
-        lpParam->bUsePush != 0,
-        lpParam->bReadOnly != 0,
-        lpParam->bHttpProxyEnabled != 0
-        );
-
-    Event::p event_wait = Event::Create();
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-
-    global_io_svc().post(boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), 
-        boost::ref(global_io_svc()), appmodule_start_interface, fun));
-
-    MainThread::Start();
-
-    event_wait->Wait();
-}
 #else
-// PPBOX兼容接口
-void PEER_API Startup(LPSTARTPARAM lpParam)
+void void PEER_API Startup(LPSTARTPARAM lpParam)
+#endif
 {
+    LOGX(__DEBUG, "app", "StartKernel");
+ 
 #if (defined _DEBUG || defined DEBUG)
     framework::logger::glog.load_config(conf);
 #endif
 
-    LOGX(__DEBUG, "app", "StartKernel");
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
 #endif
@@ -194,9 +158,18 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
         lpParam->aIndexServer[0].usIndexPort,
         lpParam->bUseDisk != 0,
         lpParam->ullDiskLimit,
+#ifdef PEER_PC_CLIENT
+        string (base::ws2s(lpParam->wszDiskPath)),
+#else
         string(lpParam->szDiskPath),
-        string(lpParam->szPeerGuid, 16),
+#endif
+        string(lpParam->szPeerGuid, 32),
+#ifdef PEER_PC_CLIENT
+        string(base::ws2s(lpParam->wszConfigPath)),
+#else
+
         string(lpParam->szConfigPath),
+#endif
         lpParam->bUsePush != 0,
         lpParam->bReadOnly != 0,
         lpParam->bHttpProxyEnabled != 0
@@ -213,7 +186,6 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 
     event_wait->Wait();
 }
-#endif
 
 void PEER_API Clearup()
 {
@@ -261,7 +233,6 @@ void PEER_API OpenUPNPSucced(uint32_t ip, boost::uint16_t udp_port, boost::uint1
     return;
 }
 
-#ifdef PEER_PC_CLIENT
 void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, wchar_t const * lptszFileName, boost::uint32_t nFileNameLength)
 {
     if (!IsProxyModuleStarted())
@@ -284,31 +255,6 @@ void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, w
     global_io_svc().post(boost::bind(&storage::IStorage::AttachFilenameByUrl, storage::Storage::Inst(), url,
         file_name));
 }
-#else
-// PPBOX兼容接口
-void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszFileName, boost::uint32_t nFileNameLength)
-{
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (lpszUrl == NULL || lpszFileName == NULL || nUrlLength == 0 || nFileNameLength == 0)
-        return;
-
-    string url(lpszUrl, nUrlLength);
-    string file_name(lpszFileName, nFileNameLength);
-    LOG(__INFO, "struct", "SetUrlFileName url:" << url << " name:" << file_name);
-
-    if (!storage::Storage::Inst())
-        return;
-
-    boost::algorithm::replace_all(file_name, ("."), ("_"));
-
-    global_io_svc().post(boost::bind(&storage::IStorage::AttachFilenameByUrl, storage::Storage::Inst(), url,
-        file_name));
-}
-#endif
 
 // 向Peer上传特定操作的次数
 void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
@@ -327,7 +273,6 @@ void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
 
 }
 
-#ifdef PEER_PC_CLIENT
 void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
     char const * lpszUserAgent, boost::uint32_t nUserAgentLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
 {
@@ -375,58 +320,6 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
         refer_url, user_agent, qualified_file_name));
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
-#else
-// PPBOX兼容StartDownload接口
-void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength,
-                   char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
-                   char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                   char const * lpszFileName, boost::uint32_t nFileNameLength)
-{
-    if (NULL == lpszUrl || 0 == nUrlLength)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (NULL == lpszReferUrl || 0 == nReferUrlLength)
-    {
-        lpszReferUrl = "";
-        nReferUrlLength = 0;
-    }
-    if (NULL == lpszWebUrl || 0 == nWebUrlLength)
-    {
-        lpszWebUrl = "";
-        nWebUrlLength = 0;
-    }
-    if (NULL == lpszFileName || 0 == nFileNameLength)
-    {
-        lpszFileName = "";
-        nFileNameLength = 0;
-    }
-
-    string url(lpszUrl, nUrlLength);
-    string refer_url(lpszReferUrl, nReferUrlLength);
-    string web_url(lpszWebUrl, nWebUrlLength);
-    string qualified_file_name(lpszFileName, nFileNameLength);
-
-    LOGX(__DEBUG, "struct", "\n\tUrl = " << url << "\n\tReferer = " << refer_url << "\n\tWebUrl = " << web_url);
-
-    // check name
-    string ext = (".tpp");
-    if (boost::algorithm::iends_with(qualified_file_name, ext))
-    {
-        qualified_file_name = qualified_file_name.substr(0, qualified_file_name.length() - ext.length());
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFile, p2sp::ProxyModule::Inst(), url,
-        refer_url, web_url, qualified_file_name));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
-}
-#endif
 
 void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
 {
@@ -527,7 +420,6 @@ void PEER_API StartDownloadAll(void * lpBuffer, uint32_t nLength)
 /**
  * 开始下载
  */
-#ifdef PEER_PC_CLIENT
 void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
     char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
 {
@@ -557,40 +449,6 @@ void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength, 
         request_header, web_url, file_name, url));
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
-#else
-// PPBOX兼容StartDownloadEx接口
-void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength,
-                     char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
-                     char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength,
-                     char const * lpszFileName, boost::uint32_t nFileNameLength)
-{
-    LOGX(__DEBUG, "struct", "Url = " << lpszUrl);
-    if (NULL == lpszUrl || 0 == nUrlLength || NULL == lpszWebUrl || 0 == nWebUrlLength || NULL == lpszRequestHeader
-        || 0 == nRequestHeaderLength || NULL == lpszFileName || 0 == nFileNameLength)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    string url(lpszUrl, nUrlLength);
-    string request_header(lpszRequestHeader, nRequestHeaderLength);
-    string web_url(lpszWebUrl, nWebUrlLength);
-    string file_name(lpszFileName, nFileNameLength);
-
-    if (request_header.length() == 0 || web_url.length() == 0 || file_name.length() == 0)
-    {
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFileEx, p2sp::ProxyModule::Inst(),
-        request_header, web_url, file_name, url));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
-}
-#endif
 
 /**
 * 停止并从共享内存中删除文件信息
@@ -648,7 +506,6 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
     LOGX(__DEBUG, "struct", "global_io_svc().post");
 }
 
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t * pTotalSize)
 {
     if (NULL == lpszRID || 0 == nRIDLength)
@@ -688,55 +545,11 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
     LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << download_progress << ", total_size = " << pTotalSize);
     return download_progress;
 }
-#else
-// PPBox兼容QueryDownloadProgress接口
-
-boost::int32_t PEER_API QueryDownloadProgress(char const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t *pTotalSize)
-{
-    if (NULL == lpszRID || 0 == nRIDLength)
-    {
-        LOGX(__DEBUG, "struct", " lpwszRID = NULL || nRIDLength == 0");
-        return -1;
-    }
-
-    string rid_str(lpszRID, nRIDLength);
-
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "struct", " rid Parse Failed!");
-        return -2;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
-        return -3;
-    }
-
-    Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
-
-    boost::function<void(boost::int32_t, boost::int32_t)> fun = boost::bind(&SimpleResult::result_handler, result);
-
-    boost::int32_t download_progress;
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDownloadProgress, p2sp::ProxyModule::Inst(), rid, fun, pTotalSize, download_progress));
-
-    event_wait->Wait();
-
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << download_progress << ", total_size = " << Ptotal_size);
-    download_progress;
-}
-#endif
 
 /**
 * lpwszRID：对应资源的RID，UTF16编码
 * 返回值：当前下载速度（以字节为单位）
 */
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint32_t nRIDLength)
 {
     if (NULL == lpszRID || 0 == nRIDLength)
@@ -779,52 +592,8 @@ boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint3
 
     return download_speed;
 }
-#else
-// PPBox兼容QueryDownloadSpeed接口
-boost::int32_t PEER_API QueryDownloadSpeed(char const * lpszRID, boost::uint32_t nRIDLength)
-{
-    if (NULL == lpszRID || 0 == nRIDLength)
-    {
-        LOGX(__DEBUG, "struct", " lpwszRID = NULL || nRIDLength == 0");
-        return -1;
-    }
 
-    string rid_str(lpszRID, nRIDLength);
-
-    LOGX(__DEBUG, "struct", " rid_str = " << rid_str);
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "struct", " rid Parse Failed!");
-        return -2;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
-        return -3;
-    }
-
-    Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
-
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-    boost::int32_t download_speed;
-    global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeed, p2sp::ProxyModule::Inst(), rid, fun, &download_speed)
-       );
-
-    event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
-
-    return download_speed;
-}
-#endif
-
-#ifdef PEER_PC_CLIENT
-boost::int32_t         PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszURL, boost::uint32_t nURLLength, boost::int32_t *pTotalSize)
+boost::int32_t PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszURL, boost::uint32_t nURLLength, boost::int32_t *pTotalSize)
 {
     if (NULL == lpszURL || 0 == nURLLength)
     {
@@ -856,44 +625,7 @@ boost::int32_t         PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszU
 
     return download_progress;
 }
-#else
-// PPBox兼容QueryDownloadProgressByUrl接口
 
-boost::int32_t PEER_API QueryDownloadProgressByUrl(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t *pTotalSize)
-{
-    if (NULL == lpszUrl || 0 == nUrlLength)
-    {
-        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
-        return -1;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
-        return -3;
-    }
-
-    string url_str(lpszUrl, nUrlLength);
-
-    Event::p event_wait = Event::Create();
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-
-    boost::int32_t download_progress = 0;
-    boost::int32_t position = 0;
-
-    global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadProgressByUrl, p2sp::ProxyModule::Inst(),
-        url_str, pTotalSize, &download_progress, &position, fun));
-
-    event_wait->Wait();
-
-    return download_progress;
-}
-#endif
-
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::uint32_t nURLLength)
 {
     if (NULL == lpszURL || 0 == nURLLength)
@@ -929,44 +661,6 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
 
     return download_speed;
 }
-#else
-// PPBox兼容QueryDownloadSpeedByUrl接口
-
-boost::int32_t PEER_API QueryDownloadSpeedByUrl(char const * lpszUrl, boost::uint32_t nUrlLength)
-{
-    if (NULL == lpszUrl || 0 == nUrlLength)
-    {
-        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
-        return -1;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
-        return -3;
-    }
-
-    string url_str(lpszUrl, nUrlLength);
-
-    LOGX(__DEBUG, "struct", " url_str = " << url_str);
-
-    Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
-
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-    boost::int32_t download_speed;
-    global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryDownloadSpeedByUrl, p2sp::ProxyModule::Inst(), url_str, fun, &download_speed)
-       );
-
-    event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
-
-    return download_speed;
-}
-#endif
 
 void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * web_url, boost::uint32_t weburl_len)
 {
@@ -997,7 +691,6 @@ void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * 
    );
 }
 
-#ifdef PEER_PC_CLIENT
 PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost::uint32_t nRIDLength)
 {
     PEERSTATEMACHINE peer_state;
@@ -1044,55 +737,6 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
 
     return peer_state;
 }
-#else
-// PPBox兼容QueryPeerStateMachine接口
-
-PEERSTATEMACHINE PEER_API QueryPeerStateMachine(const char * lpszRID, boost::uint32_t nRIDLength)
-{
-    PEERSTATEMACHINE peer_state;
-    peer_state.state_machine_ = -1;
-    peer_state.http_speed_ = 0;
-    peer_state.p2p_speed_ = 0;
-
-    if (!IsProxyModuleStarted())
-    {
-        return peer_state;
-    }
-
-    if (NULL == lpszRID || 0 == nRIDLength)
-    {
-        LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
-        return peer_state;
-    }
-
-    string rid_str(lpszRID, nRIDLength);
-
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
-
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
-        return peer_state;
-    }
-
-    Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "interface", "ResultHolder: " << result);
-
-    boost::function<void(int, int, int)> fun = boost::bind(&SimpleResult::result_handler, result);
-    global_io_svc().post(
-        boost::bind(&p2sp::ProxyModule::QueryPeerStateMachine, p2sp::ProxyModule::Inst(), rid, fun, &peer_state)
-       );
-
-    event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
-    // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
-
-    return peer_state;
-}
-#endif
 
 void PEER_API NotifyTaskStatusChange(boost::uint32_t task_id, boost::uint32_t task_status)
 {
@@ -1124,34 +768,16 @@ void PEER_API NotifyJoinLeave(boost::uint32_t join_or_leave)
 
 #ifdef PEER_PC_CLIENT
 void PEER_API SetRestPlayTime(wchar_t const * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t rest_play_time)
-{
-    string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
-
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
-
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
-        return;
-    }
-
-    global_io_svc().post(
-        boost::bind(
-        &p2sp::ProxyModule::SetRestPlayTime, p2sp::ProxyModule::Inst(),
-        rid, rest_play_time));
-}
-#else
+#else 
 // PPBox兼容SetRestPlayTime接口
 void PEER_API SetRestPlayTime(const char * lpszRID, boost::uint32_t nRIDLength, boost::uint32_t rest_play_time)
+#endif
 {
+#ifdef PEER_PC_CLIENT
+    string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
+#else
     string rid_str(lpszRID, nRIDLength);
+#endif
 
     LOGX(__DEBUG, "interface", " RID = " << rid_str);
 
@@ -1173,9 +799,7 @@ void PEER_API SetRestPlayTime(const char * lpszRID, boost::uint32_t nRIDLength, 
         &p2sp::ProxyModule::SetRestPlayTime, p2sp::ProxyModule::Inst(),
         rid, rest_play_time));
 }
-#endif
 
-#ifdef PEER_PC_CLIENT
 void PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode)
 {
     string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
@@ -1200,34 +824,6 @@ void PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLeng
         &p2sp::ProxyModule::SetDownloadMode, p2sp::ProxyModule::Inst(),
         rid, download_mode));
 }
-#else
-// PPBox兼容接口
-
-void PEER_API SetDownloadMode(const char * lpszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode)
-{
-    string rid_str(lpszRID, nRIDLength);
-
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
-
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
-        return;
-    }
-
-    global_io_svc().post(
-        boost::bind(
-        &p2sp::ProxyModule::SetDownloadMode, p2sp::ProxyModule::Inst(),
-        rid, download_mode));
-}
-#endif
 
 /**
  *  告诉内核当前状态
@@ -1279,7 +875,6 @@ void PEER_API SetPeerState(uint32_t nPeerState)
 }
 
 // 拖动时查询内核状态
-#ifdef PEER_PC_CLIENT
 void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::int32_t * state)
 {
     if (!IsProxyModuleStarted())
@@ -1317,49 +912,7 @@ void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDL
 
     LOGX(__DEBUG, "interface", "QUERYDRAGPEERSTATE Succeed: " << *state);
 }
-#else
-// PPBox兼容QueryDragPeerState接口
 
-void PEER_API QueryDragPeerState(const char * lpszRID, boost::uint32_t nRIDLength, boost::int32_t * state)
-{
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (NULL == lpszRID || 0 == nRIDLength)
-    {
-        LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
-        *state = 0;
-        return;
-    }
-
-    string rid_str(lpszRID, nRIDLength);
-
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
-
-    RID rid;
-    if (rid.from_string(rid_str))
-    {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
-        *state = 0;
-        return;
-    }
-
-    Event::p event_wait = Event::Create();
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::QueryDragState, p2sp::ProxyModule::Inst(), rid, state, fun));
-
-    event_wait->Wait();
-
-    LOGX(__DEBUG, "interface", "QUERYDRAGPEERSTATE Succeed: " << *state);
-}
-#endif
-
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API GetBasicPeerInfo(
                             boost::int32_t *tcp_port,
                             boost::int32_t *udp_port,
@@ -1428,81 +981,9 @@ boost::int32_t PEER_API GetBasicPeerInfo(
 
     return 2;
 }
-#else
-// PPBox兼容GetBasicPeerInfo接口
-boost::int32_t PEER_API GetBasicPeerInfo(
-                                boost::int32_t *tcp_port,
-                                boost::int32_t *udp_port,
-                                char * bs_ip,
-                                boost::int32_t bs_ip_len,
-                                boost::int32_t *tracker_count,
-                                boost::int32_t *stun_count,
-                                boost::int32_t *upload_speed
-                               )
-{
-    if (!IsProxyModuleStarted())
-    {
-        return 0;
-    }
-
-    if (tcp_port == NULL || udp_port == NULL || bs_ip == NULL
-        || tracker_count == NULL || stun_count == NULL || upload_speed == NULL)
-    {
-        LOGX(__DEBUG, "interface", " param NULL");
-        return 1;
-    }
-
-    LOGX(__DEBUG, "interface", " GetBasicPeerInfo");
-
-    Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "interface", "ResultHolder: " << result);
-
-    // 向StatisticModule发请求
-    boost::function<void()> fun = boost::bind(&BasicPeerInfoResult::result_handler, result);
-    statistic::BASICPEERINFO bpi
-
-    global_io_svc().post(
-        boost::bind(&statistic::StatisticModule::QueryBasicPeerInfo, statistic::StatisticModule::Inst(), fun, &bpi)
-       );
-
-    event_wait->Wait();
-
-    *tcp_port = bpi.tcp_port;
-    *udp_port = bpi.udp_port;
-    *tracker_count = bpi.tracker_count;
-    *stun_count = bpi.stun_count;
-    *upload_speed = bpi.upload_speed;
-
-    string bs_ip_s;
-    boost::asio::ip::address_v4 addr(bpi.bs_ip);
-    boost::system::error_code ec;
-    bs_ip_s = addr.to_string(ec);
-
-    if (!ec && bs_ip_len >= bs_ip_s.size() * sizeof(char))
-    {
-        string str_bs_ip(bs_ip_s);
-        strcpy(bs_ip, str_bs_ip.c_str());
-
-        LOGX(__DEBUG, "interface", "-----------BasicPeerInfo-----------");
-        LOGX(__DEBUG, "interface", "tcp_port: " << *tcp_port);
-        LOGX(__DEBUG, "interface", "udp_port: " << *udp_port);
-        LOGX(__DEBUG, "interface", "tracker_count: " << *tracker_count);
-        LOGX(__DEBUG, "interface", "stun_count: " << *stun_count);
-        LOGX(__DEBUG, "interface", "upload_speed: " << *upload_speed);
-        LOGX(__DEBUG, "interface", "ips: " << bs_ip_s);
-
-        return 0;
-    }
-
-    return 2;
-}
-#endif
 
 // start = 1表示开始下载
 // start = 0表示查询
-#ifdef PEER_PC_CLIENT
 boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, wchar_t const * strURL)
 {
     if (!IsProxyModuleStarted())
@@ -1567,73 +1048,6 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
 
     return 0;
 }
-#else
-// PPBox兼容GetPeerInfo接口
-
-boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed, const char * strURL)
-{
-    if (!IsProxyModuleStarted())
-    {
-        return 0;
-    }
-
-    if (ilistCount == NULL || iConnectCount == NULL || iAverSpeed == NULL
-        || strURL == NULL)
-    {
-        LOGX(__DEBUG, "interface", " param NULL");
-        return 1;
-    }
-
-    string url(strURL);
-    p2sp::PlayInfo::p play_info = p2sp::PlayInfo::Parse(url);
-    if (play_info && play_info->HasRidInfo() && play_info->HasUrlInfo())
-    {
-
-    }
-    else
-    {
-        LOGX(__DEBUG, "interface", " play info failed, url: " << url);
-        return 2;
-    }
-
-    LOGX(__DEBUG, "interface", " start: " << start << ", url: " << url);
-
-    // 先解析出url和rid
-
-    switch (start)
-    {
-    case 0:  // 查询
-        {
-            Event::p event_wait = Event::Create();
-            LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
-            boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-            LOGX(__DEBUG, "interface", "ResultHolder: " << result);
-
-            boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
-            global_io_svc().post(
-                boost::bind(&statistic::StatisticModule::QueryPeerInfoByRid,
-                statistic::StatisticModule::Inst(), play_info->GetRidInfo().GetRID(), fun, ilistCount, iConnectCount, iAverSpeed)
-               );
-
-            event_wait->Wait();
-
-            LOGX(__DEBUG, "interface", "listcount: " << *ilistCount << ", speed: " << *iAverSpeed);
-        }
-        break;
-    case 1:  // 下载
-        {
-            global_io_svc().post(
-                boost::bind(&p2sp::ProxyModule::StartDownloadFileByRidWithTimeout,
-                p2sp::ProxyModule::Inst(), play_info->GetRidInfo(), play_info->GetUrlInfo(), 15));
-        }
-        break;
-    default:
-        return 3;
-    }
-
-    return 0;
-}
-#endif
 
 /*
  * 开始对所有下载视频的连接限速
