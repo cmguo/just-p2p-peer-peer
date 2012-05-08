@@ -74,7 +74,6 @@ namespace p2sp
             {
                 assert(GetHTTPControlTarget());
             }
-
             SWITCH_DEBUG((string)state_ << " " << times);
 
             // <3300>
@@ -162,10 +161,6 @@ namespace p2sp
                     // next
                     continue;
                 }
-                else
-                {
-                    // ! 判断P2P连接数
-                }
                 break;
             }
             // <3222>
@@ -181,11 +176,9 @@ namespace p2sp
                 // action
                 uint32_t active_peer_count = p2p->GetActivePeersCount();
                 uint32_t speed5 = p2p->GetCurrentDownloadSpeed();
-                uint32_t data_rate = 20 * 1024;  // GetGlobalDataProvider()->GetDataRate();
-                // uint32_t bandwidth = GetGlobalDataProvider()->GetBandWidth();
 
                 bool b1 = (active_peer_count >= 1);
-                bool b2 = (speed5 >= data_rate);
+                bool b2 = (speed5 >= 10 * 1024);
 
                 if (b1 && b2)
                 {
@@ -230,31 +223,26 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                // uint32_t active_peer_count = p2p->GetActivePeersCount();
                 uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
                 uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
                 uint32_t speed_h = http->GetCurrentDownloadSpeed();
-                // uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                // uint32_t bandwidth = GetGlobalDataProvider()->GetBandWidth();
                 // action
-                bool b1 = (speed_h < speed_p);
                 bool b2 = (speed_p >= 20 * 1024);
-                bool b3 = (speed_p >= 40 * 1024);
 
-                if ((b1&&b2) || b3)
+                if (available_peer_count == 0)
+                {
+                    // action
+                    p2p->Pause();
+                    state_.p2p_ = State::P2P_PAUSING;
+                    // next
+                    continue;
+                }
+                else if (b2)
                 {
                     // action
                     http->Pause();
                     // state
                     state_.http_ = State::HTTP_PAUSING;
-                    // next
-                    continue;
-                }
-                else if (available_peer_count == 0)
-                {
-                    // action
-                    p2p->Pause();
-                    state_.p2p_ = State::P2P_PAUSING;
                     // next
                     continue;
                 }
@@ -273,24 +261,12 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                // uint32_t active_peer_count = p2p->GetActivePeersCount();
                 uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
                 uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
-                // uint32_t speed_h = http->GetCurrentDownloadSpeed();
-                // uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                // uint32_t bandwidth = GetGlobalDataProvider()->GetBandWidth();
 
                 bool b1 = (speed_p < 10 * 1024);
 
-                if (b1)
-                {
-                    http->Resume();
-                    // state
-                    state_.http_ = State::HTTP_DOWNLOADING;
-                    // next
-                    continue;
-                }
-                else if (available_peer_count == 0)
+                if (available_peer_count == 0)
                 {
                     http->Resume();
                     p2p->Pause();
@@ -300,9 +276,13 @@ namespace p2sp
                     // next
                     continue;
                 }
-                else
+                else if (b1)
                 {
-                    // ! 要卡了
+                    http->Resume();
+                    // state
+                    state_.http_ = State::HTTP_DOWNLOADING;
+                    // next
+                    continue;
                 }
                 break;
             }
@@ -317,13 +297,7 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                // uint32_t connected_peer_count = p2p->GetConnectedPeersCount();
-                // uint32_t active_peer_count = p2p->GetActivePeersCount();
                 uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
-                // uint32_t speed5 = p2p->GetCurrentDownloadSpeed();
-                // uint32_t speed_h = http->GetCurrentDownloadSpeed();
-                // uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                // uint32_t bandwidth = GetGlobalDataProvider()->GetBandWidth();
 
                 bool b1 = (available_peer_count >= 1);
 

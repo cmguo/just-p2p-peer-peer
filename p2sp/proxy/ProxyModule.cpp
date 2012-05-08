@@ -595,13 +595,12 @@ namespace p2sp
             }
             return;
         }
-        uint32_t filelength = inst->GetFileLength();
-        uint32_t downloaded = inst->GetDownloadBytes();
-        LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", FileLength: " << filelength << ", DownloadedBytes: " << downloaded);
-        if(result_handler)
+
+        *file_length = inst->GetFileLength();
+        *download_bytes = inst->GetDownloadBytes();
+        LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", FileLength: " << *file_length << ", DownloadedBytes: " << *download_bytes);
+        if (result_handler)       //Push任务会传进一个空的function句柄
         {
-            *file_length = filelength;
-            *download_bytes = downloaded;
             result_handler();
         }
     }

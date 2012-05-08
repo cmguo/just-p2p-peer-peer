@@ -55,6 +55,7 @@ namespace p2sp
         , is_connect_full_(false)
         , is_sn_enable_(false)
         , vip_level_(vip_level)
+        , connected_available_block_peer_count_(0)
     {
     }
 
