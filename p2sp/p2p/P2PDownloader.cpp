@@ -980,7 +980,11 @@ namespace p2sp
             if (peers_.find(packet.end_point) != peers_.end())
             {
                 assert(peers_[packet.end_point]);
+#ifdef BOOST_WINDOWS_API
                 PeerConnection::p peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+#else
+                PeerConnection::p peer_connection = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+#endif
                 assert(peer_connection);
                 if (peer_connection)
                 {
