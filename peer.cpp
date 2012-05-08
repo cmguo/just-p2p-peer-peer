@@ -138,7 +138,7 @@ bool IsProxyModuleStarted()
 #ifdef PEER_PC_CLIENT
 void PEER_API Startup(LPWSTARTPARAM lpParam)
 #else
-void void PEER_API Startup(LPSTARTPARAM lpParam)
+void PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
 {
     LOGX(__DEBUG, "app", "StartKernel");
