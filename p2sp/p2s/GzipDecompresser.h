@@ -25,6 +25,7 @@ namespace p2sp
         void Stop();
 
         GzipDecompresser()
+            : is_decompress_complete_(false)
         {
             /* allocate inflate state */
             stream_.zalloc = Z_NULL;
