@@ -223,7 +223,14 @@ namespace network
 
         std::stringstream sstr;
         sstr << method_ << " " << path_;
-        sstr << "&agent=ppap";
+        if (path_.find('?') == string::npos)             //修改bug18250,处理原path不含参数的情况
+        {
+            sstr<<"?agent=ppap";
+        }
+        else
+        {
+            sstr << "&agent=ppap";
+        }        
 
         sstr << " " << version_ << "\r\n";
         if (!http_request_demo_)
