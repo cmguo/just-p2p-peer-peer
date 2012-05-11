@@ -639,6 +639,12 @@ namespace p2sp
                 uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
                 boost::uint32_t rest_playable_time_in_ms = GetGlobalDataProvider()->GetRestPlayableTime();
 
+                if (p2p->GetConnectedPeersCount() == 0)
+                {
+                    ChangeTo2300();
+                    break;
+                }
+
                 if (is_p2p_start_ && time_counter_3200.elapsed() <= 8000 && rest_playable_time_in_ms <= 30000)
                 {
                     if (time_counter_3200.elapsed() <= 4000)
