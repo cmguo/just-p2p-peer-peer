@@ -1766,53 +1766,6 @@ namespace p2sp
         }
     }
 
-    void ProxyConnection::OnNoticeDownloadModeEx(network::HttpRequest::p http_request, const string& web_url, const string& qualifed_file_name, const string& source_url)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-        if (true == save_mode_)
-        {
-            if (!http_request)
-            {
-                assert(!"Invalid Http Request!!");
-                LOG(__ERROR, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " Invalid network::HttpRequest");
-                return;
-            }
-
-            source_url_ = (source_url.length() > 0 ? source_url : http_request->GetUrl());
-            qualified_file_name_ = qualifed_file_name;
-
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_);
-            OnHttpRecvSucced(http_request);
-
-            if (false == will_stop_)
-            {
-                protocol::UrlInfo url_info = download_driver_->GetOriginalUrlInfo();
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_
-                    << ", Url = " << url_info.url_
-                    << ", FileName = " << (qualified_file_name_));
-#ifdef DISK_MODE
-                storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, "", qualified_file_name_);
-
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " ProxyConnectionProcessor = " << shared_from_this());
-                downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());
-                downloadcenter::DownloadCenterModule::Inst()->FlushData();
-#endif  // #ifdef DISK_MODE
-            }
-            else
-            {
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " will_stop_ = true");
-            }
-        }
-        else
-        {
-            assert(!"Should be SaveMode!!");
-            LOG(__ERROR, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " Should be SaveMode");
-        }
-    }
-
     void ProxyConnection::OnNoticeDownloadFileByRid(const protocol::RidInfo& rid_info, const protocol::UrlInfo& url_info, protocol::TASK_TYPE task_type, bool is_push)
     {
         if (false == is_running_) {

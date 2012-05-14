@@ -368,39 +368,6 @@ namespace p2sp
 
     }
 
-    void ProxyModule::StartDownloadFileEx(const string& request_head, const string& web_url, const string& qualified_file_name, const string& source_url)
-    {
-        if (false == is_running_) {
-            return;
-        }
-#ifdef DISK_MODE
-        // parse
-        network::HttpRequest::p http_request = network::HttpRequest::ParseFromBuffer(request_head);
-        if (!http_request) {
-            LOG(__ERROR, "downloadcenter", __FUNCTION__ << " Invalid Http Request: \n" << request_head);
-            return;
-        }
-        // check url
-        string pa = http_request->GetPath();
-        pa = RemovePpvakeyFromUrl(pa);
-        http_request->SetPath(pa);
-        string url = http_request->GetUrl();
-        LOG(__DEBUG, "downloadcenter", "Start Download Url: " << url);
-        if (true == downloadcenter::DownloadCenterModule::Inst()->IsUrlDownloading(url)) {
-            LOG(__WARN, "downloadcenter", "Url already exists: " << url);
-            storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url, web_url, qualified_file_name);
-            return;
-        }
-        // start download
-        ProxyConnection::p download_center_conn = ProxyConnection::create(io_svc_);
-        download_center_conn->SetHttpRequestString(request_head);
-        download_center_conn->Start();
-        download_center_conn->OnNoticeDownloadModeEx(http_request, web_url, qualified_file_name, source_url);
-        proxy_connections_.insert(download_center_conn);
-#endif  // #ifdef DISK_MODE
-
-    }
-
     void ProxyModule::StartDownloadFileByRid(const protocol::RidInfo& rid_info, const protocol::UrlInfo& url_info, protocol::TASK_TYPE task_type, bool is_push)
     {
         if (false == is_running_) {

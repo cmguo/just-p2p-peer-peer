@@ -20,7 +20,6 @@
 #include "storage/Storage.h"
 #include "statistic/StatisticModule.h"
 #include "statistic/StatisticStructs.h"
-#include "downloadcenter/VideoDownloadInfo.h"
 #include "message.h"
 #include "p2sp/proxy/PlayInfo.h"
 #include "base/wsconvert.h"
@@ -386,39 +385,7 @@ void PEER_API RemoveDownloadFile(char const * lpszUrl, uint32_t nUrlLength)
 
 void PEER_API StartDownloadAll(void * lpBuffer, uint32_t nLength)
 {
-    LOGX(__DEBUG, "struct", "");
-#ifdef BOOST_WINDOWS_API
-    if (NULL == lpBuffer || nLength == 0)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    downloadcenter::VideoDownloadInfoGroup g;
-    if (false == g.ReadBuffer(lpBuffer, nLength, NULL))
-    {
-        return;
-    }
-    // do the work
-    boost::filesystem::path store_path(g.StorePath);
-    std::map<string, boost::int32_t> next_id_;
-    for (uint32_t i = 0; i < g.VideoInfos.size(); ++i)
-    {
-        downloadcenter::VideoDownloadInfo& info = g.VideoInfos[i];
-        string ext = (info.FileExt.length() == 0 ? (".flv") : (info.FileExt[0] == ('.') ? info.FileExt : (".")
-                + info.FileExt));
-        boost::int32_t id = ++next_id_[info.Title + ext];
-        string qualified_file_name = (store_path / info.Title).file_string() + ("[") + boost::lexical_cast<string>(
-            id) + ("]") + ext;
-        global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFileEx, p2sp::ProxyModule::Inst(),
-                info.RequestHeader, info.WebUrl, qualified_file_name, info.Url));
-    }
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
-#endif
+    return;
 }
 
 /**
@@ -427,33 +394,7 @@ void PEER_API StartDownloadAll(void * lpBuffer, uint32_t nLength)
 void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszWebUrl, boost::uint32_t nWebUrlLength,
     char const * lpszRequestHeader, boost::uint32_t nRequestHeaderLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
 {
-#ifdef PEER_PC_CLIENT
-    LOGX(__DEBUG, "struct", "Url = " << lpszUrl);
-    if (NULL == lpszUrl || 0 == nUrlLength || NULL == lpszWebUrl || 0 == nWebUrlLength || NULL == lpszRequestHeader
-        || 0 == nRequestHeaderLength || NULL == lpszFileName || 0 == nFileNameLength)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    string url(lpszUrl, nUrlLength);
-    string request_header(lpszRequestHeader, nRequestHeaderLength);
-    string web_url(lpszWebUrl, nWebUrlLength);
-    string file_name(base::ws2s(std::wstring(lpszFileName, nFileNameLength)));
-
-    if (request_header.length() == 0 || web_url.length() == 0 || file_name.length() == 0)
-    {
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFileEx, p2sp::ProxyModule::Inst(),
-        request_header, web_url, file_name, url));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
-#endif
+    return;
 }
 
 /**

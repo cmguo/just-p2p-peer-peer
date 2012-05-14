@@ -57,7 +57,7 @@ namespace p2sp
 
         //
         void StartDownloadFile(const string& url, const string& refer_url, const string& web_url, const string& qualified_file_name);
-        void StartDownloadFileEx(const string& request_head, const string& web_url, const string& qualified_file_name, const string& source_url);
+
         ProxyConnection__p GetProxyConnection(const string& url);
         void StopProxyConnection(const string& url);
         void ForEachProxyConnection(boost::function<void(ProxyConnection__p)> processor);

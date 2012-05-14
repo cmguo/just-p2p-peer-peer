@@ -160,7 +160,6 @@ namespace p2sp
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
         virtual void OnNoticeDirectMode(DownloadDriver__p download_driver);
         virtual void OnNoticeDownloadMode(const string& url, const string& refer_url, const string& web_url, const string& qualifed_file_name);
-        virtual void OnNoticeDownloadModeEx(network::HttpRequest::p http_request, const string& web_url, const string& qualifed_file_name, const string& source_url);
 
         virtual void OnNoticeDownloadFileByRid(const protocol::RidInfo& rid_info, const protocol::UrlInfo& url_info, protocol::TASK_TYPE task_type, bool is_push = false);
 
