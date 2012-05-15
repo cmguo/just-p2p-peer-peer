@@ -223,59 +223,6 @@ namespace p2sp
             framework::timer::TickCounter time_counter_x_;
         };
 
-        ////////////////////////////////////////////////////////////////////
-        // Video
-        class VideoControlMode
-            : public ControlMode
-            // , public boost::enable_shared_from_this<VideoControlMode>
-        {
-        public:
-            typedef boost::shared_ptr<VideoControlMode> p;
-        public:
-            static VideoControlMode::p Create(SwitchController::p controller);
-        public:
-            virtual void Start();
-            virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
-        protected:
-            VideoControlMode(SwitchController::p controller)
-                : ControlMode(controller)
-            {}
-
-            bool P2PCanDropHttp();
-            bool P2PCanPlayStably();  // 根据P2P的速度和节点数以及活跃节点数和全满的节点数等参数进行判断
-            bool P2PMayPlayStably();  // 只根据p2p的节点数进行判断
-            bool P2PCanDownloadStably();
-
-        private:
-            // 状态
-            State state_;
-            // HTTP 预下载
-            framework::timer::TickCounter time_counter_t_;
-            //
-            framework::timer::TickCounter time_counter_x_;
-            //
-            framework::timer::TickCounter time_counter_y_;
-            //
-            framework::timer::TickCounter time_counter_z_;
-            //
-            framework::timer::TickCounter time_counter_h_;
-            //
-            framework::timer::TickCounter time_counter_elapsed_;
-            //
-            uint32_t t_;
-            //
-            uint32_t h_;
-            //
-            uint32_t x_;
-            //
-            uint32_t y_;
-            //
-            uint32_t z_;
-            //
-            uint32_t speed_h_;
-        };
-
         //////////////////////////////////////////////////////////////////////////
         // OpenServiceVideoControlMode
         class OpenServiceVideoControlMode
