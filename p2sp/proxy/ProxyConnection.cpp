@@ -15,7 +15,6 @@
 
 #include "p2sp/proxy/ProxyConnection.h"
 #include "p2sp/proxy/ProxyModule.h"
-#include "p2sp/proxy/ProxyScript.h"
 #include "p2sp/proxy/NullProxySender.h"
 #include "p2sp/proxy/CommonProxySender.h"
 #include "p2sp/proxy/FlvDragProxySender.h"
@@ -1044,13 +1043,7 @@ namespace p2sp
         {
             if (false == save_mode_)
             {
-                if (boost::algorithm::istarts_with(request_path, "/application.pac") == true)
-                {
-                    LOG(__EVENT, "proxy", "OnHttpRecvSucced Request Pac");
-                    string proxy_script_text = boost::str(boost::format(PROXY_SCRIPT_TEXT) % ProxyModule::Inst()->GetHttpPort() % ProxyModule::Inst()->GetHttpPort());
-                    http_server_socket_->HttpSendContent(proxy_script_text, "text/plain");
-                }
-                else if (boost::algorithm::istarts_with(request_path, "/crossdomain.xml") == true)
+                if (boost::algorithm::istarts_with(request_path, "/crossdomain.xml") == true)
                 {
                     LOG(__EVENT, "proxy", "OnHttpRecvSucced Request CrossDomain.xml");
                     string cross_domain_xml =
