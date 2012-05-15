@@ -30,7 +30,6 @@ namespace p2sp
         enum ControlModeType
         {
             CONTROL_MODE_NULL,
-            CONTROL_MODE_VIDEO,
             CONTROL_MODE_DOWNLOAD,
             CONTROL_MODE_VIDEO_OPENSERVICE,       // 带宽节约优先
             CONTROL_MODE_PUSH_OPENSERVICE,
@@ -196,26 +195,6 @@ namespace p2sp
         };
     protected:
         //////////////////////////////////////////////////////////////////////////
-        // Null
-        class NullControlMode
-            : public ControlMode
-        {
-        public:
-            typedef boost::shared_ptr<NullControlMode> p;
-        public:
-            static NullControlMode::p Create(SwitchController::p controller);
-        public:
-            virtual void Start();
-            virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
-        protected:
-            NullControlMode(SwitchController::p controller)
-                : ControlMode(controller)
-            {
-            }
-        };
-
-        //////////////////////////////////////////////////////////////////////////
         // Download
         class DownloadControlMode
             : public ControlMode
@@ -295,76 +274,6 @@ namespace p2sp
             uint32_t z_;
             //
             uint32_t speed_h_;
-        };
-
-        //////////////////////////////////////////////////////////////////////////
-        // SimpleVideoControlMode
-        class SimpleVideoControlMode
-            : public ControlMode
-            // , public boost::enable_shared_from_this<SimpleVideoControlMode>
-        {
-        public:
-            typedef boost::shared_ptr<SimpleVideoControlMode> p;
-        public:
-            static SimpleVideoControlMode::p Create(SwitchController::p controller);
-        public:
-            virtual void Start();
-            virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
-        protected:
-            SimpleVideoControlMode(SwitchController::p controller)
-                : ControlMode(controller)
-            {
-            }
-
-            bool P2PCanDropHttp();
-            bool P2PCanPlayStably();  // 根据P2P的速度和节点数以及活跃节点数和全满的节点数等参数进行判断
-            bool P2PMayPlayStably();  // 只根据p2p的节点数进行判断
-            bool P2PCanDownloadStably();
-            uint32_t P2PEstimatedDownloadTimeInSec();
-
-            uint32_t CalcX();
-            uint32_t CalcY();
-            bool IsHttpBad();
-            void CheckRID();
-
-        private:
-            // HTTP 预下载
-            framework::timer::TickCounter time_counter_t_;
-            //
-            framework::timer::TickCounter time_counter_x_;
-            //
-            framework::timer::TickCounter time_counter_y_;
-            //
-            framework::timer::TickCounter time_counter_z_;
-            //
-            framework::timer::TickCounter time_counter_h_;
-            //
-            framework::timer::TickCounter time_counter_elapsed_;
-            //
-            framework::timer::TickCounter timer_counter_2300x1;
-            //
-            framework::timer::TickCounter timer_counter_230031;
-            //
-            framework::timer::TickCounter timer_counter_220031;
-            //
-            framework::timer::TickCounter timer_counter_3200x1;
-            //
-            bool is_2200_from_2300;
-            //
-            uint32_t t_;
-            //
-            uint32_t h_;
-            //
-            uint32_t x_;
-            //
-            uint32_t y_;
-            //
-            uint32_t z_;
-            //
-            uint32_t speed_h_;
-            //
-            bool p2p_tried;
         };
 
         //////////////////////////////////////////////////////////////////////////

@@ -226,7 +226,7 @@ namespace p2sp
                 statistic_->SetHidden(true);
             }
 
-            switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO;
+            switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
         }
         else
         {
@@ -414,7 +414,7 @@ namespace p2sp
             }
             else
             {
-                switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO;
+                switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
             }
         }
         else
@@ -483,7 +483,7 @@ namespace p2sp
             if (instance_->GetRID().is_empty())
             {
                 // RID 错误, 使用普通模式
-                switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO;
+                switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
             }
         }
 
@@ -1666,6 +1666,10 @@ namespace p2sp
         }
         else if (downloader->IsOriginal())
         {
+            // 这里原来是转加速状态机的逻辑
+            // 现在把加速状态机去掉了，所以这段代码不应该被走道
+            // 所以增加assert(false);
+            assert(false);
             //     否则 如果 downloader 是 origanel 的，
             //              intance->DettachDownloadDriver();
             //              Storage.RemoveUrl(downloader 的 Url)
@@ -1687,7 +1691,7 @@ namespace p2sp
 
             // stop
             switch_controller_->Stop();
-            switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO;
+            switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
 
             for (std::set<VodDownloader__p>::iterator iter = downloaders_.begin(); iter != downloaders_.end(); iter++)
             {

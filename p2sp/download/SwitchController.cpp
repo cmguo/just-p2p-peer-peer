@@ -185,9 +185,6 @@ namespace p2sp
         case SwitchController::CONTROL_MODE_DOWNLOAD:
             mode = DownloadControlMode::Create(controller);
             break;
-        case SwitchController::CONTROL_MODE_VIDEO:
-            mode = SimpleVideoControlMode::Create(controller);
-            break;
         case SwitchController::CONTROL_MODE_VIDEO_OPENSERVICE:
             mode = OpenServiceVideoControlMode::Create(controller);
             break;
@@ -195,7 +192,8 @@ namespace p2sp
             mode = OpenServicePushControlMode::Create(controller);
             break;
         default:
-            mode = NullControlMode::Create(controller);
+            assert(false);
+            mode = DownloadControlMode::Create(controller);
             break;
         }
         return mode;
@@ -258,37 +256,6 @@ namespace p2sp
         {
             state_.range_ = (GetHTTPControlTarget()->IsSupportRange() ? State::RANGE_SUPPORT : State::RANGE_UNSUPPORT);
         }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    // NullControlMode
-    SwitchController::NullControlMode::p SwitchController::NullControlMode::Create(SwitchController::p controller)
-    {
-        return NullControlMode::p(new NullControlMode(controller));
-    }
-    void SwitchController::NullControlMode::Start()
-    {
-        ControlMode::Start();
-
-        state_.http_ = (GetHTTPControlTarget() ? State::HTTP_DOWNLOADING : State::HTTP_NONE);
-        state_.p2p_ = (GetP2PControlTarget() ? State::P2P_DOWNLOADING : State::P2P_NONE);
-        state_.rid_ = (GetP2PControlTarget() ? State::RID_GOT : State::RID_NONE);
-        state_.range_ = (GetHTTPControlTarget() ? (GetHTTPControlTarget()->IsDetecting() ? State::RANGE_DETECTING : State::RANGE_DETECTED) : State::RANGE_NONE);
-        state_.timer_ = State::TIMER_NONE;
-        state_.timer_using_ = State::TIMER_USING_NONE;
-        if (GetHTTPControlTarget())      GetHTTPControlTarget()->Resume();
-        if (GetP2PControlTarget())     GetP2PControlTarget()->Resume();
-    }
-    void SwitchController::NullControlMode::Stop()
-    {
-        ControlMode::Stop();
-    }
-
-    void SwitchController::NullControlMode::OnControlTimer(uint32_t times)
-    {
-        if (false == IsRunning())
-            return;
-        // nothing
     }
 
     SwitchController::ControlMode::p SwitchController::GetControlMode()
