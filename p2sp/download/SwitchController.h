@@ -58,9 +58,6 @@ namespace p2sp
 
         bool IsRunning() const { return is_running_; }
 
-        // for download driver statistic submit
-        uint32_t GetDownloadStatus() const;
-
         // framework::timer::ITimerListener
         void OnTimerElapsed(framework::timer::PeriodicTimer * pointer);
 
@@ -114,17 +111,6 @@ namespace p2sp
                 TIMER_STOPPED        = 2,
             } timer_;
 
-            //////////////////////////////////////////////////////////////////////////
-
-            enum RangeState
-            {
-                RANGE_NONE           = 0,
-                RANGE_DETECTING      = 1,
-                RANGE_DETECTED       = 2,
-                RANGE_SUPPORT        = 3,
-                RANGE_UNSUPPORT      = 4,
-            } range_;
-
             enum RIDState
             {
                 RID_NONE             = 0,
@@ -163,9 +149,6 @@ namespace p2sp
             IHTTPControlTarget::p GetHTTPControlTarget() { assert(controller_); return controller_->GetHTTPControlTarget(); }
             IP2PControlTarget::p GetP2PControlTarget() { assert(controller_); return controller_->GetP2PControlTarget(); }
 
-        protected:
-            void CheckRange();
-            void Next(uint32_t times);
 
         protected:
             //
@@ -343,9 +326,6 @@ namespace p2sp
         ControlMode::p control_mode_;
 
         framework::timer::PeriodicTimer control_timer_;
-
-    public:
-        ControlMode::p GetControlMode();
     };
 }
 

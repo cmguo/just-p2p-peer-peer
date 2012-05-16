@@ -39,7 +39,6 @@ namespace p2sp
         state_.http_ = (GetHTTPControlTarget() ? State::HTTP_PAUSING : State::HTTP_NONE);
         state_.p2p_ = (GetP2PControlTarget() ? State::P2P_PAUSING : State::P2P_NONE);
         state_.rid_ = (GetP2PControlTarget() ? State::RID_GOT : State::RID_NONE);
-        state_.range_ = (GetHTTPControlTarget() ? (GetHTTPControlTarget()->IsDetecting() ? State::RANGE_DETECTING : State::RANGE_DETECTED) : State::RANGE_NONE);
         state_.timer_ = State::TIMER_NONE;
         state_.timer_using_ = State::TIMER_USING_NONE;
 

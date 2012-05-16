@@ -129,49 +129,13 @@ namespace p2sp
         }
     }
 
-    uint32_t SwitchController::GetDownloadStatus() const
-    {
-        if (false == is_running_)
-            return 0;
-
-        State s = control_mode_->GetState();
-
-        uint32_t state = 0;
-        // 1:p2p单独跑支持range  2: http单独跑支持range  3:两个一起跑支持range
-        // 11:p2p单独跑不支持range 12:http单独跑不支持range 13:两个一起跑不支持range
-
-        // range
-        if (s.range_ != State::RANGE_SUPPORT)
-            state += 10;
-        bool http_pausing = (s.http_ != State::HTTP_DOWNLOADING);
-        bool p2p_pausing = (s.p2p_ != State::P2P_DOWNLOADING);
-        // p2p/http
-        if (http_pausing && !p2p_pausing)  // http pause
-            state += 1;
-        else if (!http_pausing && p2p_pausing)  // p2p pause
-            state += 2;
-        else if (!http_pausing && !p2p_pausing)
-            state += 3;
-        else if (http_pausing && p2p_pausing)
-            state = 0;
-
-        return state;
-    }
-
     //////////////////////////////////////////////////////////////////////////
     // State
 
     SwitchController::State::operator string () const
     {
         std::stringstream ss;
-        // ss << "http=" << http_ << ";"
-        //   << "p2p=" << p2p_ << ";"
-        //   << "rid=" << rid_ << ";"
-        //   << "range=" << range_ << ";"
-        //   << "timer=" << timer_ << ";"
-        //   << "timer_using=" << timer_using_ << ";"
-        //  ;
-        ss << "<" << http_ << p2p_ << timer_using_ << timer_ << range_ << rid_ << ">";
+        ss << "<" << http_ << p2p_ << timer_using_ << timer_ << rid_ << ">";
         return ss.str();
     }
 
@@ -217,50 +181,4 @@ namespace p2sp
         }
         is_running_ = false;
     }
-    void SwitchController::ControlMode::Next(uint32_t times)
-    {
-        if (false == IsRunning())
-            return;
-        // 必须用post
-        // 2010.1.6 modified by jeffrey
-        // TODO: 暂时先加上post的方式调用，有时间把Next函数取消，全部换成while, continue的方式实现跳转
-        global_io_svc().post(boost::bind(&SwitchController::ControlMode::OnControlTimer, shared_from_this(), times));
-    }
-    void SwitchController::ControlMode::CheckRange()
-    {
-        if (false == IsRunning())
-            return;
-        assert(GetHTTPControlTarget());
-        if (!GetHTTPControlTarget())
-            return;
-        // check
-        if (state_.range_ == State::RANGE_NONE)
-        {
-            if (GetHTTPControlTarget() && false == GetHTTPControlTarget()->IsDetecting())
-            {
-                state_.range_ = (GetHTTPControlTarget()->IsSupportRange() ? State::RANGE_SUPPORT : State::RANGE_UNSUPPORT);
-            }
-            else if (GetHTTPControlTarget() && true == GetHTTPControlTarget()->IsDetecting())
-            {
-                state_.range_ = State::RANGE_DETECTING;
-            }
-        }
-        else if (state_.range_ == State::RANGE_DETECTING)
-        {
-            if (false == GetHTTPControlTarget()->IsDetecting())
-            {
-                state_.range_ = (GetHTTPControlTarget()->IsSupportRange() ? State::RANGE_SUPPORT : State::RANGE_UNSUPPORT);
-            }
-        }
-        else if (state_.range_ == State::RANGE_DETECTED)
-        {
-            state_.range_ = (GetHTTPControlTarget()->IsSupportRange() ? State::RANGE_SUPPORT : State::RANGE_UNSUPPORT);
-        }
-    }
-
-    SwitchController::ControlMode::p SwitchController::GetControlMode()
-    {
-        return control_mode_;
-    }
-
 }
