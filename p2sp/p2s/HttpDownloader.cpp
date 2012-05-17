@@ -7,7 +7,6 @@
 #include "p2sp/p2s/HttpDownloader.h"
 #include "p2sp/download/DownloadDriver.h"
 #include "p2sp/p2s/HttpConnection.h"
-#include "p2sp/p2s/HttpDetecter.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "statistic/DownloadDriverStatistic.h"
 
@@ -69,8 +68,6 @@ namespace p2sp
 
         is_running_ = true;
 
-        is_detecting_ = true;
-
         string refer(url_info_.refer_url_);
         assert(download_driver_->GetStatistic());
 
@@ -82,16 +79,6 @@ namespace p2sp
 
         is_support_start_ = is_support_start;
 
-        if (false == is_to_get_header_)
-        {
-            if (http_request_demo_)
-                http_detecter_ = HttpDetecter::Create(io_svc_, http_request_demo_, shared_from_this());
-            else
-                http_detecter_ = HttpDetecter::Create(io_svc_, shared_from_this());
-
-            http_detecter_->Start();
-        }
-
         if (http_request_demo_)
             http_connection_ = HttpConnection::Create(io_svc_, http_request_demo_, shared_from_this(), url_info_, is_to_get_header_, is_head_only_);
         else
@@ -101,13 +88,6 @@ namespace p2sp
         {
             http_connection_->Start(is_support_start, is_open_service_, download_driver_->GetOpenServiceHeadLength());
         }
-        else
-        {
-            if (false == is_to_get_header_ && false == is_open_service_)
-            {
-                is_detecting_ = http_detecter_->DoDetect(http_connection_, url_info_);
-            }
-        }
     }
 
     void HttpDownloader::Stop()
@@ -115,11 +95,6 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        if (http_detecter_)
-        {
-            http_detecter_->Stop();
-            http_detecter_.reset();
-        }
         if (http_connection_)
         {
             http_connection_->Stop();
@@ -143,25 +118,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    bool HttpDownloader::IsSupportRange()
-    {
-        if (false == is_running_)
-            return false;
-        return http_connection_->IsSupportRange();
-    }
-
-    void HttpDownloader::DoDetecter(HttpConnection::p http_connection, protocol::UrlInfo url_info)
-    {
-        if (is_running_ == false)
-            return;
-
-        HTTP_EVENT("HttpDownloader::DoDetecter url:" << url_info.url_);
-        if (false == is_to_get_header_)
-        {
-            is_detecting_ = http_detecter_->DoDetect(http_connection, url_info);
-        }
-    }
-
     void HttpDownloader::DetectorReport(HttpConnection__p http_connection, bool is_support_range)
     {
         if (is_running_ == false)
@@ -183,7 +139,6 @@ namespace p2sp
                 download_driver_->SetDownloaderToDeath(shared_from_this());
             }
         }
-        is_detecting_ = false;
     }
 
     void HttpDownloader::HttpConnectComplete(HttpConnection::p http_connection)
@@ -269,13 +224,6 @@ namespace p2sp
         if (false == is_running_)
             return 0;
         return GetSpeedInfoEx().MinuteDownloadSpeed;
-    }
-
-    bool HttpDownloader::IsDetecting()
-    {
-        if (false == is_running_)
-            return false;
-        return is_detecting_;
     }
 
     void HttpDownloader::SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps)

@@ -17,8 +17,6 @@ namespace p2sp
 {
     class HttpConnection;
     typedef boost::shared_ptr<HttpConnection> HttpConnection__p;
-    class HttpDetecter;
-    typedef boost::shared_ptr<HttpDetecter> HttpDetecter__p;
     class DownloadDriver;
     typedef boost::shared_ptr<DownloadDriver> DownloadDriver__p;
     class HttpDownloadSpeedLimiter;
@@ -59,12 +57,10 @@ namespace p2sp
 
         virtual void PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_info_ex_s, DownloadDriver__p downloader_driver);
         virtual bool GetUrlInfo(protocol::UrlInfo& url_info) { url_info = url_info_; return true;}
-        virtual bool IsSupportRange();
 
         virtual void HttpConnectComplete(HttpConnection__p http_connection);
 
         // HttpConnection下达命令做detecter
-        virtual void DoDetecter(HttpConnection__p http_connection, protocol::UrlInfo url_info);
         virtual void DetectorReport(HttpConnection__p http_connection, bool is_support_range);
         virtual bool IsPausing();
 
@@ -113,8 +109,6 @@ namespace p2sp
         virtual boost::uint32_t GetCurrentDownloadSpeed();
         virtual boost::uint32_t GetRecentDownloadSpeed();
         virtual boost::uint32_t GetMinuteDownloadSpeed();
-        virtual bool IsDetecting();
-        // virtual bool IsSupportRange();
 
     protected:
         boost::asio::io_service & io_svc_;
@@ -122,12 +116,9 @@ namespace p2sp
         protocol::UrlInfo url_info_;
         bool is_support_start_;
         bool is_to_get_header_;
-        bool is_need_detect_;
-        bool is_detecting_;
         bool is_open_service_;
 
         HttpConnection__p http_connection_;
-        HttpDetecter__p http_detecter_;
         DownloadDriver__p download_driver_;
         statistic::HttpDownloaderStatistic::p statistic_;
         network::HttpRequest::p http_request_demo_;

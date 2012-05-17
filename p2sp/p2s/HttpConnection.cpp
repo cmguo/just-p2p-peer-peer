@@ -746,15 +746,6 @@ namespace p2sp
                             HTTP_ERROR("HttpConnection::OnRecvHttpHeaderSucced Invalid OpenService Response");
                         }
                     }
-                    else if (is_support_start_ == false)
-                    {
-                        HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced NoStart");
-                        if (downloader_->IsOriginal())
-                        {
-                            HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced Detect");
-                            downloader_->DoDetecter(shared_from_this(), url_info_);
-                        }
-                    }
 
                     HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced http_client_->RecvSubPiece() ");
                     HttpRecvSubPiece();

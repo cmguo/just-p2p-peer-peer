@@ -57,17 +57,6 @@ namespace p2sp
 
     public:
         virtual ~IHTTPControlTarget() {}
-
-    public:
-
-        // Control
-
-        // Data
-
-        virtual bool IsSupportRange() = 0;
-
-        virtual bool IsDetecting() = 0;
-        // virtual void RequestPieces() = 0;
     };
 
     class IP2PControlTarget
