@@ -392,6 +392,10 @@ namespace p2sp
             return max_sn_list_size_;
         }
 
+        boost::uint32_t GetMaxMaterialDolistCount() const
+        {
+            return max_material_do_list_count_;
+        }
         boost::uint32_t GetSNRequestNumber() const
         {
             return sn_request_number_;
@@ -647,6 +651,9 @@ namespace p2sp
 
         //最大SN list size
         boost::uint32_t max_sn_list_size_;
+
+        //最大广告素材DoList次数
+        boost::uint32_t max_material_do_list_count_;
 
         //是否根据udpserver的历史使用情况来优选使用过去服务得较好的udpserver
         bool udp_server_usage_history_enabled_;

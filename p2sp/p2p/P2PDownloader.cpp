@@ -1571,9 +1571,19 @@ namespace p2sp
 
     void P2PDownloader::DoList()
     {
+        int max_do_list_count;
+        if(is_openservice_)
+        {
+            max_do_list_count = 5;
+        }
+        else
+        {
+            max_do_list_count = BootStrapGeneralConfig::Inst()->GetMaxMaterialDolistCount();
+        }
+
         if (ippool_ && ippool_->GetNotTriedPeerCount() < 30 && NeedConnectNewConnection())
         {
-            if ((dolist_count_ < 5 && (!last_dolist_time_.running() || last_dolist_time_.elapsed() > 2 * 1000)) ||
+            if ((dolist_count_ < max_do_list_count && (!last_dolist_time_.running() || last_dolist_time_.elapsed() > 2 * 1000)) ||
                 last_dolist_time_.elapsed() > 60 * 1000)
             {
                 ++dolist_count_;

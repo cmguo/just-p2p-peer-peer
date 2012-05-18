@@ -97,6 +97,7 @@ namespace p2sp
         , should_judge_switching_datarate_manually_(true)
         , interval_of_two_vv_delim_(5 * 1000)
         , rest_playable_time_delim_when_switching_(10)
+        , max_material_do_list_count_(2)
     {
     }
 
@@ -242,6 +243,7 @@ namespace p2sp
                 ("config.jsd", po::value<bool>()->default_value(should_judge_switching_datarate_manually_))
                 ("config.i2vv", po::value<uint32_t>()->default_value(interval_of_two_vv_delim_))
                 ("config.rpts", po::value<uint32_t>()->default_value(rest_playable_time_delim_when_switching_))
+                ("config.mmdc", po::value<uint32_t>()->default_value(max_material_do_list_count_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -330,6 +332,7 @@ namespace p2sp
             should_judge_switching_datarate_manually_ = vm["config.jsd"].as<bool>();
             interval_of_two_vv_delim_ = vm["config.i2vv"].as<uint32_t>();
             rest_playable_time_delim_when_switching_ = vm["config.rpts"].as<uint32_t>();
+            max_material_do_list_count_ = vm["config.mmdc"].as<uint32_t>();
 
             if (save_to_disk)
             {
