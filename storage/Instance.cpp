@@ -23,7 +23,6 @@
 #include "storage/FileResourceInfo.h"
 #endif
 
-#include "downloadcenter/DownloadCenterModule.h"
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
 #include "network/Uri.h"
@@ -100,42 +99,6 @@ namespace storage
         return pointer;
     }
 
-    void Instance::GetDownloadResourceData(downloadcenter::DownloadResourceData& download_data)
-    {
-        download_data.WebUrl = web_url_;
-        download_data.DownloadUrl = origanel_url_info_.url_;
-        download_data.RefererUrl = origanel_url_info_.refer_url_;
-        download_data.StorePath = resource_name_;
-        download_data.FileName = file_name_;
-        download_data.FileLength = GetFileLength();
-        download_data.FileDuration = file_duration_in_sec_;
-        download_data.DataRate = data_rate_;
-        download_data.DownloadedBytes = GetDownloadBytes();
-        download_data.DownloadSpeed = 0;
-        download_data.HttpDownloadBytes = 0;
-        download_data.HttpDownloadSpeed = 0;
-        download_data.IsDownloading = false;
-        download_data.IsFinished = IsComplete();
-        download_data.P2PDownloadBytes = 0;
-        download_data.P2PDownloadSpeed = 0;
-        // 下载状态
-        download_data.DownloadStatus = (local_complete_ ? downloadcenter::DOWNLOAD_LOCAL
-            : (download_data.IsFinished ? downloadcenter::DOWNLOAD_COMPLETE : downloadcenter::NOT_DOWNLOADING));
-
-        LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " FileName = " << download_data.FileName << " StorePath = " << download_data.StorePath);
-
-        // check
-        string ext(".tpp");
-        if (boost::algorithm::iends_with(download_data.FileName, ext))
-        {
-            download_data.FileName = download_data.FileName.substr(0, download_data.FileName.length() - ext.length());
-        }
-        if (download_data.IsFinished && boost::algorithm::iends_with(download_data.StorePath, ext))
-        {
-            download_data.StorePath = download_data.StorePath.substr(0, download_data.StorePath.length() - ext.length());
-        }
-    }
-
 #ifdef DISK_MODE
     // 根据FileResourceInfo和Resource_p创建一个新的instance
     Instance::p Instance::Open(FileResourceInfo r_f, Resource::p resource_p)
@@ -178,35 +141,6 @@ namespace storage
         {
             STORAGE_DEBUG_LOG("local_complete_ = true");
             pointer->local_complete_ = true;
-        }
-
-        // ! 判断down_mode_
-        if (pointer->IsSaveMode())
-        {
-            // DownloadCenterModule
-            downloadcenter::DownloadResourceData download_data;
-            download_data.WebUrl = pointer->web_url_;
-            download_data.StorePath = (r_f.file_path_);
-            download_data.FileName = (r_f.file_name_);
-            download_data.FileLength = pointer->GetFileLength();
-            download_data.FileDuration = pointer->file_duration_in_sec_;
-            download_data.DownloadedBytes = pointer->GetDownloadBytes();
-            download_data.DownloadSpeed = 0;
-            download_data.HttpDownloadBytes = 0;
-            download_data.HttpDownloadSpeed = 0;
-            download_data.IsDownloading = false;
-            download_data.IsFinished = pointer->IsComplete();
-            download_data.P2PDownloadBytes = 0;
-            download_data.P2PDownloadSpeed = 0;
-            download_data.DownloadStatus = (download_data.IsFinished ? downloadcenter::DOWNLOAD_LOCAL
-                : downloadcenter::NOT_DOWNLOADING);
-
-            for (std::vector<protocol::UrlInfo>::const_iterator it = r_f.url_info_.begin(); it != r_f.url_info_.end(); ++it)
-            {
-                download_data.DownloadUrl = it->url_;
-                download_data.RefererUrl = it->refer_url_;
-                downloadcenter::DownloadCenterModule::Inst()->UpdateDownloadResourceData(download_data);
-            }
         }
 
         return pointer;
@@ -278,14 +212,6 @@ namespace storage
 
     void Instance::ReleaseData()
     {
-#ifdef DISK_MODE
-        // flush data
-        downloadcenter::DownloadResourceData res_data;
-        GetDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->RemoveDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->FlushData();
-#endif  // #ifdef DISK_MODE
-
         // release all
         download_driver_s_.clear();
         cfg_timer_.stop();

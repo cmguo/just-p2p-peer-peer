@@ -24,7 +24,6 @@
 #include "statistic/StatisticsCollectionController.h"
 #include "statistic/BufferringMonitor.h"
 #include "statistic/StatisticsReporter.h"
-#include "downloadcenter/DownloadCenterModule.h"
 #include "network/tcp/CrossDomainConfig.h"
 #ifdef AUTO_SVN_VERSION
 #include "autopeerversion.hpp"
@@ -209,10 +208,6 @@ namespace p2sp
         // 启动IndexServer模块
         IndexManager::CreateInst(io_svc)->Start(appmodule_start_interface->url_, appmodule_start_interface->port_);
 
-        // LOG(__EVENT, "index", "Index Module has started successfully.");
-#ifdef DISK_MODE
-        downloadcenter::DownloadCenterModule::Inst()->Start(1000);
-#endif  // #ifdef DISK_MODE
         // 启动TrackerManager模块  开启tracker模块是会做第一次commit
 
         bool need_report = appmodule_start_interface->bUseDisk_;
@@ -354,10 +349,6 @@ namespace p2sp
             // Storage并没有创建
             Storage::Inst()->Stop();
         }
-
-#ifdef DISK_MODE
-        downloadcenter::DownloadCenterModule::Inst()->Stop();
-#endif  // #ifdef DISK_MODE
 
 #ifdef NOTIFY_ON
         p2sp::NotifyModule::Inst()->Stop();

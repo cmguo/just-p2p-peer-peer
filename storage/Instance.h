@@ -154,8 +154,6 @@ namespace storage
         float GetInstanceValue();
         string GetFileName(){return file_name_;}
 
-        void GetDownloadResourceData(downloadcenter::DownloadResourceData& res_data);
-
         uint32_t GetDDNum() { return download_driver_s_.size();}
         int GetStatus() { return instance_state_;}
         unsigned char GetResDownMode() const { return down_mode_;}

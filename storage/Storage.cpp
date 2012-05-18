@@ -18,7 +18,6 @@
 #include "storage/FileResourceInfo.h"
 #endif
 
-#include "downloadcenter/DownloadCenterModule.h"
 #include "storage/MemoryConsumptionMonitor.h"
 #include "storage/InstanceMemoryConsumer.h"
 #include "storage/LiveInstanceMemoryConsumer.h"
@@ -1807,12 +1806,6 @@ namespace storage
         }
         Instance::p inst = it->second;
 
-        // remove from data center
-        downloadcenter::DownloadResourceData res_data;
-        inst->GetDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->RemoveDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->FlushData();
-
         // remove instance
         // framework::MainThread::Post(boost::bind(&Storage::RemoveInstance, Storage::Inst_Storage(), inst, true));
         Storage::Inst_Storage()->RemoveInstance(inst, true);
@@ -1834,12 +1827,6 @@ namespace storage
             return;
         }
         Instance::p inst = it->second;
-
-        // remove from data center
-        downloadcenter::DownloadResourceData res_data;
-        inst->GetDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->RemoveDownloadResourceData(res_data);
-        downloadcenter::DownloadCenterModule::Inst()->FlushData();
 
         inst->SetSaveMode(false);
         inst->FreeResourceHandle();

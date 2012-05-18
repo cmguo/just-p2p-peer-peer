@@ -20,7 +20,6 @@
 
 #include "network/UrlCodec.h"
 #include "base/util.h"
-#include "downloadcenter/DownloadCenterModule.h"
 #include "storage/Storage.h"
 #include "storage/Instance.h"
 #include "PlayInfo.h"
@@ -354,11 +353,6 @@ namespace p2sp
         }
 
 #ifdef DISK_MODE
-        // check url
-        if (true == downloadcenter::DownloadCenterModule::Inst()->IsUrlDownloading(url)) {
-            LOG(__WARN, "downloadcenter", "");
-            return;
-        }
         // start download
         ProxyConnection::p download_center_conn = ProxyConnection::create(io_svc_);
         download_center_conn->Start();
@@ -374,9 +368,6 @@ namespace p2sp
             return;
         }
 #ifdef DISK_MODE
-        if (true == downloadcenter::DownloadCenterModule::Inst()->IsUrlDownloading(url_info.url_)) {
-            return;
-        }
         // start download
         ProxyConnection::p download_conn = ProxyConnection::create(io_svc_);
         download_conn->Start();
@@ -390,9 +381,7 @@ namespace p2sp
         if (false == is_running_) {
             return;
         }
-        if (true == downloadcenter::DownloadCenterModule::Inst()->IsUrlDownloading(url_info.url_)) {
-            return;
-        }
+
         // start download
         ProxyConnection::p download_conn = ProxyConnection::create(io_svc_);
         protocol::TASK_TYPE task_type = protocol::TASK_TEST_OPENSERVICE;

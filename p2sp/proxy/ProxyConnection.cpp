@@ -26,7 +26,6 @@
 #include "p2sp/proxy/RangeProxySender.h"
 #include "p2sp/proxy/MessageBufferManager.h"
 #include "network/UrlCodec.h"
-#include "downloadcenter/DownloadCenterModule.h"
 #include "p2sp/proxy/LiveProxySender.h"
 #include "p2sp/download/LiveDownloadDriver.h"
 #include "p2sp/push/PushModule.h"
@@ -1293,12 +1292,6 @@ namespace p2sp
 
         will_stop_download_ = true;
 
-#ifdef DISK_MODE
-        // flush info
-        downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());
-        downloadcenter::DownloadCenterModule::Inst()->FlushData();
-#endif  // #ifdef DISK_MODE
-
         // download driver
         if (download_driver_)
         {
@@ -1420,11 +1413,6 @@ namespace p2sp
             if (IsWillStopDownload() && IsNotifiedStop())
             {
                 LOG(__EVENT, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() << " will_stop_download & download_finished");
-#ifdef DISK_MODE
-                // flush info
-                downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());
-                downloadcenter::DownloadCenterModule::Inst()->FlushData();
-#endif  // #ifdef DISK_MODE
                 // stop
                 WillStop();
             }
@@ -1743,10 +1731,6 @@ namespace p2sp
                 if (qualified_file_name_.length() > 0) {
                     storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, "", qualified_file_name_);
                 }
-
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " ProxyConnectionProcessor = " << shared_from_this());
-                downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());
-                downloadcenter::DownloadCenterModule::Inst()->FlushData();
 #endif  // #ifdef DISK_MODE
             }
             else
@@ -1813,9 +1797,6 @@ namespace p2sp
             string file_name = ProxyModule::ParseOpenServiceFileName(network::Uri(url_info.url_));
 #ifdef DISK_MODE
             storage::Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, "", file_name);
-
-            downloadcenter::DownloadCenterModule::Inst()->ProxyConnectionProcessor(shared_from_this());
-            downloadcenter::DownloadCenterModule::Inst()->FlushData();
 #endif  // #ifdef DISK_MODE
         }
     }
