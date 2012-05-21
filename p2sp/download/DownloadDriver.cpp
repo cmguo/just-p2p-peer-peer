@@ -109,7 +109,6 @@ namespace p2sp
         , is_drag_local_play_for_client_(false)
         , drag_machine_state_(SwitchController::MS_WAIT)
         , is_pool_mode_(false)
-        , need_bubble_(true)
         , is_push_(false)
         , speed_limit_in_KBps_(P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT)
         , is_pragmainfo_noticed_(false)
@@ -123,9 +122,6 @@ namespace p2sp
         // pc 版本默认智能限速模式
         , download_mode_(IGlobalControlTarget::SMART_MODE)
 #endif
-        , accelerate_status_(255)
-        , is_got_accelerate_http_speed(false)
-        , accelerate_http_speed(0)
         , init_local_data_bytes_(-1)
         , second_timer_(global_second_timer(), 1000, boost::bind(&DownloadDriver::OnTimerElapsed, this, &second_timer_))
         , disable_smart_speed_limit_(false)
@@ -197,35 +193,10 @@ namespace p2sp
         assert(statistic_);
         statistic_->SetOriginalUrl(original_url_info_.url_);
         statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
-        statistic_->SetHidden(!need_bubble_);
-
 
         // 包含.exe则不发送消息
         if (false == IsFileUrl(original_url_info_.url_))
         {
-            if (true == need_bubble_)
-            {
-                // 计算需要发出的消息的参数
-                DOWNLOADDRIVERSTARTDATA* lpDownloadDriverStartData = MessageBufferManager::Inst()->NewStruct<
-                    DOWNLOADDRIVERSTARTDATA> ();
-                memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
-                lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
-
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
-
-                LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
-    #ifdef NEED_TO_POST_MESSAGE
-                WindowsMessage::Inst().PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData);
-    #endif
-            }
-            else
-            {
-                statistic_->SetHidden(true);
-            }
-
             switch_control_mode_ = SwitchController::CONTROL_MODE_DOWNLOAD;
         }
         else
@@ -377,37 +348,10 @@ namespace p2sp
         assert(statistic_);
         statistic_->SetOriginalUrl(original_url_info_.url_);
         statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
-        statistic_->SetHidden(!need_bubble_);
-
 
         // 包含.exe则不发送消息
         if (false == IsFileUrl(original_url_info_.url_))
         {
-            if (true == need_bubble_)
-            {
-                // 计算需要发出的消息的参数
-                DOWNLOADDRIVERSTARTDATA* lpDownloadDriverStartData = MessageBufferManager::Inst()->NewStruct<
-                    DOWNLOADDRIVERSTARTDATA> ();
-                memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
-                lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
-
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
-
-                LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
-                // 向客户端程序发送 UM_DONWLOADDRIVER_START 消息
-                // !TestMessage
-    #ifdef NEED_TO_POST_MESSAGE
-                WindowsMessage::Inst().PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData);
-    #endif
-            }
-            else
-            {
-                statistic_->SetHidden(true);
-            }
-
             if (open_service)
             {
                 switch_control_mode_ = SwitchController::CONTROL_MODE_VIDEO_OPENSERVICE;
@@ -626,35 +570,10 @@ namespace p2sp
         assert(statistic_);
         statistic_->SetOriginalUrl(original_url_info_.url_);
         statistic_->SetOriginalReferUrl(original_url_info_.refer_url_);
-        statistic_->SetHidden(!need_bubble_);
         statistic_->SetSourceType(source_type_);
 
         if (false == IsFileUrl(original_url_info_.url_))
         {
-            if (true == need_bubble_)
-            {
-                // 计算需要发出的消息的参数
-                DOWNLOADDRIVERSTARTDATA* lpDownloadDriverStartData = MessageBufferManager::Inst()->NewStruct<
-                    DOWNLOADDRIVERSTARTDATA> ();
-                memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
-                lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
-
-                strncpy(lpDownloadDriverStartData->szOriginalUrl, original_url_info_.url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-                strncpy(lpDownloadDriverStartData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
-                    sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
-
-                LOG(__EVENT, "pplive", __FUNCTION__ << "PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData)");
-    #ifdef NEED_TO_POST_MESSAGE
-                // 向客户端程序发送 UM_DONWLOADDRIVER_START 消息
-                WindowsMessage::Inst().PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)id_, (LPARAM)lpDownloadDriverStartData);
-    #endif
-            }
-            else
-            {
-                statistic_->SetHidden(true);
-            }
-
             switch_control_mode_ = SwitchController::CONTROL_MODE_NULL;
         }
         else
@@ -1106,51 +1025,11 @@ namespace p2sp
         // V: 码流率
         info.uDataRate = GetDataRate();
 
-        // W: P2P开启切换之前的平均速度（新增）
-        // TODO(herain):2011-3-1:用uAccelerateHttpSpeed暂时表示2300状态的http平均速度
+        // W: 2300状态的http平均速度
+        info.avg_http_download_speed_in2300 = avg_http_download_speed_in2300_;
 
-        if (info.uSourceType == 0 || info.uSourceType == 1)
-        {
-            if (avg_http_download_speed_in2300_ == -1)
-            {
-                info.uAccelerateHttpSpeed = info.uAvgDownloadSpeed;
-            }
-            else
-            {
-                info.uAccelerateHttpSpeed = avg_http_download_speed_in2300_;
-            }
-        }
-        else
-        {
-            if (accelerate_http_speed == 0)
-            {
-                info.uAccelerateHttpSpeed = info.uAvgDownloadSpeed;
-            }
-            else
-            {
-                info.uAccelerateHttpSpeed = accelerate_http_speed;
-            }
-        }
-
-        // X: 加速状态
-        // TODO(herain):2011-2-25:临时把uAccelerateStatus替换为不限速时的平均下载速度，在启用新DAC日志系统后
-        // 考虑恢复http最大下载速度的统计
-
-        if (info.uSourceType == 0 || info.uSourceType == 1)
-        {
-            if (avg_download_speed_before_limit_ == -1)
-            {
-                info.uAccelerateStatus = info.uAvgDownloadSpeed;
-            }
-            else
-            {
-                info.uAccelerateStatus = (uint32_t)avg_download_speed_before_limit_;
-            }
-        }
-        else
-        {
-            info.uAccelerateStatus = accelerate_status_;
-        }
+        // X: 不限速时的平均下载速度
+        info.avg_download_speed_before_limit = (uint32_t)avg_download_speed_before_limit_;
 
         // Y: 备用 (原来是客户端提交，操作系统版本)
         info.reserved1 = 0;
@@ -1342,8 +1221,8 @@ namespace p2sp
         log_stream << "&T=" << (uint32_t)info.uQueriedPeerCount;
         log_stream << "&U=" << (uint32_t)info.uSourceType;
         log_stream << "&V=" << (uint32_t)info.uDataRate;
-        log_stream << "&W=" << (uint32_t)info.uAccelerateHttpSpeed;
-        log_stream << "&X=" << (uint32_t)info.uAccelerateStatus;
+        log_stream << "&W=" << (uint32_t)info.avg_http_download_speed_in2300;
+        log_stream << "&X=" << (uint32_t)info.avg_download_speed_before_limit;
         // 原来版本是客户端提交的操作系统版本
         log_stream << "&Y=";
         // 原来版本是客户端计算的平均下载速度
@@ -2775,27 +2654,6 @@ namespace p2sp
             RestrictSendListLength(pp,buffers);
           }
   
-    }
-
-    void DownloadDriver::SetAcclerateStatus(boost::int32_t status)
-    {
-        if (!is_got_accelerate_http_speed && (status == 17 || status == 24))
-        {
-            // P2P下载字节数
-            boost::uint32_t total = 0;
-            if (p2p_downloader_ && p2p_downloader_->GetStatistic())
-            {
-                total += p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes();
-            }
-            // HTTP总下载字节数
-            total += statistic_->GetTotalHttpDataBytes();
-            accelerate_http_speed = total * 1000.0 / download_time_counter_.elapsed();
-
-            // 设置 is_got_accelerate_http_speed
-            is_got_accelerate_http_speed = true;
-        }
-
-        accelerate_status_ = status;
     }
 
     void DownloadDriver::EnableSmartSpeedLimit()

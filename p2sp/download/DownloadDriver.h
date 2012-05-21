@@ -51,8 +51,8 @@ namespace p2sp
         boost::uint16_t       uQueriedPeerCount;                    // T: 查询到的节点数
         boost::uint16_t       uSourceType;                          // U: SourceType
         boost::uint32_t       uDataRate;                            // V: 码流率
-        boost::uint32_t       uAccelerateHttpSpeed;                 // W: 加速状态机切换之前的速度
-        boost::uint32_t       uAccelerateStatus;                    // X: 加速状态机的状态
+        boost::uint32_t       avg_http_download_speed_in2300;       // W: 2300状态的http平均速度
+        boost::uint32_t       avg_download_speed_before_limit;      // X: 不限速时的平均下载速度
         boost::uint32_t       reserved1;                            // Y: 备用 (原来是客户端提交，操作系统版本)
         boost::uint32_t       file_length_in_second;                // Z: 文件时常(原来是客户端提交的)
         boost::uint32_t       download_time;                        // A1: 下载所用的时间
@@ -167,9 +167,6 @@ namespace p2sp
 
         bool IsHttp403Header() const { return is_http_403_header_; }
 
-        bool NeedBubble() const { return need_bubble_; }
-        void SetNeedBubble(bool bubble) { need_bubble_ = bubble; }
-
         bool IsPush() const { return is_push_; }
         void SetIsPush(bool is_push) { is_push_ = is_push; }
 
@@ -248,7 +245,6 @@ namespace p2sp
         virtual void SetDragMachineState(boost::int32_t state);
         virtual bool IsPPLiveClient();
         virtual bool IsDragLocalPlayForSwitch();
-        virtual void SetAcclerateStatus(boost::int32_t status);
         virtual JumpBWType GetBWType() {return bwtype_;}
         virtual void NoticeLeave2300();
         virtual void NoticeLeave2000();
@@ -386,7 +382,6 @@ namespace p2sp
         bool is_play_by_rid_;
 
         bool is_pool_mode_;
-        bool need_bubble_;
         bool is_push_;
 
         SwitchController::p switch_controller_;
@@ -409,9 +404,6 @@ namespace p2sp
         boost::uint32_t rest_play_time_;
         framework::timer::TickCounter rest_play_time_set_counter_;
         boost::int32_t download_mode_;
-        bool is_got_accelerate_http_speed;
-        boost::int32_t accelerate_http_speed;
-        boost::int32_t accelerate_status_;
         JumpBWType bwtype_;
         bool is_preroll_;       //标记是否跨集预下载
 

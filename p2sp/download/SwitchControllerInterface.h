@@ -169,7 +169,6 @@ namespace p2sp
 
         virtual boost::int32_t GetDownloadMode() = 0;
 
-        virtual void SetAcclerateStatus(boost::int32_t status) = 0;
         virtual JumpBWType GetBWType() = 0;
         virtual void NoticeLeave2300() = 0;
         virtual void NoticeLeave2000() = 0;

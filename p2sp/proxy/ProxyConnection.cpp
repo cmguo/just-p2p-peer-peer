@@ -484,10 +484,6 @@ namespace p2sp
         }
 
         download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-        // if (true == save_mode_)
-        {
-            download_driver_->SetNeedBubble(false);
-        }
         download_driver_->SetSourceType(static_cast<uint32_t>(play_info->GetSourceType()));
         // speed limit
         download_driver_->SetSpeedLimitInKBps(speed_limit_in_kBps);
@@ -586,7 +582,6 @@ namespace p2sp
                     proxy_sender_->Start();
 
                     download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-                    download_driver_->SetNeedBubble(false);
                     if (http_request->GetPath().substr(0, 4) != "http")
                     {
                         download_driver_->SetSourceType(PlayInfo::SOURCE_HOOK);
@@ -627,11 +622,6 @@ namespace p2sp
             }
 
             download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-            if (true == save_mode_)
-            {
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode, Bubble To False");
-                download_driver_->SetNeedBubble(false);
-            }
             if (rid_info.HasRID())
             {
                 if (http_request->GetPath().substr(0, 4) != "http")
@@ -808,7 +798,6 @@ namespace p2sp
             if (true == save_mode_ || play_info->HasPpvakey())
             {
                 LOGX(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode, SetNeedBubble = false");
-                download_driver_->SetNeedBubble(false);
                 url_info.url_ = ProxyModule::RemovePpvakeyFromUrl(url_info.url_);
             }
 
@@ -1751,7 +1740,6 @@ namespace p2sp
         if (true == save_mode_) {
             proxy_sender_ = NullProxySender::create(shared_from_this());
             download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-            download_driver_->SetNeedBubble(false);
             download_driver_->SetIsPush(is_push);
             if(is_push) 
             {
