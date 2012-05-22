@@ -816,11 +816,21 @@ namespace p2sp
             P();
 
             string filename = ProxyModule::ParseOpenServiceFileName(uri);
+            string index = filename.substr(filename.find('['),
+                filename.find(']') - filename.find('[') + 1);
+            string file_ext = filename.substr(filename.find('.'),
+                filename.length() - filename.find('.'));
             download_driver_->SetOpenServiceFileName(filename);
             string segno = base::util::GetSegno(uri);
 #ifdef DISK_MODE            
             BOOST_ASSERT(play_history_item_handle_ == PlayHistoryManager::InvalidHandle());
-            play_history_item_handle_ = PushModule::Inst()->GetPlayHistoryManager()->StartVideoPlay(filename);
+            string filename_provide_for_push = filename;
+            if (!play_info->GetChannelName().empty())                          //url请求中含有channelname字段,文件名格式为channel_name + [X]+”.mp4” + ft+Y
+            {
+                filename_provide_for_push = play_info->GetChannelName() + index + file_ext + ".ft" + play_info->GetFileRateType();
+            }
+            
+            play_history_item_handle_ = PushModule::Inst()->GetPlayHistoryManager()->StartVideoPlay(filename_provide_for_push);
 #endif
             if (false == save_mode_)
             {

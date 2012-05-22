@@ -105,6 +105,10 @@ namespace p2sp
 
         bool GetPreroll() const { return is_preroll_; }
 
+        string GetChannelName() const { return channel_name_;}
+
+        string GetFileRateType() const { return file_rate_type_;}
+
         boost::int32_t GetSendSpeedLimit() const
         {
             return send_speed_limit_;
@@ -234,6 +238,8 @@ namespace p2sp
         boost::shared_ptr<RangeInfo> range_info_;
         boost::uint32_t vip_;
         bool is_preroll_;
+        string channel_name_;
+        string file_rate_type_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid

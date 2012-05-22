@@ -569,6 +569,9 @@ namespace p2sp
                 play_info->is_preroll_ = 0;
             }
             
+            play_info->file_rate_type_ = uri.getparameter("ft");
+            string channel_name = uri.getparameter("channelname");
+            play_info->channel_name_ = UrlCodec::Decode(channel_name);
             ParseBakHosts(uri, play_info->bak_hosts_);
             LOGX(__DEBUG, "proxy", "Parse BWType = " << play_info->bwtype_);
 

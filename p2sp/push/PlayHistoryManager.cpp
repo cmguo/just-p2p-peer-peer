@@ -264,12 +264,23 @@ bool LocalHistoryConverter::IsAdjacentSegment(boost::uint16_t episode_index1, bo
 
 bool LocalHistoryConverter::GetVideoInfo(const std::string& raw_name, std::string& name, boost::uint16_t& episode_index, boost::uint16_t& segment_index)
 {
-    std::string reg_exp1 = "(.+)\\(第(\\d+)集\\).*\\[(\\d+)\\]\\..+";
-    std::string reg_exp2 = "(.+)\\[(\\d+)\\]\\..+";
+    unsigned char new_ch1[] = {0xE7, 0xAC, 0xAC, 0x00};  // 第 in utf-8 encoding.
+    unsigned char new_ch2[] = {0xE9, 0x9B, 0x86, 0x00};  // 集 in utf-8 encoding.
+
+    //build the new reg_expression
+    std::stringstream new_s1, new_s2;
+    std::string nstr1, nstr2;
+    new_s1 << new_ch1;
+    new_s2 << new_ch2;
+    new_s1 >> nstr1;
+    new_s2 >> nstr2;
+    string newreg_exp1 = "(.+)\\(" + nstr1 + "(\\d+)" + nstr2 + "\\).*\\[(\\d+)\\]\\..+";
+    string newreg_exp2 = "(.+)\\[(\\d+)\\]\\..+";
+
 
     try {
-        boost::smatch what1;
-        if (boost::regex_match(raw_name, what1, boost::regex(reg_exp1))) {
+         boost::smatch what1;
+        if (boost::regex_match(raw_name, what1, boost::regex(newreg_exp1))) {
             name.assign(what1[1].first, what1[1].second);
             episode_index = boost::lexical_cast<boost::uint16_t>(std::string(what1[2].first, what1[2].second));
             segment_index = boost::lexical_cast<boost::uint16_t>(std::string(what1[3].first, what1[3].second));
@@ -277,7 +288,7 @@ bool LocalHistoryConverter::GetVideoInfo(const std::string& raw_name, std::strin
         }
 
         boost::smatch what2;
-        if (boost::regex_match(raw_name, what2, boost::regex(reg_exp2))) {
+        if (boost::regex_match(raw_name, what2, boost::regex(newreg_exp2))) {
             name.assign(what2[1].first, what2[1].second);
             episode_index = 0;
             segment_index =  boost::lexical_cast<boost::uint16_t>(std::string(what2[2].first, what2[2].second));
