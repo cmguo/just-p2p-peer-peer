@@ -416,6 +416,20 @@ namespace p2sp
             return rest_playable_time_delim_when_switching_;
         }
 
+        boost::uint32_t GetRestTimeEnoughLaunchP2P10() const
+        {
+            return rest_time_enough_launch_P2P_2300_10;
+        }
+
+        boost::uint32_t GetRestTimeEnoughLaunchP2P0() const
+        {
+            return rest_time_enough_lauch_P2P_2300_0;
+        }
+
+        boost::uint32_t GetRestTimeNeedCheckP2P() const
+        {
+            return rest_time_need_check_P2P;
+        }
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -539,6 +553,15 @@ namespace p2sp
 
         // 当P2P连接的peer数小于这个值，启用SN
         boost::uint32_t peer_count_when_use_sn_;
+
+        // 点播状态机在peer_count>10时判断2300状态下剩余时间是否足够启动P2P,单位s
+        boost::uint32_t rest_time_enough_launch_P2P_2300_10;
+
+        // 点播状态机在peer_count<10时判断2300状态下剩余时间是否能够稳定启动P2P
+        boost::uint32_t rest_time_enough_lauch_P2P_2300_0;
+
+        // 点播状态机判断剩余时间是否需要检查P2P下载速度
+        boost::uint32_t rest_time_need_check_P2P;
 
         // 二代直播p2p最大连接数
         boost::uint32_t live_peer_max_connections_;

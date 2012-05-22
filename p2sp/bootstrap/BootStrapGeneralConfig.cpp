@@ -98,6 +98,9 @@ namespace p2sp
         , interval_of_two_vv_delim_(5 * 1000)
         , rest_playable_time_delim_when_switching_(10)
         , max_material_do_list_count_(2)
+        , rest_time_enough_lauch_P2P_2300_0(30)
+        , rest_time_enough_launch_P2P_2300_10(20)
+        , rest_time_need_check_P2P(50)
     {
     }
 
@@ -244,6 +247,9 @@ namespace p2sp
                 ("config.i2vv", po::value<uint32_t>()->default_value(interval_of_two_vv_delim_))
                 ("config.rpts", po::value<uint32_t>()->default_value(rest_playable_time_delim_when_switching_))
                 ("config.mmdc", po::value<uint32_t>()->default_value(max_material_do_list_count_))
+                ("config.rel10", po::value<uint32_t>()->default_value(rest_time_enough_launch_P2P_2300_10))
+                ("config.rel0", po::value<uint32_t>()->default_value(rest_time_enough_lauch_P2P_2300_0))
+                ("config.rncp", po::value<uint32_t>()->default_value(rest_time_need_check_P2P))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -333,6 +339,9 @@ namespace p2sp
             interval_of_two_vv_delim_ = vm["config.i2vv"].as<uint32_t>();
             rest_playable_time_delim_when_switching_ = vm["config.rpts"].as<uint32_t>();
             max_material_do_list_count_ = vm["config.mmdc"].as<uint32_t>();
+            rest_time_enough_launch_P2P_2300_10 = vm["config.rel10"].as<uint32_t>();
+            rest_time_enough_lauch_P2P_2300_0 = vm["config.rel0"].as<uint32_t>();
+            rest_time_need_check_P2P = vm["config.rncp"].as<uint32_t>();
 
             if (save_to_disk)
             {

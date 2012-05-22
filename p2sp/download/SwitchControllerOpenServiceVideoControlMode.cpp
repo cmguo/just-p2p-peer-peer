@@ -216,10 +216,10 @@ namespace p2sp
 
         // http速度可以满足要求，如果剩余缓冲足够大了，也需要转到p2p
         // 这个地方将对带宽节约比有很大的影响！zw
-        return rest_play_time_inms >= 20 * 1000 * data_rate_v &&
+        return rest_play_time_inms >= BootStrapGeneralConfig::Inst()->GetRestTimeEnoughLaunchP2P10() * 1000 * data_rate_v &&
             peer_count > 10
             ||
-            rest_play_time_inms >= 30 * 1000 &&
+            rest_play_time_inms >= BootStrapGeneralConfig::Inst()->GetRestTimeEnoughLaunchP2P0() * 1000 &&
             peer_count > 0;
     }
 
@@ -638,12 +638,6 @@ namespace p2sp
                 uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
                 boost::uint32_t rest_playable_time_in_ms = GetGlobalDataProvider()->GetRestPlayableTime();
 
-                if (p2p->GetConnectedPeersCount() == 0)
-                {
-                    ChangeTo2300();
-                    break;
-                }
-
                 if (is_p2p_start_ && time_counter_3200.elapsed() <= 8000 && rest_playable_time_in_ms <= 30000)
                 {
                     if (time_counter_3200.elapsed() <= 4000)
@@ -674,7 +668,7 @@ namespace p2sp
                         ChangeTo2300();
                     }
                 }
-                else if (rest_playable_time_in_ms < 50*1000)
+                else if (rest_playable_time_in_ms < BootStrapGeneralConfig::Inst()->GetRestTimeNeedCheckP2P())
                 {
                     // http不好或者未知
                     if (Is3200P2pSlow())
