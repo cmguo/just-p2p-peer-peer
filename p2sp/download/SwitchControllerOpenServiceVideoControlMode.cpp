@@ -668,7 +668,7 @@ namespace p2sp
                         ChangeTo2300();
                     }
                 }
-                else if (rest_playable_time_in_ms < BootStrapGeneralConfig::Inst()->GetRestTimeNeedCheckP2P())
+                else if (rest_playable_time_in_ms < BootStrapGeneralConfig::Inst()->GetRestTimeNeedCheckP2P() * 1000)
                 {
                     // http不好或者未知
                     if (Is3200P2pSlow())
