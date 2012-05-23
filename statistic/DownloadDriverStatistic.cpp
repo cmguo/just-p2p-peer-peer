@@ -384,10 +384,16 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // HTTP Data Bytes
 
-    void DownloadDriverStatistic::SubmitHttpDataBytes(uint32_t http_data_bytes)
+    void DownloadDriverStatistic::SubmitHttpDataBytesWithRedundance(uint32_t http_data_bytes)
     {
-        download_driver_statistic_info_.TotalHttpDataBytes += http_data_bytes;
+        download_driver_statistic_info_.TotalHttpDataBytesWithRedundance += http_data_bytes;
     }
+
+    void DownloadDriverStatistic::SubmitHttpDataBytesWithoutRedundance(uint32_t http_data_bytes)
+    {
+        download_driver_statistic_info_.TotalHttpDataBytesWithoutRedundance += http_data_bytes;
+    }
+
 
     void DownloadDriverStatistic::SetLocalDataBytes(uint32_t local_data_bytes)
     {

@@ -57,7 +57,9 @@ namespace p2sp
             boost::uint32_t copy_count) = 0;
 
         virtual void SubmitDownloadedBytes(boost::uint32_t length) = 0;
-        virtual void SubmitP2PDataBytes(boost::uint32_t length) = 0;
+
+        virtual void SubmitP2PDataBytesWithoutRedundance(boost::uint32_t length) = 0;
+        virtual void SubmitP2PDataBytesWithRedundance(boost::uint32_t length) = 0;
 
         virtual boost::uint32_t GetConnectRTT() const = 0;
 

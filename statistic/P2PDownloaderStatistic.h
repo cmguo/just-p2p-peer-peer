@@ -140,15 +140,23 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // P2P Data Bytes
 
-        void SubmitP2PPeerDataBytes(uint32_t p2p_data_bytes);
+        void SubmitP2PPeerDataBytesWithRedundance(uint32_t p2p_data_bytes);
 
-        void SubmitP2PSnDataBytes(uint32_t p2p_data_bytes);
+        void SubmitP2PPeerDataBytesWithoutRedundance(uint32_t p2p_data_bytes);
+
+        void SubmitP2PSnDataBytesWithRedundance(uint32_t p2p_data_bytes);
+
+        void SubmitP2PSnDataBytesWithoutRedundance(uint32_t p2p_data_bytes);
 
         void ClearP2PDataBytes();
 
-        uint32_t GetTotalP2PPeerDataBytes();
+        uint32_t GetTotalP2PPeerDataBytesWithRedundance();
 
-        uint32_t GetTotalP2PSnDataBytes();
+        uint32_t GetTotalP2PPeerDataBytesWithoutRedundance();
+
+        uint32_t GetTotalP2PSnDataBytesWithRedundance();
+
+        uint32_t GetTotalP2PSnDataBytesWithoutRedundance();
 
         void SetEmptySubpieceDistance(uint32_t empty_subpiece_distance);
 
@@ -213,30 +221,52 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // P2P Data Bytes
 
-    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytes(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithRedundance(uint32_t p2p_data_bytes)
     {
-        p2p_downloader_statistic_info_.TotalP2PPeerDataBytes += p2p_data_bytes;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance += p2p_data_bytes;
     }
 
-    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytes(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithoutRedundance(uint32_t p2p_data_bytes)
     {
-        p2p_downloader_statistic_info_.TotalP2PSnDataBytes += p2p_data_bytes;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance += p2p_data_bytes;
     }
 
-   inline  void P2PDownloaderStatistic::ClearP2PDataBytes()
+    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithRedundance(uint32_t p2p_data_bytes)
     {
-        p2p_downloader_statistic_info_.TotalP2PPeerDataBytes = 0;
-        p2p_downloader_statistic_info_.TotalP2PSnDataBytes = 0;
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance += p2p_data_bytes;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytes()
+    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithoutRedundance(uint32_t p2p_data_bytes)
     {
-        return p2p_downloader_statistic_info_.TotalP2PPeerDataBytes;
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance += p2p_data_bytes;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytes()
+    inline  void P2PDownloaderStatistic::ClearP2PDataBytes()
     {
-        return p2p_downloader_statistic_info_.TotalP2PSnDataBytes;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance = 0;
+        p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance = 0;
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance = 0;
+        p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance = 0;
+    }
+
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithRedundance()
+    {
+        return p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance;
+    }
+
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithoutRedundance()
+    {
+        return p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance;
+    }
+
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithRedundance()
+    {
+        return p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance;
+    }
+
+    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithoutRedundance()
+    {
+        return p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance;
     }
 
     //////////////////////////////////////////////////////////////////////////

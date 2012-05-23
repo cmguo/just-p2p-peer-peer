@@ -80,7 +80,9 @@ namespace p2sp
             boost::uint32_t copy_count);
 
         virtual void SubmitDownloadedBytes(boost::uint32_t length);
-        virtual void SubmitP2PDataBytes(boost::uint32_t length);
+
+        virtual void SubmitP2PDataBytesWithoutRedundance(boost::uint32_t length);
+        virtual void SubmitP2PDataBytesWithRedundance(boost::uint32_t length);
 
     private:
         void RequestSubPiece(const protocol::SubPieceInfo& subpiece_info, bool need_check = false);

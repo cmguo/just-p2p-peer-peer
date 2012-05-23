@@ -105,11 +105,21 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // HTTP Data Bytes
 
-        void SubmitHttpDataBytes(uint32_t http_data_bytes);
+        void SubmitHttpDataBytesWithRedundance(uint32_t http_data_bytes);
+
+        void SubmitHttpDataBytesWithoutRedundance(uint32_t http_data_bytes);
 
         void SetLocalDataBytes(uint32_t local_data_bytes);
 
-        uint32_t GetTotalHttpDataBytes() { return download_driver_statistic_info_.TotalHttpDataBytes; }
+        uint32_t GetTotalHttpDataBytesWithRedundancy()
+        {
+            return download_driver_statistic_info_.TotalHttpDataBytesWithRedundance;
+        }
+
+        uint32_t GetTotalHttpDataBytesWithoutRedundancy()
+        {
+            return download_driver_statistic_info_.TotalHttpDataBytesWithoutRedundance;
+        }
 
         uint32_t GetTotalLocalDataBytes() { return download_driver_statistic_info_.TotalLocalDataBytes; }
 

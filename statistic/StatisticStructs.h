@@ -548,7 +548,8 @@ namespace statistic
         boost::uint16_t SubPieceRetryRate;             // 冗余率: 冗余 / 收到
         boost::uint16_t UDPLostRate;                   // 丢包率: (发出 - 收到) / 发出
 
-        boost::uint32_t TotalP2PPeerDataBytes;             // 当前P2PDownloader下载的有效字节数
+        // PEER 下载的字节数(不含冗余)
+        boost::uint32_t TotalP2PPeerDataBytesWithoutRedundance;
         boost::uint16_t FullBlockPeerCount;            // 在已经连接的Peer中，资源全满的Peer个数
 
         boost::uint32_t TotalUnusedSubPieceCount;      // 冗余的Subpieces数
@@ -563,9 +564,17 @@ namespace statistic
 
         SPEED_INFO PeerSpeedInfo;
         SPEED_INFO SnSpeedInfo;
-        boost::uint32_t TotalP2PSnDataBytes;
+        
+        // SN 下载的字节数(不含冗余)
+        boost::uint32_t TotalP2PSnDataBytesWithoutRedundance;
 
-        boost::uint8_t Reserved[894];                  // 保留
+        // PEER 下载的字节数(包含冗余)
+        boost::uint32_t TotalP2PPeerDataBytesWithRedundance;
+
+        // SN 下载的字节数(包含冗余)
+        boost::uint32_t TotalP2PSnDataBytesWithRedundance;
+
+        boost::uint8_t Reserved[886];                  // 保留
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -597,7 +606,7 @@ namespace statistic
             ar & SubPieceRetryRate;
             ar & UDPLostRate;
 
-            ar & TotalP2PPeerDataBytes;
+            ar & TotalP2PPeerDataBytesWithoutRedundance;
             ar & FullBlockPeerCount;
 
             ar & TotalUnusedSubPieceCount;
@@ -612,7 +621,10 @@ namespace statistic
 
             ar & PeerSpeedInfo;
             ar & SnSpeedInfo;
-            ar & TotalP2PSnDataBytes;
+            ar & TotalP2PSnDataBytesWithoutRedundance;
+
+            ar & TotalP2PPeerDataBytesWithRedundance;
+            ar & TotalP2PSnDataBytesWithRedundance;
 
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
             ar & PeerCount;
@@ -695,7 +707,7 @@ namespace statistic
         boost::uint32_t    BlockSize;                  // Block的大小
         boost::uint16_t    BlockCount;                 // Block的个数
 
-        boost::uint32_t TotalHttpDataBytes;          // 所有HttpDownloader下载的有效字节数
+        boost::uint32_t TotalHttpDataBytesWithoutRedundance; // 所有HttpDownloader下载的有效字节数, 不包含冗余
         boost::uint32_t TotalLocalDataBytes;         // 所有本地已经下载过的有效字节数
         boost::uint8_t FileName[256];                // 文件名, (TCHAR*)
 
@@ -716,7 +728,8 @@ namespace statistic
         boost::int32_t b;
         boost::int32_t speed_limit;
 
-        boost::uint8_t Resersed[451-12];                // 保留字段
+        boost::uint32_t TotalHttpDataBytesWithRedundance; // 所有HttpDownloader下载的有效字节数, 包含冗余
+        boost::uint8_t Resersed[451-16];                // 保留字段
 
         boost::uint8_t  HttpDownloaderCount;
         HTTP_DOWNLOADER_INFO HttpDownloaders[MAX_HTTP_DOWNLOADER_COUNT];
@@ -745,7 +758,7 @@ namespace statistic
             ar & BlockSize;
             ar & BlockCount;
 
-            ar & TotalHttpDataBytes;
+            ar & TotalHttpDataBytesWithoutRedundance;
             ar & TotalLocalDataBytes;
             ar & framework::container::make_array(FileName, sizeof(FileName) / sizeof(FileName[0]));
 
@@ -766,6 +779,7 @@ namespace statistic
             ar & t;
             ar & b;
             ar & speed_limit;
+            ar & TotalHttpDataBytesWithRedundance;
             ar & framework::container::make_array(Resersed, sizeof(Resersed) / sizeof(Resersed[0]));
 
             ar & HttpDownloaderCount;

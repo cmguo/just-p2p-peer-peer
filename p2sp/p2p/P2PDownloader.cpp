@@ -953,9 +953,15 @@ namespace p2sp
             {
                 if (iter != peers_.end())
                 {
-                    iter->second->SubmitP2PDataBytes(
+                    iter->second->SubmitP2PDataBytesWithoutRedundance(
                         ((const protocol::SubPiecePacket &)packet).sub_piece_length_);
                 }
+            }
+
+            if (iter != peers_.end())
+            {
+                iter->second->SubmitP2PDataBytesWithRedundance(
+                    ((const protocol::SubPiecePacket &)packet).sub_piece_length_);
             }
 
             subpiece_request_manager_.OnSubPiece((protocol::SubPiecePacket const &)packet);

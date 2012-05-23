@@ -100,11 +100,6 @@ namespace statistic
             return;
         }
 
-        DebugLog("speed sn = %d, bytes = %d\n", p2p_downloader_statistic_info_.SnSpeedInfo.NowDownloadSpeed,
-            p2p_downloader_statistic_info_.TotalP2PSnDataBytes);
-
-        DebugLog("speed p2p = %d\n", p2p_downloader_statistic_info_.SpeedInfo.NowDownloadSpeed);
-
         TakeSnapshot();
 
         P2PDOWNLOADER_STATISTIC_INFO& info = p2p_downloader_statistic_info_;

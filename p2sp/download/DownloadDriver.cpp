@@ -974,19 +974,19 @@ namespace p2sp
         // J: P2P下载字节数
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
-            info.uP2PDownloadBytes = p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes();
+            info.peer_downloadbytes_without_redundance = p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytesWithoutRedundance();
         }
         else
         {
-            info.uP2PDownloadBytes = 0;
+            info.peer_downloadbytes_without_redundance = 0;
         }
 
         // K: HTTP总下载字节数
-        info.uHttpDownloadBytes = statistic_->GetTotalHttpDataBytes();
+        info.http_downloadbytes_without_redundance = statistic_->GetTotalHttpDataBytesWithoutRedundancy();
 
         // L: 平均下载速度(AvgDownloadSpeed)
         info.uAvgDownloadSpeed = (download_time_counter_.elapsed() == 0) ? 0 : 
-            (info.uP2PDownloadBytes + info.uHttpDownloadBytes) * 1000.0 / download_time_counter_.elapsed();
+            (info.peer_downloadbytes_without_redundance + info.http_downloadbytes_without_redundance) * 1000.0 / download_time_counter_.elapsed();
 
         // M: 是否是下载模式完成的此次下载
         info.bIsSaveMode = proxy_connection_->IsSaveMode();
@@ -1031,11 +1031,18 @@ namespace p2sp
         // X: 不限速时的平均下载速度
         info.avg_download_speed_before_limit = (uint32_t)avg_download_speed_before_limit_;
 
-        // Y: 备用 (原来是客户端提交，操作系统版本)
-        info.reserved1 = 0;
+        // Y: HTTP总下载字节数（包含冗余）
+        info.http_downloadbytes_with_redundance = statistic_->GetTotalHttpDataBytesWithRedundancy();
 
-        // Z: 文件时常(原来是客户端提交的)
-        info.file_length_in_second = info.uVideoBytes / info.uDataRate;
+        // Z: Peer总下载字节数（包含冗余）
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.peer_downloadbytes_with_redundance = p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytesWithRedundance();
+        }
+        else
+        {
+            info.peer_downloadbytes_with_redundance = 0;
+        }
 
         // A1: 下载所用的时间
         info.download_time = download_time_counter_.elapsed();
@@ -1053,8 +1060,16 @@ namespace p2sp
         // C1: 是否获得RID(0未获得;1获得)
         info.is_got_rid = (GetP2PControlTarget() ? 1 : 0);
 
-        // D1: J+K
-        info.total_downloaded_bytes = info.uP2PDownloadBytes + info.uHttpDownloadBytes;
+        // D1: SN 总下载字节数（包含冗余）
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.sn_downloadbytes_with_redundance = p2p_downloader_->GetStatistic()->GetTotalP2PSnDataBytesWithRedundance();
+        }
+        else
+        {
+            info.sn_downloadbytes_with_redundance = 0;
+        }
+        
 
         // E1: bwtype
         info.bwtype = (uint32_t)bwtype_;
@@ -1072,7 +1087,7 @@ namespace p2sp
             }
             else
             {
-                info.http_avg_speed_in_KBps = info.uHttpDownloadBytes / downloading_time_in_seconds / 1024;
+                info.http_avg_speed_in_KBps = info.http_downloadbytes_without_redundance / downloading_time_in_seconds / 1024;
             }
         }
         else
@@ -1090,7 +1105,7 @@ namespace p2sp
             }
             else
             {
-                info.p2p_avg_speed_in_KBps = info.uP2PDownloadBytes / download_time_in_seconds / 1024;
+                info.p2p_avg_speed_in_KBps = info.peer_downloadbytes_without_redundance / download_time_in_seconds / 1024;
             }
         }
         else
@@ -1156,15 +1171,16 @@ namespace p2sp
         // P1: drag状态码
         info.tiny_drag_http_status = tiny_drag_http_status_;
        
-        // Q1: SN下载字节数
+        // Q1: SN总下载字节数（不带冗余）
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
-            info.total_sn_download_bytes = p2p_downloader_->GetStatistic()->GetTotalP2PSnDataBytes();
+            info.sn_downloadbytes_without_redundance = p2p_downloader_->GetStatistic()->GetTotalP2PSnDataBytesWithoutRedundance();
         }
         else
         {
-            info.total_sn_download_bytes = 0;
+            info.sn_downloadbytes_without_redundance = 0;
         }
+
         // R1: 是否是push
         info.is_push = is_push_;
         // S1: 是否是push下载完成的任务，如果R1 == false && S1 == true 则表示push下载的任务被命中
@@ -1208,8 +1224,8 @@ namespace p2sp
         log_stream << "&G=" << info.szOriginalReferUrl;
         log_stream << "&H=" << (uint32_t)info.uDiskBytes;
         log_stream << "&I=" << (uint32_t)info.uVideoBytes;
-        log_stream << "&J=" << (uint32_t)info.uP2PDownloadBytes;
-        log_stream << "&K=" << (uint32_t)info.uHttpDownloadBytes;
+        log_stream << "&J=" << (uint32_t)info.peer_downloadbytes_without_redundance;
+        log_stream << "&K=" << (uint32_t)info.http_downloadbytes_without_redundance;
         log_stream << "&L=" << (uint32_t)info.uAvgDownloadSpeed;
         log_stream << "&M=" << (uint32_t)info.bIsSaveMode;
         log_stream << "&N=" << (uint32_t)info.MaxHistoryDownloadSpeed;
@@ -1223,15 +1239,12 @@ namespace p2sp
         log_stream << "&V=" << (uint32_t)info.uDataRate;
         log_stream << "&W=" << (uint32_t)info.avg_http_download_speed_in2300;
         log_stream << "&X=" << (uint32_t)info.avg_download_speed_before_limit;
-        // 原来版本是客户端提交的操作系统版本
-        log_stream << "&Y=";
-        // 原来版本是客户端计算的平均下载速度
-        log_stream << "&Z=" << (uint32_t)info.file_length_in_second;
+        log_stream << "&Y=" <<  (uint32_t)info.http_downloadbytes_with_redundance;
+        log_stream << "&Z=" << (uint32_t)info.peer_downloadbytes_with_redundance;
         log_stream << "&A1=" << (uint32_t)info.download_time;
         log_stream << "&B1=" << (uint32_t)info.tiny_drag_result;
         log_stream << "&C1=" << (uint32_t)info.is_got_rid;
-        // 原来版本是客户端计算的本次下载字节数
-        log_stream << "&D1=" << (uint32_t)info.total_downloaded_bytes;
+        log_stream << "&D1=" << (uint32_t)info.sn_downloadbytes_with_redundance;
         log_stream << "&E1=" << (uint32_t)info.bwtype;
         log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
         log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
@@ -1243,7 +1256,7 @@ namespace p2sp
         log_stream << "&O1=" << (uint32_t)info.retry_rate;
         log_stream << "&P1=" << (uint32_t)info.tiny_drag_http_status;
 
-        log_stream << "&Q1=" << (uint32_t)info.total_sn_download_bytes;
+        log_stream << "&Q1=" << (uint32_t)info.sn_downloadbytes_without_redundance;
         log_stream << "&R1=" << (uint32_t)info.is_push;
         log_stream << "&S1=" << (uint32_t)info.instance_is_push;
         log_stream << "&T1=" << (uint32_t)info.vip;
@@ -1650,7 +1663,7 @@ namespace p2sp
         statistic_->SetFileLength(instance_->GetFileLength());
         statistic_->SetBlockSize(instance_->GetBlockSize());
         statistic_->SetBlockCount(instance_->GetBlockCount());
-        statistic_->SetLocalDataBytes(instance_->GetDownloadBytes() - statistic_->GetTotalHttpDataBytes());
+        statistic_->SetLocalDataBytes(instance_->GetDownloadBytes() - statistic_->GetTotalHttpDataBytesWithoutRedundancy());
 
         GetSubPieceForPlay();
     }
@@ -2686,10 +2699,10 @@ namespace p2sp
                 // P2P下载字节数
                 if (p2p_downloader_ && p2p_downloader_->GetStatistic())
                 {
-                    p2p_download_bytes = (int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytes());
+                    p2p_download_bytes = (int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytesWithoutRedundance());
                 }
 
-                http_download_bytes = (int32_t)(statistic->GetTotalHttpDataBytes());
+                http_download_bytes = (int32_t)(statistic->GetTotalHttpDataBytesWithoutRedundancy());
 
                 // 平均下载速度(AvgDownloadSpeed)
                 avg_download_speed_before_limit_ = (int32_t)((p2p_download_bytes + http_download_bytes) * 
@@ -2706,7 +2719,7 @@ namespace p2sp
 
             int32_t http_download_bytes = 0;
 
-            http_download_bytes = (int32_t)(GetStatistic()->GetTotalHttpDataBytes());
+            http_download_bytes = (int32_t)(GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy());
 
             // 平均下载速度(AvgDownloadSpeed)
             avg_http_download_speed_in2300_ = (int32_t)(http_download_bytes * 
@@ -2720,11 +2733,11 @@ namespace p2sp
         {
             if (total_download_byte_2000_ > 0)
             {
-                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytes() - total_download_byte_2000_;
+                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy() - total_download_byte_2000_;
             }
             else
             {
-                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytes();
+                total_download_byte_2300_ = GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy();
             }
         }
     }
@@ -2851,7 +2864,7 @@ namespace p2sp
 
     void DownloadDriver::DoCDNFlowStatistic()
     {
-        boost::uint32_t total_bytes = GetStatistic()->GetTotalHttpDataBytes();
+        boost::uint32_t total_bytes = GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy();
         bool is_real_drag = is_head_only_ || (position_after_drag_ != 0 && is_drag_ == true) || openservice_start_position_ !=0;
         bool normal_launch = !is_real_drag && !is_drag_;   //正常下载启动状态
         bool predownload = !is_real_drag && is_drag_;       //预下载状态
@@ -2960,6 +2973,6 @@ namespace p2sp
     {
         assert(GetBWType() != JBW_HTTP_ONLY);
 
-        total_download_byte_2000_ = GetStatistic()->GetTotalHttpDataBytes();
+        total_download_byte_2000_ = GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy();
     }
 }

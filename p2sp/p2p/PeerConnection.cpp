@@ -564,9 +564,14 @@ namespace p2sp
         p2p_downloader_->GetStatistic()->SubmitPeerDownloadedBytes(length);
     }
 
-    void PeerConnection::SubmitP2PDataBytes(boost::uint32_t length)
+    void PeerConnection::SubmitP2PDataBytesWithoutRedundance(boost::uint32_t length)
     {
-        p2p_downloader_->GetStatistic()->SubmitP2PPeerDataBytes(length);
+        p2p_downloader_->GetStatistic()->SubmitP2PPeerDataBytesWithoutRedundance(length);
+    }
+
+    void PeerConnection::SubmitP2PDataBytesWithRedundance(boost::uint32_t length)
+    {
+        p2p_downloader_->GetStatistic()->SubmitP2PPeerDataBytesWithRedundance(length);
     }
 
     boost::uint32_t PeerConnection::GetConnectRTT() const

@@ -38,8 +38,8 @@ namespace p2sp
         char                  szOriginalReferUrl[1000];             // G: Refer Url
         boost::uint32_t       uDiskBytes;                           // H: 磁盘已有字节数
         boost::uint32_t       uVideoBytes;                          // I: 影片大小
-        boost::uint32_t       uP2PDownloadBytes;                    // J: P2P下载字节数
-        boost::uint32_t       uHttpDownloadBytes;                   // K: HTTP下载字节数
+        boost::uint32_t       peer_downloadbytes_without_redundance;// J: Peer总下载字节数（不带冗余）
+        boost::uint32_t       http_downloadbytes_without_redundance;// K: http总下载字节数（不带冗余）
         boost::uint32_t       uAvgDownloadSpeed;                    // L: 平均下载速度 (B/s)
         boost::uint8_t        bIsSaveMode;                          // M: 是否是下载模式完成的此次下载
         boost::uint32_t       MaxHistoryDownloadSpeed;              // N: 最大历史下载速度
@@ -53,12 +53,12 @@ namespace p2sp
         boost::uint32_t       uDataRate;                            // V: 码流率
         boost::uint32_t       avg_http_download_speed_in2300;       // W: 2300状态的http平均速度
         boost::uint32_t       avg_download_speed_before_limit;      // X: 不限速时的平均下载速度
-        boost::uint32_t       reserved1;                            // Y: 备用 (原来是客户端提交，操作系统版本)
-        boost::uint32_t       file_length_in_second;                // Z: 文件时常(原来是客户端提交的)
+        boost::uint32_t       http_downloadbytes_with_redundance;   // Y: HTTP总下载字节数（包含冗余）
+        boost::uint32_t       peer_downloadbytes_with_redundance;   // Z: Peer总下载字节数（包含冗余）
         boost::uint32_t       download_time;                        // A1: 下载所用的时间
         boost::uint32_t       tiny_drag_result;                     // B1: tiny_drag结果
         boost::uint32_t       is_got_rid;                           // C1: 是否获得RID(0未获得;1获得)
-        boost::uint32_t       total_downloaded_bytes;               // D1: J+K
+        boost::uint32_t       sn_downloadbytes_with_redundance;     // D1: SN 总下载字节数（包含冗余）
         boost::uint32_t       bwtype;                               // E1: bwtype
         boost::uint32_t       http_avg_speed_in_KBps;               // F1: http 平均下载速度
         boost::uint32_t       p2p_avg_speed_in_KBps;                // G1: p2p 平均下载速度
@@ -69,7 +69,7 @@ namespace p2sp
         boost::uint32_t       avg_http_download_byte;               // N1: HTTP平均下载的长度
         boost::uint32_t       retry_rate;                           // O1: 冗余率
         boost::uint32_t       tiny_drag_http_status;                // P1: drag状态码
-        boost::uint32_t       total_sn_download_bytes;              // Q1: SN下载字节数
+        boost::uint32_t       sn_downloadbytes_without_redundance;  // Q1: SN总下载字节数（不带冗余）
         bool                  is_push;                              // R1: 是否是push任务
         bool                  instance_is_push;                     // S1: 是否是push下载的任务，用于判断命中率
         boost::uint32_t       vip;                                  // T1: VIP
