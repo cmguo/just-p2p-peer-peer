@@ -322,7 +322,7 @@ namespace p2sp
             boost::asio::io_service & io_svc);
 
     private:
-        static const uint32_t DEFAULT_SILENT_TIME_LIMIT = 60*1000;
+        static const uint32_t DEFAULT_SILENT_TIME_LIMIT = 300*1000;
         static const uint32_t HEADER_LENGTH = 2048;
         static const uint32_t CONTENT_LENGTH = 10 * 1024;
     };
