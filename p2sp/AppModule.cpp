@@ -572,15 +572,6 @@ namespace p2sp
         return s;
     }
 
-    void AppModule::DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-        IndexManager::Inst()->DoAddUrlRid(url_info, rid_info, content_md5, content_bytes, flag);
-    }
-
     protocol::CandidatePeerInfo AppModule::GetCandidatePeerInfo() const
     {
         if (false == is_running_)

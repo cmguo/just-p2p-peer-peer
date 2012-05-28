@@ -229,15 +229,6 @@ namespace p2sp
         // 资源创建成功，资源对象绑定 这个DownloadDriver
         instance_->AttachDownloadDriver(shared_from_this());
 
-        // 如果该 instance 没有 RID, 那么 要让 IndexManager 发出 QueryRidByUrl 请求
-        IndexManager::Inst()->DoQueryRidByUrl(original_url_info_.url_, original_url_info_.refer_url_);
-
-        // if (instance_->GetRID().IsEmpty())
-        // {
-        //    if (false == instance_->IsComplete())
-        //        instance_->DoMakeContentMd5AndQuery();
-        // }
-
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (instance_->HasRID())
         {
@@ -412,11 +403,6 @@ namespace p2sp
                 http_drag_downloader_ = HttpDragDownloader::Create(io_svc_, shared_from_this(), 
                     url_info.url_);
                 http_drag_downloader_->Start();
-            }
-            else
-            {
-                // 如果该 instance 没有 RID, 那么 要让 IndexManager 发出 QueryRidByUrl 请求
-                IndexManager::Inst()->DoQueryRidByUrl(original_url_info_.url_, original_url_info_.refer_url_);
             }
         }
         else
@@ -1835,14 +1821,6 @@ namespace p2sp
         }
         }
         */
-    }
-
-    void DownloadDriver::OnNoticeContentHashSucced(string url, MD5 content_md5, uint32_t content_bytes, uint32_t file_length)
-    {
-        if (false == is_running_)
-            return;DD_EVENT("DownloadDriver::OnNoticeContentHashSucced MD5:" << content_md5 << " file_length:" << content_bytes << " file_length:" << file_length);
-        IndexManager::Inst()->DoQueryRidByContent(original_url_info_.url_, original_url_info_.refer_url_, content_md5,
-            content_bytes, file_length);
     }
 
     void DownloadDriver::OnNoticeGetFileName(const string& file_name)

@@ -53,8 +53,6 @@ namespace storage
 
         virtual void OnNoticeMakeBlockFailed(uint32_t block_info) = 0;
 
-        virtual void OnNoticeContentHashSucced(string url, MD5 content_md5, uint32_t content_bytes, uint32_t file_length) = 0;
-
         virtual void OnNoticeGetFileName(const string& file_name) = 0;
 
         virtual void OnNoticeFileDownloadComplete() = 0;

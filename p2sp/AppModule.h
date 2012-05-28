@@ -220,8 +220,6 @@ class AppModule: public boost::noncopyable,
 
     boost::uint16_t GetUpnpPortForTcpUpload();
 
-    void DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
-
     // 上传统计信息
     void SubmitToDataCollectionServer();
 

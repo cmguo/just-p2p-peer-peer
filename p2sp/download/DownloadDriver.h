@@ -302,8 +302,6 @@ namespace p2sp
         virtual void OnNoticeMakeBlockSucced(uint32_t block_info);
         // 通知 DownloadDriver 一个Block检验失败
         virtual void OnNoticeMakeBlockFailed(uint32_t block_info);
-        // 通知 DownloadDriver contenthash校验成功
-        virtual void OnNoticeContentHashSucced(string url, MD5 content_md5, uint32_t content_bytes, uint32_t file_length);
         // 通知获得文件名
         virtual void OnNoticeGetFileName(const string& file_name);
 

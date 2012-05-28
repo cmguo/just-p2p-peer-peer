@@ -822,11 +822,6 @@ namespace storage
             else if (subpiece_manager_->HasRID() && content_need_to_add_
                 && content_md5_.is_empty() == false)
             {
-                if (url_info_s_.size() > 0 && flag_rid_origin_ != protocol::RID_BY_PLAY_URL)
-                {
-                    p2sp::AppModule::Inst()->DoAddUrlRid(*(url_info_s_.begin()),
-                        subpiece_manager_->GetRidInfo(), content_md5_, content_bytes_, GetRidOriginFlag());
-                }
                 content_need_to_add_ = false;
             }
         }
@@ -859,17 +854,6 @@ namespace storage
         content_md5_ = hash_val;
         content_bytes_ = content_bytes;
         content_buffer_ = base::AppBuffer();
-
-        if (false == content_need_to_query_)
-            return;
-
-        STL_FOR_EACH_CONST(std::set<IDownloadDriver::p>, download_driver_s_, iter)
-        {
-            if (*iter)
-            {
-                (*iter)->OnNoticeContentHashSucced(origanel_url_info_.url_, hash_val, content_bytes, GetResourceLength());
-            }
-        }
     }
 
     // 从资源描述, pending_subpiece_manager和pending_get_subpiece_manager中删除block
@@ -1213,14 +1197,6 @@ namespace storage
         assert(subpiece_manager_->HasRID());
         assert(url_info_s_.size() == 1);
         Storage::Inst_Storage()->AddInstanceToRidMap(shared_from_this());
-
-        if (!url_info_s_.empty())
-        {
-            protocol::UrlInfo url_info = *(url_info_s_.begin());
-
-            p2sp::AppModule::Inst()->DoAddUrlRid(url_info, subpiece_manager_->GetRidInfo(), content_md5_, content_bytes_, flag_rid_origin_);
-            STORAGE_DEBUG_LOG(" post to DoAddUrlRid!" << subpiece_manager_->GetRidInfo());
-        }
 
         STL_FOR_EACH_CONST(std::set<IDownloadDriver::p>, download_driver_s_, iter)
         {

@@ -36,13 +36,6 @@ namespace p2sp
         */
         void Stop();
 
-        /**
-        * @brief 通过url获得RID (异步)
-        */
-        void DoQueryRidByUrl(string url, string refer);
-
-        void DoQueryRidByContent(string url, string refer, MD5 content_md5, uint32_t content_bytes, uint32_t file_length);
-
         void DoQueryVodListTrackerList();
 
         void DoQueryVodReportTrackerList();
@@ -53,8 +46,6 @@ namespace p2sp
 
         void DoQueryStunServerList();
 
-        void DoQueryIndexServerList();
-
 #ifdef NOTIFY_ON
         void DoQueryNotifyServerList();
 #endif
@@ -62,8 +53,6 @@ namespace p2sp
         void DoQueryBootStrapConfig();
 
         void DoQuerySnList();
-
-        void DoAddUrlRid(protocol::UrlInfo url_info, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
 
         void OnUdpRecv(protocol::ServerPacket const & packet_header);
 
@@ -73,13 +62,6 @@ namespace p2sp
         virtual void OnResolverFailed(uint32_t error_code);  // 1-Url有问题 2-域名无法解析 3-域名解析出错 4-连接失败
 
     protected:
-
-        void OnQueryRidByUrlPacket(protocol::QueryRidByUrlPacket const & packet);
-
-        void OnQueryRidByContentPacket(protocol::QueryRidByContentPacket const & packet);
-
-        void OnQueryHttpServerByRidPacket(protocol::QueryHttpServerByRidPacket const & packet);
-
         void OnQueryVodListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet);
 
         void OnQueryVodReportTrackerListPacket(protocol::QueryTrackerListPacket const & packet);
@@ -88,11 +70,7 @@ namespace p2sp
 
         void OnQueryLiveReportTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet);
 
-        void OnAddRidUrlPacket(protocol::AddRidUrlPacket const & packet);
-
         void OnQueryStunServerListPacket(protocol::QueryStunServerListPacket const & packet);
-
-        void OnQueryIndexServerListPacket(protocol::QueryIndexServerListPacket const & packet);
 
         void OnQueryBootStrapConfigPacket(protocol::QueryConfigStringPacket const & packet);
 
@@ -113,9 +91,6 @@ namespace p2sp
 
         void OnQueryStunServerListTimerElapsed(uint32_t times);
 
-        void OnQueryIndexServerListTimerElapsed(uint32_t times);
-
-        void OnQueryTestUrlListTimerElapsed(uint32_t times);
 #ifdef NOTIFY_ON
         void OnQueryNotifyServerTimerElapsed(boost::uint32_t times);
 #endif
@@ -125,10 +100,6 @@ namespace p2sp
 
     private:
         boost::asio::io_service & io_svc_;
-        /**
-        * @brief 用于记录 发出的 QureyRidByUrl 包 TransactionID 和 url 的对应关系
-        */
-        std::map<uint32_t, protocol::UrlInfo> trans_url_map_;
 
         bool is_have_vod_list_tracker_list_;
         bool is_have_vod_report_tracker_list_;
@@ -137,7 +108,6 @@ namespace p2sp
         bool is_have_live_report_tracker_list_;
 
         bool is_have_stun_server_list_;
-        bool is_have_index_server_list_;
         bool is_have_change_domain_;
         bool is_resolving_;
         bool is_have_notify_server_;
@@ -153,7 +123,6 @@ namespace p2sp
 
         framework::timer::OnceTimer change_domain_resolver_timer_;
         framework::timer::OnceTimer query_stun_server_list_timer_;
-        framework::timer::OnceTimer query_index_server_list_timer_;
 #ifdef NOTIFY_ON
         framework::timer::OnceTimer query_notify_server_list_timer_;
 #endif
@@ -178,8 +147,6 @@ namespace p2sp
 
         // Resolver
         network::Resolver::p resolver_;
-        std::vector<boost::uint8_t> mod_index_map_;
-        std::vector<protocol::INDEX_SERVER_INFO> index_servers_;
 
         string domain_;
         boost::uint16_t port_;
@@ -194,13 +161,7 @@ namespace p2sp
         IndexManager(
             boost::asio::io_service & io_svc);
 
-        boost::asio::ip::udp::endpoint GetIndexEndPoint(string url, string refer);
-        boost::asio::ip::udp::endpoint GetIndexEndPoint(Guid guid);
-        boost::asio::ip::udp::endpoint ModToEndPoint(uint32_t mod);
-        string Url2Mini(string url, string refer);
-
     private:
-
         static const uint32_t INITIAL_QUERY_INTERVAL = 15*1000;
         static const uint32_t DEFAULT_QUERY_INTERVAL = 4 * 60 * 60*1000U;
         static const uint32_t DEFAULT_QUERY_BOOTSTRAP_CONFIG_INTERVAL = 60 * 60*1000U;
