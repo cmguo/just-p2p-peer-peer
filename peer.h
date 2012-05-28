@@ -51,29 +51,11 @@ typedef struct _INDEXSTARTPARAM
     boost::uint16_t            usIndexPort;            // IndexServer UDP port
 } INDEXSTRATPARAM, *LPINDEXSTRATPARAM;
 
+#ifdef PEER_PC_CLIENT
 typedef struct _WSTRATPARAM{
-    boost::uint32_t            uSize;                    // 整个结构的大小
-    boost::uint32_t            hWnd;                     // 通讯用Window句柄，界面此处填写接收消息的窗口句柄
-    boost::uint16_t            usUdpPort;                // 要建立监听的UDP端口
-    boost::uint16_t            usTcpPort;                // 要建立监听的TCP端口
-    boost::uint16_t            usHttpProxyPort;          // 要建立的本地代理的端口
-    INDEXSTRATPARAM            aIndexServer[16];         // aIndexServer组，目前只适用 IndexServer[0]
-    boost::int32_t             bUseDisk;                 // 是否使用磁盘, 如果是TRUE, 则使用磁盘; 如果是FALSE, 则纯内存
-    boost::uint64_t            ullDiskLimit;             // 使用磁盘上限
-    wchar_t                    wszDiskPath[256];         // 磁盘使用路径
-    boost::int32_t             reserve1;
-    char                       reserve2[64];
-    char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
-    // extend
-    wchar_t                    wszConfigPath[256];       // 配置文件路径, "" 表示使用默认路径
-    boost::int32_t             reserve3;
-    boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
-    boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
-    boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             reserve4;
-} WSTARTPARAM, *LPWSTARTPARAM;
-
+#else
 typedef struct _STRATPARAM{
+#endif
     boost::uint32_t            uSize;                    // 整个结构的大小
     boost::uint32_t            hWnd;                     // 通讯用Window句柄，界面此处填写接收消息的窗口句柄
     boost::uint16_t            usUdpPort;                // 要建立监听的UDP端口
@@ -82,18 +64,30 @@ typedef struct _STRATPARAM{
     INDEXSTRATPARAM            aIndexServer[16];         // aIndexServer组，目前只适用 IndexServer[0]
     boost::int32_t             bUseDisk;                 // 是否使用磁盘, 如果是TRUE, 则使用磁盘; 如果是FALSE, 则纯内存
     boost::uint64_t            ullDiskLimit;             // 使用磁盘上限
-    char                       szDiskPath[512];          // 磁盘使用路径
+#ifdef PEER_PC_CLIENT
+    wchar_t                    wszDiskPath[256];         // 磁盘使用路径
+#else
+    char                       szDiskPath[512];         // 磁盘使用路径
+#endif
     boost::int32_t             reserve1;
     char                       reserve2[64];
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
-    char                       szConfigPath[512];        // 配置文件路径, "" 表示使用默认路径
+#ifdef PEER_PC_CLIENT
+    wchar_t                    wszConfigPath[256];       // 配置文件路径, "" 表示使用默认路径
+#else
+    char                       szConfigPath[512];        // 配置文件路径, ""表示使用默认路径
+#endif
     boost::int32_t             reserve3;
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
     boost::uint8_t             reserve4;
+#ifdef PEER_PC_CLIENT
+} WSTARTPARAM, *LPWSTARTPARAM;
+#else
 } STARTPARAM, *LPSTARTPARAM;
+#endif
 
 typedef struct _PEERSTATEMACHINE
 {
