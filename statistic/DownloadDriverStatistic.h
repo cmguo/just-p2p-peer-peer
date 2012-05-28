@@ -164,6 +164,7 @@ namespace statistic
         void SetP2PState(boost::uint8_t p);
         void SetTimerusingState(boost::uint8_t tu);
         void SetTimerState(boost::uint8_t t);
+        void SetSnState(boost::uint8_t sn);
 
         //////////////////////////////////////////////////////////////////////////
         // extend

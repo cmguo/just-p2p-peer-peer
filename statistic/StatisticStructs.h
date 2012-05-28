@@ -729,7 +729,9 @@ namespace statistic
         boost::int32_t speed_limit;
 
         boost::uint32_t TotalHttpDataBytesWithRedundance; // 所有HttpDownloader下载的有效字节数, 包含冗余
-        boost::uint8_t Resersed[451-16];                // 保留字段
+        boost::uint8_t sn_state;
+
+        boost::uint8_t Resersed[451-17];                // 保留字段
 
         boost::uint8_t  HttpDownloaderCount;
         HTTP_DOWNLOADER_INFO HttpDownloaders[MAX_HTTP_DOWNLOADER_COUNT];
@@ -780,6 +782,7 @@ namespace statistic
             ar & b;
             ar & speed_limit;
             ar & TotalHttpDataBytesWithRedundance;
+            ar & sn_state;
             ar & framework::container::make_array(Resersed, sizeof(Resersed) / sizeof(Resersed[0]));
 
             ar & HttpDownloaderCount;

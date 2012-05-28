@@ -2831,10 +2831,12 @@ namespace p2sp
                     p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())
                 {
                     p2p_downloader_->SetSnEnable(true);
+                    statistic_->SetSnState(1);
                 }
                 else if (GetRestPlayableTime() > 40*1000)
                 {
                     p2p_downloader_->SetSnEnable(false);
+                    statistic_->SetSnState(0);
                 }
             }
         }

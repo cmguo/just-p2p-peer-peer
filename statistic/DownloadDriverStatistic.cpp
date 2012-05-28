@@ -564,6 +564,11 @@ namespace statistic
         download_driver_statistic_info_.p2p_state = p;
     }
 
+    void DownloadDriverStatistic::SetSnState(boost::uint8_t sn)
+    {
+        download_driver_statistic_info_.sn_state = sn;
+    }
+
     void DownloadDriverStatistic::SetTimerusingState(boost::uint8_t tu)
     {
         download_driver_statistic_info_.timer_using_state = tu;
