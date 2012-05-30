@@ -260,18 +260,7 @@ void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, w
 // 向Peer上传特定操作的次数
 void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
 {
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (!statistic::StatisticModule::Inst())
-        return;
-
-    LOG(__EVENT, "leak", __FUNCTION__ << " action=" << uAction << " uTimes=" << uTimes);
-    global_io_svc().post(boost::bind(&statistic::StatisticModule::SubmitActionCount,
-        statistic::StatisticModule::Inst(), uAction, uTimes));
-
+    return;
 }
 
 void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
@@ -346,41 +335,12 @@ void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
 
 void PEER_API ResetCompleteCount()
 {
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&statistic::StatisticModule::ResetCompleteCount,
-        statistic::StatisticModule::Inst()));
+    return;
 }
 
 void PEER_API RemoveDownloadFile(char const * lpszUrl, uint32_t nUrlLength)
 {
-    // !
-    LOGX(__DEBUG, "struct", "Url = " << lpszUrl);
-    if (NULL == lpszUrl || 0 == nUrlLength)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    string url(lpszUrl, nUrlLength);
-
-    // stop, -> post to RemoveProxyConnection
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StopProxyConnection, p2sp::ProxyModule::Inst(), url));
-
-#ifdef DISK_MODE
-    // remove -> post to RemoveInstance
-    global_io_svc().post(boost::bind(&storage::Storage::RemoveDownloadFile, storage::Storage::Inst_Storage(),
-        url));
-#endif  // #ifdef DISK_MODE
-
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    return;
 }
 
 void PEER_API StartDownloadAll(void * lpBuffer, uint32_t nLength)
@@ -402,29 +362,7 @@ void PEER_API StartDownloadEx(char const * lpszUrl, boost::uint32_t nUrlLength, 
 */
 void PEER_API RemoveDownloadFileEx(char const * lpszUrl, boost::uint32_t nUrlLength)
 {
-    LOGX(__DEBUG, "struct", "Url = " << lpszUrl);
-    if (NULL == lpszUrl || 0 == nUrlLength)
-    {
-        return;
-    }
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    string url(lpszUrl, nUrlLength);
-
-    // stop, -> post to RemoveProxyConnection
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::StopProxyConnection, p2sp::ProxyModule::Inst(), url));
-
-#ifdef DISK_MODE
-    // remove -> post to RemoveInstance
-    global_io_svc().post(boost::bind(&storage::Storage::RemoveDownloadFileEx, storage::Storage::Inst_Storage(),
-        url));
-#endif  // #ifdef DISK_MODE
-
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    return;
 }
 
 /**
@@ -619,31 +557,7 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
 
 void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * web_url, boost::uint32_t weburl_len)
 {
-    LOGX(__DEBUG, "interface", "URL = " << url << " weburl = " << web_url);
-
-    if (!IsProxyModuleStarted())
-    {
-        return;
-    }
-
-    if (NULL == url || 0 == url_len)
-    {
-        return;
-    }
-
-    if (NULL == web_url || 0 == weburl_len) {
-        return;
-    }
-
-    string url_(url, url_len);
-    string web_url_(web_url, weburl_len);
-
-    global_io_svc().post(
-        boost::bind(
-            &storage::IStorage::SetWebUrl, storage::Storage::Inst(),
-            url_, web_url_
-       )
-   );
+    return;
 }
 
 PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost::uint32_t nRIDLength)

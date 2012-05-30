@@ -1635,21 +1635,6 @@ namespace storage
         }
     }
 
-    void Instance::NotifySetWebUrl(string web_url)
-    {
-        if (false == is_running_) {
-            return;
-        }
-        STL_FOR_EACH(std::set<IDownloadDriver::p>, download_driver_s_, it)
-        {
-            if (*it)
-            {
-                LOGX(__DEBUG, "interface", "Instance::NotifySetWebUrl weburl = " << web_url);
-                global_io_svc().post(boost::bind(&IDownloadDriver::OnNoticeSetWebUrl, *it, web_url));
-            }
-        }
-    }
-
 #ifdef DISK_MODE
     void Instance::ReadFromDisk(protocol::SubPieceInfo & start_s_info)
     {

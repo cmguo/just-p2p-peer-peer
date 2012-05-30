@@ -305,8 +305,6 @@ namespace p2sp
         // 通知获得文件名
         virtual void OnNoticeGetFileName(const string& file_name);
 
-        virtual void OnNoticeSetWebUrl(const string& web_url);
-
         virtual void OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer);
 
         virtual uint32_t GetPlayingPosition() const;

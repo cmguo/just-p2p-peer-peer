@@ -1177,16 +1177,6 @@ namespace statistic
         STAT_DEBUG("IndexServer, QueryRIDByUrlResponseCount: " << statistic_info_.TotalOtherServerDownloadBytes);
     }
 
-    void StatisticModule::ResetCompleteCount()
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-        statistic_info_.CompleteCount = 0;
-        FlushSharedMemory();
-    }
-
     uint32_t StatisticModule::GetTotalDataBytes()
     {
         return statistic_info_.TotalP2PDataBytes + statistic_info_.TotalHttpOriginalDataBytes;
@@ -1367,41 +1357,6 @@ namespace statistic
     }
 
     //////////////////////////////////////////////////////////////////////////
-    // Action Count
-
-    void StatisticModule::SubmitActionCount(uint32_t action_id, uint32_t action_count)
-    {
-        if (false == is_running_)
-            return;
-        LOG(__EVENT, "leak", __FUNCTION__ << " action=" << action_id << " uTimes=" << action_count);
-        action_count_map_[action_id] += action_count;
-    }
-
-    uint32_t StatisticModule::GetActionCount(uint32_t action_id) const
-    {
-        if (false == is_running_)
-            return 0;
-        ActionCountMap::const_iterator iter = action_count_map_.find(action_id);
-        if (iter != action_count_map_.end())
-        {
-            return iter->second;
-        }
-        return 0;
-    }
-
-    protocol::ACTION_COUNT_INFO StatisticModule::GetActionCountInfo() const
-    {
-        protocol::ACTION_COUNT_INFO action_count_info;
-        if (false == is_running_)
-            return action_count_info;
-        ActionCountMap::const_iterator iter = action_count_map_.begin();
-        for (uint32_t i = 0; iter != action_count_map_.end() && i < protocol::ACTION_COUNT_INFO::ACTION_NUMBER; ++i, ++iter)
-        {
-            action_count_info.ActionCount[2 * i] = iter->first;
-            action_count_info.ActionCount[2 * i + 1] = iter->second;
-        }
-        return action_count_info;
-    }
 
     // 设置全局window_size
     void StatisticModule::SetGlobalWindowSize(uint32_t global_window_size)

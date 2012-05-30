@@ -301,7 +301,7 @@ namespace statistic
         boost::uint32_t  TotalHttpNotOriginalDataBytes;        // 实时 下载的纯数据 字节数
         boost::uint32_t  TotalP2PDataBytes;                    // 实时 P2P下载的纯数据 字节数
         boost::uint32_t  TotalHttpOriginalDataBytes;            // 实时 原生下载的纯数据 字节数
-        boost::uint32_t  CompleteCount;                        // 已经完成的DD数
+        boost::uint32_t  Resersed1;// 备用
 
         boost::uint32_t  TotalUploadCacheRequestCount;       // 总共的上传Cache请求数
         boost::uint32_t  TotalUploadCacheHitCount;           // 总共的上传Cache命中数
@@ -317,9 +317,6 @@ namespace statistic
         boost::uint16_t  GlobalRequestSendCount;             // 每秒发出的请求数
 
         boost::uint16_t  MemoryPoolLeftSize;                     // 内存池剩余大小
-
-        // 统计BHO和FlOAT的点击次数
-        // protocol::ACTION_COUNT_INFO ActionCountInfo;
 
         // LiveDownloadDriver 相关信息
         boost::uint8_t  LiveDownloadDriverCount;               // 正在下载的直播视频
@@ -365,7 +362,7 @@ namespace statistic
             ar &  TotalHttpNotOriginalDataBytes;        //
             ar &  TotalP2PDataBytes;                    //
             ar &  TotalHttpOriginalDataBytes;            //
-            ar &  CompleteCount;                        //
+            ar &  Resersed1;                        //
 
             ar &  TotalUploadCacheRequestCount;       //
             ar &  TotalUploadCacheHitCount;           //
@@ -713,7 +710,7 @@ namespace statistic
 
         boost::uint8_t IsHidden;                      // 是否隐藏(不在界面上显示进度)
         boost::uint8_t SourceType;  // 标识是否是客户端
-        boost::uint8_t WebUrl[256];  // va 传进来的 WebUrl
+        boost::uint8_t Resersed1[256];  // 保留字段
 
         boost::uint8_t   StateMachineType;
         boost::uint8_t   StateMachineState[14];
@@ -766,7 +763,7 @@ namespace statistic
 
             ar & IsHidden;
             ar & SourceType;
-            ar & framework::container::make_array(WebUrl, sizeof(WebUrl) / sizeof(WebUrl[0]));
+            ar & framework::container::make_array(Resersed1, sizeof(Resersed1) / sizeof(Resersed1[0]));
 
             ar & StateMachineType;
             ar & framework::container::make_array(StateMachineState, sizeof(StateMachineState) / sizeof(StateMachineState[0]));

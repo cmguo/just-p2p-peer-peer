@@ -1392,27 +1392,6 @@ namespace storage
     }
 #endif  // #ifdef DISK_MODE
 
-    void Storage::SetWebUrl(string url, string web_url)
-    {
-        LOGX(__DEBUG, "interface", "Storage::SetWebUrl URL = " << url << " weburl = " << web_url);
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        map<string, Instance::p>::const_iterator it = url_instance_map_.find(url);
-        // instance尚未创建
-        if (it == url_instance_map_.end())
-        {
-            LOGX(__DEBUG, "interface", "Storage::SetWebUrl url instance not found");
-            return;
-        }
-
-        Instance::p inst = it->second;
-
-        inst->NotifySetWebUrl(web_url);
-    }
-
 // 获得了新的关于该url的文件名
     void Storage::AttachFilenameByUrl(const string& url, string filename)
     {
@@ -1791,49 +1770,6 @@ namespace storage
         inst->Remove(true);  // 删除instance
         return;
     }
-
-#ifdef DISK_MODE
-    void Storage::RemoveDownloadFile(const string& url)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-        std::map<string, Instance::p>::iterator it = url_instance_map_.find(url);
-        if (it == url_instance_map_.end())
-        {
-            return;
-        }
-        Instance::p inst = it->second;
-
-        // remove instance
-        // framework::MainThread::Post(boost::bind(&Storage::RemoveInstance, Storage::Inst_Storage(), inst, true));
-        Storage::Inst_Storage()->RemoveInstance(inst, true);
-    }
-
-    // 停止下载并从共享内存中删除文件(不删除本地缓存)
-    void Storage::RemoveDownloadFileEx(const string& url)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        STORAGE_DEBUG_LOG("停止下载并从共享内存中删除文件(不删除本地缓存)");
-
-        std::map<string, Instance::p>::iterator it = url_instance_map_.find(url);
-        if (it == url_instance_map_.end())
-        {
-            return;
-        }
-        Instance::p inst = it->second;
-
-        inst->SetSaveMode(false);
-        inst->FreeResourceHandle();
-        // framework::MainThread::Post(boost::bind(&Storage::SaveResourceInfoToDisk, shared_from_this()));
-        SaveResourceInfoToDisk();
-    }
-#endif  // #ifdef DISK_MODE
 
     // 从url和rid列表中删除某个instance，并添加到spacemanager的释放资源列表中
     void Storage::RemoveInstance(Instance::p inst, bool need_remove_file)

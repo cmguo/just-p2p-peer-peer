@@ -812,10 +812,6 @@ namespace p2sp
             // 先往客户端界面发送 UM_DOWNLOADDRIVER_STOP 消息
             WindowsMessage::Inst().PostWindowsMessage(UM_DOWNLOADDRIVER_STOP, (WPARAM)id_, (LPARAM)lpDownloadDriverStopData);
     #endif
-            if (instance_->IsComplete() || is_http_304_header_)
-            {
-                StatisticModule::Inst()->SubmitCompleteCount(1);
-            }
         }
         else
         {
@@ -1832,16 +1828,6 @@ namespace p2sp
         statistic_->SetFileName(file_name);
     }
 
-    void DownloadDriver::OnNoticeSetWebUrl(const string& web_url)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        LOGX(__DEBUG, "interface", "DownloadDriver::OnNoticeSetWebUrl weburl = " << web_url);
-        statistic_->SetWebUrl(web_url);
-    }
     void DownloadDriver::RestrictSendListLength(uint32_t position,vector<protocol::SubPieceBuffer>&buffers)
     {
         //用于将sendList控制在1024的以内

@@ -251,7 +251,6 @@ namespace storage
         // 资源文件改名，通知storage将文件信息写入资源信息文件
         void OnDiskFileNameChange(string file_name);
         void OnFileWriteFinish();
-        void NotifySetWebUrl(string web_url);
         void GetBlockPosition(uint32_t block_index, uint32_t &offset, uint32_t &length);
         void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length);
         void OnThreadReadSubPieceSucced(const protocol::SubPieceInfo & subpiece_info, protocol::SubPieceBuffer buff);

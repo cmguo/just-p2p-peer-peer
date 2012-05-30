@@ -224,10 +224,6 @@ namespace statistic
 
         void SubmitTotalHttpOriginalDataBytes(boost::uint32_t bytes);     // 实时 原生下载的纯数据 字节数
 
-        void SubmitCompleteCount(boost::uint32_t count);                  // 已经完成的DD数
-
-        void ResetCompleteCount();
-
         uint32_t GetTotalDataBytes();
 
         boost::uint16_t GetTotalDataBytesInMB();
@@ -261,10 +257,6 @@ namespace statistic
         boost::uint16_t GetDownloadDurationInSec();
 
         //////////////////////////////////////////////////////////////////////////
-        // Action Count
-
-        void SubmitActionCount(uint32_t action_id, uint32_t action_count);
-
         // 设置全局window_size
         void SetGlobalWindowSize(uint32_t global_window_size);
 
@@ -272,15 +264,6 @@ namespace statistic
 
         // 设置全局window_size
         void SetMemoryPoolLeftSize(uint32_t memory_pool_left_size);
-
-        uint32_t GetActionCount(uint32_t action_id) const;
-
-        protocol::ACTION_COUNT_INFO GetActionCountInfo() const;
-
-//         uint32_t GetActionNumber() const
-//         {
-//             return protocol::ACTION_NUMBER;
-//         }
 
         void QueryBasicPeerInfo(boost::function<void()> result_handler, BASICPEERINFO *para_bpi);
         void QueryPeerInfoByRid(RID rid, boost::function<void()> result_handler, boost::int32_t *iListCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed);
@@ -368,8 +351,6 @@ namespace statistic
 
         typedef std::map<protocol::TRACKER_INFO, STATISTIC_TRACKER_INFO> StatisticTrackerInfoMap;
 
-        typedef std::map<uint32_t, uint32_t> ActionCountMap;
-
     private:
 
         LiveDownloadDriverStatisticMap live_download_driver_statistic_map_;
@@ -382,7 +363,6 @@ namespace statistic
 
         vector<protocol::STUN_SERVER_INFO> stun_server_infos_;
         boost::asio::ip::udp::endpoint bootstrap_endpoint_;
-        ActionCountMap action_count_map_;
 
         STATISTIC_TRACKER_INFO* hot_tracker_;  // optimization
 
@@ -438,11 +418,6 @@ namespace statistic
     inline void StatisticModule::SubmitTotalHttpOriginalDataBytes(boost::uint32_t bytes)
     {
         statistic_info_.TotalHttpOriginalDataBytes += bytes;
-    }
-
-    inline void StatisticModule::SubmitCompleteCount(boost::uint32_t count)
-    {
-        statistic_info_.CompleteCount += count;
     }
 }
 

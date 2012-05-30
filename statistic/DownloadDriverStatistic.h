@@ -178,8 +178,6 @@ namespace statistic
         void SetMaxActivePeerCount(boost::uint16_t MaxActivePeerCount);
         boost::uint16_t GetMaxActivePeerCount();
 
-        void SetWebUrl(string web_url);
-
         void SetSmartPara(boost::int32_t t, boost::int32_t b, boost::int32_t speed_limit);
 
     private:

@@ -579,13 +579,6 @@ namespace statistic
         download_driver_statistic_info_.timer_state = t;
     }
 
-    void DownloadDriverStatistic::SetWebUrl(string web_url)
-    {
-        int32_t max_length = sizeof(download_driver_statistic_info_.WebUrl) - 1;
-        strncpy((char*)download_driver_statistic_info_.WebUrl, web_url.c_str(), max_length);
-        download_driver_statistic_info_.WebUrl[max_length] = '\0';
-    }
-
     void DownloadDriverStatistic::SetSmartPara(boost::int32_t t, boost::int32_t b, boost::int32_t speed_limit)
     {
         download_driver_statistic_info_.t = t;

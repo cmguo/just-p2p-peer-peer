@@ -57,8 +57,6 @@ namespace storage
 
         virtual void OnNoticeFileDownloadComplete() = 0;
 
-        virtual void OnNoticeSetWebUrl(const string& web_url) = 0;
-
         virtual void OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer) = 0;
 
         virtual uint32_t GetPlayingPosition() const = 0;
@@ -191,8 +189,6 @@ namespace storage
         virtual boost::int64_t GetFreeSize() const = 0;
         virtual boost::int64_t GetStoreSize() const = 0;
 #endif  // #ifdef DISK_MODE
-
-        virtual void SetWebUrl(string url, string web_url) = 0;
 
         virtual ~IStorage()
         {}

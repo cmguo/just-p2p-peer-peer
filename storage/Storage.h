@@ -97,7 +97,6 @@ namespace storage
 
         // 如果url在map中，instance set is_need_to_add
         virtual void AttachContentStatusByUrl(const string& url, bool is_need_to_add);
-        virtual void SetWebUrl(string url, string web_url);
 
         // 获得了新的关于该url的文件名
         virtual void AttachFilenameByUrl(const string& url, string filename);
@@ -189,12 +188,6 @@ namespace storage
         string FindRealName(const string& url);
 
 #ifdef DISK_MODE
-        // 停止下载并删除下载文件
-        virtual void RemoveDownloadFile(const string& url);
-
-        // 停止下载并从共享内存中删除文件(不删除本地缓存)
-        virtual void RemoveDownloadFileEx(const string& url);
-
         // 遍历instance_set_, 将Instace信息保存到Resourceinfo，同时保存原资源信息到bak
         virtual void SaveResourceInfoToDisk();
 
