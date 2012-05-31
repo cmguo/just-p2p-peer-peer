@@ -205,31 +205,6 @@ namespace p2sp
         ShrinkCacheListIfNeeded();
     }
 
-    void UploadCacheModule::SetCurrentCacheSize(size_t cache_size)
-    {
-        if (cache_size == 0)
-        {
-            return;
-        }
-
-        if (cache_size > P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH)
-        {
-            max_upload_cache_len_ = P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH;
-        }
-        else
-        {
-            max_upload_cache_len_ = cache_size;
-        }
-
-        ShrinkCacheListIfNeeded();
-    }
-
-    size_t UploadCacheModule::GetCurrentCacheSize() const
-    {
-        assert(cache_list_.size() <= max_upload_cache_len_);
-        return cache_list_.size();
-    }
-
     void UploadCacheModule::OnP2PTimer(boost::uint32_t times)
     {
         statistic::StatisticModule::Inst()->SetUploadCacheHit(get_from_cache_);
@@ -256,7 +231,7 @@ namespace p2sp
 
     void UploadCacheModule::ShrinkCacheListIfNeeded()
     {
-        while (cache_list_.size() > max_upload_cache_len_)
+        while (cache_list_.size() > P2SPConfigs::UPLOAD_MAX_CACHE_LENGTH)
         {
             cache_list_.pop_back();
         }

@@ -140,10 +140,6 @@ namespace p2sp
         virtual void OnAsyncGetBlockSucced(const RID& rid, uint32_t block_index, base::AppBuffer const & buffer);
         virtual void OnAsyncGetBlockFailed(const RID& rid, uint32_t block_index, int failed_code);
 
-        void SetCurrentCacheSize(size_t cache_size);
-
-        size_t GetCurrentCacheSize() const;
-
         void OnP2PTimer(boost::uint32_t times);
 
     private:

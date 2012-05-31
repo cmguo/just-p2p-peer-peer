@@ -1893,7 +1893,6 @@ namespace storage
     void Storage::MonitorMemoryConsumption(size_t memory_quota_in_bytes)
     {
         MemoryConsumptionMonitor monitor(memory_quota_in_bytes);
-        monitor.Add(boost::shared_ptr<IMemoryConsumer>(new UploaderMemoryConsumer(p2sp::UploadModule::Inst())));
 
         for(std::map<RID, LiveInstance::p>::iterator iter = rid_to_live_instance_map_.begin();
             iter != rid_to_live_instance_map_.end();

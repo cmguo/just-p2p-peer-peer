@@ -575,16 +575,6 @@ namespace p2sp
         }
     }
 
-    size_t UploadModule::GetCurrentCacheSize() const
-    {
-        return UploadCacheModule::Inst()->GetCurrentCacheSize();
-    }
-
-    void UploadModule::SetCurrentCacheSize(size_t cache_size)
-    {
-        UploadCacheModule::Inst()->SetCurrentCacheSize(cache_size);
-    }
-
     void UploadModule::SubmitUploadInfoStatistic()
     {
         std::set<boost::asio::ip::address> accept_uploading_peers;

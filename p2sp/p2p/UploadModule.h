@@ -92,10 +92,6 @@ namespace p2sp
 
         void OnConfigUpdated();
 
-        size_t GetCurrentCacheSize() const;
-
-        void SetCurrentCacheSize(size_t cache_size);
-
         void SetUploadUserSpeedLimitInKBps(boost::int32_t user_speed_in_KBps);
 
         boost::uint32_t GetMaxUnlimitedUploadSpeedInRecord() const;
