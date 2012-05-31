@@ -60,8 +60,6 @@ namespace p2sp
 
         virtual void HttpConnectComplete(HttpConnection__p http_connection);
 
-        // HttpConnection下达命令做detecter
-        virtual void DetectorReport(HttpConnection__p http_connection, bool is_support_range);
         virtual bool IsPausing();
 
         virtual void OnPieceTimeout(DownloadDriver__p download_driver_, const protocol::PieceInfoEx & piece);

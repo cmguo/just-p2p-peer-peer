@@ -118,29 +118,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void HttpDownloader::DetectorReport(HttpConnection__p http_connection, bool is_support_range)
-    {
-        if (is_running_ == false)
-            return;
-        HTTP_EVENT("HttpDownloader::DetectorReport is_support_range:" << is_support_range);
-        if (is_original_)
-        {
-            http_connection->DetectorReport(is_support_range);
-        }
-        else
-        {
-            if (is_support_range)
-            {
-                http_connection_->Start(is_support_start_);
-                http_connection_->DetectorReport(is_support_range);
-            }
-            else
-            {
-                download_driver_->SetDownloaderToDeath(shared_from_this());
-            }
-        }
-    }
-
     void HttpDownloader::HttpConnectComplete(HttpConnection::p http_connection)
     {
         if (is_running_ == false)

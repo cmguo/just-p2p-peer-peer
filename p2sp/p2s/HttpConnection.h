@@ -63,8 +63,6 @@ namespace p2sp
         void PutPieceTask();
         void PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_infos);
 
-        void DetectorReport(bool is_support_range);
-
         void Resume();
 
         void Pause();

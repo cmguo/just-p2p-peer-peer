@@ -166,16 +166,6 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void HttpConnection::DetectorReport(bool is_support_range)
-    {
-        if (is_running_ == false)
-            return;
-
-        is_support_range_ = is_support_range;
-        is_detected_ = true;
-
-        HTTP_EVENT("HttpConnection::DecetecterReport is_support_range_=" << is_support_range_ << " is_detected_=" << is_detected_);
-    }
     void HttpConnection::DoConnect()
     {
         if (is_running_ == false)
@@ -733,20 +723,6 @@ namespace p2sp
                     }
                     status = PIECEING;
 
-                    // 如果不带start的 进行探测
-                    if (true == is_open_service_)
-                    {
-                        if (head_length_ != (uint32_t)-1) {
-                            if (downloader_)
-                            {
-                                downloader_->DetectorReport(shared_from_this(), true);
-                            }
-                        }
-                        else {
-                            HTTP_ERROR("HttpConnection::OnRecvHttpHeaderSucced Invalid OpenService Response");
-                        }
-                    }
-
                     HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced http_client_->RecvSubPiece() ");
                     HttpRecvSubPiece();
                 }
@@ -1206,7 +1182,6 @@ namespace p2sp
             is_support_range_ = false;
             status = NONE;
             http_client_->Close();
-            downloader_->DetectorReport(shared_from_this(), false);
             DoConnect();
         }
         else if (status == CONNECTED && have_piece_ == true)
@@ -1228,7 +1203,6 @@ namespace p2sp
                 is_support_range_ = false;
                 status = NONE;
                 http_client_->Close();
-                downloader_->DetectorReport(shared_from_this(), false);
                 DoConnect();
             }
             else
