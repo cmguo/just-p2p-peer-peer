@@ -21,7 +21,6 @@
 #include "storage/MemoryConsumptionMonitor.h"
 #include "storage/InstanceMemoryConsumer.h"
 #include "storage/LiveInstanceMemoryConsumer.h"
-#include "storage/UploaderMemoryConsumer.h"
 #include "network/Uri.h"
 #include "base/util.h"
 #include "p2sp/p2p/UploadStruct.h"
