@@ -45,6 +45,12 @@ namespace p2sp
             SOURCE_DEFAULT = 255,
         };
 
+        enum DownloadLevel
+        {
+            PASSIVE_DOWNLOAD_LEVEL = 0,
+            POSITIVELY_DOWNLOAD_LEVEL,
+        };
+
     public:
 
         typedef boost::shared_ptr<PlayInfo> p;
@@ -104,6 +110,8 @@ namespace p2sp
         boost::uint32_t GetBWType() const {return bwtype_;}
 
         bool GetPreroll() const { return is_preroll_; }
+
+        DownloadLevel GetLevel() const { return level_;}
 
         string GetChannelName() const { return channel_name_;}
 
@@ -173,6 +181,8 @@ namespace p2sp
 
         static bool ParseIsPreroll(const network::Uri& uri, bool& is_preroll);
 
+        static bool ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level);
+
         // 解析一个频道所有的rid
         static void ParseLiveRids(const network::Uri& uri, vector<RID> & rid_s);
         // 解析所有rid对应的码流
@@ -211,6 +221,7 @@ namespace p2sp
             , live_replay_(false)
             , live_pause_(false)
             , is_preroll_(false)
+            , level_(PASSIVE_DOWNLOAD_LEVEL)
         {
         }
 
@@ -240,6 +251,7 @@ namespace p2sp
         bool is_preroll_;
         string channel_name_;
         string file_rate_type_;
+        DownloadLevel level_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid

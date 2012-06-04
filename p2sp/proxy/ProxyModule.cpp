@@ -1422,7 +1422,8 @@ namespace p2sp
                 {
                     (*i)->GetDownloadDriver()->DisableSmartSpeedLimit();
                     download_connections.insert(*i);
-                    if ((*i)->GetPlayInfo() && (*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE)      //素材下载
+                    if ((*i)->GetPlayInfo() && (*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE
+                        && (*i)->GetPlayInfo() && (*i)->GetPlayInfo()->GetLevel() != PlayInfo::POSITIVELY_DOWNLOAD_LEVEL)      //素材下载
                     {
                         ++material_download_count;
                     }
@@ -1430,7 +1431,6 @@ namespace p2sp
             }
         }
 
-        // 无需为网页预留带宽
         // 点播视频不限速
         for (std::set<ProxyConnection::p>::iterator i = play_vod_connections.begin();
             i != play_vod_connections.end(); ++i)
@@ -1507,7 +1507,7 @@ namespace p2sp
                 {
                     material_download_speed_limit_inKBps = bandwidth * 3 / 4 / 1024 / material_download_count;
                     LimitMinMax(material_download_speed_limit_inKBps, 10, 30);
-                }                
+                }
             }
         }
 
@@ -1524,7 +1524,8 @@ namespace p2sp
 #endif
             {
                 boost::int32_t speed_limit;
-                if((*i)->GetPlayInfo() && ((*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE))
+                if((*i)->GetPlayInfo() && ((*i)->GetPlayInfo()->GetSourceType() != PlayInfo::SOURCE_DOWNLOAD_MOVIE
+                    && (*i)->GetPlayInfo() && (*i)->GetPlayInfo()->GetLevel() != PlayInfo::POSITIVELY_DOWNLOAD_LEVEL))
                 {
                     speed_limit = material_download_speed_limit_inKBps;
                 }

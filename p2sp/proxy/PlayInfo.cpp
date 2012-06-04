@@ -458,6 +458,22 @@ namespace p2sp
         return false;
     }
 
+    bool PlayInfo::ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level)
+    {
+        string level_str = uri.getparameter("level");
+        if (level_str.length() > 0)
+        {
+            uint32_t type;
+            boost::system::error_code ec = framework::string::parse2(level_str, type);
+            if (!ec)
+            {
+                level = static_cast<PlayInfo::DownloadLevel>(type);
+                return true;
+            }
+        }
+        return false;
+    }
+
     PlayInfo::p PlayInfo::Parse(const string& url)
     {
         network::Uri uri(url);
@@ -596,6 +612,11 @@ namespace p2sp
             // speedlimit
             if (false == ParseSpeedLimit(uri, play_info->speed_limit_)) {
                 play_info->speed_limit_ = -1;
+            }
+
+            if (false == ParseDownloadLevel(uri, play_info->level_))
+            {
+                play_info->level_ = PASSIVE_DOWNLOAD_LEVEL;
             }
 
             play_info->play_type_ = PlayInfo::DOWNLOAD_BY_URL;
