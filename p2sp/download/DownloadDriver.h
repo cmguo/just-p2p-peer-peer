@@ -260,6 +260,7 @@ namespace p2sp
         virtual void OnStateMachineState(const string& state_machine_state);
 
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
+        virtual uint32_t GetVipLevel() {return vip_level_;}
 
         uint32_t GetSourceType() const { return source_type_; }
     private:

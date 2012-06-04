@@ -430,6 +430,11 @@ namespace p2sp
         {
             return rest_time_need_check_P2P;
         }
+
+        boost::uint32_t GetVipDownloadMinP2PSpeed() const
+        {
+            return vip_download_min_p2p_speed_;
+        }
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -562,6 +567,9 @@ namespace p2sp
 
         // 点播状态机判断剩余时间是否需要检查P2P下载速度
         boost::uint32_t rest_time_need_check_P2P;
+
+        // VIP用户下载影片最小P2P速度
+        boost::uint32_t vip_download_min_p2p_speed_;
 
         // 二代直播p2p最大连接数
         boost::uint32_t live_peer_max_connections_;

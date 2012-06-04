@@ -101,6 +101,7 @@ namespace p2sp
         , rest_time_enough_lauch_P2P_2300_0(30)
         , rest_time_enough_launch_P2P_2300_10(20)
         , rest_time_need_check_P2P(50)
+        , vip_download_min_p2p_speed_(50)
     {
     }
 
@@ -250,6 +251,7 @@ namespace p2sp
                 ("config.rel10", po::value<uint32_t>()->default_value(rest_time_enough_launch_P2P_2300_10))
                 ("config.rel0", po::value<uint32_t>()->default_value(rest_time_enough_lauch_P2P_2300_0))
                 ("config.rncp", po::value<uint32_t>()->default_value(rest_time_need_check_P2P))
+                ("config.vdmps", po::value<uint32_t>()->default_value(vip_download_min_p2p_speed_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -342,6 +344,7 @@ namespace p2sp
             rest_time_enough_launch_P2P_2300_10 = vm["config.rel10"].as<uint32_t>();
             rest_time_enough_lauch_P2P_2300_0 = vm["config.rel0"].as<uint32_t>();
             rest_time_need_check_P2P = vm["config.rncp"].as<uint32_t>();
+            vip_download_min_p2p_speed_ = vm["config.vdmps"].as<uint32_t>();
 
             if (save_to_disk)
             {

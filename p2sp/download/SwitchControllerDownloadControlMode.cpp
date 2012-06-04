@@ -4,6 +4,8 @@
 
 #include "Common.h"
 #include "p2sp/download/SwitchController.h"
+#include "DownloadDriver.h"
+#include "../bootstrap/BootStrapGeneralConfig.h"
 
 
 namespace p2sp
@@ -75,13 +77,18 @@ namespace p2sp
         if (false == IsRunning())
             return false;
 
-        assert(state_.http_ == State::HTTP_PAUSING);
         assert(state_.p2p_ == State::P2P_DOWNLOADING);
         assert(state_.timer_ == State::TIMER_NONE);
         assert(GetP2PControlTarget());
 
         uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
-        // uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+         uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+
+        if (GetGlobalDataProvider()->GetVipLevel() == VIP_LEVEL::VIP)
+        {
+            boost::uint32_t vip_download_min_p2p_speed = BootStrapGeneralConfig::Inst()->GetVipDownloadMinP2PSpeed();
+            return now_speed < vip_download_min_p2p_speed * 1024;
+        }
 
         if (minute_speed < 5 * 1024)
         {
@@ -310,7 +317,7 @@ namespace p2sp
                 assert(GetP2PControlTarget());
 
                 // p2p 能稳定下载
-                if (CanP2PDownloadStably())
+                if (!IsP2PBad())
                 {
                     // action
                     GetHTTPControlTarget()->Pause();

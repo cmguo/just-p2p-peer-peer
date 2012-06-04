@@ -127,6 +127,8 @@ namespace p2sp
 
         virtual uint32_t GetBandWidth() = 0;
 
+        virtual uint32_t GetVipLevel() = 0;
+
         virtual uint32_t GetFileLength() = 0;
 
         virtual uint32_t GetDataRate() = 0;
