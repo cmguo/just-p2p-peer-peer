@@ -9,6 +9,7 @@
 #include "storage/StorageThread.h"
 #include "SubPieceManager.h"
 #include "base/util.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -354,7 +355,12 @@ namespace storage
                 STORAGE_DEBUG_LOG("will post to SecSaveResourceFileInfo");
             }
             else
-                node->WriteToResource(resource_p);
+            {
+                if (!p2sp::BootStrapGeneralConfig::Inst()->BlockValidWhenFull())
+                {
+                    node->WriteToResource(resource_p);
+                }
+            }
         }
     }
 #endif
@@ -421,7 +427,10 @@ namespace storage
             }
 
             pointer->block_bit_map_->Reset(block_index);
-            pointer->blocks_[block_index] = block_pointer;
+            if (!p2sp::BootStrapGeneralConfig::Inst()->BlockValidWhenFull())
+            {
+                pointer->blocks_[block_index] = block_pointer;
+            }
             if (block_pointer)
             {
                 curr_null_subpiece_count += block_pointer->GetCurrNullSubPieceCount();

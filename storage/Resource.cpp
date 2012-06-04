@@ -212,6 +212,8 @@ namespace storage
         }
         else
         {
+            // 只有满2M才会写磁盘，所以这里代码应该不会走进来
+            assert(false);
             std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::iterator it = buffer_set.begin();
             for (; it != buffer_set.end(); ++it)
             {
