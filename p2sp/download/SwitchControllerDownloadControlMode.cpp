@@ -82,9 +82,9 @@ namespace p2sp
         assert(GetP2PControlTarget());
 
         uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
-         uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+        uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
 
-        if (GetGlobalDataProvider()->GetVipLevel() == VIP_LEVEL::VIP)
+         if (GetGlobalDataProvider()->GetVipLevel() == p2sp::VIP)
         {
             boost::uint32_t vip_download_min_p2p_speed = BootStrapGeneralConfig::Inst()->GetVipDownloadMinP2PSpeed();
             return now_speed < vip_download_min_p2p_speed * 1024;
