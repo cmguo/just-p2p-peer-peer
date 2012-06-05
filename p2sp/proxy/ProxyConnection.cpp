@@ -816,10 +816,11 @@ namespace p2sp
             P();
 
             string filename = ProxyModule::ParseOpenServiceFileName(uri);
-            string index = filename.substr(filename.find('['),
-                filename.find(']') - filename.find('[') + 1);
-            string file_ext = filename.substr(filename.find('.'),
-                filename.length() - filename.find('.'));
+
+            string index = filename.substr(filename.find_last_of('['),
+                filename.find_last_of(']') - filename.find_last_of('[') + 1);
+            string file_ext = filename.substr(filename.find_last_of('.'),
+                filename.length() - filename.find_last_of('.'));
             download_driver_->SetOpenServiceFileName(filename);
             string segno = base::util::GetSegno(uri);
 #ifdef DISK_MODE            
