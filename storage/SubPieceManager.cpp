@@ -518,37 +518,4 @@ namespace storage
         }
         return false;
     }
-
-    void SubPieceManager::GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size)
-    {
-        boost::uint32_t offset = 0;
-
-        for (boost::uint32_t i=0; i<blocks_.size(); ++i)
-        {
-            boost::uint16_t bitmap_in_block = 0;
-
-            if (block_bit_map_->HasBlock(i))
-            {
-                bitmap_in_block = 65535;
-            }
-            else if (blocks_[i])
-            {
-                bitmap_in_block = blocks_[i]->GetBitmap();
-            }
-            
-            if (offset < *bitmap_size)
-            {
-                *(bitmap+offset) = bitmap_in_block / 256;
-                offset++;
-            }
-
-            if (offset < *bitmap_size)
-            {
-                *(bitmap+offset) = bitmap_in_block % 256;
-                offset++;
-            }
-        }
-
-        *bitmap_size = GetFileLength() / PIECE_SIZE;
-    }
 }

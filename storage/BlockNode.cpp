@@ -535,22 +535,4 @@ namespace storage
         }
         return os;
     }
-
-    boost::uint16_t BlockNode::GetBitmap()
-    {
-        boost::uint16_t ret = 0;
-        for (std::vector<PieceNode::p>::iterator iter = piece_nodes_.begin();
-            iter != piece_nodes_.end(); ++iter)
-        {
-            if ((*iter) && (*iter)->IsFull())
-            {
-                ret = ret * 2 + 1;
-            }
-            else
-            {
-                ret = ret * 2 + 0;
-            }
-        }
-        return ret;
-    }
 }

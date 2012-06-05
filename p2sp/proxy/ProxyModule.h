@@ -85,9 +85,6 @@ namespace p2sp
         void QueryDownloadSpeed(RID rid, boost::function<void()> result_handler, boost::int32_t *download_speed);
         void QueryDownloadSpeedByUrl(string url, boost::function<void()> result_handler, boost::int32_t *download_speed);
 
-        void QueryProgressBitmap(string url, char * bitmap, boost::uint32_t * bitmap_size,
-            boost::function<void ()> result_handler);
-
         void QueryDownloadProgress2(string url, boost::uint32_t start_pos, boost::uint32_t * last_pos,
             boost::function<void ()> result_handler);
 

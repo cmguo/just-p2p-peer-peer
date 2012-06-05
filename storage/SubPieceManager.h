@@ -90,8 +90,6 @@ namespace storage
             return false;
         }
 
-        void GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size);
-
     public:
 
         bool PosToSubPieceInfo(uint32_t position, protocol::SubPieceInfo&subpiec_info)
@@ -226,4 +224,4 @@ namespace storage
     };
 }
 
-#endif
+#endif

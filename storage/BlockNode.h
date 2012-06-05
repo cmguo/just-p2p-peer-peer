@@ -60,11 +60,6 @@ namespace storage
             return curr_subpiece_count_;
         }
 
-        uint32_t GetSize() const
-        {
-            return piece_nodes_.size();
-        }
-
         bool IsFull() const
         {
             return curr_subpiece_count_ == total_subpiece_count_;
@@ -81,8 +76,6 @@ namespace storage
         void OnWriteFinish();
         void OnWriteSubPieceFinish(uint32_t subpiece_info);
         void GetBufferForSave (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set);
-
-        boost::uint16_t GetBitmap();
 
     private:
         std::vector<PieceNode::p> piece_nodes_;

@@ -1723,14 +1723,6 @@ namespace storage
     }
 #endif
 
-    void Instance::GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size)
-    {
-        if (subpiece_manager_)
-        {
-            subpiece_manager_->GetDownloadProgressBitmap(bitmap, bitmap_size);
-        }
-    }
-
     std::map<uint32_t,boost::dynamic_bitset<uint32_t> > Instance::GetSubPiecesBitMap()
     {
        map<uint32_t,boost::dynamic_bitset<uint32_t> > subpieces_bitmap_;

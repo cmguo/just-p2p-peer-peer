@@ -255,7 +255,6 @@ namespace storage
         void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length);
         void OnThreadReadSubPieceSucced(const protocol::SubPieceInfo & subpiece_info, protocol::SubPieceBuffer buff);
 
-        void GetDownloadProgressBitmap(char * bitmap, boost::uint32_t * bitmap_size);
         map<uint32_t, boost::dynamic_bitset<uint32_t> > GetSubPiecesBitMap();
 
     protected:
