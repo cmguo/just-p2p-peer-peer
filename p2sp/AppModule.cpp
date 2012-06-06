@@ -704,6 +704,8 @@ namespace p2sp
         tcp_server_.RegisterPacket<protocol::TcpReportSpeedPacket>();
         tcp_server_.RegisterPacket<protocol::TcpErrorPacket>();
         tcp_server_.RegisterPacket<protocol::TcpReportStatusPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpStartDownloadPacket>();
+        tcp_server_.RegisterPacket<protocol::TcpStopDownLoadPacket>();
     }
 
     boost::uint16_t AppModule::GetUpnpPortForTcpUpload()

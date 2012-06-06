@@ -1754,6 +1754,20 @@ namespace p2sp
                 SetRestPlayTime(stauts_pacekt.resource_id_, stauts_pacekt.rest_play_time_in_seconds_ * 1000);
             }
             break;
+        case protocol::TcpStartDownloadPacket::Action:
+            {
+                protocol::TcpStartDownloadPacket const & start_download_packet = (protocol::TcpStartDownloadPacket const &)packet;
+                StartDownloadFile(start_download_packet.download_url_, start_download_packet.refer_url_, start_download_packet.user_agent_, start_download_packet.filename_);
+            }
+            break;
+        case  protocol::TcpStopDownLoadPacket::Action:
+            {
+                protocol::TcpStopDownLoadPacket const & stop_download_packet = (protocol::TcpStopDownLoadPacket const &)packet;
+                StopProxyConnection(stop_download_packet.stop_url_);
+            }
+            break;
+        default:
+            break;
         }
     }
 
