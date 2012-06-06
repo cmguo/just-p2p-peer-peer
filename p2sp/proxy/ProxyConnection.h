@@ -277,15 +277,11 @@ namespace p2sp
 
         base::AppBuffer header_buffer_;
         uint32_t header_buffer_length_;
-        base::AppBuffer content_buffer_;
-        uint32_t content_buffer_length_;
 
         bool will_stop_;
         bool will_stop_download_;
         bool paused_by_user_;
         bool is_notified_stop_;
-
-        bool queried_content_;
 
         bool save_mode_;
 

@@ -123,12 +123,7 @@ namespace storage
         void UploadOneSubPiece();
 
         // 如果资源描述为空(正常情况)，则根据rid_info创建资源描述符，进而创建文件资源
-        bool SetRidInfo(const protocol::RidInfo& rid_info, MD5 content_md5, uint32_t content_bytes);
-
-        void SetContentNeedToAdd(bool is_need_to_add)
-        {
-            content_need_to_add_ = is_need_to_add;
-        }
+        bool SetRidInfo(const protocol::RidInfo& rid_info);
 
         int GetRidOriginFlag() const
         {
@@ -217,11 +212,6 @@ namespace storage
         void DettachDownloadDriver(IDownloadDriver::p download_driver);
 
     public:
-        // 将content写入文件，并通知download_driver
-        bool DoMakeContentMd5AndQuery(base::AppBuffer content_buffer);
-
-
-
         // 通知DownloadDriver makeblock成功或失败
         void OnNotifyHashBlock(uint32_t block_index, bool b_success);
 
@@ -238,9 +228,6 @@ namespace storage
         void OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener,
             MD5 hash_val);
         void OnReadBlockForUploadFinish(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener);
-
-        // content写入完毕，通知download_driver
-        void OnPendingHashContentFinish(MD5 hash_val, uint32_t content_bytes);
 
         // 通知storage关闭instance，释放资源空间
         void OnResourceCloseFinish(Resource::p resource_p, bool need_remove_file);
@@ -265,12 +252,6 @@ namespace storage
     private:
         // 从Url中获取文件名，如果获取失败，则生成一串随机数表示文件名, 生成的文件名写入resource_name_中
         void ParseFileNameFromUrl(const protocol::UrlInfo &url_info);
-
-        // 通过subpiece计算block的MD5值，然后检查上传等操作
-        void PendingHashBlock(uint32_t block_index);
-
-        // 通过subpiece计算content的MD5值
-        void PendingHashContent();
 
         // 根据url_info_s的第一个Url生成资源文件的文件名，然后向Storage申请资源
         // instance状态：NEED_RESOURCE --> APPLY_RESOURCE
@@ -340,14 +321,6 @@ namespace storage
 
     private:
         protocol::SubPieceInfo merging_pos_subpiece;
-
-        // 内容感知
-        MD5 content_md5_;
-        uint32_t content_bytes_;
-        base::AppBuffer content_buffer_;
-
-        bool content_need_to_add_;
-        bool content_need_to_query_;
 
         MetaData meta_data_;
         int flag_rid_origin_;

@@ -169,16 +169,12 @@ namespace storage
         // 通过文件名来查询Instance
         virtual IInstance::p GetInstanceByFileName(const string& filename, bool is_check = true) = 0;
         // 该URL获得ResourceInfo, 包括文件大小等信息
-        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid, MD5 content_md5, uint32_t content_bytes, int flag) = 0;
-        // 获得了新的关于该Rid的Url
-        virtual void AttachHttpServerByRid(const RID& rid, const std::vector<protocol::UrlInfo>& url_info_s) = 0;
+        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid, int flag) = 0;
         // 获得对应的mod_number, group_count的RID资源，即 RID % group_count == mod_number
         virtual void GetVodResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count) = 0;
         virtual void GetLiveResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count) = 0;
         // 删除url_info所对应的信息
         virtual void RemoveUrlInfo(const protocol::UrlInfo& url_info) = 0;
-        // 根据查询Content信息返回的ERRORCODE获得信息
-        virtual void AttachContentStatusByUrl(const string& url, bool is_need_to_add) = 0;
         // 获得了新的关于该url的文件名
         virtual void AttachFilenameByUrl(const string& url, string filename) = 0;
 

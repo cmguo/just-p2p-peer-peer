@@ -81,12 +81,7 @@ namespace storage
         virtual IInstance::p GetInstanceByFileName(const string & filename, bool is_check);
 
         // Url如果在url_map中已存在并且与RID信息不一致，则调用MergeInstance删除并重新建立新Instance
-        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid, MD5 content_md5, uint32_t content_bytes, int flag);
-
-        // 查看url_info_s中的url所对应的instance是否是rid所对应的instance
-        // 如果url不在url_instance_map中，则需要将url与rid_inst匹配，否则，若url_inst != rid_inst，
-        // 且不是纯下载模式，且url_inst_rid != rid，则从map中和url_inst中删除该url
-        virtual void AttachHttpServerByRid(const RID& rid, const std::vector<protocol::UrlInfo>& url_info_s);
+        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid, int flag);
 
         // 根据mod_number和group_count获取rid_inst_map中的rid
         virtual void GetVodResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count);
@@ -94,9 +89,6 @@ namespace storage
 
         // 从url对应的instance和url_map中删除某个Url
         virtual void RemoveUrlInfo(const protocol::UrlInfo& url_info);
-
-        // 如果url在map中，instance set is_need_to_add
-        virtual void AttachContentStatusByUrl(const string& url, bool is_need_to_add);
 
         // 获得了新的关于该url的文件名
         virtual void AttachFilenameByUrl(const string& url, string filename);

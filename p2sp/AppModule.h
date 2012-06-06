@@ -138,19 +138,6 @@ class AppModule: public boost::noncopyable,
     int StartDownload(protocol::UrlInfo url_info);
 
     /**
-     * @brief IndexServer成功根据url探测到rid 后 通知 AppModule 处理
-     */
-    void AttachRidInfoToUrl(string url, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag);
-
-    // 根据content请求获得返回信息
-    void AttachContentStatusByUrl(const string& url, bool is_need_to_add);
-
-    /**
-    * @brief 给资源RID添加 多个 HttpServer
-    */
-    void AddUrlInfo(RID rid, std::vector<protocol::UrlInfo> url_info_s);
-
-    /**
     * @brief 给资源RID添加 多个 Peer
     */
     void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver);

@@ -119,13 +119,9 @@ namespace p2sp
         header_buffer_.Malloc(HEADER_LENGTH);
         header_buffer_length_ = 0;
 
-        content_buffer_.Malloc(CONTENT_LENGTH);
-        content_buffer_length_ = 0;
-
         silent_time_counter_.reset();
         will_stop_ = false;
         will_stop_download_ = false;
-        queried_content_ = false;
         is_notified_stop_ = false;
 
         time_interval_in_ms_ = 250;
@@ -157,9 +153,6 @@ namespace p2sp
         // header_buffer
         header_buffer_ = base::AppBuffer();
         header_buffer_length_ = 0;
-        // content_buffer
-        content_buffer_ = base::AppBuffer();
-        content_buffer_length_ = 0;
     }
 
     void ProxyConnection::Start()
@@ -350,32 +343,6 @@ namespace p2sp
         if (download_driver_->GetStatistic())
         {
             download_driver_->GetStatistic()->SetPlayingPosition(GetPlayingPosition());
-        }
-
-        if (!download_driver_->GetInstance()->HasRID() && !queried_content_ && content_buffer_)
-        {
-            uint32_t i = 0;
-            uint32_t start_pos = start_position;
-
-            while (start_pos < CONTENT_LENGTH && i < buffers.size())
-            {
-                base::AppBuffer const & buffer = buffers[i++];
-                uint32_t remain = CONTENT_LENGTH - start_pos;
-                uint32_t len = (remain < buffer.Length() ? remain : buffer.Length());
-                base::util::memcpy2(content_buffer_.Data() + start_pos, content_buffer_.Length() - start_pos, buffer.Data(), len);
-                start_pos += len;
-            }
-
-            if (start_pos >= CONTENT_LENGTH)
-            {
-                if (download_driver_->GetInstance()) {
-                    download_driver_->GetInstance()->DoMakeContentMd5AndQuery(content_buffer_);
-                }
-                else {
-                    LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " download_driver_->GetInstance() == null !!!");
-                }
-                queried_content_ = true;
-            }
         }
 
         if (!metadata_parsed_ && header_buffer_)

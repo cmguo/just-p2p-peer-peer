@@ -1226,82 +1226,6 @@ namespace storage
         return true;
     }
 
-    // 查看url_info_s中的url所对应的instance是否是rid所对应的instance
-    // 如果url不在url_instance_map中，则需要将url与rid_inst匹配，否则，若url_inst != rid_inst，
-    // 且不是纯下载模式，且url_inst_rid != rid，则从map中和url_inst中删除该url
-    void Storage::AttachHttpServerByRid(const RID& rid, const std::vector<protocol::UrlInfo>& url_info_s)
-    {
-        if (is_running_ == false)
-            return;
-        // 此处的URL一般不是主URL，需要考虑维护RID，URL信息的一致性，
-        // 如果出现冲突，不考虑融合，留待AttachRidByUrl和Resource下载完成后的RID比较后融合
-        std::map<RID, Instance::p>::const_iterator iter = rid_instance_map_.find(rid);
-        if (iter == rid_instance_map_.end())
-            return;
-        Instance::p inst = iter->second;
-        std::vector<protocol::UrlInfo>::const_iterator v_url = url_info_s.begin();
-
-        std::vector<protocol::UrlInfo> in_url_info_s;  // 用于保存需要添加到inst里的url列表
-        for (uint32_t i = 0; i < url_info_s.size(); i++)
-        {
-            std::map<string, Instance::p>::iterator it = url_instance_map_.find(url_info_s[i].url_);
-            if (it != url_instance_map_.end())
-            {
-                if (it->second == inst)  // 正确、已存在
-                {
-                    // in_url_info_s.push_back(url_info_s[i]);
-                    continue;
-                }
-                if (it->second->IsPureDownloadMode())
-                {
-                    // 冲突、但是是纯下载模式实例, 丢弃该URL
-                    continue;
-                }
-
-                if (it->second->GetRID().is_empty())    // 非纯下，但是没有RID
-                {
-                    // 不融合
-                    // MergeInstance(iter->second, inst1);
-                    continue;
-                }
-
-                // RID考虑
-                if (rid != it->second->GetRID())
-                {
-                    // 两个RID都有该url，更新新信息？？？？如果被删除url是DD的，怎么办？
-                    it->second->RemoveUrl(url_info_s[i].url_);
-                    url_instance_map_.erase(it);
-                }
-            }
-            // url不在url_instance_map中，则需要将url与rid所对应的instance匹配
-            in_url_info_s.push_back(url_info_s[i]);
-            url_instance_map_.insert(std::make_pair(url_info_s[i].url_, inst));
-        }
-
-        if (in_url_info_s.size())
-        {
-            inst->AddUrlInfo(in_url_info_s);
-        }
-    }
-
-    // 如果url在map中，instance set is_need_to_add
-    void Storage::AttachContentStatusByUrl(const string& url, bool is_need_to_add)
-    {
-        if (is_running_ == false)
-            return;
-
-        std::map<string, Instance::p>::const_iterator it = url_instance_map_.find(url);
-        if (it == url_instance_map_.end())
-        {
-            STORAGE_ERR_LOG("Storage::AttachRidByUrl " << "not find url:" << url);
-            return;
-        }
-        Instance::p inst1 = it->second;
-
-        inst1->SetContentNeedToAdd(is_need_to_add);
-
-    }
-
 #ifdef DISK_MODE
     // 重命名 & SaveMode = true
     void Storage::AttachSaveModeFilenameByUrl(const string& url, const string& web_url, string qualified_filename)
@@ -1612,7 +1536,7 @@ namespace storage
     }
 
     // Url如果在url_map中已存在并且与RID信息不一致，则调用MergeInstance删除并重新建立新Instance
-    void Storage::AttachRidByUrl(const string& url, const protocol::RidInfo& rid, MD5 ContentMD5, uint32_t ContentBytes, int flag)
+    void Storage::AttachRidByUrl(const string& url, const protocol::RidInfo& rid, int flag)
     {
         if (is_running_ == false)
             return;
@@ -1675,7 +1599,7 @@ namespace storage
             // 回头在考虑考虑！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
             // 将rid与url_inst匹配，并为url_inst添加rid信息
             rid_instance_map_.insert(std::make_pair(rid.GetRID(), inst1));
-            inst1->SetRidInfo(rid, ContentMD5, ContentBytes);
+            inst1->SetRidInfo(rid);
         }
         else
         {
@@ -1695,12 +1619,12 @@ namespace storage
                 // 回头在考虑考虑！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
                 // 将rid与url_inst匹配，并为url_inst添加rid信息
                 rid_instance_map_.insert(std::make_pair(rid.GetRID(), inst1));
-                inst1->SetRidInfo(rid, ContentMD5, ContentBytes);
+                inst1->SetRidInfo(rid);
             }
             else
 #endif  // #ifdef DISK_MODE
             {
-                inst1->SetRidInfo(rid, ContentMD5, ContentBytes);
+                inst1->SetRidInfo(rid);
 
                 DoMerge(iter->second, inst1);
             }

@@ -402,69 +402,6 @@ namespace p2sp
         // udp_server_->UdpSendTo(buffer, end_point);
     }
 
-    void AppModule::AttachRidInfoToUrl(string url, protocol::RidInfo rid_info, MD5 content_md5, uint32_t content_bytes, int flag)
-    {
-        // ppassert(在map<string, Instance::p> url_indexer_中 已经存在 该url)
-        // 1. 从 url_indexer_ 找到 url 对应的 Instance
-        // 2. map<RID, Instance::p> rid_indexer; 是否找到RID
-        //      如果找不到 则
-        //       Instance->SetRidInfo(rid_info);
-        //       将这个Instance添加到 map<RID, Instance::p> rid_indexer_ 中
-        //    如果找到
-        //       (比较复杂 已解决)
-        //       判断该Instanse是否存在
-        //            如果存在则直接返回
-        //            如果不存在，将该 RID, Instanse添加到rid_indexer中，
-        //       情况1:
-        //         IndexServer 发送超时 收到两次
-        //       情况2:
-        //         两个url对应了一个rid, 这时要做归并
-        //
-        // 3.保存 instance_set_ 回磁盘
-        //       ResourceMap::AsyncSaveToDisk();
-        if (false == is_running_)
-        {
-            return;
-        }
-        Storage::Inst()->AttachRidByUrl(url, rid_info, content_md5, content_bytes, flag);
-    }
-    void AppModule::AttachContentStatusByUrl(const string& url, bool is_need_to_add)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-        Storage::Inst()->AttachContentStatusByUrl(url, is_need_to_add);
-    }
-
-    void AppModule::AddUrlInfo(RID rid, std::vector<protocol::UrlInfo> url_info_s)
-    {
-        // 1. 在 map<RID, Instance::p> rid_indexer 找到 rid 对应的 Instance
-        //    如果找不到
-        //       ppassert(0);
-        //    如果找得到
-        //       遍历所有 url_info_s
-        //            Instance->AddUrlInfo(url_info)
-        //            map<string, Instance::p> url_indexer_[url] = Instance A
-        //             如果 url_indexer_ 已经存在这个url, (Instanse B)
-        //                (比较复杂 已解决)
-        //                  如果其对应的Instanse A就是当前Instanse B，则不管。
-        //                  如果不是，则stop该url对应的Instanse B，将该url对应现在的Instanse A;
-        //
-        //
-        // 3.保存 instance_set_ 回磁盘
-        //       ResourceMap::AsyncSaveToDisk();
-        if (false == is_running_)
-        {
-            return;
-        }
-        LOG(__EVENT, "packet", "AppModule::AddUrlInfo   RID:" << rid);
-        for (uint32_t i = 0; i < url_info_s.size(); i ++)
-            LOG(__EVENT, "packet", "AppModule::AddUrlInfo     url:" << url_info_s[i].url_);
-
-        Storage::Inst()->AttachHttpServerByRid(rid, url_info_s);
-    }
-
     void AppModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver)
     {
         if (false == is_running_)

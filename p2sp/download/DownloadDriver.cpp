@@ -409,7 +409,7 @@ namespace p2sp
         {
             LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " AttachRidByUrl inst = " << instance_
                 << ", url = " << original_url_info_.url_ << ", rid = " << rid_info_);
-            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, protocol::RID_BY_PLAY_URL);
             if (instance_->GetRID().is_empty())
             {
                 // RID 错误, 使用普通模式
@@ -586,7 +586,7 @@ namespace p2sp
 
         instance_->AttachDownloadDriver(shared_from_this());
 
-        Storage::Inst()->AttachRidByUrl(rid_for_play.GetRID().to_string(), rid_for_play, RID(), 0, protocol::RID_BY_PLAY_URL);
+        Storage::Inst()->AttachRidByUrl(rid_for_play.GetRID().to_string(), rid_for_play, protocol::RID_BY_PLAY_URL);
 
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (instance_->HasRID())
@@ -2743,7 +2743,7 @@ namespace p2sp
 
         if (instance_)
         {
-            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, MD5(), 0, protocol::RID_BY_PLAY_URL);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, protocol::RID_BY_PLAY_URL);
         }
 
         bufferring_monitor_.reset();

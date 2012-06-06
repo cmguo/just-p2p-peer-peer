@@ -164,7 +164,7 @@ namespace storage
         rid_info.InitByFileLength(file_length);
 
         // 如果文件描述符为空，则创建文件资源
-        bool result = SetRidInfo(rid_info, MD5(), 0);
+        bool result = SetRidInfo(rid_info);
         assert(result);
     }
 
@@ -173,13 +173,6 @@ namespace storage
         cfg_timer_.start();
         traffic_timer_.start();
         is_running_ = true;
-
-        // content_kb_ = 10;
-        content_bytes_ = 0;
-        if (IsComplete())
-            content_need_to_add_ = content_need_to_query_ = false;
-        else
-            content_need_to_add_ = content_need_to_query_ = true;
     }
 
     void Instance::Stop()
@@ -224,7 +217,6 @@ namespace storage
             merge_to_instance_p_.reset();
         url_info_s_.clear();
         traffic_list_.clear();
-        content_buffer_ = base::AppBuffer();
     }
 
     // 关闭本instance并通知storage，释放空间
@@ -408,7 +400,7 @@ namespace storage
     }
 
     // 如果资源描述为空(正常情况)，则根据rid_info创建资源描述符，进而创建文件资源
-    bool Instance::SetRidInfo(const protocol::RidInfo& rid_info, MD5 content_md5, uint32_t content_bytes)
+    bool Instance::SetRidInfo(const protocol::RidInfo& rid_info)
     {
         if (is_running_ == false) return false;
 
@@ -466,21 +458,9 @@ namespace storage
             assert(rid_info.GetBlockSize() == subpiece_manager_->GetBlockSize());
         }
 
-        // 如果content_md5为空，则赋值
-        if (content_bytes != 0)
-        {
-            assert(content_md5.is_empty() == false);
-            content_need_to_add_ = false;
-            if (true == content_md5_.is_empty())
-            {
-                content_md5_ = content_md5;
-                content_bytes_ = content_bytes;
-            }
-        }
         // 告诉download_driver, rid改变
         if ((subpiece_manager_ && subpiece_manager_->HasRID()) || rid_info.HasRID())
         {
-            content_need_to_query_ = false;
             std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin();
             while (iter != download_driver_s_.end())
             {
@@ -655,25 +635,6 @@ namespace storage
         }
     }
 
-    // 将content写入文件，并通知download_driver
-    bool Instance::DoMakeContentMd5AndQuery(base::AppBuffer content_buffer)
-    {
-        STORAGE_DEBUG_LOG("DoMakeContentMd5AndQuery");
-        if (!subpiece_manager_)
-        {
-            STORAGE_DEBUG_LOG("!subpiece_manager_");
-            return false;
-        }
-
-        if (!subpiece_manager_->HasRID())
-        {
-            content_buffer_ = content_buffer;
-            PendingHashContent();
-            return true;
-        }
-        return false;
-    }
-
     void Instance::OnWriteSubPieceFinish(protocol::SubPieceInfo subpiece_info)
     {
         if (false == is_running_)
@@ -698,50 +659,7 @@ namespace storage
         }
     }
 
-    // 通过subpiece计算block的MD5值，然后检查上传等操作
-    void Instance::PendingHashBlock(uint32_t block_index)
-    {
-        if (false == is_running_)
-            return;
-         uint32_t offset = 0;
-         uint32_t length = 0;
-         uint32_t subpiece_num = subpiece_manager_->GetBlockSubPieceCount(block_index);
-         protocol::SubPieceInfo subpiece_info;
-         subpiece_info.block_index_ = block_index;
-         std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::const_iterator it;
-         // CMD5::p hash = CMD5::Create();
-         framework::string::Md5 hash;
-         for (uint32_t i = 0; i < subpiece_num; i++)
-         {
-             subpiece_info.subpiece_index_ = i;
-             // SubPieceBuffer buf = pending_subpiece_manager_p_->Get(subpiece_info);
-             protocol::SubPieceBuffer buf = subpiece_manager_->GetSubPiece(subpiece_info);
-             assert(buf.Length() != 0);
-             // hash->Add(buf.Data(), buf.Length());
-             hash.update(buf.Data(), buf.Length());
-         }
-
-         // hash->Finish();
-         hash.final();
-         MD5 hash_val(hash.to_bytes());
-         OnPendingHashBlockFinish(block_index, hash_val);
-    }
-
-    // 通过subpiece计算content的MD5值
-    void Instance::PendingHashContent()
-    {
-        if (false == is_running_)
-            return;
-        STORAGE_DEBUG_LOG("PendingHashContent");
-
-        framework::string::Md5 hash;
-        hash.update(content_buffer_.Data(), content_buffer_.Length());
-        hash.final();
-        MD5 hash_val(hash.to_bytes());
-        OnPendingHashContentFinish(hash_val, content_buffer_.Length());
-    }
-
-    void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, 
+void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, 
         IUploadListener::p listener, MD5 hash_val)
     {
         if (false == is_running_)
@@ -817,12 +735,6 @@ namespace storage
             {
                 STORAGE_DEBUG_LOG(" Finished: ");
                 OnHashResourceFinish();
-                content_need_to_add_ = false;
-            }
-            else if (subpiece_manager_->HasRID() && content_need_to_add_
-                && content_md5_.is_empty() == false)
-            {
-                content_need_to_add_ = false;
             }
         }
         else
@@ -844,16 +756,6 @@ namespace storage
                 OnRemoveResourceBlockFinish(block_index);
             }
         }
-    }
-
-    // content写入完毕，通知download_driver
-    void Instance::OnPendingHashContentFinish(MD5 hash_val, uint32_t content_bytes)
-    {
-        STORAGE_DEBUG_LOG(" OnPendingHashContentFinish:" << "md5:" << hash_val);
-
-        content_md5_ = hash_val;
-        content_bytes_ = content_bytes;
-        content_buffer_ = base::AppBuffer();
     }
 
     // 从资源描述, pending_subpiece_manager和pending_get_subpiece_manager中删除block
