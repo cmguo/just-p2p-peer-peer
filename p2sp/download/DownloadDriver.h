@@ -78,6 +78,8 @@ namespace p2sp
         bool                  preroll;                              // W1: 记录是否是客户端跨集预下载
         boost::uint32_t       p2p_download_max_connect_count;       // X1: p2p最大连接数
         boost::uint32_t       p2p_download_min_connect_count;       // Y1: p2p最小连接数
+        boost::uint32_t       uUsedDiskSizeInMB;                    // Z1: 缓存目录已用大小
+        boost::uint32_t       uTotalDiskSizeInMB;                   // A2: 缓存目录设置大小
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

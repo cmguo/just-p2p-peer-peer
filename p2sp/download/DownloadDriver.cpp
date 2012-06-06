@@ -1191,7 +1191,17 @@ namespace p2sp
             // Y1: p2p最小连接数
             info.p2p_download_min_connect_count = p2p_downloader_->GetP2PMinConnectionCount();
         }
-        
+
+#if DISK_MODE
+        Storage::p p_storage = Storage::Inst_Storage();
+        // Z1: 缓存目录已用大小
+        info.uUsedDiskSizeInMB = p_storage->GetUsedDiskSpace() / (1024 * 1024);
+        // A2: 缓存目录设置大小
+        info.uTotalDiskSizeInMB = p_storage->GetStoreSize() / (1024 * 1024);
+#else
+        info.uUsedDiskSizeInMB  = 0;
+        info.uTotalDiskSizeInMB = 0;
+#endif
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
@@ -1249,6 +1259,9 @@ namespace p2sp
 
         log_stream << "&X1=" << (uint32_t)info.p2p_download_max_connect_count;
         log_stream << "&Y1=" << (uint32_t)info.p2p_download_min_connect_count;
+
+        log_stream << "&Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
+        log_stream << "&A2=" << (uint32_t)info.uTotalDiskSizeInMB;
 
         string log = log_stream.str();
 
