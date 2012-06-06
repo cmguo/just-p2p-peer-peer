@@ -80,6 +80,7 @@ namespace p2sp
         boost::uint32_t       p2p_download_min_connect_count;       // Y1: p2p最小连接数
         boost::uint32_t       uUsedDiskSizeInMB;                    // Z1: 缓存目录已用大小
         boost::uint32_t       uTotalDiskSizeInMB;                   // A2: 缓存目录设置大小
+        boost::uint16_t       http_port;                            // B2: 本地http server监听端口
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

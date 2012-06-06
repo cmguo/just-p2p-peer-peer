@@ -1203,6 +1203,9 @@ namespace p2sp
         info.uTotalDiskSizeInMB = 0;
 #endif
 
+        //B2: 本地http server监听端口
+        info.http_port = ProxyModule::Inst()->GetHttpPort();
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1262,6 +1265,7 @@ namespace p2sp
 
         log_stream << "&Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
         log_stream << "&A2=" << (uint32_t)info.uTotalDiskSizeInMB;
+        log_stream << "&B2=" << (uint16_t)info.http_port;
 
         string log = log_stream.str();
 
