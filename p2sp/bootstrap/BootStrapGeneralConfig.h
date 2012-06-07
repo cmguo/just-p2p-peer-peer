@@ -435,12 +435,6 @@ namespace p2sp
         {
             return vip_download_min_p2p_speed_;
         }
-
-        bool BlockValidWhenFull() const
-        {
-            return block_valid_when_full_;
-        }
-
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -709,10 +703,6 @@ namespace p2sp
 
         // 手动切换码流时，如果剩余时间小于这个值，则http启动
         boost::uint32_t rest_playable_time_delim_when_switching_;
-
-        // 只有TPP文件（不满20M）的时候，只有2M已经满的，才认为有效
-        // 暂用于清理本地污染数据
-        bool block_valid_when_full_;
     };
 }
 #endif
