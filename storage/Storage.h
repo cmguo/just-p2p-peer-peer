@@ -53,8 +53,6 @@ namespace storage
             string ConfigPath,
             uint32_t storage_mode);  // storage mode
 
-        virtual void Start();
-
         virtual void Stop();
 
     private:
@@ -143,8 +141,6 @@ namespace storage
         virtual bool CheckInstanceResource(Instance::p inst);
 
         virtual bool CreateDirectoryRecursive(const string& directory);
-
-        virtual string GetResourceDataPath(const string& default_path);
 #endif  // #ifdef DISK_MODE
 
     public:

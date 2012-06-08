@@ -49,15 +49,7 @@ namespace p2sp
 
         is_running_ = true;
 
-        if (config_path.length() == 0) {
-            string szPath;
-            if (base::util::GetAppDataPath(szPath)) {
-                ppva_config_path_.assign(szPath);
-            }
-        }
-        else {
-            ppva_config_path_ = config_path;
-        }
+        ppva_config_path_ = config_path;
 
         history_max_download_speed_ = 0;
         LoadHistoricalMaxDownloadSpeed();

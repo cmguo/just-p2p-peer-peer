@@ -16,20 +16,7 @@ namespace statistic
 
     StatisticsCollectionConfigurationFile::StatisticsCollectionConfigurationFile(string const& config_path)
     {
-        if (config_path.length() == 0) 
-        {
-            string szPath;
-#ifdef DISK_MODE
-            if (base::util::GetAppDataPath(szPath)) 
-            {
-                local_config_file_path_ = szPath;
-            }
-#endif  // #ifdef DISK_MODE
-        }
-        else
-        {
-            local_config_file_path_ = config_path;
-        }
+        local_config_file_path_ = config_path;
 
         boost::filesystem::path temp_path(local_config_file_path_);
         temp_path /= "pp_statistics_collection_cf";

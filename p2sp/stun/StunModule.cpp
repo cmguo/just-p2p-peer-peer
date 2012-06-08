@@ -48,19 +48,7 @@ namespace p2sp
         STUN_INFO("StunModule::Start ");
 
         // config path
-        if (config_path.length() == 0) {
-            string szPath;
-
-#ifdef DISK_MODE
-            if (base::util::GetAppDataPath(szPath)) {
-                ppva_config_path_.assign(szPath);
-            }
-#endif  // #ifdef DISK_MODE
-
-        }
-        else {
-            ppva_config_path_ = config_path;
-        }
+        ppva_config_path_ = config_path;
 
         ClearStunInfo();
 

@@ -53,6 +53,7 @@ class AppModuleStartInterface
         bool http_proxy_enabled)
     {
         Guid peer_guid(guid_str);
+        assert(config_path.length() != 0);
 
         return p(new AppModuleStartInterface(local_udp_port, local_http_procy_port, url, port, bUseDisk, ullDiskLimit,
             disk_path, peer_guid, config_path, use_push, disk_read_only,

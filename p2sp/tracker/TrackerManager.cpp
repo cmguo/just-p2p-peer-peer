@@ -21,21 +21,8 @@ namespace p2sp
 
         // config path
         LOGX(__WARN, "tracker", "config_path = " << config_path);
-        if (config_path.length() == 0)
-        {
-            string szPath;
-#ifdef DISK_MODE
-            if (base::util::GetAppDataPath(szPath))
-            {
-                tracker_list_save_path_ = szPath;
-            }
-#endif  // #ifdef DISK_MODE
+        tracker_list_save_path_ = config_path;
 
-        }
-        else 
-        {
-            tracker_list_save_path_ = config_path;
-        }
         boost::filesystem::path list_path(tracker_list_save_path_);
 
         if (is_vod_)

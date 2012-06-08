@@ -36,16 +36,7 @@ namespace p2sp
 
         upload_manager_list_.push_back(TcpUploadManager::create(upload_limiter_));
 
-        if (config_path.length() == 0)
-        {
-#ifdef DISK_MODE
-            base::util::GetAppDataPath(config_path_);
-#endif
-        }
-        else
-        {
-            config_path_ = config_path;
-        }
+        config_path_ = config_path;
 
         LoadHistoricalMaxUploadSpeed();
 

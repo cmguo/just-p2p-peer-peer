@@ -152,7 +152,6 @@ namespace storage
             string ConfigPath,              // 资源文件路径
             uint32_t storage_mode    // storage mode
            ) = 0;
-        virtual void Start() = 0;
         virtual void Stop() = 0;
 
         // 根据创建Instance，此时没有RID以及文件长度等信息

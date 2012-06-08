@@ -14,20 +14,7 @@ boost::shared_ptr<Config> Config::inst_;
 
 Config::Config()
 {
-    if (p2sp::ProxyModule::Inst()->GetConfigPath().length() == 0)
-    {
-        string szPath;
-#ifdef DISK_MODE
-        if (base::util::GetAppDataPath(szPath)) 
-        {
-            config_file_path_ = szPath;
-        }
-#endif  // DISK_MODE
-    }
-    else
-    {
-        config_file_path_ = p2sp::ProxyModule::Inst()->GetConfigPath();
-    }
+    config_file_path_ = p2sp::ProxyModule::Inst()->GetConfigPath();
 
     boost::filesystem::path temp_path(config_file_path_);
     temp_path /= "pph";

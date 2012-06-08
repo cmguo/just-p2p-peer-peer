@@ -67,8 +67,6 @@ namespace base
             memcpy(dest, src, count);
         }
 
-        bool GetAppDataPath(string & pszCachePath);
-
         inline bool is_private_address(boost::uint32_t addr)
         {
             boost::asio::ip::address_v4 address(addr);

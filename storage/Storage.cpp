@@ -137,7 +137,7 @@ namespace storage
         memory_consumption_monitor_timer_.start();
 
 #ifdef DISK_MODE
-        resource_data_path_ = GetResourceDataPath(ConfigPath);
+        resource_data_path_ = ConfigPath;
         CreateDirectoryRecursive(resource_data_path_);
 
         boost::filesystem::path config_path(resource_data_path_);
@@ -179,13 +179,6 @@ namespace storage
 #endif  // #ifdef DISK_MODE
 
         STORAGE_EVENT_LOG("storage system start success!");
-    }
-
-    void Storage::Start()
-    {
-        string store_path(("FavoriteVideo"));
-        string config_path;
-        Start(true, 400 * 1024 * 1024, store_path, config_path, STORAGE_MODE_NORMAL);  // 400M
     }
 
     // storage被通知instance关闭，storage取消instance的资源申请，释放资源空间
@@ -1835,20 +1828,6 @@ namespace storage
     }
 
 #ifdef DISK_MODE
-    string Storage::GetResourceDataPath(const string& default_path)
-    {
-        string szPath;
-        if (default_path.length() != 0)
-        {
-            return default_path;
-        }
-        else if (false == base::util::GetAppDataPath(szPath))
-        {
-            return (fs::path(default_path) / "resconfig").file_string();
-        }
-        return (fs::path(szPath) / "resconfig").file_string();
-    }
-
     string Storage::GetCfgFilename(const string& res_name)
     {
         string fileName = fs::path(res_name).filename();
