@@ -435,6 +435,16 @@ namespace p2sp
         {
             return vip_download_min_p2p_speed_;
         }
+        bool WriteBlockWhenFull() const
+        {
+            return write_block_when_full_;
+        }
+
+        bool WriteBlockWhenVerified() const
+        {
+            return write_block_when_verified_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -703,6 +713,10 @@ namespace p2sp
 
         // 手动切换码流时，如果剩余时间小于这个值，则http启动
         boost::uint32_t rest_playable_time_delim_when_switching_;
+
+        bool write_block_when_full_;
+
+        bool write_block_when_verified_;
     };
 }
 #endif

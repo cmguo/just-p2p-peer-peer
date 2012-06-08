@@ -9,6 +9,7 @@
 #include "storage/StorageThread.h"
 #include "SubPieceManager.h"
 #include "base/util.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -354,7 +355,12 @@ namespace storage
                 STORAGE_DEBUG_LOG("will post to SecSaveResourceFileInfo");
             }
             else
-                node->WriteToResource(resource_p);
+            {
+                if (!p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenFull())
+                {
+                    node->WriteToResource(resource_p);
+                }
+            }
         }
     }
 #endif

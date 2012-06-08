@@ -11,6 +11,7 @@
 #include "storage/Storage.h"
 #include "storage/SpaceManager.h"
 #include "storage/StorageThread.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace storage
 {
@@ -195,41 +196,57 @@ namespace storage
         std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set = *buffer_set_p;
         assert(!buffer_set.empty());
 
-        /*CMD5::p hash = CMD5::Create(); need to be fixed 100712 */
         framework::string::Md5 md5;
         if (buffer_set.size() == subpiece_manager_->GetBlockSubPieceCount(block_index))
         {
             for (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::const_iterator it = buffer_set.begin();
                 it != buffer_set.end(); ++it)
             {
-                // hash->Add(it->second.Data(), it->second.Length());
                 md5.update(it->second.Data(), it->second.Length());
             }
-            // hash->Finish();
+
             md5.final();
 
-            ThreadPendingWriteBlock(block_index, buffer_set_p);
+            if (p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenVerified())
+            {
+                MD5 actual_hash;
+                actual_hash.from_bytes(md5.to_bytes());
+
+                if (actual_hash == subpiece_manager_->GetRidInfo().block_md5_s_[block_index])
+                {
+                    ThreadPendingWriteBlock(block_index, buffer_set_p);
+                }
+            }
+            else
+            {
+                ThreadPendingWriteBlock(block_index, buffer_set_p);
+            }
         }
         else
         {
-            std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::iterator it = buffer_set.begin();
-            for (; it != buffer_set.end(); ++it)
+            if (!p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenFull())
             {
-                ThreadSecWriteSubPiece(it->first, &(it->second), false);
-            }
-
-            if (subpiece_manager_->HasFullBlock(block_index))
-            {
-                uint32_t offset, length;
-                subpiece_manager_->GetBlockPosition(block_index, offset, length);
-
-                std::vector<AppBuffer> buffs = ReadBufferArray(offset, length);
-                for (boost::uint32_t i = 0; i < buffs.size(); ++i)
+                // 只有满2M才会写磁盘，所以这里代码应该不会走进来
+                assert(false);
+                std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::iterator it = buffer_set.begin();
+                for (; it != buffer_set.end(); ++it)
                 {
-                    assert(buffs[i].Data() && (buffs[i].Length() <= bytes_num_per_subpiece_g_ && buffs[i].Length()>0));
-                    md5.update(buffs[i].Data(), buffs[i].Length());
+                    ThreadSecWriteSubPiece(it->first, &(it->second), false);
                 }
-                md5.final();
+
+                if (subpiece_manager_->HasFullBlock(block_index))
+                {
+                    uint32_t offset, length;
+                    subpiece_manager_->GetBlockPosition(block_index, offset, length);
+
+                    std::vector<AppBuffer> buffs = ReadBufferArray(offset, length);
+                    for (boost::uint32_t i = 0; i < buffs.size(); ++i)
+                    {
+                        assert(buffs[i].Data() && (buffs[i].Length() <= bytes_num_per_subpiece_g_ && buffs[i].Length()>0));
+                        md5.update(buffs[i].Data(), buffs[i].Length());
+                    }
+                    md5.final();
+                }
             }
         }
 
