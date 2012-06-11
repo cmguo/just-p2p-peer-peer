@@ -1041,6 +1041,7 @@ namespace p2sp
                 }
             }
             WillStop();
+            return;
         }
         else
         {
@@ -1061,6 +1062,7 @@ namespace p2sp
             if (url_info_.url_ == "")
             {
                 WillStop();
+                return;
             }
             else
             {
@@ -1087,6 +1089,9 @@ namespace p2sp
                     if (play_info)
                     {
                         OnLivePause(play_info->GetChannelID(), play_info->GetLivePause(), play_info->GetUniqueID());
+                        // 断开连接
+                        WillStop();
+                        return;
                     }
                 }
                 else if (PlayInfo::IsGreenWayUri(uri_))
@@ -1861,8 +1866,6 @@ namespace p2sp
 
         // 成功收到通知暂停的请求
         proxy_sender_->OnNoticeGetContentLength(0, network::HttpResponse::p());
-        // 断开连接
-        WillStop();
     }
 
     // 直播收到数据
