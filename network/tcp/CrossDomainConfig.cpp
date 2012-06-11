@@ -135,7 +135,9 @@ namespace network
     {
         //目前仅仅处理crossdomain.xml文件小于1K的情况，在大于1K时将会出错
         //TODO: 处理crossdomain.xml > 1k时的逻辑
-        string cross_domain_string((char *)buffer.Data());
+        // 
+        // buffer data is not terminated by '\0', we need to specify buffer length when copying data
+        string cross_domain_string((char *)buffer.Data(), buffer.Length());
         SetCrossDomainString(cross_domain_string);
     }
 
