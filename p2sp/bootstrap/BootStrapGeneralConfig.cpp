@@ -102,8 +102,8 @@ namespace p2sp
         , rest_time_enough_launch_P2P_2300_10(20)
         , rest_time_need_check_P2P(50)
         , vip_download_min_p2p_speed_(50)
-        , write_block_when_full_(true)
-        , write_block_when_verified_(true)
+        , write_block_when_full_(false)
+        , write_block_when_verified_(false)
     {
     }
 
