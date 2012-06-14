@@ -202,11 +202,6 @@ namespace storage
         // 判断是否和已存在的instance的文件名重名
         bool IsFilenameExist(const string& filename);
 
-        string GetPrefixName() const
-        {
-            return prefix_filename_;
-        }
-
         StorageMode GetStorageMode() const
         {
             return storage_mode_;
@@ -252,7 +247,6 @@ namespace storage
         string resourceinfo_file_;  // "ResourceInfo.dat"
         string resourceinfo_bak_file_;  // "ResourceInfo.dat.bak"
         string resource_data_path_;
-        string prefix_filename_;
         StorageMode storage_mode_;
         framework::timer::PeriodicTimer space_manager_timer_;  // 5s
         framework::timer::PeriodicTimer res_info_timer_;

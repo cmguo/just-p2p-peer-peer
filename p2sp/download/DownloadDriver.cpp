@@ -851,6 +851,12 @@ namespace p2sp
             proxy_connection_.reset();
         }
 
+        if (http_drag_downloader_)
+        {
+            http_drag_downloader_->Stop();
+            http_drag_downloader_.reset();
+        }
+
         is_running_ = false;
 
         second_timer_.stop();

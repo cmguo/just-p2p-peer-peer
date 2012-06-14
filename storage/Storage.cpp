@@ -55,7 +55,6 @@ namespace storage
     {
 #ifdef DISK_MODE
         need_save_info_to_disk = (false);
-        prefix_filename_ = ("[PPVA]");
         storage_mode_ = STORAGE_MODE_NORMAL;
 #endif  // #ifdef DISK_MODE
     }
@@ -887,8 +886,6 @@ namespace storage
             fs::remove(fs::path(resourceinfo_bak_file_), ec);
         }
 
-        bool is_name_use_ppva = false;
-
         //
         //  每一个未下载完全的视频文件有一个对应的配置文件，以.cfg结尾
         //  resource_data_path_是存放配置文件的目录
@@ -1050,32 +1047,18 @@ namespace storage
 
         // 删除多余文件
         string disk_store_path = space_manager_->GetStorePath();
-        if (is_name_use_ppva)
+        
+        fs::path disk_path(disk_store_path);
+
+        if (boost::algorithm::ends_with(disk_store_path, ("FavoriteVideo\\")) || boost::algorithm::ends_with(
+            disk_store_path, ("PPLiveVAShareFlv\\")) || boost::algorithm::ends_with(disk_store_path, ("cache\\ppva")))
         {
             STL_FOR_EACH(std::set<string>, filename_list, it)
             {
-                boost::filesystem::path filepath(*it);
-                if (boost::algorithm::starts_with(filepath.filename(), GetPrefixName()))
+                if (!boost::algorithm::iends_with(*it, ("readme.txt")))
                 {
                     boost::system::error_code ec;
-                    fs::remove(filepath, ec);
-                }
-            }
-        }
-        else
-        {
-            fs::path disk_path(disk_store_path);
-
-            if (boost::algorithm::ends_with(disk_store_path, ("FavoriteVideo\\")) || boost::algorithm::ends_with(
-                disk_store_path, ("PPLiveVAShareFlv\\")) || boost::algorithm::ends_with(disk_store_path, ("cache\\ppva")))
-            {
-                STL_FOR_EACH(std::set<string>, filename_list, it)
-                {
-                    if (!boost::algorithm::iends_with(*it, ("readme.txt")))
-                    {
-                        boost::system::error_code ec;
-                        fs::remove(fs::path(*it), ec);
-                    }
+                    fs::remove(fs::path(*it), ec);
                 }
             }
         }

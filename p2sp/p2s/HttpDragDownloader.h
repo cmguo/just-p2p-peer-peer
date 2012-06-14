@@ -16,6 +16,9 @@ namespace p2sp
         : public boost::noncopyable
         , public boost::enable_shared_from_this<HttpDragDownloader>
         , public network::IHttpClientListener<protocol::SubPieceBuffer>
+#ifdef DUMP_OBJECT
+        , public count_object_allocate<HttpDragDownloader>
+#endif
     {
     public:
         typedef boost::shared_ptr<HttpDragDownloader> p;
@@ -23,9 +26,8 @@ namespace p2sp
         static p Create(boost::asio::io_service & io_svc, DownloadDriver__p download_driver,
             string url);
 
-        ~HttpDragDownloader();
-
         void Start();
+        void Stop();
         
     private:
         HttpDragDownloader(

@@ -41,7 +41,12 @@ namespace p2sp
             boost::algorithm::is_any_of("@"));
     }
 
-    HttpDragDownloader::~HttpDragDownloader()
+    void HttpDragDownloader::Start()
+    {
+        Connect();
+    }
+
+    void HttpDragDownloader::Stop()
     {
         if (client_)
         {
@@ -54,11 +59,8 @@ namespace p2sp
             proxy_client_->Close();
             proxy_client_.reset();
         }
-    }
 
-    void HttpDragDownloader::Start()
-    {
-        Connect();
+        download_driver_.reset();
     }
 
     void HttpDragDownloader::Connect()
