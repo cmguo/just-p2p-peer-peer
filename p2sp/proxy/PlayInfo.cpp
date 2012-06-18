@@ -696,14 +696,6 @@ namespace p2sp
             play_info->send_speed_limit_ = DEFAULT_SEND_SPEED_LIMIT;
         }
 
-        // autoclose
-        if (false == ParseAutoClose(uri, play_info->auto_close_)) {
-            play_info->auto_close_ = false;  // for c2 system
-        }
-
-        // ppva_key
-        play_info->has_ppva_key_ = (uri.getparameter("ppvakey").length() > 0);
-
         // start position
         string param_start = uri.getparameter("start");
         if (param_start.length() != 0)

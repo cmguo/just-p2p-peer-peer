@@ -321,7 +321,6 @@ namespace p2sp
         // stop downloading
         ProxyConnection::p conn = GetProxyConnection(url);
         if (conn) {
-            conn->SetPausedByUser(true);
             conn->WillStop();
         }
     }
@@ -399,26 +398,6 @@ namespace p2sp
         else {
             LOG(__DEBUG, "downloadcenter", __FUNCTION__ << " Url Not Found: " << url);
         }
-    }
-
-    string ProxyModule::RemovePpvakeyFromUrl(const string& url)
-    {
-        const static string ppvakey = "ppvakey=";
-
-        string::size_type start_idx = url.rfind(ppvakey);
-        if (string::npos != start_idx) {
-            if (start_idx > 0 && ('?' == url[start_idx-1] || '&' == url[start_idx-1])) {
-                // find end
-                string::size_type end_idx = url.find('&', start_idx + ppvakey.length());
-                if (end_idx == string::npos) {  // no '&' after ppvakey
-                    return url.substr(0, start_idx - 1);
-                }
-                else {
-                    return url.substr(0, start_idx) + url.substr(end_idx + 1);
-                }
-            }
-        }
-        return url;
     }
 
     void ProxyModule::StopProxyDownload(const ProxyType& proxy_type, ProxyConnection__p proxy_connection)

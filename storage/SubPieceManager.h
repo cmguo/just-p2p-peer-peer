@@ -37,7 +37,6 @@ namespace storage
         uint32_t GetBlockCount() const {return rid_info_.GetBlockCount();}
         uint32_t GetBlockSize() const {return rid_info_.GetBlockSize();}
         uint32_t GetFileLength() const {return rid_info_.GetFileLength();}
-        bool SetBlockHash(uint32_t block_index, MD5 hash_md5);
 
         bool IsBlockDataInMemCache(uint32_t block_index) const;
         void RemoveBlockDataFromMemCache(Resource::p resource_p, uint32_t block_index);

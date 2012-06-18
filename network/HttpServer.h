@@ -94,10 +94,6 @@ namespace network
         {
             return is_open_;
         }
-        void SetAutoClose(bool auto_close)
-        {
-            is_auto_close_ = auto_close;
-        }
     protected:
         void HandleHttpRecv(const boost::system::error_code& err, uint32_t bytes_transferred);
         void HandleHttpRecvTillClose(const boost::system::error_code& err, uint32_t bytes_transferred, protocol::SubPieceBuffer buffer);
@@ -117,8 +113,6 @@ namespace network
         bool will_close_;
         uint8_t object_state_;
         IHttpServerListener::pointer handler_;
-
-        bool is_auto_close_;
     };
 }
 

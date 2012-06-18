@@ -89,11 +89,6 @@ namespace storage
         return true;
     }
 
-    bool SubPieceManager::SetBlockHash(uint32_t block_index, MD5 hash_md5) {
-        rid_info_.block_md5_s_[block_index] = hash_md5;
-        return true;
-    }
-
     bool SubPieceManager::AddSubPiece(const protocol::SubPieceInfo& in, const protocol::SubPieceBuffer& buf) {
         if (block_bit_map_->HasBlock(in.block_index_))
         {

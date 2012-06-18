@@ -193,7 +193,6 @@ namespace p2sp
         }
 
         static ProxyModule::p Inst() { return inst_; }
-        static string RemovePpvakeyFromUrl(const string& url);
     };
 }
 

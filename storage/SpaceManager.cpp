@@ -4,11 +4,6 @@
 
 #include "Common.h"
 
-#ifdef BOOST_WINDOWS_API
-#pragma  comment(lib, "shlwapi.lib")
-#include <shlwapi.h>
-#endif
-
 #include "storage/storage_base.h"
 #include "storage/Storage.h"
 #include "storage/StorageThread.h"

@@ -77,8 +77,6 @@ namespace p2sp
 
         bool HasRidInfo() const { return has_rid_info_; }
 
-        bool HasPpvakey() const { return has_ppva_key_; }
-
         bool HasPlayerId() const { return has_player_id_; }
 
         bool HasStart() const { return has_start_; }
@@ -98,8 +96,6 @@ namespace p2sp
         uint32_t GetHeadLength() const { return head_length_; }
 
         SourceType GetSourceType() const { return source_type_; }
-
-        bool GetAutoClose() const { return auto_close_; }
 
         boost::int32_t GetIsDrag() const { return is_drag_; }
 
@@ -214,7 +210,6 @@ namespace p2sp
             , speed_limit_(-1)
             , has_player_id_(false)
             , has_start_(false)
-            , auto_close_(true)
             , is_drag_(-1)
             , bwtype_(0)
             , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
@@ -232,14 +227,12 @@ namespace p2sp
         bool has_url_info_;
         bool has_rid_info_;
         PlayType play_type_;
-        bool has_ppva_key_;
         boost::int32_t speed_limit_;
         bool has_player_id_;
         string player_id_;
         bool has_start_;
         uint32_t head_length_;
         SourceType source_type_;
-        bool auto_close_;
         boost::int32_t is_drag_;
         bool head_only_;
         boost::uint32_t rest_time_in_millisecond_;

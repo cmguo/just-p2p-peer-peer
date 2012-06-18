@@ -65,8 +65,6 @@ namespace p2sp
         , is_running_(false)
         , file_length_(0)
         , metadata_parsed_(false)
-        , paused_by_user_(false)
-        , is_notified_stop_(false)
         , save_mode_(false)
         , is_movie_url_(false)
         , will_stop_download_(false)
@@ -86,8 +84,6 @@ namespace p2sp
         , is_running_(false)
         , file_length_(0)
         , metadata_parsed_(false)
-        , paused_by_user_(false)
-        , is_notified_stop_(false)
         , save_mode_(true)
         , is_movie_url_(false)
         , will_stop_download_(false)
@@ -122,7 +118,6 @@ namespace p2sp
         silent_time_counter_.reset();
         will_stop_ = false;
         will_stop_download_ = false;
-        is_notified_stop_ = false;
 
         time_interval_in_ms_ = 250;
         send_subpieces_per_interval_ = 0;
@@ -441,8 +436,6 @@ namespace p2sp
         {
             proxy_sender_ = CommonProxySender::create(io_svc_, http_server_socket_);
             proxy_sender_->Start();
-
-            http_server_socket_->SetAutoClose(false);
         }
         else
         {
@@ -646,41 +639,6 @@ namespace p2sp
             protocol::UrlInfo url_info = play_info->GetUrlInfo();
             uint32_t start_position = play_info->GetStartPosition();
 
-#undef TEST_DIRECT
-// #define TEST_DIRECT
-#ifdef TEST_DIRECT
-            if (false == save_mode_)
-            {
-                network::Uri uri(url_info.url_);
-                string request =
-                    "GET " + uri.getrequest() + " HTTP/1.1\r\n"
-                    "Host: " + uri.gethost() + "\r\n"
-                    "Referer: " + url_info.refer_url_ + "\r\n"
-                    "User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9.0.3) Gecko/2008092417 Firefox/3.0.3 QQDownload/1.7\r\n"
-                    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\r\n"
-                    "Connection: close\r\n"
-                    "\r\n";
-                network::HttpRequest::p http_request = network::HttpRequest::ParseFromBuffer(request);
-
-                proxy_sender_ = DirectProxySender::create(http_server_socket_, false);
-                proxy_sender_->Start(http_request, shared_from_this());
-                proxy_sender_->SendHttpRequest();
-            }
-            else
-            {
-                WillStop();
-            }
-            return;
-#endif
-
-            bool auto_close = play_info->GetAutoClose();
-            if (false == save_mode_)
-            {
-                LOGX(__DEBUG, "proxy", "NonSaveMode, http_server_socket_ = " << http_server_socket_);
-                http_server_socket_->SetAutoClose(auto_close);
-            }
-            LOGX(__DEBUG, "proxy", "auto_close = " << auto_close);
-
             // fix url
             if (!boost::algorithm::istarts_with(url_info.url_, "http://"))
             {
@@ -762,11 +720,6 @@ namespace p2sp
 
             // download driver
             download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-            if (true == save_mode_ || play_info->HasPpvakey())
-            {
-                LOGX(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode, SetNeedBubble = false");
-                url_info.url_ = ProxyModule::RemovePpvakeyFromUrl(url_info.url_);
-            }
 
             download_driver_->SetRestPlayTime(play_info->GetRestTimeInMillisecond());
             download_driver_->SetIsHeadOnly(play_info->GetHeadOnly());
@@ -1380,16 +1333,9 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            LOG(__EVENT, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() << " IsWillStopDownload = " << IsWillStopDownload() << ", IsNotifiedStop = " << IsNotifiedStop());
-            // check file length & download driver
-            if (IsWillStopDownload() && IsNotifiedStop())
-            {
-                LOG(__EVENT, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() << " will_stop_download & download_finished");
-                // stop
-                WillStop();
-            }
-            // has play info
-            else if (download_driver_ && play_info_ && file_length_ > 0 && proxy_sender_->GetPlayingPosition() >= file_length_)
+            LOG(__EVENT, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() << " IsWillStopDownload = " << IsWillStopDownload());
+             // has play info
+            if (download_driver_ && play_info_ && file_length_ > 0 && proxy_sender_->GetPlayingPosition() >= file_length_)
             {
                 if (!download_driver_->GetInstance())
                 {

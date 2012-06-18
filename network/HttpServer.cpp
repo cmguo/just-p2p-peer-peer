@@ -40,7 +40,6 @@ namespace network
         , object_state_(ObjectStates::Alive)
 
     {
-        is_auto_close_ = true;
     }
 
     HttpServer::~HttpServer()

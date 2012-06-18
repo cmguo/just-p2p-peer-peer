@@ -143,10 +143,6 @@ namespace p2sp
         virtual void ResetPlayingPostion();
         virtual bool IsWillStop() const { return will_stop_; }
         virtual bool IsWillStopDownload() const { return will_stop_download_; }
-        virtual bool IsPausedByUser() const { return paused_by_user_; }
-        virtual void SetPausedByUser(bool paused_by_user) { paused_by_user_ = paused_by_user; }
-        virtual void NotifyStop() { is_notified_stop_ = true; }
-        virtual bool IsNotifiedStop() const { return is_notified_stop_; }
         virtual bool IsSaveMode() const { return save_mode_; }
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
     public:
@@ -280,8 +276,6 @@ namespace p2sp
 
         bool will_stop_;
         bool will_stop_download_;
-        bool paused_by_user_;
-        bool is_notified_stop_;
 
         bool save_mode_;
 
