@@ -291,6 +291,12 @@ namespace p2sp
         ((framework::timer::AsioTimerManager &)global_second_timer()).stop();
         ((framework::timer::AsioTimerManager &)global_250ms_timer()).stop();
 
+        if (udp_server_)
+        {
+            udp_server_->Close();
+            udp_server_.reset();
+        }
+
         LOG(__EVENT, "app", "AppModule is stopping...");
 
 #ifdef DISK_MODE
@@ -359,12 +365,6 @@ namespace p2sp
             statistics_collection_controller_->Stop();
         }
         
-        if (udp_server_)
-        {
-            udp_server_->Close();
-            udp_server_.reset();
-        }
-
         LOG(__EVENT, "app", "AppModule has stopped.");
         inst_.reset();
 
