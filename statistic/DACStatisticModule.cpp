@@ -74,19 +74,6 @@ namespace statistic
 
         if (pointer == &timer_)
         {
-#ifdef BOOST_WINDOWS_API
-            if (pointer->times() % 60 == 0)
-            {
-                // 每分钟
-                if (AppModule::Inst()->GetIdleTimeInMins() > 1)
-                {
-                    idle_time_ |= 1;
-                }
-
-                idle_time_ <<= 1;
-            }
-#endif
-
             if (m_IntervalTime != 0 && pointer->times() > 0 && pointer->times() % (m_IntervalTime * 60) == 0)
             {
 #ifdef NEED_TO_POST_MESSAGE
@@ -100,59 +87,49 @@ namespace statistic
     void DACStatisticModule::SendDacUploadMessage()
     {
 #ifdef NEED_TO_POST_MESSAGE
-        // 内核提交数据2日志格式
-        // A：接口类别，固定为10
-        // B: 用户的ID
-        // C：peer版本
-        // D：统计时长(Min)
-        // E：P2P下载字节数(B)
-        // F：HTTP 下载字节数(B)
-        // G: P2P上传字节数(B)
-        // H：缓存目录已用大小(MB)
-        // I：缓存目录设置大小(MB
-        // J：最大上传速度(B)
-        // K：IDLE时长(分钟)
-        // L：上传限速字节数 (B)
-        // M：上传限速丢弃字节数 (B)
-
-        // 统计数据没有意义，不用提交
-//         if (p2p_download_byte_ == 0 && http_download_byte_ == 0 && p2p_upload_byte_ == 0)
-//         {
-//             return;
-//         }
-
         PERIOD_DAC_STATISTIC_INFO_STRUCT info;
+
+        // C: 内核版本：major, minor, micro, extra
         info.aPeerVersion[0] = AppModule::GetKernelVersionInfo().Major;
         info.aPeerVersion[1] = AppModule::GetKernelVersionInfo().Minor;
         info.aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
         info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
 
+        // D: 普通P2P上传字节数
         info.uP2PUploadKBytesByNomal = p2p_upload_byte_by_normal_ / 1024;
-
+        // E: P2P下载字节数
         info.uP2PDownloadBytes = p2p_download_byte_;
-
+        // F: HTTP下载字节数
         info.uHTTPDownloadBytes = http_download_byte_;
-
+        // G: PUSH P2P上传字节数
         info.uP2PUploadKBytesByPush = p2p_upload_byte_by_push_ / 1024;
-
+       
 #if DISK_MODE
         Storage::p p_storage = Storage::Inst_Storage();
+        // H: 缓存目录已用大小
         info.uUsedDiskSizeInMB = p_storage->GetUsedDiskSpace() / (1024 * 1024);
+        // I: 缓存目录设置大小
         info.uTotalDiskSizeInMB = p_storage->GetStoreSize() / (1024 * 1024);
 #else
         info.uUsedDiskSizeInMB  = 0;
         info.uTotalDiskSizeInMB = 0;
 #endif
+        // J: 上传带宽
         info.uUploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
-        
+        // K: 上传使用ping policy
         info.uNeedUseUploadPingPolicy = p2sp::P2PModule::Inst()->NeedUseUploadPingPolicy();
-
+        // L: p2p上传限速字节数
         upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
         info.uUploadLimitInBytes = upload_limit_KBytes_ * 1024;
+        // M: p2p上传限速导致被丢弃的报文字节数
         info.uUploadDiscardBytes = upload_discard_byte_;
+        // N: 本地RID数
         info.uLocalRidCount = storage::Storage::Inst_Storage()->LocalRidCount();
+        // O: 上传过的RID数
         info.uRidUploadCountTotal = rid_upload_count_total_;
+        // P: NAT节点类型
         info.uNatType = StunModule::Inst()->GetPeerNatType();
+        // Q: 十分钟内上传的RID数
         info.uRidUploadCountInTenMinutes = rid_upload_count_in_ten_minutes_;
 
         // herain:2010-12-31:创建提交DAC的日志字符串
@@ -206,7 +183,6 @@ namespace statistic
         upload_limit_KBytes_ = 0;
         upload_limit_counter_.reset();
         upload_discard_byte_ = 0;
-        idle_time_ = 0;
         rid_upload_count_in_ten_minutes_ = 0;
     }
 }
