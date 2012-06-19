@@ -328,6 +328,7 @@ namespace storage
 
         uint32_t send_speed_limit_;
         uint32_t send_count_;
+        bool have_upload_at_least_one_subpiece_;
     };
 
     // ---------------------------------------------------------------

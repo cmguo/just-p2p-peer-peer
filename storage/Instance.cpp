@@ -61,6 +61,7 @@ namespace storage
         , md5_hash_failed_(0)
         , is_push_(false)
         , filesystem_last_write_time_(0)
+        , have_upload_at_least_one_subpiece_(false)
     {
         STORAGE_DEBUG_LOG(
             "traffic_timer_:" << (void*)&traffic_timer_ <<
@@ -787,6 +788,12 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         else
         {
             traffic_list_.back() = traffic_list_.back() + 1;
+        }
+
+        if (!have_upload_at_least_one_subpiece_)
+        {
+            statistic::DACStatisticModule::Inst()->SubmitRidUploadCount();
+            have_upload_at_least_one_subpiece_ = true;
         }
     }
 

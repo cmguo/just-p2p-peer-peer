@@ -12,6 +12,7 @@
 #ifdef BOOST_WINDOWS_API
 #include "WindowsMessage.h"
 #endif
+#include "p2sp/stun/StunModule.h"
 
 using namespace storage;
 using namespace p2sp;
@@ -35,6 +36,8 @@ namespace statistic
         , m_IntervalTime(10)
         , idle_time_(0)
         , timer_(global_second_timer(), 1000, boost::bind(&DACStatisticModule::OnTimerElapsed, this, &timer_))
+        , rid_upload_count_total_(0)
+        , rid_upload_count_in_ten_minutes_(0)
     {
     }
 
@@ -147,6 +150,10 @@ namespace statistic
         upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
         info.uUploadLimitInBytes = upload_limit_KBytes_ * 1024;
         info.uUploadDiscardBytes = upload_discard_byte_;
+        info.uLocalRidCount = storage::Storage::Inst_Storage()->LocalRidCount();
+        info.uRidUploadCountTotal = rid_upload_count_total_;
+        info.uNatType = StunModule::Inst()->GetPeerNatType();
+        info.uRidUploadCountInTenMinutes = rid_upload_count_in_ten_minutes_;
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
@@ -166,6 +173,10 @@ namespace statistic
         log_stream << "&K=" << (boost::uint32_t)info.uNeedUseUploadPingPolicy;
         log_stream << "&L=" << (boost::uint32_t)info.uUploadLimitInBytes;
         log_stream << "&M=" << (boost::uint32_t)info.uUploadDiscardBytes;
+        log_stream << "&N=" << (boost::uint32_t)info.uLocalRidCount;
+        log_stream << "&O=" << (boost::uint32_t)info.uRidUploadCountTotal;
+        log_stream << "&P=" << (boost::uint16_t)info.uNatType;
+        log_stream << "&Q=" << (boost::uint32_t)info.uRidUploadCountInTenMinutes;
 
         string log = log_stream.str();
 
@@ -196,5 +207,6 @@ namespace statistic
         upload_limit_counter_.reset();
         upload_discard_byte_ = 0;
         idle_time_ = 0;
+        rid_upload_count_in_ten_minutes_ = 0;
     }
 }

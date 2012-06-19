@@ -22,6 +22,10 @@ namespace statistic
         boost::uint32_t       uNeedUseUploadPingPolicy;             // 上传使用ping policy
         boost::uint32_t       uUploadLimitInBytes;                  // p2p上传限速字节数
         boost::uint32_t       uUploadDiscardBytes;                  // p2p上传限速导致被丢弃的报文字节数
+        boost::uint32_t       uLocalRidCount;                       // 本地RID数
+        boost::uint32_t       uRidUploadCountTotal;                      // 上传过的RID数
+        boost::uint16_t       uNatType;                             // NAT节点类型
+        boost::uint32_t       uRidUploadCountInTenMinutes;          //十分钟内上传的RID数
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -39,6 +43,11 @@ namespace statistic
         void SubmitP2PUploadSpeedInKBps(uint32_t p2p_upload_KBps);
         void SubmitP2PUploadSpeedLimitInKBps(boost::uint32_t p2p_upload_limit_KBps);
         void SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes);
+        void SubmitRidUploadCount()
+        {
+            rid_upload_count_total_++;
+            rid_upload_count_in_ten_minutes_++;
+        }
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -88,6 +97,8 @@ namespace statistic
         uint32_t max_peer_upload_kbps_;
 
         u_int idle_time_;
+        boost::uint32_t rid_upload_count_total_;
+        boost::uint32_t rid_upload_count_in_ten_minutes_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)

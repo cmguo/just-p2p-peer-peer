@@ -175,6 +175,8 @@ namespace storage
         // 通过url-filename map中查找获取到的文件名
         string FindRealName(const string& url);
 
+        boost::uint32_t LocalRidCount() { return rid_instance_map_.size();}
+
 #ifdef DISK_MODE
         // 遍历instance_set_, 将Instace信息保存到Resourceinfo，同时保存原资源信息到bak
         virtual void SaveResourceInfoToDisk();
