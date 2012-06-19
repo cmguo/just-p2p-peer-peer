@@ -34,7 +34,6 @@ namespace statistic
         , upload_limit_KBytes_(0)
         , upload_discard_byte_(0)
         , m_IntervalTime(10)
-        , idle_time_(0)
         , timer_(global_second_timer(), 1000, boost::bind(&DACStatisticModule::OnTimerElapsed, this, &timer_))
         , rid_upload_count_total_(0)
         , rid_upload_count_in_ten_minutes_(0)
