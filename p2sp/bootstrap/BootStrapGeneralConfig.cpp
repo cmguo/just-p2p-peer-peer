@@ -23,36 +23,59 @@ namespace p2sp
         , upload_policy_(policy_default)
         , connection_policy_enable_(true)
         , use_cdn_when_large_upload_(false)
+        , use_cdn_when_large_upload_in_saving_mode_(true)
         , desirable_vod_ippool_size_(500)
         , desirable_live_ippool_size_(1000)
         , rest_play_time_delim_(25)
+        , rest_play_time_delim_in_saving_mode_(30)
         , ratio_delim_of_upload_speed_to_datarate_(200)
+        , ratio_delim_of_upload_speed_to_datarate_in_saving_mode_(900)
         , limit_upload_speed_for_live2_(true)
         , send_peer_info_packet_interval_in_second_(5)
         , safe_enough_rest_playable_time_delim_under_http_(20)
+        , safe_enough_rest_playable_time_delim_under_http_in_saving_mode_(18)
         , http_running_long_enough_time_when_start_(3 * 60 * 1000)
+        , http_running_long_enough_time_when_start_in_saving_mode_(45000)
         , http_protect_time_when_start_(10 * 1000)
+        , http_protect_time_when_start_in_saving_mode_(10000)
         , http_protect_time_when_urgent_switched_(20 * 1000)
+        , http_protect_time_when_urgent_switched_in_saving_mode_(15000)
         , http_running_long_enough_time_when_urgent_switched_(60 * 1000)
+        , http_running_long_enough_time_when_urgent_switched_in_saving_mode_(45000)
         , safe_rest_playable_time_delim_when_use_http_(5)
+        , safe_rest_playable_time_delim_when_use_http_in_saving_mode_(5)
         , http_protect_time_when_large_upload_(10 * 1000)
+        , http_protect_time_when_large_upload_in_saving_mode_(10000)
         , p2p_rest_playable_time_delim_when_switched_with_large_time_(6)
+        , p2p_rest_playable_time_delim_when_switched_with_large_time_in_saving_mode_(5)
         , p2p_rest_playable_time_delim_(5)
+        , p2p_rest_playable_time_delim_in_saving_mode_(4)
         , p2p_protect_time_when_switched_with_not_enough_time_(15 * 1000)
+        , p2p_protect_time_when_switched_with_not_enough_time_in_saving_mode_(20000)
         , p2p_protect_time_when_switched_with_buffering_(30 * 1000)
+        , p2p_protect_time_when_switched_with_buffering_in_saving_mode_(35000)
         , time_to_ignore_http_bad_(3 * 60 * 1000)
+        , time_to_ignore_http_bad_in_saving_mode_(180000)
         , urgent_rest_playable_time_delim_(10)
+        , urgent_rest_playable_time_delim_in_saving_mode_(8)
         , safe_rest_playable_time_delim_(15)
+        , safe_rest_playable_time_delim_in_saving_mode_(13)
         , safe_enough_rest_playable_time_delim_(20)
+        , safe_enough_rest_playable_time_delim_in_saving_mode_(18)
         , using_udpserver_time_in_second_delim_(60)
+        , using_udpserver_time_in_second_delim_in_saving_mode_(45)
         , small_ratio_delim_of_upload_speed_to_datarate_(100)
+        , small_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_(600)
         , using_cdn_or_udpserver_time_at_least_when_large_upload_(30)
+        , using_cdn_or_udpserver_time_at_least_when_large_upload_in_saving_mode_(30)
         , use_udpserver_count_(3)
         , p2p_protect_time_when_start_(30 * 1000)
+        , p2p_protect_time_when_start_in_saving_mode_(30000)
         , should_use_bw_type_(true)
         , enhanced_announce_threshold_in_millseconds_(4000)
         , enhanced_announce_copies_(4)
         , udpserver_protect_time_when_start_(15 * 1000)
+        , udpserver_protect_time_when_start_in_saving_mode_(25000)
         , peer_count_when_use_sn_(100)
         , live_peer_max_connections_(25)
         , live_connect_low_normal_threshold_(25)
@@ -71,20 +94,31 @@ namespace p2sp
         , udpserver_maximum_window_size_(25)
         , live_minimum_upload_speed_in_kilobytes_(20)
         , p2p_speed_threshold_(5)
+        , p2p_speed_threshold_in_saving_mode_(5)
         , time_of_advancing_switching_to_http_when_p2p_slow_(3)
+        , time_of_advancing_switching_to_http_when_p2p_slow_in_saving_mode_(3)
         , p2p_protect_time_if_start_and_speed_is_0_(10 * 1000)
+        , p2p_protect_time_if_start_and_speed_is_0_in_saving_mode_(1000000)
         , p2p_protect_time_if_speed_is_0_(5 * 1000)
+        , p2p_protect_time_if_speed_is_0_in_saving_mode_(1000000)
         , fall_behind_seconds_threshold_(30)
         , max_rest_playable_time_(120)
         , min_rest_playable_time_(60)
         , prevent_http_predownload(true)
         , max_ratio_of_upload_to_download_delim_(800)
+        , max_ratio_of_upload_to_download_delim_in_saving_mode_(900)
         , large_ratio_of_upload_to_download_delim_(600)
+        , large_ratio_of_upload_to_download_delim_in_saving_mode_(700)
         , ratio_of_large_upload_times_to_total_times_delim_(60)
+        , ratio_of_large_upload_times_to_total_times_delim_in_saving_mode_(60)
         , upload_connection_count_delim_(10)
+        , upload_connection_count_delim_in_saving_mode_(10)
         , not_strict_ratio_delim_of_upload_speed_to_datarate_(600)
+        , not_strict_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_(600)
         , min_interval_of_cdn_acceleration_delim_(300)
+        , min_interval_of_cdn_acceleration_delim_in_saving_mode_(300)
         , use_cdn_to_accelerate_based_on_history_(true)
+        , use_cdn_to_accelerate_based_on_history_in_saving_mode_(false)
         , max_times_of_record_(50)
         , min_times_of_record_(3)
         , interval_of_requesting_announce_from_udpserver_(5)
@@ -161,34 +195,57 @@ namespace p2sp
                 ("config.uploadpolicy", po::value<uint32_t>()->default_value((uint32_t)upload_policy_))
                 ("config.connectionpolicy", po::value<bool>()->default_value(connection_policy_enable_))
                 ("config.usecdnpolicy", po::value<bool>()->default_value(use_cdn_when_large_upload_))
+                ("config.usecdnpolicysave", po::value<bool>()->default_value(use_cdn_when_large_upload_in_saving_mode_))
                 ("config.vps", po::value<uint32_t>()->default_value(desirable_vod_ippool_size_))
                 ("config.lps", po::value<uint32_t>()->default_value(desirable_live_ippool_size_))
                 ("config.restplaytime", po::value<uint32_t>()->default_value(rest_play_time_delim_))
+                ("config.restplaytimesave", po::value<uint32_t>()->default_value(rest_play_time_delim_in_saving_mode_))
                 ("config.ratiodelim", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_))
+                ("config.ratiodelimsave", po::value<uint32_t>()->default_value(ratio_delim_of_upload_speed_to_datarate_in_saving_mode_))
                 ("config.limitlive2upload", po::value<bool>()->default_value(limit_upload_speed_for_live2_))
                 ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
                 ("config.a", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_under_http_))
+                ("config.asave", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_under_http_in_saving_mode_))
                 ("config.b", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_start_))
+                ("config.bsave", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_start_in_saving_mode_))
                 ("config.c", po::value<uint32_t>()->default_value(http_protect_time_when_start_))
+                ("config.csave", po::value<uint32_t>()->default_value(http_protect_time_when_start_in_saving_mode_))
                 ("config.d", po::value<uint32_t>()->default_value(http_protect_time_when_urgent_switched_))
+                ("config.dsave", po::value<uint32_t>()->default_value(http_protect_time_when_urgent_switched_in_saving_mode_))
                 ("config.e", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_urgent_switched_))
+                ("config.esave", po::value<uint32_t>()->default_value(http_running_long_enough_time_when_urgent_switched_in_saving_mode_))
                 ("config.f", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_when_use_http_))
+                ("config.fsave", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_when_use_http_in_saving_mode_))
                 ("config.g", po::value<uint32_t>()->default_value(http_protect_time_when_large_upload_))
+                ("config.gsave", po::value<uint32_t>()->default_value(http_protect_time_when_large_upload_in_saving_mode_))
                 ("config.h", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_when_switched_with_large_time_))
+                ("config.hsave", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_when_switched_with_large_time_in_saving_mode_))
                 ("config.i", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_))
+                ("config.isave", po::value<uint32_t>()->default_value(p2p_rest_playable_time_delim_in_saving_mode_))
                 ("config.j", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_not_enough_time_))
+                ("config.jsave", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_not_enough_time_in_saving_mode_))
                 ("config.k", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_buffering_))
+                ("config.ksave", po::value<uint32_t>()->default_value(p2p_protect_time_when_switched_with_buffering_in_saving_mode_))
                 ("config.l", po::value<uint32_t>()->default_value(time_to_ignore_http_bad_))
+                ("config.lsave", po::value<uint32_t>()->default_value(time_to_ignore_http_bad_in_saving_mode_))
                 ("config.m", po::value<uint32_t>()->default_value(p2p_protect_time_when_start_))
+                ("config.msave", po::value<uint32_t>()->default_value(p2p_protect_time_when_start_in_saving_mode_))
                 ("config.n", po::value<bool>()->default_value(should_use_bw_type_))
                 ("config.o", po::value<uint32_t>()->default_value(udpserver_protect_time_when_start_))
+                ("config.osave", po::value<uint32_t>()->default_value(udpserver_protect_time_when_start_in_saving_mode_))
                 ("config.peerinfointerval", po::value<uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
                 ("config.rpt1", po::value<uint32_t>()->default_value(urgent_rest_playable_time_delim_))
+                ("config.rpt1save", po::value<uint32_t>()->default_value(urgent_rest_playable_time_delim_in_saving_mode_))
                 ("config.rpt2", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_))
+                ("config.rpt2save", po::value<uint32_t>()->default_value(safe_rest_playable_time_delim_in_saving_mode_))
                 ("config.rpt3", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_))
+                ("config.rpt3save", po::value<uint32_t>()->default_value(safe_enough_rest_playable_time_delim_in_saving_mode_))
                 ("config.ut1", po::value<uint32_t>()->default_value(using_udpserver_time_in_second_delim_))
+                ("config.ut1save", po::value<uint32_t>()->default_value(using_udpserver_time_in_second_delim_in_saving_mode_))
                 ("config.ut2", po::value<uint32_t>()->default_value(using_cdn_or_udpserver_time_at_least_when_large_upload_))
+                ("config.ut2save", po::value<uint32_t>()->default_value(using_cdn_or_udpserver_time_at_least_when_large_upload_in_saving_mode_))
                 ("config.sr", po::value<uint32_t>()->default_value(small_ratio_delim_of_upload_speed_to_datarate_))
+                ("config.srsave", po::value<uint32_t>()->default_value(small_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_))
                 ("config.uuc", po::value<uint32_t>()->default_value(use_udpserver_count_))
                 ("config.eat", po::value<uint32_t>()->default_value(enhanced_announce_threshold_in_millseconds_))
                 ("config.eac", po::value<uint32_t>()->default_value(enhanced_announce_copies_))
@@ -210,20 +267,31 @@ namespace p2sp
                 ("config.umw", po::value<uint32_t>()->default_value(udpserver_maximum_window_size_))
                 ("config.lminu", po::value<uint32_t>()->default_value(live_minimum_upload_speed_in_kilobytes_))
                 ("config.p2pst", po::value<uint32_t>()->default_value(p2p_speed_threshold_))
+                ("config.p2pstsave", po::value<uint32_t>()->default_value(p2p_speed_threshold_in_saving_mode_))
                 ("config.ahttp", po::value<uint32_t>()->default_value(time_of_advancing_switching_to_http_when_p2p_slow_))
+                ("config.ahttpsave", po::value<uint32_t>()->default_value(time_of_advancing_switching_to_http_when_p2p_slow_in_saving_mode_))
                 ("config.pp1", po::value<uint32_t>()->default_value(p2p_protect_time_if_start_and_speed_is_0_))
+                ("config.pp1save", po::value<uint32_t>()->default_value(p2p_protect_time_if_start_and_speed_is_0_in_saving_mode_))
                 ("config.pp2", po::value<uint32_t>()->default_value(p2p_protect_time_if_speed_is_0_))
+                ("config.pp2save", po::value<uint32_t>()->default_value(p2p_protect_time_if_speed_is_0_in_saving_mode_))
                 ("config.fbt", po::value<uint32_t>()->default_value(fall_behind_seconds_threshold_))
                 ("config.maxlive2t", po::value<uint32_t>()->default_value(max_rest_playable_time_))
                 ("config.minlive2t", po::value<uint32_t>()->default_value(min_rest_playable_time_))
                 ("config.phpd", po::value<bool>()->default_value(prevent_http_predownload))
                 ("config.maxrutd", po::value<uint32_t>()->default_value(max_ratio_of_upload_to_download_delim_))
+                ("config.maxrutdsave", po::value<uint32_t>()->default_value(max_ratio_of_upload_to_download_delim_in_saving_mode_))
                 ("config.lrutd", po::value<uint32_t>()->default_value(large_ratio_of_upload_to_download_delim_))
+                ("config.lrutdsave", po::value<uint32_t>()->default_value(large_ratio_of_upload_to_download_delim_in_saving_mode_))
                 ("config.rlut", po::value<uint32_t>()->default_value(ratio_of_large_upload_times_to_total_times_delim_))
+                ("config.rlutsave", po::value<uint32_t>()->default_value(ratio_of_large_upload_times_to_total_times_delim_in_saving_mode_))
                 ("config.ucc", po::value<uint32_t>()->default_value(upload_connection_count_delim_))
+                ("config.uccsave", po::value<uint32_t>()->default_value(upload_connection_count_delim_in_saving_mode_))
                 ("config.nsrdutd", po::value<uint32_t>()->default_value(not_strict_ratio_delim_of_upload_speed_to_datarate_))
+                ("config.nsrdutdsave", po::value<uint32_t>()->default_value(not_strict_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_))
                 ("config.minica", po::value<uint32_t>()->default_value(min_interval_of_cdn_acceleration_delim_))
+                ("config.minicasave", po::value<uint32_t>()->default_value(min_interval_of_cdn_acceleration_delim_in_saving_mode_))
                 ("config.uca", po::value<bool>()->default_value(use_cdn_to_accelerate_based_on_history_))
+                ("config.ucasave", po::value<bool>()->default_value(use_cdn_to_accelerate_based_on_history_in_saving_mode_))
                 ("config.maxtr", po::value<uint32_t>()->default_value(max_times_of_record_))
                 ("config.mintr", po::value<uint32_t>()->default_value(min_times_of_record_))
                 ("config.ira", po::value<uint32_t>()->default_value(interval_of_requesting_announce_from_udpserver_))
@@ -256,34 +324,57 @@ namespace p2sp
             upload_policy_ = (UploadPolicy)(vm["config.uploadpolicy"].as<uint32_t>());
             connection_policy_enable_ = vm["config.connectionpolicy"].as<bool>();
             use_cdn_when_large_upload_ = vm["config.usecdnpolicy"].as<bool>();
+            use_cdn_when_large_upload_in_saving_mode_ = vm["config.usecdnpolicysave"].as<bool>();
             desirable_live_ippool_size_ = vm["config.lps"].as<uint32_t>();
             desirable_vod_ippool_size_ = vm["config.vps"].as<uint32_t>();
             rest_play_time_delim_ = vm["config.restplaytime"].as<uint32_t>();
+            rest_play_time_delim_in_saving_mode_ = vm["config.restplaytimesave"].as<uint32_t>();
             ratio_delim_of_upload_speed_to_datarate_ = vm["config.ratiodelim"].as<uint32_t>();
+            ratio_delim_of_upload_speed_to_datarate_in_saving_mode_ = vm["config.ratiodelimsave"].as<uint32_t>();
             data_collection_server_list_ = vm["config.dc_servers"].as<string>();
             limit_upload_speed_for_live2_ = vm["config.limitlive2upload"].as<bool>();
             send_peer_info_packet_interval_in_second_ = vm["config.peerinfointerval"].as<uint32_t>();
             safe_enough_rest_playable_time_delim_under_http_ = vm["config.a"].as<uint32_t>();
+            safe_enough_rest_playable_time_delim_under_http_in_saving_mode_ = vm["config.asave"].as<uint32_t>();
             http_running_long_enough_time_when_start_ = vm["config.b"].as<uint32_t>();
+            http_running_long_enough_time_when_start_in_saving_mode_ = vm["config.bsave"].as<uint32_t>();
             http_protect_time_when_start_ = vm["config.c"].as<uint32_t>();
+            http_protect_time_when_start_in_saving_mode_ = vm["config.csave"].as<uint32_t>();
             http_protect_time_when_urgent_switched_ = vm["config.d"].as<uint32_t>();
+            http_protect_time_when_urgent_switched_in_saving_mode_ = vm["config.dsave"].as<uint32_t>();
             http_running_long_enough_time_when_urgent_switched_ = vm["config.e"].as<uint32_t>();
+            http_running_long_enough_time_when_urgent_switched_in_saving_mode_ = vm["config.esave"].as<uint32_t>();
             safe_rest_playable_time_delim_when_use_http_ = vm["config.f"].as<uint32_t>();
+            safe_rest_playable_time_delim_when_use_http_in_saving_mode_ = vm["config.fsave"].as<uint32_t>();
             http_protect_time_when_large_upload_ = vm["config.g"].as<uint32_t>();
+            http_protect_time_when_large_upload_in_saving_mode_ = vm["config.gsave"].as<uint32_t>();
             p2p_rest_playable_time_delim_when_switched_with_large_time_ = vm["config.h"].as<uint32_t>();
+            p2p_rest_playable_time_delim_when_switched_with_large_time_in_saving_mode_ = vm["config.hsave"].as<uint32_t>();
             p2p_rest_playable_time_delim_ = vm["config.i"].as<uint32_t>();
+            p2p_rest_playable_time_delim_in_saving_mode_ = vm["config.isave"].as<uint32_t>();
             p2p_protect_time_when_switched_with_not_enough_time_ = vm["config.j"].as<uint32_t>();
+            p2p_protect_time_when_switched_with_not_enough_time_in_saving_mode_ = vm["config.jsave"].as<uint32_t>();
             p2p_protect_time_when_switched_with_buffering_ = vm["config.k"].as<uint32_t>();
+            p2p_protect_time_when_switched_with_buffering_in_saving_mode_ = vm["config.ksave"].as<uint32_t>();
             time_to_ignore_http_bad_ = vm["config.l"].as<uint32_t>();
+            time_to_ignore_http_bad_in_saving_mode_ = vm["config.lsave"].as<uint32_t>();
             p2p_protect_time_when_start_ = vm["config.m"].as<uint32_t>();
+            p2p_protect_time_when_start_in_saving_mode_ = vm["config.msave"].as<uint32_t>();
             should_use_bw_type_ = vm["config.n"].as<bool>();
             udpserver_protect_time_when_start_ = vm["config.o"].as<uint32_t>();
+            udpserver_protect_time_when_start_in_saving_mode_ = vm["config.osave"].as<uint32_t>();
             urgent_rest_playable_time_delim_ = vm["config.rpt1"].as<uint32_t>();
+            urgent_rest_playable_time_delim_in_saving_mode_ = vm["config.rpt1save"].as<uint32_t>();
             safe_rest_playable_time_delim_ = vm["config.rpt2"].as<uint32_t>();
+            safe_rest_playable_time_delim_in_saving_mode_ = vm["config.rpt2save"].as<uint32_t>();
             safe_enough_rest_playable_time_delim_ = vm["config.rpt3"].as<uint32_t>();
+            safe_enough_rest_playable_time_delim_in_saving_mode_ = vm["config.rpt3save"].as<uint32_t>();
             using_udpserver_time_in_second_delim_ = vm["config.ut1"].as<uint32_t>();
+            using_udpserver_time_in_second_delim_in_saving_mode_ = vm["config.ut1save"].as<uint32_t>();
             using_cdn_or_udpserver_time_at_least_when_large_upload_ = vm["config.ut2"].as<uint32_t>();
+            using_cdn_or_udpserver_time_at_least_when_large_upload_in_saving_mode_ = vm["config.ut2save"].as<uint32_t>();
             small_ratio_delim_of_upload_speed_to_datarate_ = vm["config.sr"].as<uint32_t>();
+            small_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_ = vm["config.srsave"].as<uint32_t>();
             use_udpserver_count_ = vm["config.uuc"].as<uint32_t>();
             enhanced_announce_threshold_in_millseconds_ = vm["config.eat"].as<uint32_t>();
             enhanced_announce_copies_ = vm["config.eac"].as<uint32_t>();
@@ -305,20 +396,31 @@ namespace p2sp
             udpserver_maximum_window_size_ = vm["config.umw"].as<uint32_t>();
             live_minimum_upload_speed_in_kilobytes_ = vm["config.lminu"].as<uint32_t>();
             p2p_speed_threshold_ = vm["config.p2pst"].as<uint32_t>();
+            p2p_speed_threshold_in_saving_mode_ = vm["config.p2pstsave"].as<uint32_t>();
             time_of_advancing_switching_to_http_when_p2p_slow_ = vm["config.ahttp"].as<uint32_t>();
+            time_of_advancing_switching_to_http_when_p2p_slow_in_saving_mode_ = vm["config.ahttpsave"].as<uint32_t>();
             p2p_protect_time_if_start_and_speed_is_0_ = vm["config.pp1"].as<uint32_t>();
+            p2p_protect_time_if_start_and_speed_is_0_in_saving_mode_ = vm["config.pp1save"].as<uint32_t>();
             p2p_protect_time_if_speed_is_0_ = vm["config.pp2"].as<uint32_t>();
+            p2p_protect_time_if_speed_is_0_in_saving_mode_ = vm["config.pp2save"].as<uint32_t>();
             fall_behind_seconds_threshold_ = vm["config.fbt"].as<uint32_t>();
             max_rest_playable_time_ = vm["config.maxlive2t"].as<uint32_t>();
             min_rest_playable_time_ = vm["config.minlive2t"].as<uint32_t>();
             prevent_http_predownload = vm["config.phpd"].as<bool>();
             max_ratio_of_upload_to_download_delim_ = vm["config.maxrutd"].as<uint32_t>();
+            max_ratio_of_upload_to_download_delim_in_saving_mode_ = vm["config.maxrutdsave"].as<uint32_t>();
             large_ratio_of_upload_to_download_delim_ = vm["config.lrutd"].as<uint32_t>();
+            large_ratio_of_upload_to_download_delim_in_saving_mode_ = vm["config.lrutdsave"].as<uint32_t>();
             ratio_of_large_upload_times_to_total_times_delim_ = vm["config.rlut"].as<uint32_t>();
+            ratio_of_large_upload_times_to_total_times_delim_in_saving_mode_ = vm["config.rlutsave"].as<uint32_t>();
             upload_connection_count_delim_ = vm["config.ucc"].as<uint32_t>();
+            upload_connection_count_delim_in_saving_mode_ = vm["config.uccsave"].as<uint32_t>();
             not_strict_ratio_delim_of_upload_speed_to_datarate_ = vm["config.nsrdutd"].as<uint32_t>();
+            not_strict_ratio_delim_of_upload_speed_to_datarate_in_saving_mode_ = vm["config.nsrdutdsave"].as<uint32_t>();
             min_interval_of_cdn_acceleration_delim_ = vm["config.minica"].as<uint32_t>();
+            min_interval_of_cdn_acceleration_delim_in_saving_mode_ = vm["config.minicasave"].as<uint32_t>();
             use_cdn_to_accelerate_based_on_history_ = vm["config.uca"].as<bool>();
+            use_cdn_to_accelerate_based_on_history_in_saving_mode_ = vm["config.ucasave"].as<bool>();
             max_times_of_record_ = vm["config.maxtr"].as<uint32_t>();
             min_times_of_record_ = vm["config.mintr"].as<uint32_t>();
             interval_of_requesting_announce_from_udpserver_ = vm["config.ira"].as<uint32_t>();

@@ -63,6 +63,7 @@ namespace p2sp
         , max_push_data_interval_(0)
         , total_upload_bytes_when_using_cdn_because_of_large_upload_(0)
         , is_history_upload_good_(false)
+        , is_saving_mode_(false)
     {
         history_record_count_ = BootStrapGeneralConfig::Inst()->GetMaxTimesOfRecord();
         LoadConfig();
@@ -106,6 +107,7 @@ namespace p2sp
         source_type_ = source_type;
 
         bwtype_ = bwtype;
+        is_saving_mode_ = (bwtype_ == JBW_P2P_MORE);
 
         channel_id_ = channel_id;
 
@@ -128,7 +130,7 @@ namespace p2sp
         live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->Start(start_position);
 
         // 直播状态机
-        live_switch_controller_.Start(shared_from_this(), is_too_near_from_last_vv_of_same_channel);
+        live_switch_controller_.Start(shared_from_this(), is_too_near_from_last_vv_of_same_channel, is_saving_mode_);
         
 #ifndef STATISTIC_OFF
         live_download_driver_statistic_info_.Clear();
@@ -634,6 +636,7 @@ namespace p2sp
         // I2: 在每次使用UdpServer期间，收到Announce的次数的最大值
         // J2: 在每次使用UdpServer期间，收到/请求的最小值
         // K2: 在每次使用UdpServer期间，收到/请求的最大值
+        // L2: BWType
 
         LIVE_DAC_STOP_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -788,6 +791,8 @@ namespace p2sp
             info.MaxRatioOfResponseToRequestFromUdpserver = 0;
         }
 
+        info.BWType = bwtype_;
+
         string log = info.ToString();
 
         DebugLog("%s", log.c_str());
@@ -843,9 +848,9 @@ namespace p2sp
 
     void LiveDownloadDriver::OnConfigUpdated()
     {
-        ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetRatioDelimOfUploadSpeedToDatarate();
-        small_ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetSmallRatioDelimOfUploadSpeedToDatarate();
-        using_cdn_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
+        ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetRatioDelimOfUploadSpeedToDatarate(is_saving_mode_);
+        small_ratio_delim_of_upload_speed_to_datarate_ = BootStrapGeneralConfig::Inst()->GetSmallRatioDelimOfUploadSpeedToDatarate(is_saving_mode_);
+        using_cdn_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim(is_saving_mode_);
     }
 
     bool LiveDownloadDriver::IsUploadSpeedLargeEnough()
@@ -1031,14 +1036,14 @@ namespace p2sp
                     max_ratio_of_upload_to_download = ratio_of_upload_to_download_on_history_[i];
                 }
 
-                if (ratio_of_upload_to_download_on_history_[i] > BootStrapGeneralConfig::Inst()->GetLargeRatioOfUploadToDownloadDelim())
+                if (ratio_of_upload_to_download_on_history_[i] > BootStrapGeneralConfig::Inst()->GetLargeRatioOfUploadToDownloadDelim(is_saving_mode_))
                 {
                     ++large_ratio_count;
                 }
             }
 
-            is_history_upload_good_ = (max_ratio_of_upload_to_download > BootStrapGeneralConfig::Inst()->GetMaxRatioOfUploadToDownloadDelim() ||
-                large_ratio_count * 100 >= InitialChangedToP2PConditionWhenStart * BootStrapGeneralConfig::Inst()->GetRatioOfLargeUploadTimesToTotalTimesDelim());
+            is_history_upload_good_ = (max_ratio_of_upload_to_download > BootStrapGeneralConfig::Inst()->GetMaxRatioOfUploadToDownloadDelim(is_saving_mode_) ||
+                large_ratio_count * 100 >= InitialChangedToP2PConditionWhenStart * BootStrapGeneralConfig::Inst()->GetRatioOfLargeUploadTimesToTotalTimesDelim(is_saving_mode_));
         }
     }
 
@@ -1050,14 +1055,14 @@ namespace p2sp
         }
 
         if (live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetTimesOfUseCdnBecauseOfLargeUpload() != 0 &&
-            tick_counter_since_last_advance_using_cdn_.elapsed() < BootStrapGeneralConfig::Inst()->GetMinIntervalOfCdnAccelerationDelim() * 1000)
+            tick_counter_since_last_advance_using_cdn_.elapsed() < BootStrapGeneralConfig::Inst()->GetMinIntervalOfCdnAccelerationDelim(is_saving_mode_) * 1000)
         {
             return false;
         }
 
         if (GetP2PControlTarget() && GetP2PControlTarget()->GetPooledPeersCount() >= BootStrapGeneralConfig::Inst()->GetDesirableLiveIpPoolSize() &&
-            statistic::UploadStatisticModule::Inst()->GetUploadCount() > BootStrapGeneralConfig::Inst()->GetUploadConnectionCountDelim() &&
-            statistic::UploadStatisticModule::Inst()->GetUploadSpeed() > GetDataRate() * BootStrapGeneralConfig::Inst()->GetNotStrictRatioDelimOfUploadToDatarate() / 100)
+            statistic::UploadStatisticModule::Inst()->GetUploadCount() > BootStrapGeneralConfig::Inst()->GetUploadConnectionCountDelim(is_saving_mode_) &&
+            statistic::UploadStatisticModule::Inst()->GetUploadSpeed() > GetDataRate() * BootStrapGeneralConfig::Inst()->GetNotStrictRatioDelimOfUploadToDatarate(is_saving_mode_) / 100)
         {
             tick_counter_since_last_advance_using_cdn_.reset();
             return true;

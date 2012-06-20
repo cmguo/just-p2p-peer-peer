@@ -131,6 +131,11 @@ namespace p2sp
             return live_download_driver_;
         }
 
+        bool IsSavingMode() const
+        {
+            return live_download_driver_->IsSavingMode();
+        }
+
         void SetUseCdnBecauseOfLargeUpload();
         void SetUseP2P();
         void UpdateCdnAccelerationHistory();

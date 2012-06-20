@@ -38,13 +38,13 @@ namespace p2sp
         , total_udpserver_data_bytes_(0)
     {
         send_peer_info_packet_interval_in_second_ = BootStrapGeneralConfig::Inst()->GetSendPeerInfoPacketIntervalInSecond();
-        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim();
-        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim();
-        safe_enough_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayabelTimeDelim();
-        using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim();
-        using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim();
+        urgent_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetUrgentRestPlayableTimeDelim(live_stream_->IsSavingMode());
+        safe_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim(live_stream_->IsSavingMode());
+        safe_enough_rest_playable_time_delim_ = BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayabelTimeDelim(live_stream_->IsSavingMode());
+        using_udpserver_time_in_second_delim_ = BootStrapGeneralConfig::Inst()->GetUsingUdpServerTimeDelim(live_stream_->IsSavingMode());
+        using_udpserver_time_at_least_when_large_upload_ = BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim(live_stream_->IsSavingMode());
         use_udpserver_count_ = BootStrapGeneralConfig::Inst()->GetUseUdpserverCount();
-        udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart();
+        udpserver_protect_time_when_start_ = BootStrapGeneralConfig::Inst()->GetUdpServerProtectTimeWhenStart(live_stream_->IsSavingMode());
         should_use_bw_type_ = BootStrapGeneralConfig::Inst()->GetShouldUseBWType();
         p2p_max_connect_count_ = default_connection_limit_ = BootStrapGeneralConfig::Inst()->GetLivePeerMaxConnections();
         live_connect_low_normal_threshold_ = BootStrapGeneralConfig::Inst()->GetLiveConnectLowNormalThresHold();
@@ -915,7 +915,7 @@ namespace p2sp
 
         // 上传足够大，剩余时间足够大，并且跟视野中的peer相比，跑的足够靠前，使用UdpServer来快速分发
         if (live_stream_->IsUploadSpeedLargeEnough() &&
-            live_stream_->GetRestPlayableTimeInSecond() > BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim() &&
+            live_stream_->GetRestPlayableTimeInSecond() > BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim(live_stream_->IsSavingMode()) &&
             IsAheadOfMostPeers())
         {
             use_udpserver_reason_ = LARGE_UPLOAD;
@@ -1092,7 +1092,7 @@ namespace p2sp
     {
         // 在保护时间之内 并且bs开关为开 并且bwtype为0
         return (live_stream_->GetDownloadTime() < udpserver_protect_time_when_start_ &&
-            live_stream_->GetBWType() == JBW_NORMAL &&
+            (live_stream_->GetBWType() == JBW_NORMAL || live_stream_->IsSavingMode()) &&
             should_use_bw_type_ &&
             live_stream_->GetSourceType() == PlayInfo::SOURCE_PPLIVE_LIVE2 &&
             live_stream_->GetReplay() == false);

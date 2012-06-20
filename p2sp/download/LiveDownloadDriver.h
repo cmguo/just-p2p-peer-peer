@@ -137,6 +137,11 @@ namespace p2sp
 
         void AddCdnAccelerationHistory(boost::uint32_t ratio_of_upload_to_download);
 
+        bool IsSavingMode() const
+        {
+            return is_saving_mode_;
+        }
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -267,6 +272,8 @@ namespace p2sp
             static const std::string UdpServerScore;
             static const std::string UdpServerIpAddress;
         };
+
+        bool is_saving_mode_;
 
     private:
         // statistic

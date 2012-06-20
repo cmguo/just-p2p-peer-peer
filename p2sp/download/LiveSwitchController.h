@@ -35,7 +35,8 @@ namespace p2sp
     {
     public:
         LiveSwitchController();
-        void Start(LiveDownloadDriver__p live_download_driver, bool is_too_near_from_last_vv_of_same_channel);
+        void Start(LiveDownloadDriver__p live_download_driver, bool is_too_near_from_last_vv_of_same_channel,
+            bool is_saving_mode);
         void Stop();
     private:
         void ChangeTo3200();
@@ -90,6 +91,8 @@ namespace p2sp
             LONG_TIME_USING_CDN = 1,
             BLOCK = 2,
         };
+
+        bool is_saving_mode_;
     };
 }
 

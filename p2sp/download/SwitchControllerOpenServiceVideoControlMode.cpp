@@ -867,6 +867,7 @@ namespace p2sp
         {
         case JBW_NORMAL:
         case JBW_HTTP_MORE:
+        case JBW_P2P_MORE:
             return true;
         case JBW_HTTP_ONLY:
         case JBW_HTTP_PREFERRED:

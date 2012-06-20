@@ -67,6 +67,7 @@ namespace p2sp
         boost::uint32_t         MaxAnnounceResponseFromUdpServer;
         boost::uint32_t         MinRatioOfResponseToRequestFromUdpserver;
         boost::uint32_t         MaxRatioOfResponseToRequestFromUdpserver;
+        boost::uint8_t          BWType;
 
         string ToString()
         {
@@ -153,6 +154,7 @@ namespace p2sp
             log_stream << "&I2=" << MaxAnnounceResponseFromUdpServer;
             log_stream << "&J2=" << MinRatioOfResponseToRequestFromUdpserver;
             log_stream << "&K2=" << MaxRatioOfResponseToRequestFromUdpserver;
+            log_stream << "&L2=" << (uint32_t)BWType;
 
             return log_stream.str();
         }
