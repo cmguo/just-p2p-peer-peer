@@ -130,14 +130,6 @@ class AppModule: public boost::noncopyable,
     void DoSendPacket(type const & packet,
         boost::uint16_t dest_protocol_version);
 
-    void DoSendBuffer(boost::asio::ip::udp::endpoint& end_point, const protocol::SubPieceBuffer& buffer);
-
-    /**
-    * @brief 客户端开始下载一个 url
-    * @return 已经在下载了，返回false, 否则返回true
-    */
-    int StartDownload(protocol::UrlInfo url_info);
-
     /**
     * @brief 给资源RID添加 多个 Peer
     */

@@ -373,35 +373,6 @@ namespace p2sp
 #endif
     }
 
-    int AppModule::StartDownload(protocol::UrlInfo url_info)
-    {
-        // 1.在map<string, Instance::p> url_indexer_中查找是否已经存在
-        //   如果不存在则
-        //          创建Instance(url_info_)
-        //       将这个Instance添加到 map<string, Instance::p> url_indexer_ 中
-        //       将这个Instance添加到 set<Instance::p> instance_set_ 中
-        //   如果存在则
-        //       不管
-        //
-        // 2.Instance 是否正在下载
-        //       如果不是，将Instance置为 正在下载
-        //       如果是    返回
-        //
-        // 3.保存 instance_set_ 回磁盘
-        //       ResourceMap::AsyncSaveToDisk();
-        return 0;
-    }
-
-    void AppModule::DoSendBuffer(boost::asio::ip::udp::endpoint& end_point, const protocol::SubPieceBuffer& buffer)
-    {
-        if (is_running_ == false)
-            return;
-
-        // StatisticModule::Inst()->SubmitUploadedBytes(buffer.Length());
-
-        // udp_server_->UdpSendTo(buffer, end_point);
-    }
-
     void AppModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver)
     {
         if (false == is_running_)
