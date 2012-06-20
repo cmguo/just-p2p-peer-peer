@@ -94,33 +94,33 @@ namespace statistic
         info.aPeerVersion[2] = AppModule::GetKernelVersionInfo().Micro;
         info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
 
-        // D: 普通P2P上传字节数
+        // D: 普通P2P上传字节数，单位kb
         info.uP2PUploadKBytesByNomal = p2p_upload_byte_by_normal_ / 1024;
-        // E: P2P下载字节数
+        // E: P2P下载字节数，单位byte
         info.uP2PDownloadBytes = p2p_download_byte_;
-        // F: HTTP下载字节数
+        // F: HTTP下载字节数，单位byte
         info.uHTTPDownloadBytes = http_download_byte_;
-        // G: PUSH P2P上传字节数
+        // G: PUSH P2P上传字节数，单位kb
         info.uP2PUploadKBytesByPush = p2p_upload_byte_by_push_ / 1024;
        
 #if DISK_MODE
         Storage::p p_storage = Storage::Inst_Storage();
-        // H: 缓存目录已用大小
+        // H: 缓存目录已用大小，单位MB
         info.uUsedDiskSizeInMB = p_storage->GetUsedDiskSpace() / (1024 * 1024);
-        // I: 缓存目录设置大小
+        // I: 缓存目录设置大小，单位MB
         info.uTotalDiskSizeInMB = p_storage->GetStoreSize() / (1024 * 1024);
 #else
         info.uUsedDiskSizeInMB  = 0;
         info.uTotalDiskSizeInMB = 0;
 #endif
-        // J: 上传带宽
+        // J: 上传带宽，单位byte
         info.uUploadBandWidthInBytes = p2sp::P2PModule::Inst()->GetUploadBandWidthInBytes();
         // K: 上传使用ping policy
         info.uNeedUseUploadPingPolicy = p2sp::P2PModule::Inst()->NeedUseUploadPingPolicy();
-        // L: p2p上传限速字节数
+        // L: p2p上传限速字节数，单位byte
         upload_limit_KBytes_ += upload_limit_counter_.elapsed() * upload_speed_limit_KBps_ / 1000;
         info.uUploadLimitInBytes = upload_limit_KBytes_ * 1024;
-        // M: p2p上传限速导致被丢弃的报文字节数
+        // M: p2p上传限速导致被丢弃的报文字节数，单位byte
         info.uUploadDiscardBytes = upload_discard_byte_;
         // N: 本地RID数
         info.uLocalRidCount = storage::Storage::Inst_Storage()->LocalRidCount();
@@ -130,6 +130,12 @@ namespace statistic
         info.uNatType = StunModule::Inst()->GetPeerNatType();
         // Q: 十分钟内上传的RID数
         info.uRidUploadCountInTenMinutes = rid_upload_count_in_ten_minutes_;
+        // R: 上传平均速度，单位byte/s
+        info.uUploadAvgSpeedInBytes = UploadStatisticModule::Inst()->GetUploadAvgSpeed();
+        // S: peer guid
+        info.PeerGuid = AppModule::Inst()->GetPeerGuid();
+        // T: 最大上传速度，单位kb/s
+        info.uUploadMaxSpeed = max_peer_upload_kbps_;
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
@@ -153,6 +159,9 @@ namespace statistic
         log_stream << "&O=" << (boost::uint32_t)info.uRidUploadCountTotal;
         log_stream << "&P=" << (boost::uint16_t)info.uNatType;
         log_stream << "&Q=" << (boost::uint32_t)info.uRidUploadCountInTenMinutes;
+        log_stream << "&R=" << (boost::uint32_t)info.uUploadAvgSpeedInBytes;
+        log_stream << "&S=" << info.PeerGuid.to_string();
+        log_stream << "&T=" << (boost::uint32_t)info.uUploadMaxSpeed;
 
         string log = log_stream.str();
 

@@ -45,6 +45,7 @@ namespace statistic
 
         boost::uint8_t GetUploadCount() const;
         boost::uint32_t GetUploadSpeed() const;
+        boost::uint32_t GetUploadAvgSpeed();
 
         // 由于调用的SpeedInfoStatistic::GetSpeedInfo不能设置为const，所以这个函数也没有设为const
         boost::uint32_t GetUploadSpeed(const boost::asio::ip::address & address);

@@ -5,6 +5,7 @@
 #include "Common.h"
 #include "statistic/UploadStatisticModule.h"
 #include "statistic/StatisticUtil.h"
+#include "DACStatisticModule.h"
 
 namespace statistic
 {
@@ -74,6 +75,8 @@ namespace statistic
     void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size)
     {
         upload_speed_info_.SubmitUploadedBytes(size);
+        uint32_t upload_speed = upload_speed_info_.GetSpeedInfo().NowUploadSpeed / 1024;
+        DACStatisticModule::Inst()->SubmitP2PUploadSpeedInKBps(upload_speed);
 
         std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.find(address);
         if (iter != m_upload_map.end())
@@ -141,6 +144,11 @@ namespace statistic
     boost::uint32_t UploadStatisticModule::GetUploadSpeed() const
     {
         return upload_info_.upload_speed;
+    }
+
+    boost::uint32_t UploadStatisticModule::GetUploadAvgSpeed()
+    {
+        return upload_speed_info_.GetSpeedInfo().AvgUploadSpeed;
     }
 
     void UploadStatisticModule::SubmitUploadPeerInfo(const boost::asio::ip::address & address, const statistic::PEER_INFO & peer_info)

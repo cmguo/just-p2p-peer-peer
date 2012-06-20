@@ -12,20 +12,23 @@ namespace statistic
     typedef struct _PERIOD_DAC_STATISTIC_INFO_STRUCT
     {
         boost::uint32_t       aPeerVersion[4];                      // C: 内核版本：major, minor, micro, extra
-        boost::uint32_t       uP2PUploadKBytesByNomal;              // D: 普通P2P上传字节数
-        boost::uint32_t       uP2PDownloadBytes;                    // E: P2P下载字节数
-        boost::uint32_t       uHTTPDownloadBytes;                   // F: HTTP下载字节数
-        boost::uint32_t       uP2PUploadKBytesByPush;               // G: PUSH P2P上传字节数
-        boost::uint32_t       uUsedDiskSizeInMB;                    // H: 缓存目录已用大小
-        boost::uint32_t       uTotalDiskSizeInMB;                   // I: 缓存目录设置大小
-        boost::uint32_t       uUploadBandWidthInBytes;              // J: 上传带宽
+        boost::uint32_t       uP2PUploadKBytesByNomal;              // D: 普通P2P上传字节数，单位kb
+        boost::uint32_t       uP2PDownloadBytes;                    // E: P2P下载字节数，单位byte
+        boost::uint32_t       uHTTPDownloadBytes;                   // F: HTTP下载字节数，单位byte
+        boost::uint32_t       uP2PUploadKBytesByPush;               // G: PUSH P2P上传字节数，单位kb
+        boost::uint32_t       uUsedDiskSizeInMB;                    // H: 缓存目录已用大小，单位MB
+        boost::uint32_t       uTotalDiskSizeInMB;                   // I: 缓存目录设置大小，单位MB
+        boost::uint32_t       uUploadBandWidthInBytes;              // J: 上传带宽，单位byte
         boost::uint32_t       uNeedUseUploadPingPolicy;             // K: 上传使用ping policy
-        boost::uint32_t       uUploadLimitInBytes;                  // L: p2p上传限速字节数
-        boost::uint32_t       uUploadDiscardBytes;                  // M: p2p上传限速导致被丢弃的报文字节数
+        boost::uint32_t       uUploadLimitInBytes;                  // L: p2p上传限速字节数，单位byte
+        boost::uint32_t       uUploadDiscardBytes;                  // M: p2p上传限速导致被丢弃的报文字节数，单位byte
         boost::uint32_t       uLocalRidCount;                       // N: 本地RID数
         boost::uint32_t       uRidUploadCountTotal;                 // O: 上传过的RID数
         boost::uint16_t       uNatType;                             // P: NAT节点类型
         boost::uint32_t       uRidUploadCountInTenMinutes;          // Q: 十分钟内上传的RID数
+        boost::uint32_t       uUploadAvgSpeedInBytes;               // R: 上传平均速度，单位byte/s
+        Guid                  PeerGuid;                             // S: Peer Guid
+        boost::uint32_t       uUploadMaxSpeed;                      // T: 最大上传速度，单位kb/s
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
