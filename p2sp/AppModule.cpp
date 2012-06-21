@@ -73,8 +73,6 @@ namespace p2sp
 
     AppModule::AppModule()
         : is_running_(false)
-        , tcp_server_(global_io_svc())
-        , tcp_server_843_(global_io_svc())
     {
     }
 
@@ -217,13 +215,16 @@ namespace p2sp
         StunModule::Inst()->Start(appmodule_start_interface->config_path_);
 
         // 启动TCP Server
+        tcp_server_.reset(new network::TcpServer(global_io_svc()));
+
         RegisterTcpPackets();
 
         // 记录端口，汇报
         upnp_port_ = 0;
+
         for (boost::uint32_t port = 16000; port <=16010; port++)
         {
-            if (tcp_server_.Start(port))
+            if (tcp_server_->Start(port))
             {
 #ifdef NEED_TO_POST_MESSAGE
                 WindowsMessage::Inst().PostWindowsMessage(UM_INTERNAL_TCP_PORT_SUCCED, (WPARAM)0, (LPARAM)port);
@@ -234,7 +235,8 @@ namespace p2sp
 
         // 监听843端口，为flash p2p提供socket master policy file.
         // 参考http://macromedia.com/cn/devnet/flashplayer/articles/fplayer9_security.html
-        tcp_server_843_.Start(843);
+        tcp_server_843_.reset(new network::TcpServer(global_io_svc()));
+        tcp_server_843_->Start(843);
 
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
@@ -295,6 +297,16 @@ namespace p2sp
         {
             udp_server_->Close();
             udp_server_.reset();
+        }
+
+        if (tcp_server_)
+        {
+            tcp_server_->Stop();
+        }
+
+        if (tcp_server_843_)
+        {
+            tcp_server_843_->Stop();
         }
 
         LOG(__EVENT, "app", "AppModule is stopping...");
@@ -605,15 +617,15 @@ namespace p2sp
 
     void AppModule::RegisterTcpPackets()
     {
-        tcp_server_.RegisterPacket<protocol::TcpAnnounceRequestPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpAnnounceResponsePacket>();
-        tcp_server_.RegisterPacket<protocol::TcpSubPieceRequestPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpSubPieceResponsePacket>();
-        tcp_server_.RegisterPacket<protocol::TcpReportSpeedPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpErrorPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpReportStatusPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpStartDownloadPacket>();
-        tcp_server_.RegisterPacket<protocol::TcpStopDownLoadPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpAnnounceRequestPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpAnnounceResponsePacket>();
+        tcp_server_->RegisterPacket<protocol::TcpSubPieceRequestPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpSubPieceResponsePacket>();
+        tcp_server_->RegisterPacket<protocol::TcpReportSpeedPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpErrorPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpReportStatusPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpStartDownloadPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpStopDownLoadPacket>();
     }
 
     boost::uint16_t AppModule::GetUpnpPortForTcpUpload()

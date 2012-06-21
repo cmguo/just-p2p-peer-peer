@@ -17,8 +17,12 @@ char *cdnips[]={"125.39.129.53","10.13.13.214","124.89.10.138","61.158.254.141",
 
 namespace p2sp
 {
-    GateWayFinder::GateWayFinder(boost::asio::io_service& io_service, IGateWayFinderListener * listener)
-        : io_svc_(io_service), listener_(listener), is_running_(false), timer_(io_service), sequence_number_(0)
+    GateWayFinder::GateWayFinder(boost::asio::io_service& io_service, boost::shared_ptr<IGateWayFinderListener> listener)
+        : io_svc_(io_service)
+        , listener_(listener)
+        , is_running_(false)
+        , timer_(io_service)
+        , sequence_number_(0)
         , is_bind_success_(false)
     {
     }
@@ -30,6 +34,11 @@ namespace p2sp
 
     void GateWayFinder::Start()
     {
+        if (is_running_)
+        {
+            return;
+        }
+
         is_running_ = true;
         if (!ping_client_)
         {
@@ -52,39 +61,58 @@ namespace p2sp
 
     void GateWayFinder::Stop()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         if (ping_client_)
         {
             ping_client_->CancelAll();
             ping_client_.reset();
         }
 
+        listener_.reset();
+
         is_running_ = false;
     }
 
     void GateWayFinder::Reset()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         ttl_ = 1;
         time_out_num_ = 0;
     }
 
     void GateWayFinder::StartSend()
     {
-        if(is_running_)
+        if (!is_running_)
         {
-            if (ping_client_->SetTtl(ttl_))
-            {
-                time_sent_ = posix_time::microsec_clock::universal_time();
-                sequence_number_ = ping_client_->AsyncRequest(boost::bind(&GateWayFinder::HandleReceive,
-                    this, _1, _2, _3));
+            return;
+        }
 
-                timer_.expires_at(time_sent_ + posix_time::seconds(10));
-                timer_.async_wait(boost::bind(&GateWayFinder::HandleTimeOut, this, _1));
-            }
+        if (ping_client_->SetTtl(ttl_))
+        {
+            time_sent_ = posix_time::microsec_clock::universal_time();
+            sequence_number_ = ping_client_->AsyncRequest(boost::bind(&GateWayFinder::HandleReceive,
+                shared_from_this(), _1, _2, _3));
+
+            timer_.expires_at(time_sent_ + posix_time::seconds(10));
+            timer_.async_wait(boost::bind(&GateWayFinder::HandleTimeOut, shared_from_this(), _1));
         }
     }
 
     void GateWayFinder::HandleTimeOut(const boost::system::error_code& error)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         if (error != boost::asio::error::operation_aborted)
         {
             DebugLog("GateWayFinder::HandleTimeOut\n");
@@ -102,6 +130,11 @@ namespace p2sp
     void GateWayFinder::HandleReceive(unsigned char type, const string & src_ip,
         boost::uint32_t ping_rtt_for_win7)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         if (type == icmp_header::time_exceeded)
         {
             DebugLog("received time_exceeded\n");

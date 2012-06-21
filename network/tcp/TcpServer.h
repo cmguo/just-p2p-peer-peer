@@ -6,6 +6,7 @@
 namespace network
 {
     class TcpServer
+        : public boost::enable_shared_from_this<TcpServer>
     {
     public:
         TcpServer(boost::asio::io_service & io_service)
@@ -15,6 +16,13 @@ namespace network
 
         bool Start(boost::uint32_t port)
         {
+            if (is_running_)
+            {
+                return false;
+            }
+
+            is_running_ = true;
+
             tcp_port_ = port;
 
             boost::system::error_code error;
@@ -57,9 +65,28 @@ namespace network
             return true;
         }
 
+        void Stop()
+        {
+            if (!is_running_)
+            {
+                return;
+            }
+
+            is_running_ = false;
+
+            boost::system::error_code ec;
+            acceptor_.cancel(ec);
+            acceptor_.close(ec);
+        }
+
         template <typename PacketType>
         void RegisterPacket()
         {
+            if (!is_running_)
+            {
+                return;
+            }
+
             boost::uint8_t action = PacketType::Action;
             packet_handlers_[action] = &TcpConnection::HandlePacket<PacketType>;
         }
@@ -72,16 +99,26 @@ namespace network
     private:
         void StartAccept()
         {
+            if (!is_running_)
+            {
+                return;
+            }
+
             TcpConnection::pointer new_connection = TcpConnection::create(acceptor_.get_io_service(), packet_handlers_);
 
             acceptor_.async_accept(new_connection->socket(),
-                boost::bind(&TcpServer::HandleAccept, this, new_connection,
+                boost::bind(&TcpServer::HandleAccept, shared_from_this(), new_connection,
                 boost::asio::placeholders::error));
         }
 
         void HandleAccept(TcpConnection::pointer new_connection,
             const boost::system::error_code& error)
         {
+            if (!is_running_)
+            {
+                return;
+            }
+
             if (error)
             {
                 return;
@@ -98,6 +135,8 @@ namespace network
 
         typedef void (TcpConnection::* packet_handler_type)(std::istream &);
         std::map<boost::uint8_t, packet_handler_type> packet_handlers_;
+
+        bool is_running_;
     };
 }
 

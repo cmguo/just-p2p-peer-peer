@@ -16,9 +16,10 @@ namespace p2sp
     };
 
     class GateWayFinder
+        : public boost::enable_shared_from_this<GateWayFinder>
     {
     public:
-        GateWayFinder(boost::asio::io_service& io_service, IGateWayFinderListener * listener);
+        GateWayFinder(boost::asio::io_service& io_service, boost::shared_ptr<IGateWayFinderListener> listener);
         ~GateWayFinder();
         void Start();
         void Stop();
@@ -33,7 +34,7 @@ namespace p2sp
 
     private:
         boost::asio::io_service & io_svc_;
-        IGateWayFinderListener * listener_;
+        boost::shared_ptr<IGateWayFinderListener> listener_;
         bool is_running_;
         network::PingClientBase::p ping_client_;
         boost::asio::deadline_timer timer_;

@@ -10,6 +10,7 @@ namespace p2sp
 {
     class NetworkQualityMonitor
         : public IGateWayFinderListener
+        , public boost::enable_shared_from_this<NetworkQualityMonitor>
     {
     public:
         NetworkQualityMonitor(boost::asio::io_service & io_svc);
@@ -33,7 +34,7 @@ namespace p2sp
     private:
         boost::asio::io_service & io_svc_;
         bool is_running_;
-        GateWayFinder gateway_finder_;
+        boost::shared_ptr<GateWayFinder> gateway_finder_;
         string gateway_ip_;
         network::PingClientBase::p ping_client_;
         framework::timer::PeriodicTimer ping_timer_;
