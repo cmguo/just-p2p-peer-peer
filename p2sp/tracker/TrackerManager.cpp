@@ -57,11 +57,6 @@ namespace p2sp
 
     void TrackerManager::LoadTrackerList()
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         LOGX(__DEBUG, "tracker", "");
         uint32_t save_group_count;
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
@@ -120,11 +115,6 @@ namespace p2sp
 
     void TrackerManager::SaveTrackerList()
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         LOGX(__DEBUG, "tracker", "");
         uint32_t save_group_count = list_mod_indexer_.size();
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
@@ -154,11 +144,6 @@ namespace p2sp
     void TrackerManager::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
         bool is_got_tracker_list_from_bs, TrackerType tracker_type)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         if (tracker_type == p2sp::LIST)
         {
             SetTrackerList(group_count, trackers, is_got_tracker_list_from_bs, list_mod_indexer_,
@@ -176,11 +161,6 @@ namespace p2sp
         bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
         TrackerType tracker_type)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         // 去掉这个aassert, 连续2次收到BS回的查询Tracker列表的报文就会触发这个assert.
         // assert(!is_got_tracker_list_from_bs_);
 
@@ -289,10 +269,7 @@ namespace p2sp
 
     void TrackerManager::OnUdpRecv(protocol::ServerPacket const &packet)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
+        if (is_running_ == false) return;
 
         switch (packet.PacketAction)
         {
@@ -312,10 +289,7 @@ namespace p2sp
 
     void TrackerManager::OnReportResponsePacket(protocol::ReportPacket const & packet)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
+        if (is_running_ == false) return;
 
         if (report_endpoint_indexer_.count(packet.end_point) != 0)
         {
@@ -349,11 +323,6 @@ namespace p2sp
 
     void TrackerManager::StopAllGroups()
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         LOG(__INFO, "tracker", "Stopping all tracker groups.");
         for (ModIndexer::iterator it = list_mod_indexer_.begin(); it != list_mod_indexer_.end(); ++it)
         {
@@ -370,11 +339,6 @@ namespace p2sp
 
     void TrackerManager::ClearAllGroups()
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         StopAllGroups();
         list_endpoint_indexer_.clear();
         report_mod_indexer_.clear();
@@ -400,11 +364,6 @@ namespace p2sp
 
     void TrackerManager::OnLoadTrackerTimer(framework::timer::Timer::pointer timer)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         if (!is_got_tracker_list_from_bs_)
         {
             LoadTrackerList();
@@ -413,11 +372,6 @@ namespace p2sp
 
     void TrackerManager::DoReport()
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         for (ModIndexer::iterator it = report_mod_indexer_.begin();
             it != report_mod_indexer_.end(); ++it)
         {

@@ -40,11 +40,6 @@ namespace p2sp
     void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
         bool is_vod, TrackerType tracker_type)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         if (is_vod)
         {
             vod_tracker_manager_.SetTrackerList(group_count, tracker_s, true, tracker_type);
@@ -96,7 +91,7 @@ namespace p2sp
             vod_tracker_manager_.PPLeave();
             live_tracker_manager_.PPLeave();
         }
-        catch (...)
+        catch (std::exception)
         {
         
         }
@@ -104,11 +99,6 @@ namespace p2sp
 
     void TrackerModule::DoReport(bool is_vod)
     {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
         if (is_vod)
         {
             vod_tracker_manager_.DoReport();
