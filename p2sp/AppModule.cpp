@@ -156,7 +156,7 @@ namespace p2sp
         StatisticModule::Inst()->SetHttpProxyPort(ProxyModule::Inst()->GetHttpPort());
 
         // 启动Udp服务器
-        udp_server_.reset(new protocol::UdpServer(io_svc, this));
+        udp_server_.reset(new protocol::UdpServer(io_svc, shared_from_this()));
 
         boost::uint16_t local_udp_port = appmodule_start_interface->local_udp_port_;
         boost::uint16_t try_count = 0;

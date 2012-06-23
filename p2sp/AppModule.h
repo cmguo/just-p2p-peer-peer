@@ -225,21 +225,7 @@ class AppModule: public boost::noncopyable,
     boost::shared_ptr<statistic::BufferringMonitor> CreateBufferringMonitor(const RID& rid);
 
     private:
-    /**
-    * @brief 用url来索引的 Instance 实例
-    */
-    // map<string, Instance::p> url_indexer_;
-
-    /**
-    * @brief 用rid来索引的 Instance 实例
-    */
-    // map<RID, Instance::p> rid_indexer_;
-
-    /**
-    * @biref 储存所有的 Instances 实例8
-    */
-    // set<Instance::p> instance_set_;
-    protocol::UdpServer::pointer udp_server_;
+    boost::shared_ptr<protocol::UdpServer> udp_server_;
 
     Guid guid_;
     Guid unique_guid_;
