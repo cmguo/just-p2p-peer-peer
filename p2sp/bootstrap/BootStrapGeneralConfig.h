@@ -473,6 +473,26 @@ namespace p2sp
             return write_block_when_verified_;
         }
 
+        boost::uint32_t GetMaxUploadSpeedUsedInNetCheck() const
+        {
+            return max_upload_speed_used_in_network_check_;
+        }
+
+        boost::uint32_t PingUsedInNetCheckWhenBiggerUploadSpeed() const
+        {
+            return ping_time_net_check_big_upload_speed_;
+        }
+
+        boost::uint32_t pingUsedInNetCheckWhenSmallerUploadSpeed() const
+        {
+            return ping_time_net_check_small_upload_speed_;
+        }
+
+        boost::uint32_t MinusValueWhenUploadSpeedOverlarge() const
+        {
+            return minus_value_when_upload_speed_overlarge_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -779,6 +799,18 @@ namespace p2sp
         bool write_block_when_full_;
 
         bool write_block_when_verified_;
+
+        // 历史最大上传速度，用户选取不同的判断网络好坏的策略
+        boost::uint32_t max_upload_speed_used_in_network_check_;
+
+        // 最大上传速度大于某一BS可配值时，用于判断网络好坏的ping值
+        boost::uint32_t ping_time_net_check_big_upload_speed_;
+
+        // 最大上传速度小于某一BS可配值时，用于判断网络好坏的ping值
+        boost::uint32_t ping_time_net_check_small_upload_speed_;
+
+        // 上传限速值过大时，每次削减的值
+        boost::uint32_t minus_value_when_upload_speed_overlarge_;
     };
 }
 #endif

@@ -138,6 +138,10 @@ namespace p2sp
         , vip_download_min_p2p_speed_(50)
         , write_block_when_full_(false)
         , write_block_when_verified_(false)
+        , max_upload_speed_used_in_network_check_(100)
+        , ping_time_net_check_big_upload_speed_(20)
+        , ping_time_net_check_small_upload_speed_(80)
+        , minus_value_when_upload_speed_overlarge_(5)
     {
     }
 
@@ -311,6 +315,10 @@ namespace p2sp
                 ("config.vdmps", po::value<uint32_t>()->default_value(vip_download_min_p2p_speed_))
                 ("config.wbwf", po::value<uint32_t>()->default_value(write_block_when_full_))
                 ("config.wbwv", po::value<uint32_t>()->default_value(write_block_when_verified_))
+                ("config.musnc", po::value<uint32_t>()->default_value(max_upload_speed_used_in_network_check_))
+                ("config.pbus", po::value<uint32_t>()->default_value(ping_time_net_check_big_upload_speed_))
+                ("config.psus", po::value<uint32_t>()->default_value(ping_time_net_check_small_upload_speed_))
+                ("config.mvul", po::value<uint32_t>()->default_value(minus_value_when_upload_speed_overlarge_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -440,6 +448,10 @@ namespace p2sp
             vip_download_min_p2p_speed_ = vm["config.vdmps"].as<uint32_t>();
             write_block_when_full_ = vm["config.wbwf"].as<uint32_t>();
             write_block_when_verified_ = vm["config.wbwv"].as<uint32_t>();
+            max_upload_speed_used_in_network_check_ = vm["config.musnc"].as<uint32_t>();
+            ping_time_net_check_big_upload_speed_ = vm["config.pbus"].as<uint32_t>();
+            ping_time_net_check_small_upload_speed_ = vm["config.psus"].as<uint32_t>();
+            minus_value_when_upload_speed_overlarge_ = vm["config.mvul"].as<uint32_t>();
 
             if (save_to_disk)
             {

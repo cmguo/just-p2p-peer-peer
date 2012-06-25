@@ -175,14 +175,16 @@ namespace p2sp
             network_quality_monitor_->GetAveragePingDelay(), upload_speed_kbs, GetMaxUploadSpeedForControl() / 1024);
 
         bool is_network_good;
-        if (GetMaxUploadSpeedForControl() > 100 * 1024)
+        if (GetMaxUploadSpeedForControl() > BootStrapGeneralConfig::Inst()->GetMaxUploadSpeedUsedInNetCheck() * 1024)
         {
-            is_network_good = network_quality_monitor_->GetAveragePingDelay() < 20 && 
+            int big_upload_speed_ping_time = BootStrapGeneralConfig::Inst()->PingUsedInNetCheckWhenBiggerUploadSpeed();
+            is_network_good = network_quality_monitor_->GetAveragePingDelay() < big_upload_speed_ping_time && 
                 network_quality_monitor_->GetPingLostRate() == 0;
         }
         else
         {
-            is_network_good = network_quality_monitor_->GetAveragePingDelay() < 80 &&
+            int small_upload_speed_ping_time = BootStrapGeneralConfig::Inst()->pingUsedInNetCheckWhenSmallerUploadSpeed();
+            is_network_good = network_quality_monitor_->GetAveragePingDelay() < small_upload_speed_ping_time &&
                 network_quality_monitor_->GetPingLostRate() == 0;
         }
 
@@ -540,7 +542,8 @@ namespace p2sp
         {
             if (!is_network_good)
             {
-                upload_speed_limit_kbs /= 2;
+                int minus_value = BootStrapGeneralConfig::Inst()->MinusValueWhenUploadSpeedOverlarge();
+                upload_speed_limit_kbs = (upload_speed_limit_kbs / 2) > (upload_speed_limit_kbs - minus_value) ? (upload_speed_limit_kbs / 2) : (upload_speed_limit_kbs - minus_value);
 
                 if (is_main_state)
                 {
