@@ -47,8 +47,6 @@ FRAMEWORK_LOGGER_DECLARE_MODULE("struct");
 
 #pragma managed(push, off)
 
-static boost::mutex peer_mu_;
-
 BOOL APIENTRY DllMain(HMODULE hModule,
     uint32_t ul_reason_for_call,
     void * lpReserved
@@ -68,6 +66,8 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #pragma managed(pop)
 
 #endif  // BOOST_WINDOWS_API
+
+static boost::mutex peer_mu_;
 
 //////////////////////////////////////////////////////////////////////////
 //
