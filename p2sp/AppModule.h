@@ -109,7 +109,7 @@ class AppModule: public boost::noncopyable,
     public boost::enable_shared_from_this<AppModule>,
     public protocol::IUdpServerListener
 {
-    public:
+public:
     typedef boost::shared_ptr<AppModule> p;
 
     bool Start(
@@ -217,11 +217,6 @@ class AppModule: public boost::noncopyable,
     // make
     static string MakeUrlByRidInfo(const protocol::RidInfo& rid_info, uint32_t version = 1);
 
-    static void AllocSubPieceConent()
-    {
-
-    }
-
     boost::shared_ptr<statistic::BufferringMonitor> CreateBufferringMonitor(const RID& rid);
 
     private:
@@ -241,12 +236,15 @@ class AppModule: public boost::noncopyable,
 
     boost::uint16_t upnp_port_;
 
-    private:
+    static boost::mutex mu_;
+
+private:
     AppModule();
     static AppModule::p inst_;
-    public:
+public:
     static AppModule::p Inst()
     {
+        boost::mutex::scoped_lock lock(mu_);
         if (!inst_)
         {
             inst_.reset(new AppModule());

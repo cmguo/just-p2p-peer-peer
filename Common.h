@@ -23,6 +23,7 @@
 #include <boost/bind.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
 
 #ifdef BOOST_WINDOWS_API
 #ifdef PEER_PC_CLIENT

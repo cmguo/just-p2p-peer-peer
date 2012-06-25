@@ -11,6 +11,7 @@ namespace p2sp
     FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
 
     TrackerModule::p TrackerModule::inst_;
+    boost::mutex TrackerModule::mu_;
 
     void TrackerModule::Start(const string& config_path)
     {

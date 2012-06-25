@@ -70,6 +70,7 @@ namespace p2sp
     FRAMEWORK_LOGGER_DECLARE_MODULE("app");
 
     AppModule::p AppModule::inst_;
+    boost::mutex AppModule::mu_;
 
     AppModule::AppModule()
         : is_running_(false)

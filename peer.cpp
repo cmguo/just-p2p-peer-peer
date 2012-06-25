@@ -47,6 +47,7 @@ FRAMEWORK_LOGGER_DECLARE_MODULE("struct");
 
 #pragma managed(push, off)
 
+static boost::mutex peer_mu_;
 
 BOOL APIENTRY DllMain(HMODULE hModule,
     uint32_t ul_reason_for_call,
@@ -140,6 +141,7 @@ void PEER_API Startup(LPWSTARTPARAM lpParam)
 void PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
 {
+    boost::unique_lock<boost::mutex> ul(peer_mu_);
     LOGX(__DEBUG, "app", "StartKernel");
  
 #if (defined _DEBUG || defined DEBUG)
@@ -188,6 +190,7 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 
 void PEER_API Clearup()
 {
+    boost::unique_lock<boost::mutex> ul(peer_mu_);
     global_io_svc().post(boost::bind(&p2sp::AppModule::Stop, p2sp::AppModule::Inst()));
 
     MainThread::Stop();
@@ -717,12 +720,10 @@ void PEER_API SetPeerState(uint32_t nPeerState)
     case PEERSTATE_MAIN_STATE:
         peer_state |= PEERSTATE_MAIN_STATE;
         LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_MAIN_STATE");
-        DebugLog("upload Enter MAIN_STATE");
         break;
     case PEERSTATE_RESIDE_STATE:
         peer_state |= PEERSTATE_RESIDE_STATE;
         LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_RESIDE_STATE");
-        DebugLog("upload Enter RESIDE_STATE");
         break;
     default:
         peer_state |= PEERSTATE_MAIN_STATE;
