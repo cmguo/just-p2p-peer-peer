@@ -18,6 +18,7 @@
 #include "statistic/StatisticModule.h"
 
 #include "network/tcp/TcpServer.h"
+#include <boost/thread.hpp>
 
 enum PeerState
 {

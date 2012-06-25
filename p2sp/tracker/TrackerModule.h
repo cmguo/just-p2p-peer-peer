@@ -9,6 +9,7 @@
 * @brief TrackerModule 类的包含文件
 */
 
+#include <boost/thread.hpp>
 #include "p2sp/tracker/TrackerManager.h"
 
 namespace p2sp
