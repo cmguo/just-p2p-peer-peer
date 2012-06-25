@@ -379,7 +379,8 @@ namespace p2sp
         }
 
         LOG(__EVENT, "app", "AppModule has stopped.");
-        inst_.reset();
+        // AppModule暂时不析构
+        // inst_.reset();
 
 #ifdef NEED_TO_POST_MESSAGE
         WindowsMessage::Inst().PostWindowsMessage(UM_CORE_STOP, (WPARAM)0, (LPARAM)lpCoreStopData);

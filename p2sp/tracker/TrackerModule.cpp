@@ -35,7 +35,8 @@ namespace p2sp
         live_tracker_manager_.Stop();
 
         is_running_ = false;
-        inst_.reset();
+        // TrackerModuleÔİÊ±²»Îö¹¹
+        //inst_.reset();
     }
 
     void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
