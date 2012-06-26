@@ -11,6 +11,7 @@ namespace network
     public:
         TcpServer(boost::asio::io_service & io_service)
             : acceptor_(io_service)
+            , is_running_(false)
         {
         }
 
@@ -82,11 +83,6 @@ namespace network
         template <typename PacketType>
         void RegisterPacket()
         {
-            if (!is_running_)
-            {
-                return;
-            }
-
             boost::uint8_t action = PacketType::Action;
             packet_handlers_[action] = &TcpConnection::HandlePacket<PacketType>;
         }
