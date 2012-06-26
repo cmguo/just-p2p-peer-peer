@@ -473,7 +473,7 @@ namespace p2sp
                         is_timer_h_reset)
                     {                        
                         if(!should_prevent_http_predownload ||
-                            time_counter_h_.elapsed() > 1 * 1000)
+                            time_counter_h_.elapsed() > BootStrapGeneralConfig::Inst()->GetWaitTimeForTinydrag() * 1000)
                         {
                             //action
                             ChangeTo2000();

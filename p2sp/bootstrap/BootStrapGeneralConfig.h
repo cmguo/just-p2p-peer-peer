@@ -493,6 +493,11 @@ namespace p2sp
             return minus_value_when_upload_speed_overlarge_;
         }
 
+        boost::uint32_t GetWaitTimeForTinydrag() const
+        {
+            return time_wait_for_tinydrag_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -811,6 +816,9 @@ namespace p2sp
 
         // 上传限速值过大时，每次削减的值
         boost::uint32_t minus_value_when_upload_speed_overlarge_;
+
+        // 点播状态机中用于等待获取tinydrag的时间
+        boost::uint32_t time_wait_for_tinydrag_;
     };
 }
 #endif
