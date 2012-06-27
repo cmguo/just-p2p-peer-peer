@@ -329,7 +329,7 @@ namespace p2sp
             it->second->Stop();
         }
 
-        for (ModIndexer::iterator it = list_mod_indexer_.begin(); it != list_mod_indexer_.end(); ++it)
+        for (ModIndexer::iterator it = report_mod_indexer_.begin(); it != report_mod_indexer_.end(); ++it)
         {
             it->second->Stop();
         }
@@ -341,9 +341,10 @@ namespace p2sp
     {
         StopAllGroups();
         list_endpoint_indexer_.clear();
-        report_mod_indexer_.clear();
-        list_endpoint_indexer_.clear();
+        list_mod_indexer_.clear();
+
         report_endpoint_indexer_.clear();
+        report_mod_indexer_.clear();
     }
 
     void TrackerManager::PPLeave()
