@@ -924,18 +924,24 @@ namespace statistic
         // STAT_DEBUG("Current KeepAliveResponseCount: " << GetTracker(tracker_info).KeepAliveResponseCount << ", KLPInterval: " << keep_alive_interval << " of Tracker: " << tracker_info);
     }
 
-    void StatisticModule::SubmitListRequest(const protocol::TRACKER_INFO& tracker_info)
+    void StatisticModule::SubmitListRequest(const protocol::TRACKER_INFO& tracker_info, const RID &rid)
     {
         GetTracker(tracker_info).ListRequestCount++;
-        // STAT_DEBUG("Current ListRequestCount: " << GetTracker(tracker_info).ListRequestCount << " of Tracker: " << tracker_info);
+        if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
+        {
+            p2p_downloader_statistic_map_[rid]->SubmitDoListRequestCount();
+        }
     }
 
-    void StatisticModule::SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count)
+    void StatisticModule::SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count, const RID &rid)
     {
         STATISTIC_TRACKER_INFO& tracker = GetTracker(tracker_info);
         tracker.ListResponseCount++;
         tracker.LastListReturnPeerCount = peer_count;
-        // STAT_DEBUG("Current ListResponseCount: " << GetTracker(tracker_info).ListResponseCount << ", PeerCount: " << peer_count << " of Tracker: " << tracker_info);
+        if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
+        {
+            p2p_downloader_statistic_map_[rid]->SubmitDoListReponseCount();
+        }
     }
 
     void StatisticModule::SubmitErrorCode(const protocol::TRACKER_INFO& tracker_info, boost::uint8_t error_code)

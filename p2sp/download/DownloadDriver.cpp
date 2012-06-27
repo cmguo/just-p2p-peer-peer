@@ -1212,6 +1212,15 @@ namespace p2sp
         //B2: 本地http server监听端口
         info.http_port = ProxyModule::Inst()->GetHttpPort();
 
+        if (p2p_downloader_)
+        {
+            // C2: 发给tracker用于查询peer list包的总数
+            info.total_list_request_packet_count = p2p_downloader_->GetStatistic()->GetTotalListRequestCount();
+
+            // D2: Tracker返回的list包总数
+            info.total_list_response_packet_count = p2p_downloader_->GetStatistic()->GetTotalListResponseCount();
+        }
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1272,6 +1281,8 @@ namespace p2sp
         log_stream << "&Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
         log_stream << "&A2=" << (uint32_t)info.uTotalDiskSizeInMB;
         log_stream << "&B2=" << (uint16_t)info.http_port;
+        log_stream << "&C2=" << (uint32_t)info.total_list_request_packet_count;
+        log_stream << "&D2=" << (uint32_t)info.total_list_response_packet_count;
 
         string log = log_stream.str();
 

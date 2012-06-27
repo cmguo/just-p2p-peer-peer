@@ -12,7 +12,7 @@
 namespace statistic
 {
     P2PDownloaderStatistic::P2PDownloaderStatistic(const RID& rid) :
-        is_running_(false), resource_id_(rid)
+        is_running_(false), resource_id_(rid), total_list_request_count_(0), total_list_response_count_(0)
     {
     }
 

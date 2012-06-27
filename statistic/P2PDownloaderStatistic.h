@@ -66,6 +66,9 @@ namespace statistic
         void SubmitSnDownloadedBytes(uint32_t downloaded_bytes);
         void SubmitSnUploadedBytes(uint32_t uploaded_bytes);
 
+        void SubmitDoListRequestCount();
+        void SubmitDoListReponseCount();
+
         SPEED_INFO GetSpeedInfo();
 
         SPEED_INFO_EX GetSpeedInfoEx();
@@ -129,6 +132,10 @@ namespace statistic
         boost::uint16_t GetSubPieceRetryRate();
 
         boost::uint16_t GetUDPLostRate();
+
+        boost::uint32_t GetTotalListRequestCount() const { return total_list_request_count_;}
+
+        boost::uint32_t GetTotalListResponseCount() const { return total_list_response_count_;}
 
         //////////////////////////////////////////////////////////////////////////
         // Misc
@@ -203,6 +210,9 @@ namespace statistic
         SpeedInfoStatistic speed_info_;
         SpeedInfoStatistic peer_speed_info_;
         SpeedInfoStatistic sn_speed_info_;
+
+        boost::uint32_t total_list_request_count_;
+        boost::uint32_t total_list_response_count_;
 
         RID resource_id_;
 
@@ -322,6 +332,16 @@ namespace statistic
     inline void P2PDownloaderStatistic::SubmitSnUploadedBytes(uint32_t uploaded_bytes)
     {
         sn_speed_info_.SubmitUploadedBytes(uploaded_bytes);
+    }
+
+    inline void P2PDownloaderStatistic::SubmitDoListRequestCount()
+    {
+        total_list_request_count_++;
+    }
+
+    inline void P2PDownloaderStatistic::SubmitDoListReponseCount()
+    {
+        total_list_response_count_++;
     }
 }
 

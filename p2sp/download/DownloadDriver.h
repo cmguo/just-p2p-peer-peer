@@ -81,6 +81,8 @@ namespace p2sp
         boost::uint32_t       uUsedDiskSizeInMB;                    // Z1: 缓存目录已用大小
         boost::uint32_t       uTotalDiskSizeInMB;                   // A2: 缓存目录设置大小
         boost::uint16_t       http_port;                            // B2: 本地http server监听端口
+        boost::uint32_t       total_list_request_packet_count;      // C2: 发给tracker用于查询peer list包的总数
+        boost::uint32_t       total_list_response_packet_count;     // D2: Tracker返回的list包总数
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

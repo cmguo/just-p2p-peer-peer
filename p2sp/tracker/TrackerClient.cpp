@@ -63,7 +63,7 @@ namespace p2sp
         p2sp::AppModule::Inst()->DoSendPacket(list_request_packet);
 
         // 统计信息
-        statistic::StatisticModule::Inst()->SubmitListRequest(tracker_info_);
+        statistic::StatisticModule::Inst()->SubmitListRequest(tracker_info_, rid);
     }
 
     void TrackerClient::OnListResponsePacket(protocol::ListPacket const & packet)
@@ -81,7 +81,7 @@ namespace p2sp
         p2sp::AppModule::Inst()->AddCandidatePeers(packet.response.resource_id_, peers, is_tracker_for_live_udpserver_);
 
         // 统计信息
-        statistic::StatisticModule::Inst()->SubmitListResponse(tracker_info_, packet.response.peer_infos_.size());
+        statistic::StatisticModule::Inst()->SubmitListResponse(tracker_info_, packet.response.peer_infos_.size(), packet.response.resource_id_);
     }
 
     void TrackerClient::OnReportResponsePacket(protocol::ReportPacket const & packet)

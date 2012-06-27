@@ -179,9 +179,9 @@ namespace statistic
 
         void SubmitKeepAliveResponse(const protocol::TRACKER_INFO& tracker_info, boost::uint16_t keep_alive_interval);
 
-        void SubmitListRequest(const protocol::TRACKER_INFO& tracker_info);
+        void SubmitListRequest(const protocol::TRACKER_INFO& tracker_info, const RID &rid);
 
-        void SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count);
+        void SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count, const RID &rid);
 
         void SubmitErrorCode(const protocol::TRACKER_INFO& tracker_info, boost::uint8_t error_code);
 
