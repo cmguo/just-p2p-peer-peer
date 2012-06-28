@@ -1217,7 +1217,7 @@ namespace p2sp
         //B2: 本地http server监听端口
         info.http_port = ProxyModule::Inst()->GetHttpPort();
 
-        if (p2p_downloader_)
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
             // C2: 发给tracker用于查询peer list包的总数
             info.total_list_request_packet_count = p2p_downloader_->GetStatistic()->GetTotalListRequestCount();
