@@ -236,7 +236,7 @@ namespace p2sp
                 // 获取Drag失败要汇报，drag_fetch_result定义见DownloadDriver.h
                 uint32_t drag_fetch_result = 0;
                 drag_fetch_result |= tried_times_ << 24;
-                download_driver_->ReportDragFetchResult(drag_fetch_result);
+                download_driver_->ReportDragFetchResult(drag_fetch_result, 0, 0, 0, tried_times_, 0);
             }
             else
             {
@@ -300,6 +300,8 @@ namespace p2sp
 
             // drag_fetch_result的定义见downloaddriver.h
             uint32_t drag_fetch_result = 0x80000000;
+            uint32_t is_parse_tinydrag_success = 0;
+
             if (using_udp_proxy_)
             {
                 drag_fetch_result |= 0x40000000;
@@ -312,9 +314,11 @@ namespace p2sp
             {
                 // Drag获取成功并解析成功
                 drag_fetch_result |= 0x20000000;
+                is_parse_tinydrag_success = 1;
             }
-
-            download_driver_->ReportDragFetchResult(drag_fetch_result);
+            
+            download_driver_->ReportDragFetchResult(drag_fetch_result, 1, using_udp_proxy_, 
+                is_parse_tinydrag_success, tried_times_, fetch_timer_.elapsed());
 
             if (using_udp_proxy_)
             {

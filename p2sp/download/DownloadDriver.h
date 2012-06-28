@@ -83,6 +83,11 @@ namespace p2sp
         boost::uint16_t       http_port;                            // B2: 本地http server监听端口
         boost::uint32_t       total_list_request_packet_count;      // C2: 发给tracker用于查询peer list包的总数
         boost::uint32_t       total_list_response_packet_count;     // D2: Tracker返回的list包总数
+        boost::uint32_t       is_fetch_tinydrag_success;            // E2: 是否获取成功(成功:1,失败:0)
+        boost::uint32_t       is_fetch_tinydrag_from_udp;           // F2: 获取来源(http:0, udp:1)
+        boost::uint32_t       is_parse_tinydrag_success;            // G2: 是否解析成功(成功:1,失败:0)
+        boost::uint32_t       fetch_tinydrag_count;                 // H2: 获取次数(无论是否获取成功都有)
+        boost::uint32_t       fetch_tinydrag_time;                  // I2: 获取时间(ms)(仅仅在获取成功时设置)
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
@@ -220,7 +225,17 @@ namespace p2sp
         void SetVipLevel(VIP_LEVEL vip) {vip_level_ = vip;}
 
         void SetRidInfo(const protocol::RidInfo & ridinfo);
-        void ReportDragFetchResult(uint32_t drag_fetch_result){ drag_fetch_result_ = drag_fetch_result;}
+        void ReportDragFetchResult(uint32_t drag_fetch_result, uint32_t is_fetch_tinydrag_success, 
+            uint32_t is_fetch_tinydrag_from_udp, uint32_t is_parse_tinydrag_success, 
+            uint32_t fetch_tinydrag_count, uint32_t fetch_tinydrag_time)
+        { 
+            drag_fetch_result_ = drag_fetch_result;
+            is_fetch_tinydrag_success_ = is_fetch_tinydrag_success;
+            is_fetch_tinydrag_from_udp_ = is_fetch_tinydrag_from_udp;
+            is_parse_tinydrag_success_ = is_parse_tinydrag_success;
+            fetch_tinydrag_count_ = fetch_tinydrag_count;
+            fetch_tinydrag_time_ = fetch_tinydrag_time;
+        }
 
         bool IsDragLocalPlayForClient();
 
@@ -425,6 +440,11 @@ namespace p2sp
         // 4-7: 获取次数(无论是否获取成功都有)
         // 8-31：获取时间(ms)(仅仅在获取成功时设置)
         uint32_t drag_fetch_result_;
+        boost::uint32_t       is_fetch_tinydrag_success_;      // 是否获取成功(成功:1,失败:0)
+        boost::uint32_t       is_fetch_tinydrag_from_udp_;     // 获取来源(http:0, udp:1)
+        boost::uint32_t       is_parse_tinydrag_success_;      // 是否解析成功(成功:1,失败:0)
+        boost::uint32_t       fetch_tinydrag_count_;           // 获取次数(无论是否获取成功都有)
+        boost::uint32_t       fetch_tinydrag_time_;            // 获取时间(ms)(仅仅在获取成功时设置)
 
         boost::uint32_t tiny_drag_http_status_;
 

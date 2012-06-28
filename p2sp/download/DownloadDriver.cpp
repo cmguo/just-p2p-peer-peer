@@ -130,6 +130,11 @@ namespace p2sp
         , drag_http_status_(0)
         , openservice_head_length_(0)
         , drag_fetch_result_(0)
+        , is_fetch_tinydrag_success_(-1)
+        , is_fetch_tinydrag_from_udp_(-1)
+        , is_parse_tinydrag_success_(-1)
+        , fetch_tinydrag_count_(-1)
+        , fetch_tinydrag_time_(-1)
         , bak_host_status_(BAK_HOST_NONE)
         , max_rest_playable_time_(0)
         , tiny_drag_http_status_(0)
@@ -1221,6 +1226,21 @@ namespace p2sp
             info.total_list_response_packet_count = p2p_downloader_->GetStatistic()->GetTotalListResponseCount();
         }
 
+        //E2: 是否获取成功(成功:1,失败:0)
+        info.is_fetch_tinydrag_success = is_fetch_tinydrag_success_;
+        
+        //F2: 获取来源(http:0, udp:1)
+        info.is_fetch_tinydrag_from_udp = is_fetch_tinydrag_from_udp_;
+
+        //G2: 是否解析成功(成功:1,失败:0)
+        info.is_parse_tinydrag_success = is_parse_tinydrag_success_;
+
+        //H2: 获取次数(无论是否获取成功都有)
+        info.fetch_tinydrag_count = fetch_tinydrag_count_;
+
+        //I2: 获取时间(ms)(仅仅在获取成功时设置)
+        info.fetch_tinydrag_time = fetch_tinydrag_time_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1283,6 +1303,11 @@ namespace p2sp
         log_stream << "&B2=" << (uint16_t)info.http_port;
         log_stream << "&C2=" << (uint32_t)info.total_list_request_packet_count;
         log_stream << "&D2=" << (uint32_t)info.total_list_response_packet_count;
+        log_stream << "&E2=" << (uint32_t)info.is_fetch_tinydrag_success;
+        log_stream << "&F2=" << (uint32_t)info.is_fetch_tinydrag_from_udp;
+        log_stream << "&G2=" << (uint32_t)info.is_parse_tinydrag_success;
+        log_stream << "&H2=" << (uint32_t)info.fetch_tinydrag_count;
+        log_stream << "&I2=" << (uint32_t)info.fetch_tinydrag_time;
 
         string log = log_stream.str();
 
