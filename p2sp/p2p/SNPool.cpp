@@ -17,9 +17,26 @@ namespace p2sp
         }
     }
 
+    void SNPool::AddVipSN(const std::vector<protocol::SuperNodeInfo> &vip_sn_server_list)
+    {
+        for (std::vector<protocol::SuperNodeInfo>::const_iterator iter = vip_sn_server_list.begin();
+            iter != vip_sn_server_list.end(); ++iter)
+        {
+            boost::asio::ip::udp::endpoint ep = framework::network::Endpoint(
+                (*iter).ip_, (*iter).port_);
+
+            vip_sn_server_list_.push_back(ep);
+        }
+    }
+
     const std::list<boost::asio::ip::udp::endpoint> & SNPool::GetAllSNList()
     {
         return sn_server_list_;
+    }
+
+    const std::list<boost::asio::ip::udp::endpoint> & SNPool::GetVipSnList()
+    {
+        return vip_sn_server_list_;
     }
 
     void SNPoolObject::Add(const std::list<boost::asio::ip::udp::endpoint> & sn_list)

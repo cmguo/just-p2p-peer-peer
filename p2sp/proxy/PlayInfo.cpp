@@ -458,6 +458,23 @@ namespace p2sp
         return false;
     }
 
+    bool PlayInfo::ParseUint32Value(const network::Uri& uri, uint32_t& value, string key)
+    {
+        value = 0;
+        string value_str = uri.getparameter(key);
+
+        if (value_str.length() > 0)
+        {
+            boost::system::error_code ec = framework::string::parse2(value_str, value);
+            if (!ec)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool PlayInfo::ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level)
     {
         string level_str = uri.getparameter("level");
@@ -580,6 +597,11 @@ namespace p2sp
 
             // 解析客户端请求中的vip字段
             ParseVip(uri, play_info->vip_);
+
+            if (false == ParseUint32Value(uri, play_info->is_vip_channel_, "vipchannel"))
+            {
+                play_info->is_vip_channel_ = 0;
+            }
 
             if (false == ParseIsPreroll(uri, play_info->is_preroll_)) {
                 play_info->is_preroll_ = 0;
