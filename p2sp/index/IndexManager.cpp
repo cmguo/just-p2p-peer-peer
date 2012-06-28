@@ -46,7 +46,6 @@ namespace p2sp
         , is_have_change_domain_(false)
         , is_resolving_(false)
         , is_have_sn_list_(false)
-        , is_have_vip_sn_list_(false)
 
         , query_vod_list_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_list_tracker_list_timer_))
         , query_vod_report_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_report_tracker_list_timer_))
@@ -61,8 +60,6 @@ namespace p2sp
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_bootstrap_config_timer_))
         , query_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_sn_list_timer_))
-        , query_vip_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
-            boost::bind(&IndexManager::OnTimerElapsed, this, &query_vip_sn_list_timer_))
         , is_running_(false)
         , failed_times_(0)
         , resolve_times_(0)
@@ -110,11 +107,6 @@ namespace p2sp
         if (false == is_have_sn_list_)
         {
             DoQuerySnList();
-        }
-
-        if (false == is_have_vip_sn_list_)
-        {
-            DoQueryVipSnList();
         }
     }
 
@@ -166,7 +158,6 @@ namespace p2sp
             DoQueryNotifyServerList();
 #endif
             DoQuerySnList();
-            DoQueryVipSnList();
         }
 
         LOG(__WARN, "index", "IndexManager::OnResolverFailed " << error_code);
@@ -235,7 +226,6 @@ namespace p2sp
         change_domain_resolver_timer_.stop();
 
         query_sn_list_timer_.stop();
-        query_vip_sn_list_timer_.stop();
 
         query_live_list_tracker_list_timer_.stop();
         query_live_report_tracker_list_timer_.stop();
@@ -374,9 +364,6 @@ namespace p2sp
             break;
         case protocol::QuerySnListPacket::Action:
             OnQuerySnListPacket((protocol::QuerySnListPacket const &)packet);
-            break;
-        case protocol::QueryVipSnListPacket::Action:
-            OnQueryVipSnListPacket((protocol::QueryVipSnListPacket const &)packet);
             break;
         default:
             assert(0);
@@ -558,10 +545,6 @@ namespace p2sp
         else if (pointer == &query_sn_list_timer_)
         {
             OnQuerySnListTimerElapsed(times);
-        }
-        else if (pointer == &query_vip_sn_list_timer_)
-        {
-            OnQueryVipSnListTimerElapsed(times);
         }
         else
         {    // 本类中不存在这个定时器
@@ -843,22 +826,6 @@ namespace p2sp
         AppModule::Inst()->DoSendPacket(query_sn_list_packet);
     }
 
-    void IndexManager::DoQueryVipSnList()
-    {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
-        query_vip_sn_list_timer_.interval(last_query_sn_list_interval_times_);
-        query_vip_sn_list_timer_.start();
-
-        //查询VIP影片专用SN
-        protocol::QueryVipSnListPacket query_vip_sn_list_packet(protocol::Packet::NewTransactionID(),
-            protocol::PEER_VERSION, server_list_endpoint_);
-        AppModule::Inst()->DoSendPacket(query_vip_sn_list_packet);
-    }
-
     void IndexManager::OnQuerySnListPacket(protocol::QuerySnListPacket const & packet)
     {
         if (is_running_ == false)
@@ -878,28 +845,6 @@ namespace p2sp
             last_query_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
 
             SNPool::Inst()->AddSN(packet.response.super_node_infos_);
-        }
-    }
-
-    void IndexManager::OnQueryVipSnListPacket(protocol::QueryVipSnListPacket const & packet)
-    {
-        if (is_running_ == false)
-        {
-            return;
-        }
-
-        // 判断时都出错
-        if (packet.error_code_ == 0)
-        {
-            // 成功收到服务器回复，定时器时间设置为比较长的时间
-            query_vip_sn_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
-            query_vip_sn_list_timer_.start();
-            is_have_vip_sn_list_ = true;
-            failed_times_ = 0;
-            resolve_times_ = 0;
-            last_query_vip_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
-
-            SNPool::Inst()->AddVipSN(packet.response.super_node_infos_);
         }
     }
 
@@ -926,32 +871,6 @@ namespace p2sp
         if (last_query_sn_list_interval_times_ > DEFAULT_QUERY_INTERVAL)
         {
             last_query_sn_list_interval_times_ = DEFAULT_QUERY_INTERVAL;
-        }
-    }
-
-    void IndexManager::OnQueryVipSnListTimerElapsed(boost::uint32_t times)
-    {
-        if (false == is_running_)
-        {
-            return;
-        }
-
-        // 如果是成功状态
-        // 定时时间4个小时
-        if (is_resolving_)
-        {
-            return;
-        }
-
-        ++failed_times_;
-
-        DoQueryVipSnList();
-
-        // 指数增长
-        last_query_vip_sn_list_interval_times_ *= 2;
-        if (last_query_vip_sn_list_interval_times_ > DEFAULT_QUERY_INTERVAL)
-        {
-            last_query_vip_sn_list_interval_times_ = DEFAULT_QUERY_INTERVAL;
         }
     }
 

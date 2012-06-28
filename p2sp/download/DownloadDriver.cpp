@@ -2863,14 +2863,7 @@ namespace p2sp
             // 观看视频，启动SN
             if (p2p_downloader_ && !is_sn_added_)
             {
-                if (1 == proxy_connection_->GetPlayInfo()->GetVipChannel())
-                {
-                    p2p_downloader_->InitSnList(SNPool::Inst()->GetVipSnList());
-                }
-                else
-                {
-                    p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
-                }
+                p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
                 is_sn_added_ = true;
             }
         }
