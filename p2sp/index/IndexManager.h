@@ -54,6 +54,8 @@ namespace p2sp
 
         void DoQuerySnList();
 
+        void DoQueryVipSnList();
+
         void OnUdpRecv(protocol::ServerPacket const & packet_header);
 
     public:
@@ -76,6 +78,8 @@ namespace p2sp
 
         void OnQuerySnListPacket(protocol::QuerySnListPacket const & packet);
 
+        void OnQueryVipSnListPacket(protocol::QueryVipSnListPacket const & packet);
+
     protected:
 
         void OnTimerElapsed(
@@ -97,6 +101,7 @@ namespace p2sp
         void OnQueryBootStrapConfigTimerElapsed(boost::uint32_t times);
 
         void OnQuerySnListTimerElapsed(boost::uint32_t times);
+        void OnQueryVipSnListTimerElapsed(boost::uint32_t times);
 
     private:
         boost::asio::io_service & io_svc_;
@@ -114,6 +119,7 @@ namespace p2sp
         
         bool is_have_bootstrap_config_;
         bool is_have_sn_list_;
+        bool is_have_vip_sn_list_;
 
         framework::timer::OnceTimer query_vod_list_tracker_list_timer_;
         framework::timer::OnceTimer query_vod_report_tracker_list_timer_;
@@ -128,6 +134,7 @@ namespace p2sp
 #endif
         framework::timer::OnceTimer query_bootstrap_config_timer_;
         framework::timer::OnceTimer query_sn_list_timer_;
+        framework::timer::OnceTimer query_vip_sn_list_timer_;
 
         volatile bool is_running_;
 
@@ -144,6 +151,7 @@ namespace p2sp
         uint32_t last_query_live_report_tracker_list_interval_;
         uint32_t last_query_bootstrap_config_interval_times_;
         uint32_t last_query_sn_list_interval_times_;
+        uint32_t last_query_vip_sn_list_interval_times_;
 
         // Resolver
         network::Resolver::p resolver_;

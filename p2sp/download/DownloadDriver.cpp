@@ -2889,7 +2889,14 @@ namespace p2sp
                     LoadSnOnCDN();
                 }
 
-                p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
+                if (1 == proxy_connection_->GetPlayInfo()->GetVipChannel())
+                {
+                    p2p_downloader_->InitSnList(SNPool::Inst()->GetVipSnList());
+                }
+                else
+                {
+                    p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
+                }
                 is_sn_added_ = true;
             }
         }

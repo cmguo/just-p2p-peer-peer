@@ -109,6 +109,8 @@ namespace p2sp
 
         DownloadLevel GetLevel() const { return level_;}
 
+        boost::uint32_t GetVipChannel() const { return is_vip_channel_;}
+
         string GetChannelName() const { return channel_name_;}
 
         string GetFileRateType() const { return file_rate_type_;}
@@ -177,6 +179,8 @@ namespace p2sp
 
         static bool ParseIsPreroll(const network::Uri& uri, bool& is_preroll);
 
+        static bool ParseUint32Value(const network::Uri& uri, uint32_t &value, string key);
+
         static bool ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level);
 
         // 解析一个频道所有的rid
@@ -217,6 +221,7 @@ namespace p2sp
             , live_pause_(false)
             , is_preroll_(false)
             , level_(PASSIVE_DOWNLOAD_LEVEL)
+            , is_vip_channel_(0)
         {
         }
 
@@ -245,6 +250,7 @@ namespace p2sp
         string channel_name_;
         string file_rate_type_;
         DownloadLevel level_;
+        boost::uint32_t is_vip_channel_;
 
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid

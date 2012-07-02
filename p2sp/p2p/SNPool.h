@@ -17,7 +17,9 @@ namespace p2sp
         }
 
         void AddSN(const std::vector<protocol::SuperNodeInfo> & sn_server_list);
+        void AddVipSN(const std::vector<protocol::SuperNodeInfo> &vip_sn_server_list);
         const std::list<boost::asio::ip::udp::endpoint> & GetAllSNList();
+        const std::list<boost::asio::ip::udp::endpoint> & GetVipSnList();
 
     private:
         SNPool()
@@ -27,6 +29,7 @@ namespace p2sp
         static boost::shared_ptr<SNPool> inst_;
 
         std::list<boost::asio::ip::udp::endpoint> sn_server_list_;
+        std::list<boost::asio::ip::udp::endpoint> vip_sn_server_list_;
     };
 
     class SNPoolObject

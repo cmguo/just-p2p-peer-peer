@@ -142,7 +142,7 @@ namespace p2sp
         , ping_time_net_check_big_upload_speed_(20)
         , ping_time_net_check_small_upload_speed_(80)
         , minus_value_when_upload_speed_overlarge_(5)
-        , load_sn_on_cdn_(true)
+        , load_sn_on_cdn_(false)
         , time_wait_for_tinydrag_(1)
         , sn_port_on_cdn_(19001)
     {
