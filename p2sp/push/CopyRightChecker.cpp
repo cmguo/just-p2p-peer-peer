@@ -57,9 +57,13 @@ namespace p2sp
         is_running_ = false;
 
         boost::system::error_code ec;
-        http_client_->cancel(ec);
-        http_client_->close(ec);
-        http_client_.reset();
+
+        if (http_client_)
+        {
+            http_client_->cancel(ec);
+            http_client_->close(ec);
+            http_client_.reset();
+        }
 
         listener_.reset();
     }
