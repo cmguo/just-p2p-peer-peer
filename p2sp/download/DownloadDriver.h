@@ -310,6 +310,9 @@ namespace p2sp
 
         void DoCDNFlowStatistic();
 
+        void LoadSnOnCDN();
+
+        void GetSnListOnCDN(std::list<boost::asio::ip::udp::endpoint> &sn_list);
 
     protected:
         // IDownloadDriver 接口消息

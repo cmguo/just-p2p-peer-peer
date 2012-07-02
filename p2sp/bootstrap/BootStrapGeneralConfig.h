@@ -493,9 +493,19 @@ namespace p2sp
             return minus_value_when_upload_speed_overlarge_;
         }
 
+        bool NeedLoadSnOnCDN() const
+        {
+            return load_sn_on_cdn_;
+        }
+
         boost::uint32_t GetWaitTimeForTinydrag() const
         {
             return time_wait_for_tinydrag_;
+        }
+
+        boost::uint32_t GetSnPortOnCDN() const
+        {
+            return sn_port_on_cdn_;
         }
 
     private:
@@ -801,6 +811,9 @@ namespace p2sp
         // 手动切换码流时，如果剩余时间小于这个值，则http启动
         boost::uint32_t rest_playable_time_delim_when_switching_;
 
+        // 是否加载CDN节点上的SN
+        bool load_sn_on_cdn_;
+
         bool write_block_when_full_;
 
         bool write_block_when_verified_;
@@ -819,6 +832,9 @@ namespace p2sp
 
         // 点播状态机中用于等待获取tinydrag的时间
         boost::uint32_t time_wait_for_tinydrag_;
+
+        // CDN上配置的SN端口
+        boost::uint32_t sn_port_on_cdn_;
     };
 }
 #endif

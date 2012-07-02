@@ -1776,6 +1776,11 @@ namespace p2sp
         }
     }
 
+    void P2PDownloader::AddSnOnCDN(const std::list<boost::asio::ip::udp::endpoint> & sn_list)
+    {
+        sn_pool_object_.Add(sn_list);
+    }
+
     boost::int32_t P2PDownloader::GetDownloadPriority()
     {
         if (vip_level_ && GetMinRestTimeInMilliSecond() < VIP_URGENT_TIME_IN_SECOND)

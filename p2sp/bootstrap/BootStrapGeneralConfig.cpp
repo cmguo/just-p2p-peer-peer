@@ -142,7 +142,9 @@ namespace p2sp
         , ping_time_net_check_big_upload_speed_(20)
         , ping_time_net_check_small_upload_speed_(80)
         , minus_value_when_upload_speed_overlarge_(5)
+        , load_sn_on_cdn_(true)
         , time_wait_for_tinydrag_(1)
+        , sn_port_on_cdn_(19001)
     {
     }
 
@@ -320,7 +322,9 @@ namespace p2sp
                 ("config.pbus", po::value<uint32_t>()->default_value(ping_time_net_check_big_upload_speed_))
                 ("config.psus", po::value<uint32_t>()->default_value(ping_time_net_check_small_upload_speed_))
                 ("config.mvul", po::value<uint32_t>()->default_value(minus_value_when_upload_speed_overlarge_))
-                ("config.twtd",po::value<uint32_t>()->default_value(time_wait_for_tinydrag_))
+                ("config.twtd", po::value<uint32_t>()->default_value(time_wait_for_tinydrag_))
+                ("config.lsc", po::value<bool>()->default_value(load_sn_on_cdn_))
+                ("config.spc", po::value<uint32_t>()->default_value(sn_port_on_cdn_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -454,7 +458,9 @@ namespace p2sp
             ping_time_net_check_big_upload_speed_ = vm["config.pbus"].as<uint32_t>();
             ping_time_net_check_small_upload_speed_ = vm["config.psus"].as<uint32_t>();
             minus_value_when_upload_speed_overlarge_ = vm["config.mvul"].as<uint32_t>();
+            load_sn_on_cdn_ = vm["config.lsc"].as<bool>();
             time_wait_for_tinydrag_ = vm["config.twtd"].as<uint32_t>();
+            sn_port_on_cdn_ = vm["config.spc"].as<uint32_t>();
 
             if (save_to_disk)
             {

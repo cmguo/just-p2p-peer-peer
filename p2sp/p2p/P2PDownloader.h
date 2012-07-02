@@ -194,6 +194,7 @@ namespace p2sp
         void SetSnEnable(bool enable);
 
         void InitSnList(const std::list<boost::asio::ip::udp::endpoint> & sn_list);
+        void AddSnOnCDN(const std::list<boost::asio::ip::udp::endpoint> & sn_list);
 
         boost::uint32_t GetP2PMaxConnectionCount() const {return p2p_max_connect_count_; }
         boost::uint32_t GetP2PMinConnectionCount() const {return p2p_min_connect_count_; }

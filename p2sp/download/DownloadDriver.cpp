@@ -2884,6 +2884,11 @@ namespace p2sp
             // 观看视频，启动SN
             if (p2p_downloader_ && !is_sn_added_)
             {
+                if (BootStrapGeneralConfig::Inst()->NeedLoadSnOnCDN())
+                {
+                    LoadSnOnCDN();
+                }
+
                 p2p_downloader_->InitSnList(SNPool::Inst()->GetAllSNList());
                 is_sn_added_ = true;
             }
@@ -2903,6 +2908,54 @@ namespace p2sp
                 {
                     p2p_downloader_->SetSnEnable(false);
                     statistic_->SetSnState(0);
+                }
+            }
+        }
+    }
+
+    void DownloadDriver::LoadSnOnCDN()
+    {
+        std::list<boost::asio::ip::udp::endpoint> sn_list;
+        GetSnListOnCDN(sn_list);
+
+        if (!sn_list.empty())
+        {
+            p2p_downloader_->AddSnOnCDN(sn_list);
+        }
+    }
+
+    void DownloadDriver::GetSnListOnCDN(std::list<boost::asio::ip::udp::endpoint> &sn_list)
+    {
+        PlayInfo::p play_info = proxy_connection_->GetPlayInfo();
+        boost::regex re_genneration("http://(.+)/\\d+/.*");
+        string ip_address;
+        boost::cmatch what;
+        string url = play_info->GetUrlInfo().url_;
+
+        if (boost::regex_match(url.c_str(), what, re_genneration))
+        {
+            ip_address.assign(what[1].first, what[1].second);
+        }
+
+        boost::asio::ip::address addr1, addr2;
+        boost::system::error_code ec;
+        addr1 = addr1.from_string(ip_address, ec);
+
+        if (!ec)
+        {
+            boost::asio::ip::udp::endpoint ep(addr1, BootStrapGeneralConfig::Inst()->GetSnPortOnCDN());
+            sn_list.push_back(ep);
+        }
+
+        if (!play_info->GetBakHosts().empty())
+        {
+            for (int index = 0; index < play_info->GetBakHosts().size(); index++)
+            {
+                addr2 = addr2.from_string(play_info->GetBakHosts()[index], ec);
+                if (!ec)
+                {
+                    boost::asio::ip::udp::endpoint end_point(addr2, BootStrapGeneralConfig::Inst()->GetSnPortOnCDN());
+                    sn_list.push_back(end_point);
                 }
             }
         }
