@@ -72,7 +72,6 @@ namespace p2sp
 #endif
 
     AppModule::p AppModule::inst_;
-    boost::mutex AppModule::mu_;
 
     AppModule::AppModule()
         : is_running_(false)
@@ -382,8 +381,8 @@ namespace p2sp
         }
 
         LOG4CPLUS_INFO_LOG(logger_appmodule, "AppModule has stopped.");
-        // AppModule暂时不析构
-        // inst_.reset();
+
+        inst_.reset();
 
 #ifdef NEED_TO_POST_MESSAGE
         WindowsMessage::Inst().PostWindowsMessage(UM_CORE_STOP, (WPARAM)0, (LPARAM)lpCoreStopData);

@@ -237,15 +237,12 @@ public:
 
     boost::uint16_t upnp_port_;
 
-    static boost::mutex mu_;
-
 private:
     AppModule();
     static AppModule::p inst_;
 public:
     static AppModule::p Inst()
     {
-        boost::mutex::scoped_lock lock(mu_);
         if (!inst_)
         {
             inst_.reset(new AppModule());

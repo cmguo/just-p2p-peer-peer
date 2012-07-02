@@ -13,7 +13,6 @@ namespace p2sp
 #endif
 
     TrackerModule::p TrackerModule::inst_;
-    boost::mutex TrackerModule::mu_;
 
     void TrackerModule::Start(const string& config_path)
     {
@@ -37,13 +36,18 @@ namespace p2sp
         live_tracker_manager_.Stop();
 
         is_running_ = false;
-        // TrackerModuleÔÝÊ±²»Îö¹¹
-        //inst_.reset();
+
+        inst_.reset();
     }
 
     void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
         bool is_vod, TrackerType tracker_type)
     {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
         if (is_vod)
         {
             vod_tracker_manager_.SetTrackerList(group_count, tracker_s, true, tracker_type);
@@ -90,15 +94,8 @@ namespace p2sp
             return;
         }
 
-        try
-        {
-            vod_tracker_manager_.PPLeave();
-            live_tracker_manager_.PPLeave();
-        }
-        catch (std::exception)
-        {
-        
-        }
+        vod_tracker_manager_.PPLeave();
+        live_tracker_manager_.PPLeave();
     }
 
     void TrackerModule::DoReport(bool is_vod)

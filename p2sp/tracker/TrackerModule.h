@@ -47,11 +47,9 @@ namespace p2sp
 
     private:
         static TrackerModule::p inst_;
-        static boost::mutex mu_;
     public:
         static TrackerModule::p Inst()
         {
-            boost::mutex::scoped_lock lock(mu_);
             if (!inst_)
             {
                 inst_.reset(new TrackerModule());

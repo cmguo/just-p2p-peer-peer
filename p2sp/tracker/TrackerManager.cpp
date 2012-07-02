@@ -224,7 +224,10 @@ namespace p2sp
             boost::asio::ip::udp::endpoint endpoint = framework::network::Endpoint(iter->IP,
                 iter->Port);
 
-            endpoint_indexer[endpoint] = mod_indexer[iter->ModNo];
+            if (is_vod_ || tracker_type == p2sp::LIST || !iter->IsTrackerForLiveUdpServer())
+            {
+                endpoint_indexer[endpoint] = mod_indexer[iter->ModNo];
+            }
         }
 
         if (is_vod_ && tracker_type == p2sp::REPORT)
@@ -330,7 +333,17 @@ namespace p2sp
             it->second->Stop();
         }
 
+        for (EndpointIndexer::iterator it = list_endpoint_indexer_.begin(); it != list_endpoint_indexer_.end(); ++it)
+        {
+            it->second->Stop();
+        }
+
         for (ModIndexer::iterator it = report_mod_indexer_.begin(); it != report_mod_indexer_.end(); ++it)
+        {
+            it->second->Stop();
+        }
+
+        for (EndpointIndexer::iterator it = report_endpoint_indexer_.begin(); it != report_endpoint_indexer_.end(); ++it)
         {
             it->second->Stop();
         }
