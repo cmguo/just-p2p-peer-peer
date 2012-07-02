@@ -11,11 +11,11 @@
 #include "p2sp/AppModule.h"
 #include "p2sp/download/DownloadDriver.h"
 
-#define OPEN_DEBUG(message) LOG(__WARN, "openservice", __FUNCTION__ << " " << message)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_open_service_proxy = log4cplus::Logger::getInstance("[open_service_proxy]");
+#endif
 
     OpenServiceProxySender::p OpenServiceProxySender::create(network::HttpServer::pointer http_server_socket, ProxyConnection::p proxy_connection)
     {
@@ -62,7 +62,7 @@ namespace p2sp
 
         file_length_ = 0;
 
-        OPEN_DEBUG("start_offset=" << start_offset_);
+        LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "start_offset=" << start_offset_);
     }
 
     void OpenServiceProxySender::Stop()
@@ -112,7 +112,8 @@ namespace p2sp
 
         if (head_length_ == (uint32_t)-1)
         {
-            OPEN_DEBUG("head_length==-1 start_position=" << start_position << " buffer_length=" << buffer.Length());
+            LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "head_length==-1 start_position=" << start_position 
+                << " buffer_length=" << buffer.Length());
             // wait for header response
             return;
         }
@@ -137,7 +138,8 @@ namespace p2sp
                 // calc content length
                 uint32_t content_length = file_length_ - key_frame_position_ + media_header.Length();
 
-                OPEN_DEBUG("media_header_length=" << media_header.Length() << " content_length=" << content_length);
+                LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "media_header_length=" << media_header.Length() 
+                    << " content_length=" << content_length);
 
                 // send http header
                 if (!header_response_template_) {
@@ -159,7 +161,8 @@ namespace p2sp
                     // std::set content length
                     header_response_template_->SetContentLength(content_length);
                     // send head
-                    OPEN_DEBUG("mock response:\n" << header_response_template_->ToString());
+                    LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "mock response:\n" 
+                        << header_response_template_->ToString());
                     // send
                     http_server_socket_->HttpSendHeader(header_response_template_->ToString());
                 }
@@ -213,11 +216,12 @@ namespace p2sp
             header_response_template_ = http_response;
         }
         else {
-            OPEN_DEBUG(" rid_content_length=" << file_length_ << " server_content_length=" << content_length);
+            LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, " rid_content_length=" << file_length_ 
+                << " server_content_length=" << content_length);
             // uint32_t i = file_length_;
         }
 
-        OPEN_DEBUG("file_length=" << file_length_);
+        LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "file_length=" << file_length_);
     }
     // 失败
     void OpenServiceProxySender::OnNotice403Header()
@@ -228,7 +232,7 @@ namespace p2sp
         if (true == is_response_header_)
             return;
 
-        OPEN_DEBUG("");
+        LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "");
 
         http_server_socket_->HttpSend403Header();
     }
@@ -248,11 +252,12 @@ namespace p2sp
             // head_buffer_.Malloc(head_length_);
             head_buffer_.Malloc(head_length_);
 
-            OPEN_DEBUG("head_length=" << head_length << " key_frame=" << key_frame_position_ << " head_offset=" << header_offset_in_first_piece_);
+            LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "head_length=" << head_length << " key_frame=" 
+                << key_frame_position_ << " head_offset=" << header_offset_in_first_piece_);
         }
         else
         {
-            OPEN_DEBUG("head_length=" << head_length << "(Too Large)");
+            LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "head_length=" << head_length << "(Too Large)");
         }
     }
 }

@@ -6,11 +6,11 @@
 #include "p2sp/p2s/HttpDownloadSpeedLimiter.h"
 #include "p2sp/AppModule.h"
 
-#define HTTPDOWNLIMITER_DEBUG(msg) LOG(__DEBUG, "http_speed_limiter", __FUNCTION__ << " " << msg)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("http_speed_limiter");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_httpspeed_limiter = log4cplus::Logger::getInstance("[http_download_speed_limiter]");
+#endif
 
     const uint32_t DOWNLIMIT_MIN_INTERVAL_IN_MS = 1000;
 
@@ -32,16 +32,16 @@ namespace p2sp
 
     void HttpDownloadSpeedLimiter::OnTimerElapsed(framework::timer::Timer * pointer)
     {
-        HTTPDOWNLIMITER_DEBUG("pointer " << pointer << ", times = " << pointer->times());
+        LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "pointer " << pointer << ", times = " << pointer->times());
         if (pointer == &tick_timer_)
         {
-            HTTPDOWNLIMITER_DEBUG("data_queue_.size() = " << data_queue_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "data_queue_.size() = " << data_queue_.size());
             for (packet_send_count_per_tick_ = 0; packet_send_count_per_tick_ < packet_number_cur_tick_ && !data_queue_.empty();)
             {
                 network::HttpClient<protocol::SubPieceContent>::p http_client = data_queue_.front()->GetHttpClient();
                 if (http_client && !http_client->IsRequesting())
                 {
-                    HTTPDOWNLIMITER_DEBUG("http_client->HttpRecvSubPiece");
+                    LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "http_client->HttpRecvSubPiece");
                     http_client->HttpRecvSubPiece();
                 }
                 ++packet_send_count_per_tick_;
@@ -56,14 +56,14 @@ namespace p2sp
 
         if (!http_client)
         {
-            HTTPDOWNLIMITER_DEBUG("HttpClient is Null!");
+            LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "HttpClient is Null!");
             return;
         }
 
         if (GetSpeedLimitInKBps() < 0)
         {
             // 不限速
-            HTTPDOWNLIMITER_DEBUG("unlimit Speed");
+            LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "unlimit Speed");
             http_client->HttpRecvSubPiece();
             return;
         }
@@ -77,7 +77,7 @@ namespace p2sp
             }
             else
             {
-                HTTPDOWNLIMITER_DEBUG("push in the queue!");
+                LOG4CPLUS_DEBUG_LOG(logger_httpspeed_limiter, "push in the queue!");
                 data_queue_.push_back(http_connection);
             }
         }

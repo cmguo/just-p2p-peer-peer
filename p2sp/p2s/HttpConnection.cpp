@@ -18,16 +18,11 @@
 
 #include "network/Uri.h"
 
-#define HTTP_DEBUG(s)    LOG(__DEBUG, "http", s)
-#define HTTP_INFO(s)    LOG(__INFO, "http", s)
-#define HTTP_EVENT(s)    LOG(__EVENT, "http", s)
-#define HTTP_WARN(s)    LOG(__WARN, "http", s)
-#define HTTP_ERROR(s)    LOG(__ERROR, "http", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2s");
-
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_http_connection = log4cplus::Logger::getInstance("[http_connection]");
+#endif
     uint32_t DELAY_CONNECT_TIME = 1000;
     const uint32_t HTTP_SLEEP_TIME = 1*1000;
     const uint32_t HTTP_PAUSING_SLEEP_TIME = 8*1000;
@@ -92,8 +87,9 @@ namespace p2sp
         if (is_running_ == true)
             return;
 
-        HTTP_EVENT("HttpConnection Start" << shared_from_this());
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " is_open_service = " << is_open_service);
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection Start" << shared_from_this());
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " is_open_service = " 
+            << is_open_service);
 
         is_running_ = true;
 
@@ -112,7 +108,7 @@ namespace p2sp
         {
             head_length_ = head_length;
         }
-        LOG(__DEBUG, "http", "HttpConnection::Start head_length = " << head_length_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "HttpConnection::Start head_length = " << head_length_);
 
         if (is_to_get_header_)
         {
@@ -130,7 +126,7 @@ namespace p2sp
 
         if (!is_pausing_)
         {
-            LOG(__DEBUG, "http", "HttpConnection::Start is_pausing = true, do connect");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, "HttpConnection::Start is_pausing = true, do connect");
             DoConnect();
         }
 
@@ -144,8 +140,8 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        HTTP_EVENT("HttpConnection::Stop" << shared_from_this());
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << "");
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::Stop" << shared_from_this());
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << "");
 
         sleep_once_timer_.stop();
         pausing_sleep_timer_.stop();
@@ -174,14 +170,14 @@ namespace p2sp
         if (true == no_notice_header_ && false == downloader_->GetDownloadDriver()->HasNextPiece(downloader_))
         {
             // bug!!最后一片给httpConnection后，这里HasNextPiece会返回false, 但是这里又不去连接！
-            LOG(__DEBUG, "ppbug", "DO NOT has Next Piece!");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, "DO NOT has Next Piece!");
             status = SLEEPING;
             SleepForConnect();
             return;
         }
 
-        HTTP_EVENT("HttpConnection::DoConnect" << shared_from_this());
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << "");
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::DoConnect" << shared_from_this());
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << "");
 
         assert(downloader_->GetStatistics());
         downloader_->GetStatistics()->SubmitRetry();
@@ -206,7 +202,8 @@ namespace p2sp
                 http_client_ = network::HttpClient<protocol::SubPieceContent>::create(io_svc_, http_request_demo_, url_info_.url_, url_info_.refer_url_, 0, 0, false, url_info_.user_agent_);
             }
             
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " create http_client = " << http_client_);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " create http_client = " 
+                << http_client_);
 
             http_client_->SetHandler(shared_from_this());
             http_client_->Connect();
@@ -221,7 +218,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        HTTP_EVENT("HttpConnection::SleepForConnect ");
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::SleepForConnect ");
 
         for (uint32_t i = 0; i < piece_task.size(); ++i)
         {
@@ -242,7 +239,7 @@ namespace p2sp
 
     void HttpConnection::DelayForConnect()
     {
-        LOG(__DEBUG, "ppbug", "DelayForConnect DELAY_CONNECT_TIME  = " << DELAY_CONNECT_TIME);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "DelayForConnect DELAY_CONNECT_TIME  = " << DELAY_CONNECT_TIME);
         delay_once_timer_.start();
     }
 
@@ -253,7 +250,7 @@ namespace p2sp
 
         if (pointer == &delay_once_timer_)
         {
-            LOG(__DEBUG, "ppbug", "bingo! ReConnect");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, "bingo! ReConnect");
             status = NONE;
             DoConnect();
         }
@@ -281,7 +278,7 @@ namespace p2sp
     void HttpConnection::PutPieceTask(const std::deque<protocol::PieceInfoEx> & piece_info_ex_s)
     {
         piece_task.insert(piece_task.end(), piece_info_ex_s.begin(), piece_info_ex_s.end());
-        LOG(__DEBUG, "ppbug", "PutPieceTask = " << is_downloading_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "PutPieceTask = " << is_downloading_);
 
         if (!is_downloading_)
         {
@@ -296,14 +293,15 @@ namespace p2sp
         if (is_running_ == false) return;
 
         protocol::PieceInfoEx piece_info_ex = piece_task.front();
-        LOG(__DEBUG, "ppbug", "piece_task = " << piece_info_ex.GetPieceInfo());
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " protocol::PieceInfo = " << piece_info_ex);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "piece_task = " << piece_info_ex.GetPieceInfo());
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " protocol::PieceInfo = " 
+            << piece_info_ex);
 
         if (status == CONNECTED && have_piece_ == false && is_support_range_  == true)
         {
             piece_info_ex_ = piece_info_ex;
             have_piece_ = true;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SendHttpRequest");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " SendHttpRequest");
             SendHttpRequest();
         }
         else if (status == PIECED && have_piece_ == false && is_support_range_  == true)
@@ -324,7 +322,7 @@ namespace p2sp
                     piece_info_ex_ = piece_info_ex;
                     have_piece_ = true;
                     status = PIECEING;
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
                     HttpRecvSubPiece();
                 }
                 else
@@ -334,7 +332,7 @@ namespace p2sp
                     have_piece_ = true;
                     status = NONE;
                     http_client_->Close();
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
                     DoConnect();
                 }
             }
@@ -346,7 +344,7 @@ namespace p2sp
                     piece_info_ex_ = piece_info_ex;
                     have_piece_ = true;
                     status = PIECEING;
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
                     HttpRecvSubPiece();
                 }
                 else
@@ -355,7 +353,7 @@ namespace p2sp
                     have_piece_ = true;
                     status = NONE;
                     http_client_->Close();
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
                     DoConnect();
                 }
             }
@@ -365,20 +363,20 @@ namespace p2sp
             piece_info_ex_ = piece_info_ex;
             status = CONNECTING;
             have_piece_ = true;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
             DoConnect();
         }
         else if (status == CONNECTING && have_piece_ == false)
         {
             piece_info_ex_ = piece_info_ex;
             have_piece_ = true;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Nothing");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Nothing");
         }
         else if (status == CONNECTED && have_piece_ == false && is_support_range_  == false)
         {
             piece_info_ex_ = piece_info_ex;
             have_piece_ = true;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SendHttpRequest");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " SendHttpRequest");
             SendHttpRequest();
         }
         else if (status == PIECED && have_piece_ == false && is_support_range_  == false)
@@ -387,12 +385,12 @@ namespace p2sp
             status = PIECEING;
             have_piece_ = true;
             piece_info_ex_ = piece_info_ex;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
             HttpRecvSubPiece();
         }
         else
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " UnknownState " << status);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " UnknownState " << status);
         }
     }
 
@@ -400,12 +398,13 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
 
         connect_fail_count_ = 0;
 
         is_connected_ = true;
-        HTTP_EVENT("HttpConnection::OnConnectSucced " << shared_from_this() << " status=" << status);
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::OnConnectSucced " << shared_from_this() << 
+            " status=" << status);
 
         assert(downloader_->GetStatistics());
         downloader_->GetStatistics()->SubmitHttpConnected();
@@ -419,21 +418,25 @@ namespace p2sp
         else if (status == CONNECTING && have_piece_ == false && (is_support_range_  == true || is_open_service_ == true))
         {
             status = CONNECTED;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " CONNECTED downloader_->GetDownloadDriver()->RequestNextPiece(downloader_)");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " CONNECTED downloader_->GetDownloadDriver()->RequestNextPiece(downloader_)");
             if (false == downloader_->GetDownloadDriver()->RequestNextPiece(downloader_))
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece = FALSE");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                    " RequestNextPiece = FALSE");
 
                 if (downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << "Instance Complete, GetHeader!");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                        "Instance Complete, GetHeader!");
                     have_piece_ = true;
                     piece_info_ex_.block_index_ = piece_info_ex_.piece_index_ = piece_info_ex_.subpiece_index_ = 0;
                     SendHttpRequest();
                 }
                 else
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << "Instance not complete, Wait for connect!");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                        "Instance not complete, Wait for connect!");
                     status = SLEEPING;
                     have_piece_ = false;
                     http_client_->Close();
@@ -442,7 +445,8 @@ namespace p2sp
             }
             else
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece = TRUE");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                    " RequestNextPiece = TRUE");
             }
         }
         else if (status == CONNECTING && have_piece_ == true && is_support_range_  == true)
@@ -460,12 +464,14 @@ namespace p2sp
             status = CONNECTED;
             bool result = downloader_->GetDownloadDriver()->RequestNextPiece(downloader_);
             (void)result;
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece = " << result);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " RequestNextPiece = " << result);
         }
         else
         {
             // assert(!"HttpConnection::OnConnectSucced: No Such State");
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " status=" << status << " have_piece=" << have_piece_ << " range=" << is_support_range_);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " status=" << status << 
+                " have_piece=" << have_piece_ << " range=" << is_support_range_);
             // restart
             if ((is_support_range_  == true || is_open_service_ == true) && false == downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
             {
@@ -482,16 +488,16 @@ namespace p2sp
         if (false == is_running_)
             return;
 
-        HTTP_EVENT("HttpConnection::SendHttpRequest" << shared_from_this());
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::SendHttpRequest" << shared_from_this());
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
 
         if (is_to_get_header_)
         {
             status = HEADERING;
 
-            HTTP_INFO("HttpGet: downloader is_to_get_header_:" << is_to_get_header_);
+            LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader is_to_get_header_:" << is_to_get_header_);
 
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " is_to_get_header_");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " is_to_get_header_");
             if (http_request_demo_)
                 http_client_->HttpGet(http_request_demo_, 0);
             else
@@ -501,8 +507,9 @@ namespace p2sp
         {
             status = HEADERING;
             uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
-            HTTP_INFO("HttpGet: downloader:" << downloader_ << " protocol::PieceInfo: " << piece_info_ex_ << " block_size_: " << block_size);
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ << 
+                " protocol::PieceInfo: " << piece_info_ex_ << " block_size_: " << block_size);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
             if (http_request_demo_)
                 http_client_->HttpGet(http_request_demo_, piece_info_ex_.GetPosition(block_size));
             else
@@ -531,13 +538,16 @@ namespace p2sp
             uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
             uint32_t piece_position = piece_info_ex_.GetPosition(block_size);
 
-            HTTP_INFO("block size = " << block_size << " piece_position = " << piece_position << " head length = " << head_length_);
+            LOG4CPLUS_INFO_LOG(logger_http_connection, "block size = " << block_size << " piece_position = " 
+                << piece_position << " head length = " << head_length_);
 
             if ((head_length_ != (uint32_t)-1 && piece_position > head_length_) || piece_position >= 2*1024*1024)
             {
                 status = HEADERING;
-                HTTP_INFO("HttpGet: downloader:" << downloader_ << " protocol::PieceInfo: " << piece_info_ex_ << " block_size_: " << block_size);
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " head_length = " << head_length_ << ", piece_position = " << piece_position);
+                LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ 
+                    << " protocol::PieceInfo: " << piece_info_ex_ << " block_size_: " << block_size);
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " head_length = " 
+                    << head_length_ << ", piece_position = " << piece_position);
                 if (http_request_demo_)
                     http_client_->HttpGet(http_request_demo_, piece_info_ex_.GetPosition(block_size));
                 else
@@ -563,9 +573,10 @@ namespace p2sp
             else
             {
                 status = HEADERING;
-                HTTP_INFO("HttpGet: downloader:" << downloader_ << " protocol::PieceInfo: " << piece_info_ex_);
+                LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ << 
+                    " protocol::PieceInfo: " << piece_info_ex_);
 
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
                 if (http_request_demo_)
                     http_client_->HttpGet(http_request_demo_, 0);
                 else
@@ -579,9 +590,10 @@ namespace p2sp
         else if (status == CONNECTED && have_piece_ == true && is_support_range_  == false)
         {
             status = HEADERING;
-            HTTP_INFO("HttpGet: downloader:" << downloader_ << " protocol::PieceInfo: " << piece_info_ex_);
+            LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ << 
+                " protocol::PieceInfo: " << piece_info_ex_);
 
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
             if (http_request_demo_)
                 http_client_->HttpGet(http_request_demo_, 0);
             else
@@ -596,12 +608,14 @@ namespace p2sp
     void HttpConnection::OnConnectFailed(uint32_t error_code)
     {
         if (is_running_ == false) return;
-        HTTP_ERROR("HttpConnection::OnConnectFailed " << url_info_ << " ErrorCode=" << error_code);
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << " Error = " << error_code << " FailCount = " << connect_fail_count_);
+        LOG4CPLUS_ERROR_LOG(logger_http_connection, "HttpConnection::OnConnectFailed " << url_info_ << 
+            " ErrorCode=" << error_code);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << 
+            " Error = " << error_code << " FailCount = " << connect_fail_count_);
 
         if (connect_fail_count_ >= 5)
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " OnNotice403Header");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " OnNotice403Header");
             downloader_->GetDownloadDriver()->OnNotice403Header(downloader_, network::HttpResponse::p());
             return;
         }
@@ -612,29 +626,30 @@ namespace p2sp
         {
             status = SLEEPING;
             http_client_->Close();
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SleepForConnect");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " SleepForConnect");
             SleepForConnect();
         }
         else if (status == SLEEPING)
         {
             // 什么都不做
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Nothing");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Nothing");
         }
         else
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " UnknownState = " << status);
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " UnknownState = " << status);
         }
     }
 
     void HttpConnection::OnConnectTimeout()
     {
         if (is_running_ == false) return;
-        HTTP_ERROR("OnConnectTimeout " << url_info_);
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << " FailCount = " << connect_fail_count_);
+        LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnConnectTimeout " << url_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << 
+            " FailCount = " << connect_fail_count_);
 
         if (connect_fail_count_ >= 5)
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " OnNotice403Header");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " OnNotice403Header");
             downloader_->GetDownloadDriver()->OnNotice403Header(downloader_, network::HttpResponse::p());
             return;
         }
@@ -645,38 +660,42 @@ namespace p2sp
         {
             status = NONE;
             http_client_->Close();
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
             DoConnect();
         }
         else if (status == HEADERING)
         {
             status = NONE;
             http_client_->Close();
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
             DoConnect();
         }
         else if (status == SLEEPING)
         {
             // 什么都不做
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
         }
         else
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " ");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
         }
     }
 
     void HttpConnection::OnRecvHttpHeaderSucced(network::HttpResponse::p http_response)
     {
         if (is_running_ == false) return;
-        HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced Response: " << http_response);
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HeaderResponse = \n" << http_response->ToString());
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::OnRecvHttpHeaderSucced Response: " 
+            << http_response);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HeaderResponse = \n" 
+            << http_response->ToString());
 
         assert(downloader_->GetStatistics());
         downloader_->GetStatistics()->SetHttpStatusCode(http_response->GetStatusCode());
 
-        HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced downloader: " << downloader_ << " protocol::UrlInfo: " << url_info_ << "\r\nResponse:\n" << *http_response);
-        HTTP_DEBUG(__FUNCTION__ << " status=" << status << " have_piece_=" << have_piece_ << " is_support_range_=" << is_support_range_);
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::OnRecvHttpHeaderSucced downloader: " 
+            << downloader_ << " protocol::UrlInfo: " << url_info_ << "\r\nResponse:\n" << *http_response);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << " status=" << status << " have_piece_=" 
+            << have_piece_ << " is_support_range_=" << is_support_range_);
         if (status == HEADERING && have_piece_ == true && (is_support_range_  == true || is_open_service_ == true))
         {
             if (http_response->GetStatusCode() == 304)
@@ -688,10 +707,11 @@ namespace p2sp
                 // Support Range
                 if (http_client_->IsBogusAcceptRange() == false || is_open_service_ == true)
                 {
-                    HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced, Accept Range");
+                    LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::OnRecvHttpHeaderSucced, Accept Range");
                     if (! no_notice_header_)
                     {
-                        HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced no_notice_header == false");
+                        LOG4CPLUS_INFO_LOG(logger_http_connection, 
+                            "HttpConnection::OnRecvHttpHeaderSucced no_notice_header == false");
                         no_notice_header_ = true;
 
                         DownloadDriver::p download_driver = downloader_->GetDownloadDriver();
@@ -705,11 +725,15 @@ namespace p2sp
                             if (!ec)
                             {
                                 download_driver->OnNoticePragmaInfo(pragma_mod, head_length_);
-                                HTTP_WARN("HttpConnection::OnRecvHttpHeaderSucced_HEAD " << downloader_->GetDownloadDriver()->GetDownloadDriverID() << " " << head);
+                                LOG4CPLUS_WARN_LOG(logger_http_connection, 
+                                    "HttpConnection::OnRecvHttpHeaderSucced_HEAD " << 
+                                    downloader_->GetDownloadDriver()->GetDownloadDriverID() << " " << head);
                             }
                             else
                             {
-                                HTTP_WARN("HttpConnection::OnRecvHttpHeaderSucced bad: mod=" << pragma_mod << " head=" << head);
+                                LOG4CPLUS_WARN_LOG(logger_http_connection, 
+                                    "HttpConnection::OnRecvHttpHeaderSucced bad: mod=" << pragma_mod 
+                                    << " head=" << head);
                             }
                         }
 
@@ -723,13 +747,14 @@ namespace p2sp
                     }
                     status = PIECEING;
 
-                    HTTP_EVENT("HttpConnection::OnRecvHttpHeaderSucced http_client_->RecvSubPiece() ");
+                    LOG4CPLUS_INFO_LOG(logger_http_connection, 
+                        "HttpConnection::OnRecvHttpHeaderSucced http_client_->RecvSubPiece() ");
                     HttpRecvSubPiece();
                 }
                 // Not Support Range
                 else
                 {
-                    HTTP_EVENT(__FUNCTION__ << " BogusAcceptRange");
+                    LOG4CPLUS_INFO_LOG(logger_http_connection, __FUNCTION__ << " BogusAcceptRange");
                     // 假支持range
                     is_support_range_ = false;
                     status = NONE;
@@ -768,7 +793,8 @@ namespace p2sp
             else if (http_response->GetStatusCode() == 500 && retry_count_500_header_ < 9)
             {
                 // 500
-                LOG(__DEBUG, "ppbug", "500! DelayForConnect retry_count_500_header_ " << retry_count_500_header_);
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, "500! DelayForConnect retry_count_500_header_ " 
+                    << retry_count_500_header_);
                 ++retry_count_500_header_;
                 DelayForConnect();
             }
@@ -817,7 +843,8 @@ namespace p2sp
         }
         else
         {
-            HTTP_ERROR(__FUNCTION__ << " No Such State: status=" << status << " have_piece_=" << have_piece_ << " is_support_range_=" << is_support_range_);
+            LOG4CPLUS_ERROR_LOG(logger_http_connection, __FUNCTION__ << " No Such State: status=" << status 
+                << " have_piece_=" << have_piece_ << " is_support_range_=" << is_support_range_);
             // restart
             if ((is_support_range_  == true || is_open_service_ == true) && false == downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
             {
@@ -834,8 +861,10 @@ namespace p2sp
     void HttpConnection::OnRecvHttpHeaderFailed(uint32_t error_code)
     {
         if (is_running_ == false) return;
-        HTTP_ERROR("OnRecvHttpHeaderFailed downloader:" << downloader_ << " protocol::UrlInfo: " << url_info_ << " ErrorCode=" << error_code);
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << " ErrorCode = " << error_code);
+        LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnRecvHttpHeaderFailed downloader:" << downloader_ 
+            << " protocol::UrlInfo: " << url_info_ << " ErrorCode=" << error_code);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Url = " 
+            << url_info_ << " ErrorCode = " << error_code);
 
         if (status == CONNECTING && have_piece_ == true)
         {
@@ -874,13 +903,15 @@ namespace p2sp
         else
         {
             // assert(0);
-            HTTP_WARN(__FUNCTION__ << " status=" << status << " have_piece=" << have_piece_ << " range=" << is_support_range_);
+            LOG4CPLUS_WARN_LOG(logger_http_connection, __FUNCTION__ << " status=" << status << " have_piece=" 
+                << have_piece_ << " range=" << is_support_range_);
         }
     }
 
     void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
-        HTTP_EVENT("OnRecvHttpDataSucced " << url_info_ << " file_offset=" << file_offset << " content_offset=" << content_offset);
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvHttpDataSucced " << url_info_ << " file_offset=" 
+            << file_offset << " content_offset=" << content_offset);
 
         if (is_running_ == false) return;
 
@@ -917,7 +948,6 @@ namespace p2sp
         {
             piece_complete = true;
 
-            // LOG(__DEBUG, "ppbug", "piece_complete pop_front = " << piece_task.front());
             if (!piece_task.empty())
             {
                 piece_task.pop_front();
@@ -925,7 +955,7 @@ namespace p2sp
 
             // downloader_->GetDownloadDriver()->OnPieceComplete(piece_info_ex_, downloader_);
         }
-        LOG(__EVENT, "P2P", "OnRecvHttpDataSucced::OnSubPiece "
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvHttpDataSucced::OnSubPiece "
             << downloader_->GetDownloadDriver()->GetDownloadDriverID()
             << " " << 0 << " " << 1 << " " << shared_from_this() << " " << sub_piece_info_
             << " is_pausing_=" << is_pausing_);
@@ -937,28 +967,32 @@ namespace p2sp
             {
                 if (status == PIECEING && have_piece_ == true && is_support_range_  == true)
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PieceComplete = " << piece_info_ex_ << " RequestNext");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                        " PieceComplete = " << piece_info_ex_ << " RequestNext");
                     have_piece_ = false;
                     status = PIECED;
-                    HTTP_EVENT("OnRecvPieceSucced downloader:" << downloader_ << " protocol::UrlInfo: " << url_info_ << " piece_info: " << piece_info_ex_);
+                    LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvPieceSucced downloader:" << downloader_ << 
+                        " protocol::UrlInfo: " << url_info_ << " piece_info: " << piece_info_ex_);
                     downloader_->GetDownloadDriver()->OnPieceComplete(piece_info_ex_, downloader_);
 
                     if (piece_task.size() == 0)
                     {
                         // 没有任务了，设置为不在下载
                         is_downloading_ = false;
-                        LOG(__DEBUG, "ppbug", "piece_task flag = " << is_downloading_);
+                        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "piece_task flag = " << is_downloading_);
                         if (false == downloader_->GetDownloadDriver()->RequestNextPiece(downloader_))
                         {
                             if (false == downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
                             {
-                                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece FALSE -> SleepForConnect");
+                                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                    " RequestNextPiece FALSE -> SleepForConnect");
                                 status = SLEEPING;
                                 SleepForConnect();
                             }
                             else
                             {
-                                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece FALSE -> InstanceComplete");
+                                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                    " RequestNextPiece FALSE -> InstanceComplete");
                             }
                         }
                     }
@@ -969,27 +1003,31 @@ namespace p2sp
                 }
                 else if (status == PIECEING && have_piece_ == true && is_support_range_  == false)
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PieceComplete = " << piece_info_ex_ << " RequestNext");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                        " PieceComplete = " << piece_info_ex_ << " RequestNext");
                     have_piece_ = false;
                     status = PIECED;
-                    HTTP_EVENT("OnRecvPieceSucced downloader:" << downloader_ << " protocol::UrlInfo: " << url_info_ << " piece_info: " << piece_info_ex_);
+                    LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvPieceSucced downloader:" << downloader_ << 
+                        " protocol::UrlInfo: " << url_info_ << " piece_info: " << piece_info_ex_);
                     downloader_->GetDownloadDriver()->OnPieceComplete(piece_info_ex_, downloader_);
                     if (piece_task.size() == 0)
                     {
                         // 没有任务了，设置为不在下载
                         is_downloading_ = false;
-                        LOG(__DEBUG, "ppbug", "piece_task flag = " << is_downloading_);
+                        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "piece_task flag = " << is_downloading_);
                         if (false == downloader_->GetDownloadDriver()->RequestNextPiece(downloader_))
                         {
                             if (false == downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
                             {
-                                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece FALSE -> SleepForConnect");
+                                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                    " RequestNextPiece FALSE -> SleepForConnect");
                                 status = SLEEPING;
                                 SleepForConnect();
                             }
                             else
                             {
-                                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " RequestNextPiece FALSE -> InstanceComplete");
+                                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                    " RequestNextPiece FALSE -> InstanceComplete");
                             }
                         }
                     }
@@ -1000,7 +1038,9 @@ namespace p2sp
                 }
                 else
                 {
-                    HTTP_ERROR("HttpConnection::OnRecvHttpDataSucced Invalid State, status = " << status << ", have piece = " << have_piece_);
+                    LOG4CPLUS_ERROR_LOG(logger_http_connection, 
+                        "HttpConnection::OnRecvHttpDataSucced Invalid State, status = " << status << 
+                        ", have piece = " << have_piece_);
                     assert(0);
                 }
             }
@@ -1011,7 +1051,8 @@ namespace p2sp
         }
         else
         {
-            HTTP_EVENT("HttpConnection::OnRecvHttpDataSucced is_pausing=" << is_pausing_ << " is_support_range=" << is_support_range_ << " is_detected_=" << is_detected_);
+            LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::OnRecvHttpDataSucced is_pausing=" << 
+                is_pausing_ << " is_support_range=" << is_support_range_ << " is_detected_=" << is_detected_);
             if ((false == is_support_range_ || false == is_detected_) && !is_open_service_)
             {
                 pausing_sleep_timer_.start();
@@ -1036,7 +1077,7 @@ namespace p2sp
         if (false == is_running_)
             return;
 
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Pausing = " << is_pausing_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Pausing = " << is_pausing_);
 
         is_pausing_ = true;
 
@@ -1056,7 +1097,8 @@ namespace p2sp
             have_piece_ = false;
         }
 
-        HTTP_DEBUG(__FUNCTION__ << " http_connection_=" << shared_from_this() << " is_support_range_=" << is_support_range_ << " is_pausing_=" << is_pausing_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << " http_connection_=" << shared_from_this() << 
+            " is_support_range_=" << is_support_range_ << " is_pausing_=" << is_pausing_);
     }
 
     void HttpConnection::Resume()
@@ -1067,13 +1109,14 @@ namespace p2sp
         is_pausing_ = false;
 
         is_downloading_ = false;
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Pausing = " << is_pausing_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Pausing = " << is_pausing_);
 
-        HTTP_DEBUG(__FUNCTION__ << " is_pausing_=" << is_pausing_ << " http_connection_=" << shared_from_this()
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << " is_pausing_=" << is_pausing_ << 
+            " http_connection_=" << shared_from_this()
             << " is_support_range_=" << is_support_range_
             << " is_detected_=" << is_detected_);
 
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__
             << " is_support_range_ = " << is_support_range_ << " is_detected_ = " << is_detected_
             << " status = " << status << " have_piece_ = " << have_piece_);
 
@@ -1083,15 +1126,15 @@ namespace p2sp
         {
             if (status == CONNECTING)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " CONNECTING");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " CONNECTING");
             }
             else if (status == HEADERING)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HEADERING");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HEADERING");
             }
             else
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
                 status = NONE;
                 have_piece_ = false;
                 is_to_get_header_ = false;
@@ -1102,16 +1145,19 @@ namespace p2sp
         {
             if (status == PIECEING && have_piece_ == true)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PIECEING HttpRecvSubPiece");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ 
+                    << " PIECEING HttpRecvSubPiece");
                 HttpRecvSubPiece();
             }
             else if (status == PIECED && have_piece_ == false)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PIECED RequestNextPiece");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ 
+                    << " PIECED RequestNextPiece");
                 // request next piece
                 if (false == downloader_->GetDownloadDriver()->RequestNextPiece(downloader_))
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PIECED RequestNextPiece FALSE Reconnect");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ 
+                        << " PIECED RequestNextPiece FALSE Reconnect");
 
                     status = NONE;
                     have_piece_ = false;
@@ -1120,16 +1166,18 @@ namespace p2sp
                 }
                 else
                 {
-                    LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " PIECED RequestNextPiece TRUE");
+                    LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ 
+                        << " PIECED RequestNextPiece TRUE");
                 }
             }
             else if (status == CONNECTING)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " CONNECTING Ignore");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ 
+                    << " CONNECTING Ignore");
             }
             else
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " assert");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " assert");
                 status = NONE;
                 have_piece_ = false;
                 DoConnect();
@@ -1137,7 +1185,7 @@ namespace p2sp
         }
         else if (true == is_support_range_ && true == is_detected_)
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
             status = NONE;
             have_piece_ = false;
             is_to_get_header_ = false;
@@ -1145,15 +1193,16 @@ namespace p2sp
         }
         else
         {
-            HTTP_ERROR(__FUNCTION__ << " status = " << status << " is_support_range_ = " << is_support_range_ << " is_detected_ = " << is_detected_);
+            LOG4CPLUS_ERROR_LOG(logger_http_connection, __FUNCTION__ << " status = " << status 
+                << " is_support_range_ = " << is_support_range_ << " is_detected_ = " << is_detected_);
             if (status == PIECEING && have_piece_ == true)
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " HttpRecvSubPiece");
                 HttpRecvSubPiece();
             }
             else
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " DoConnect");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " DoConnect");
                 status = NONE;
                 have_piece_ = false;
                 DoConnect();
@@ -1166,16 +1215,18 @@ namespace p2sp
         uint32_t file_offset,
         uint32_t content_offset)
     {
-        HTTP_EVENT("OnRecvHttpDataPartial " << url_info_ << " Length=" << buffer.Length());
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvHttpDataPartial " << url_info_ << 
+            " Length=" << buffer.Length());
         if (is_running_ == false) return;
     }
 
     void HttpConnection::OnRecvHttpDataFailed(uint32_t error_code)
     {
-        HTTP_ERROR("OnRecvHttpDataFailed " << url_info_ << " ErrorCode=" << error_code);
+        LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnRecvHttpDataFailed " << url_info_ << " ErrorCode=" << error_code);
         if (is_running_ == false) return;
 
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_ << " ErrorCode = " << error_code);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+            " Url = " << url_info_ << " ErrorCode = " << error_code);
 
         if (status == CONNECTING)
         {
@@ -1236,9 +1287,9 @@ namespace p2sp
 
     void HttpConnection::OnRecvTimeout()
     {
-        HTTP_ERROR("OnRecvTimeout " << url_info_);
+        LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnRecvTimeout " << url_info_);
         if (is_running_ == false) return;
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_);
 
         if (status == CONNECTED && have_piece_ == true)
         {
@@ -1276,25 +1327,26 @@ namespace p2sp
 
     void HttpConnection::OnComplete()
     {
-        HTTP_EVENT("OnComplete " << url_info_);
+        LOG4CPLUS_INFO_LOG(logger_http_connection, "OnComplete " << url_info_);
         if (is_running_ == false) return;
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Url = " << url_info_);
 
         if (is_support_range_ == false && is_open_service_ == false)
         {
-            LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " NoRange Complete");
+            LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " NoRange Complete");
             downloader_->HttpConnectComplete(shared_from_this());
         }
         else
         {
             if (downloader_->GetDownloadDriver()->GetInstance()->IsComplete())
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " Complete");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " Complete");
                 downloader_->HttpConnectComplete(shared_from_this());
             }
             else
             {
-                LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " NotComplete SleepForConnect");
+                LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << 
+                    " NotComplete SleepForConnect");
                 status = SLEEPING;
                 have_piece_ = false;
                 http_client_->Close();
@@ -1309,7 +1361,7 @@ namespace p2sp
             return;
         }
 
-        HTTP_DEBUG("HttpRecvSubPiece");
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "HttpRecvSubPiece");
         downloader_->DoRequestSubPiece(shared_from_this());
     }
 
@@ -1322,7 +1374,7 @@ namespace p2sp
     }
     void HttpConnection::PieceTimeout()
     {
-        LOG(__DEBUG, "ppbug", "PieceTimeout");
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, "PieceTimeout");
         if (false == is_running_)
         {
             return;
@@ -1438,7 +1490,7 @@ namespace p2sp
                 statistic::DACStatisticModule::Inst()->SubmitHttpDownloadBytes(buffer.Length());
             }
         }
-        LOG(__DEBUG, "ppbug", __FUNCTION__ << ":" << __LINE__ << " SubPieceComplete " << sub_piece_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " SubPieceComplete " << sub_piece_info);
         downloader_->GetDownloadDriver()->GetInstance()->AsyncAddSubPiece(sub_piece_info, buffer);
     }
 

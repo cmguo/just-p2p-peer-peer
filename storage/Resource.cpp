@@ -15,7 +15,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_resource = log4cplus::Logger::getInstance("[resource]");
+#endif
     using namespace base;
 
     // TODO:yujinwu:2010/11/27:两个构造函数差异这么大，设计上要重新考虑，
@@ -85,7 +87,7 @@ namespace storage
     {
         if (is_running_ == false)
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " is_running = false");
+            LOG4CPLUS_DEBUG_LOG(logger_resource, __FUNCTION__ << ":" << __LINE__ << " is_running = false");
             return;
         }
 
@@ -96,11 +98,12 @@ namespace storage
 
         if (!need_saveinfo_to_disk_)
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " need_saveinfo_to_disk_ = false");
+            LOG4CPLUS_DEBUG_LOG(logger_resource, __FUNCTION__ << ":" << __LINE__ << " need_saveinfo_to_disk_ = false");
             return;
         }
 
-        LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " FileName = " << (file_name_) << " FileLength:"
+        LOG4CPLUS_DEBUG_LOG(logger_resource, __FUNCTION__ << ":" << __LINE__ << " FileName = " << 
+            (file_name_) << " FileLength:"
             << subpiece_manager_->GetFileLength() << "bytes! " << subpiece_manager_->GetDownloadBytes() << "bytes!");
 
         FlushStore();
@@ -114,7 +117,7 @@ namespace storage
         CfgFile cfg_file;
         if (!cfg_file.SecCreate(file_name_, subpiece_manager_->GetFileLength()))
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << "FileLength " << subpiece_manager_->GetFileLength());
+            LOG4CPLUS_DEBUG_LOG(logger_resource, __FUNCTION__ << "FileLength " << subpiece_manager_->GetFileLength());
             return;
         }
 
@@ -140,7 +143,7 @@ namespace storage
         if (false == is_running_)
             return;
 
-        STORAGE_DEBUG_LOG("Enter!");
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         const std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>& block_pending_buffer_set = *buffer_set_p;
         if (block_pending_buffer_set.empty())
             return;
@@ -192,7 +195,7 @@ namespace storage
         if (false == IsFileOpen() && false == ReOpenFile())
             return;
 
-        STORAGE_DEBUG_LOG("Enter!");
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set = *buffer_set_p;
         assert(!buffer_set.empty());
 
@@ -253,7 +256,7 @@ namespace storage
         MD5 hash_val;
         hash_val.from_bytes(md5.to_bytes());
 
-        STORAGE_DEBUG_LOG("Block:" << block_index << " Hash:" << hash_val);
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Block:" << block_index << " Hash:" << hash_val);
 
         assert(instance_p_);
         io_svc_.post(boost::bind(&Resource::ThreadPendingHashBlockHelper, buffer_set_p, instance_p_, block_index, hash_val));
@@ -277,7 +280,7 @@ namespace storage
             return;
         }
 
-        STORAGE_DEBUG_LOG("Enter!");
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         if (false == IsFileOpen() && false == ReOpenFile())
         {
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
@@ -314,18 +317,18 @@ namespace storage
         }
 
         uint32_t start_offset = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
-        STORAGE_ERR_LOG("start:!" << subpiece_info << ", continue_len=" << buffs.size());
-        STORAGE_DEBUG_LOG("(start offset: " << start_offset << ", Length: " << length << ")");
+        LOG4CPLUS_ERROR_LOG(logger_resource, "start:!" << subpiece_info << ", continue_len=" << buffs.size());
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "(start offset: " << start_offset << ", Length: " << length << ")");
 
         if (ReadBufferArray(start_offset, length, buffs))
         {
-            STORAGE_DEBUG_LOG("ReadBufferArray succed!");
+            LOG4CPLUS_DEBUG_LOG(logger_resource, "ReadBufferArray succed!");
             io_svc_.post(boost::bind(&Resource::ThreadReadBufferForPlayHelper,
                 instance_p_, subpiece_manager_, subpiece_info, buffs));
         }
         else
         {
-            STORAGE_DEBUG_LOG("ReadBufferArray failed!");
+            LOG4CPLUS_DEBUG_LOG(logger_resource, "ReadBufferArray failed!");
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
             assert(false);
         }
@@ -348,7 +351,7 @@ namespace storage
         protocol::SubPieceBuffer buff = subpiece_manager_p->GetSubPiece(subpiece_info);
         if (buff.IsValid(SUB_PIECE_SIZE))
         {
-            LOG(__DEBUG, "", "ThreadReadBufferForPlayHelper " << subpiece_info);
+            LOG4CPLUS_DEBUG_LOG(logger_resource, "ThreadReadBufferForPlayHelper " << subpiece_info);
             instance_p->OnThreadReadSubPieceSucced(subpiece_info, buff);
         }
     }
@@ -356,10 +359,10 @@ namespace storage
     void Resource::ThreadMergeSubPieceToInstance(const protocol::SubPieceInfo subpiece_info, protocol::SubPieceContent* buff,
         boost::shared_ptr<Instance> merge_to_instance_p)
     {
-        STORAGE_DEBUG_LOG("Enter!");
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         if (!buff || !buff->get_buffer())
         {
-            STORAGE_ERR_LOG("buff is Invalid!");
+            LOG4CPLUS_ERROR_LOG(logger_resource, "buff is Invalid!");
             assert(false);
             return;
         }
@@ -372,14 +375,14 @@ namespace storage
 
         if (!merge_to_instance_p)
         {
-            STORAGE_ERR_LOG("merge_to_instance_p NULL!");
+            LOG4CPLUS_ERROR_LOG(logger_resource, "merge_to_instance_p NULL!");
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContent, buff));
             return;
         }
 
         if (!subpiece_manager_->HasSubPiece(subpiece_info))
         {
-            STORAGE_ERR_LOG("merge subpiece " << subpiece_info << " failed! subpiece not exist.");
+            LOG4CPLUS_ERROR_LOG(logger_resource, "merge subpiece " << subpiece_info << " failed! subpiece not exist.");
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContent, buff));
             return;
         }
@@ -397,7 +400,7 @@ namespace storage
         if (ReadBufferArray(startoffset, length, buffs))
         {
             io_svc_.post(boost::bind(&Resource::ThreadMergeSubPieceToInstanceHelper, merge_to_instance_p, subpiece_info, buffs[0]));
-            STORAGE_ERR_LOG("merge subpiece from resource! " << subpiece_info);
+            LOG4CPLUS_ERROR_LOG(logger_resource, "merge subpiece from resource! " << subpiece_info);
         }
         else
         {
@@ -421,7 +424,7 @@ namespace storage
             return;
         }
 
-        STORAGE_DEBUG_LOG("Enter!");
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         DebugLog("hash: ThreadReadBlockForUpload index:%d, need_hash:%d", block_index, need_hash);
 #ifdef BOOST_WINDOWS_API
         std::ostringstream oss;
@@ -438,7 +441,7 @@ namespace storage
 
         if (!subpiece_manager_->HasFullBlock(block_index) || false == if_file_exist)
         {
-            STORAGE_TEST_DEBUG("Do not has full block---->block index:" << block_index);
+            LOG4CPLUS_DEBUG_LOG(logger_resource, "Do not has full block---->block index:" << block_index);
             if (listener)
             {
                 io_svc_.post(boost::bind(&IUploadListener::OnAsyncGetBlockFailed, listener, rid, block_index,
@@ -502,7 +505,7 @@ namespace storage
             return;
         }
 
-        STORAGE_DEBUG_LOG("Enter!" << subpiece_info);
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!" << subpiece_info);
         assert(subpiece_manager_->HasSubPieceInMem(subpiece_info));
 
         uint32_t startoffset, length;
@@ -546,7 +549,8 @@ namespace storage
         }
 
         // check write end of file
-        STORAGE_DEBUG_LOG("start_pos + length = " << (start_pos + length) << ", filesize = " << subpiece_manager_->GetFileLength());
+        LOG4CPLUS_DEBUG_LOG(logger_resource, "start_pos + length = " << (start_pos + length) << ", filesize = " 
+            << subpiece_manager_->GetFileLength());
 
         if (start_pos + length >= temp_subpiece_manager->GetFileLength())
         {

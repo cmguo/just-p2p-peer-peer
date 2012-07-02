@@ -27,15 +27,11 @@
 
 #include "storage/LiveInstance.h"
 
-#define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
-#define P2P_INFO(s)    LOG(__INFO, "P2P", s)
-#define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
-#define P2P_WARN(s)    LOG(__WARN, "P2P", s)
-#define P2P_ERROR(s) LOG(__ERROR, "P2P", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_p2p = log4cplus::Logger::getInstance("[p2p_module]");
+#endif
 
     P2PModule::p P2PModule::inst_;
 
@@ -139,10 +135,10 @@ namespace p2sp
 
             // ! 有问题
             if (downloader->GetInstance() != instance) {
-                LOG(__DEBUG, "storage", __FUNCTION__ << " downloader->instance_ != instance, change from " << downloader->GetInstance() << " to " << instance);
+                LOG4CPLUS_DEBUG_LOG(logger_p2p, __FUNCTION__ << " downloader->instance_ != instance, change from " 
+                    << downloader->GetInstance() << " to " << instance);
                 downloader->SetInstance(instance);
             }
-            // LOG(__EVENT, "leak", __FUNCTION__ << " found: " << rid << " downloader: " << downloader);
             return downloader;
         }
 
@@ -150,8 +146,6 @@ namespace p2sp
         P2PDownloader::p downloader = P2PDownloader::create(rid, vip);
         rid_indexer_[rid] = downloader;
         downloader->Start();
-        //
-        // LOG(__EVENT, "leak", __FUNCTION__ << " create new: " << rid << " downloader: " << downloader);
         return downloader;
     }
 
@@ -197,7 +191,8 @@ namespace p2sp
         if (packet.PacketAction == protocol::ConnectPacket::Action)
         {
             const protocol::ConnectPacket & connect_packet = (const protocol::ConnectPacket &)packet;
-            LOGX(__DEBUG, "upload", "P2PModule::OnUdpRecv ConnectPacket connect_packet->IsRequest()" << ((protocol::ConnectPacket&)packet).IsRequest());
+            LOG4CPLUS_DEBUG_LOG(logger_p2p, "P2PModule::OnUdpRecv ConnectPacket connect_packet->IsRequest()" << 
+                ((protocol::ConnectPacket&)packet).IsRequest());
 
             // 如果是特殊RID，Notify处理
             RID spec_rid;

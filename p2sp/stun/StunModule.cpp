@@ -16,17 +16,13 @@
 #include <framework/network/Interface.h>
 using namespace framework::network;
 
-#define STUN_DEBUG(s) LOG(__DEBUG, "stun", s)
-#define STUN_INFO(s) LOG(__INFO, "stun", s)
-#define STUN_EVENT(s) LOG(__EVENT, "stun", s)
-#define STUN_WARN(s) LOG(__WARN, "stun", s)
-#define STUN_ERROR(s) LOG(__ERROR, "stun", s)
-
 using namespace protocol;
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("stun");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_stun = log4cplus::Logger::getInstance("[stun_module]");
+#endif
 
     StunModule::p StunModule::inst_;
 
@@ -45,7 +41,7 @@ namespace p2sp
     {
         if (is_running_ == true) return;
 
-        STUN_INFO("StunModule::Start ");
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::Start ");
 
         // config path
         ppva_config_path_ = config_path;
@@ -67,7 +63,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        STUN_INFO("StunModule::Stop ");
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::Stop ");
         // 停止 Stun 脉冲定时器
 
         stun_timer_.stop();
@@ -87,12 +83,12 @@ namespace p2sp
             is_needed_stun_ = false;
             protocol::SocketAddr stun_socket_addr(0, 0);
             statistic::StatisticModule::Inst()->SetLocalStunSocketAddress(stun_socket_addr);
-            STUN_INFO("OnGetNATType nat_type == TYPE_PUBLIC || nat_type == TYPE_FULLCONENAT");
+            LOG4CPLUS_INFO_LOG(logger_stun, "OnGetNATType nat_type == TYPE_PUBLIC || nat_type == TYPE_FULLCONENAT");
         }
         else
         {
             is_needed_stun_ = true;
-            STUN_INFO("OnGetNATType nat_type != TYPE_PUBLIC && nat_type != TYPE_FULLCONENAT");
+            LOG4CPLUS_INFO_LOG(logger_stun, "OnGetNATType nat_type != TYPE_PUBLIC && nat_type != TYPE_FULLCONENAT");
         }
 
         nat_type_ = nat_type;
@@ -164,15 +160,16 @@ namespace p2sp
     void StunModule::SetStunServerList(std::vector<STUN_SERVER_INFO> stun_servers)
     {
         if (is_running_ == false) return;
-        STUN_INFO("StunModule::SetStunServerList size=" << stun_servers.size());
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::SetStunServerList size=" << stun_servers.size());
         STL_FOR_EACH_CONST (std::vector<STUN_SERVER_INFO>, stun_servers, server)
         {
-            STUN_INFO("IP:" << server->IP << ", port:" << server->Port << ", type:" << (int)server->Type);
+            LOG4CPLUS_INFO_LOG(logger_stun, "IP:" << server->IP << ", port:" << server->Port << ", type:" 
+                << (int)server->Type);
         }
 
         if (stun_servers.size() == 0)
         {
-            STUN_ERROR("StunModule::SetStunServerList stun_servers.size() == 0");
+            LOG4CPLUS_ERROR_LOG(logger_stun, "StunModule::SetStunServerList stun_servers.size() == 0");
             assert(0);
             return;
         }
@@ -262,11 +259,11 @@ namespace p2sp
                 0;
 #endif
             (void)error;
-            STUN_ERROR("CIPTable::LoadLocal: gethostname failed, ErrorCode=" << error);
+            LOG4CPLUS_ERROR_LOG(logger_stun, "CIPTable::LoadLocal: gethostname failed, ErrorCode=" << error);
             return 0;
         }
 
-        STUN_ERROR("CIPTable::LoadLocal: gethostname=" << hostName);
+        LOG4CPLUS_ERROR_LOG(logger_stun, "CIPTable::LoadLocal: gethostname=" << hostName);
         struct hostent* host = gethostbyname(hostName);
         if (host == NULL)
         {
@@ -277,13 +274,14 @@ namespace p2sp
                 0;
 #endif
             (void)error;
-            STUN_ERROR("CIPTable::LoadLocal: gethostbyname(" << hostName << ") failed, ErrorCode=" << error);
+            LOG4CPLUS_ERROR_LOG(logger_stun, "CIPTable::LoadLocal: gethostbyname(" << hostName 
+                << ") failed, ErrorCode=" << error);
             return 0;
         }
         uint32_t count = LoadIPs(maxCount, ipArray, *host);
         if (count == 0)
         {
-            STUN_ERROR("CIPTable::LoadLocal: No hostent found.");
+            LOG4CPLUS_ERROR_LOG(logger_stun, "CIPTable::LoadLocal: No hostent found.");
         }
         return count;
     }
@@ -326,7 +324,7 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        STUN_INFO("StunModule::OnStunHandShakePacket ");
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::OnStunHandShakePacket ");
 
         if (nat_type_ != TYPE_FULLCONENAT  && nat_type_ != TYPE_PUBLIC)
         {
@@ -386,7 +384,6 @@ namespace p2sp
         protocol::SubPieceBuffer buf = connect_packet->GetBuffer();
         if (protocol::Cryptography::Encrypt(buf) == false)
         {
-        LOG(__ERROR, "packet", "");
         assert(0);
         return;
         }
@@ -400,13 +397,13 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
-        STUN_INFO("StunModule::DoHandShake " << stun_endpoint_);
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::DoHandShake " << stun_endpoint_);
 
         protocol::StunHandShakePacket stun_handshake_packet;
         stun_handshake_packet.end_point = stun_endpoint_;
         is_select_stunserver_ = false;
 
-        STUN_INFO("DoHandShake " << stun_endpoint_);
+        LOG4CPLUS_INFO_LOG(logger_stun, "DoHandShake " << stun_endpoint_);
         AppModule::Inst()->DoSendPacket(stun_handshake_packet);
     }
 
@@ -414,11 +411,11 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
-        STUN_INFO("StunModule::DoKPL " << stun_endpoint_);
+        LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::DoKPL " << stun_endpoint_);
 
         protocol::StunKPLPacket stun_kpl_packet;
         stun_kpl_packet.end_point = stun_endpoint_;
-        STUN_INFO("DoKPL " << stun_endpoint_);
+        LOG4CPLUS_INFO_LOG(logger_stun, "DoKPL " << stun_endpoint_);
         AppModule::Inst()->DoSendPacket(stun_kpl_packet);
 
     }

@@ -11,7 +11,9 @@
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics_collection");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_buffering_monitor = log4cplus::Logger::getInstance("[buffering_monitor]");
+#endif
 
     BufferringMonitor::BufferringMonitor(RID rid, boost::shared_ptr<StatisticsReporter> reporter)
         : rid_(rid), reporter_(reporter)
@@ -28,7 +30,7 @@ namespace statistic
             conditions_.push_back(report_condition);
         }
 
-        LOG(__INFO, "statistics_collection", __FUNCTION__ << " BufferringMonitor created.");
+        LOG4CPLUS_INFO_LOG(logger_buffering_monitor, __FUNCTION__ << " BufferringMonitor created.");
     }
 
     BufferringMonitor::~BufferringMonitor()
@@ -46,7 +48,7 @@ namespace statistic
             conditions_[i]->BufferringOccurs(bufferring_position_in_seconds);
         }
 
-        LOG(__INFO, "statistics_collection", __FUNCTION__ << " Bufferring occurred");
+        LOG4CPLUS_INFO_LOG(logger_buffering_monitor, __FUNCTION__ << " Bufferring occurred");
     }
 
     boost::shared_ptr<BufferringReportCondition> BufferringMonitor::CreateBufferringReportCondition(

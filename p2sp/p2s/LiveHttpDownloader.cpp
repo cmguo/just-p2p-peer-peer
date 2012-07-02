@@ -10,7 +10,9 @@ using namespace storage;
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_p2s");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_http_downloader = log4cplus::Logger::getInstance("[live_http_downloader]");
+#endif
 
     LiveHttpDownloader::LiveHttpDownloader(
         const string & url, 
@@ -31,7 +33,7 @@ namespace p2sp
         boost::system::error_code ec = framework::string::parse2(uri.getport(), pms_url_port_);
         if (ec)
         {
-            LOG(__DEBUG, "", "get port failed. use dafault port 80.");
+            LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "get port failed. use dafault port 80.");
             pms_url_port_ = 80;
         }
 
@@ -214,7 +216,8 @@ namespace p2sp
             return;
         }
 
-        LOG(__DEBUG, "", "OnRecvHttpHeaderSucced StatusCode " << http_response->GetStatusCode());
+        LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "OnRecvHttpHeaderSucced StatusCode " << 
+            http_response->GetStatusCode());
 
         http_status_ = http_response->GetStatusCode();
 
@@ -237,7 +240,7 @@ namespace p2sp
 
     void LiveHttpDownloader::OnRecvHttpHeaderFailed(uint32_t error_code)
     {
-        LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
+        LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpHeaderFailed!");
 
         if (!is_running_)
         {
@@ -255,7 +258,8 @@ namespace p2sp
             return;
         }
 
-        LOG(__DEBUG, "", "OnRecvHttpDataSucced! content_offset:" << content_offset << ", buff size=" << buffer.Length());
+        LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "OnRecvHttpDataSucced! content_offset:" << content_offset 
+            << ", buff size=" << buffer.Length());
 
         uint16_t subpiece_index = file_offset / LIVE_SUB_PIECE_SIZE;
 
@@ -263,33 +267,33 @@ namespace p2sp
 
         http_speed_info_.SubmitDownloadedBytes(buffer.Length());
 
-        LOG(__DEBUG, "", "Receive subpiece from http, block id = " << block_tasks_.front().GetBlockId()
-            << ", subpiece index = " << subpiece_index);
+        LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "Receive subpiece from http, block id = " 
+            << block_tasks_.front().GetBlockId() << ", subpiece index = " << subpiece_index);
 
         RequestSubPiece();
     }
 
     void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
-        LOG(__ERROR, "", "OnRecvHttpDataPartial!");
+        LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpDataPartial!");
         OnError();
     }
 
     void LiveHttpDownloader::OnRecvHttpDataFailed(uint32_t error_code)
     {
-        LOG(__ERROR, "", "OnRecvHttpDataFailed!");
+        LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpDataFailed!");
         OnError();
     }
 
     void LiveHttpDownloader::OnRecvTimeout()
     {
-        LOG(__ERROR, "", "OnRecvHttpHeaderFailed!");
+        LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpHeaderFailed!");
         OnError();
     }
     
     void LiveHttpDownloader::OnComplete()
     {
-        LOG(__ERROR, "", "OnComplete!");
+        LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnComplete!");
 
         if (!is_running_)
         {
@@ -369,7 +373,7 @@ namespace p2sp
         }
 
         http_client_->HttpRecvSubPiece();
-        LOG(__DEBUG, "", "RequestSubPiece");
+        LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "RequestSubPiece");
     }
 
     statistic::SPEED_INFO_EX LiveHttpDownloader::GetSpeedInfoEx()

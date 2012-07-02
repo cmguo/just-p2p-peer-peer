@@ -10,7 +10,9 @@
 
 namespace network
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("http_acceptor");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_http_acceptor = log4cplus::Logger::getInstance("[http_acceptor]");
+#endif
 
     HttpAcceptor::HttpAcceptor(boost::asio::io_service & io_svc, IHttpAcceptorListener::p handler)
         : handler_(handler)
@@ -34,7 +36,7 @@ namespace network
 
         if (error)
         {
-            LOG(__ERROR, "http_acceptor", __FUNCTION__ << " Open Error: " << error.message());
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, __FUNCTION__ << " Open Error: " << error.message());
             Close();
             return false;
         }
@@ -53,14 +55,14 @@ namespace network
             }
             else
             {
-                LOG(__ERROR, "http_acceptor", __FUNCTION__ << " Listen Error: " << err.message());
+                LOG4CPLUS_ERROR_LOG(logger_http_acceptor, __FUNCTION__ << " Listen Error: " << err.message());
                 Close();
                 return false;
             }
         }
         else
         {
-            LOG(__ERROR, "http_acceptor", __FUNCTION__ << " Bind Error: " << error.message());
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, __FUNCTION__ << " Bind Error: " << error.message());
             Close();
             return false;
         }
@@ -79,7 +81,7 @@ namespace network
 
         network::HttpServer::pointer http_server_for_accept = network::HttpServer::create(acceptor_.get_io_service());
 
-        LOG(__ERROR, "http_acceptor", "acceptor_.async_accept http_server = " << http_server_for_accept
+        LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "acceptor_.async_accept http_server = " << http_server_for_accept
             << ", acceptor = " << ref_this());
         acceptor_.async_accept(http_server_for_accept->GetSocket(), boost::bind(&HttpAcceptor::HandleAccept,
             ref_this(), http_server_for_accept, boost::asio::placeholders::error));
@@ -94,11 +96,12 @@ namespace network
         is_open_ = false;
         if (err)
         {
-            LOGX(__ERROR, "http_acceptor", "Failed, acceptor = " << ref_this() << ", Close Error: " << err.message());
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "Failed, acceptor = " << ref_this() << 
+                ", Close Error: " << err.message());
         }
         else
         {
-            LOGX(__ERROR, "http_acceptor", "Succeed, acceptor = " << ref_this());
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "Succeed, acceptor = " << ref_this());
         }
     }
 
@@ -110,8 +113,8 @@ namespace network
 
         if (!err)
         {
-            LOGX(__ERROR, "http_acceptor", "http_server = " << http_server_for_accept << ", acceptor = " << ref_this()
-                << ", succeed!");
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "http_server = " << http_server_for_accept << 
+                ", acceptor = " << ref_this() << ", succeed!");
             try
             {
                 http_server_for_accept->is_open_ = true;
@@ -124,7 +127,7 @@ namespace network
             }
             catch(...)
             {
-                LOGX(__ERROR, "http_acceptor", "Exception!!");
+                LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "Exception!!");
                 if (handler_)
                 {
                     handler_->OnHttpAcceptFailed();
@@ -135,8 +138,8 @@ namespace network
         }
         else
         {
-            LOGX(__ERROR, "http_acceptor", "http_server = " << http_server_for_accept << ", acceptor = " << ref_this()
-                << ", error = " << err.message());
+            LOG4CPLUS_ERROR_LOG(logger_http_acceptor, "http_server = " << http_server_for_accept << 
+                ", acceptor = " << ref_this() << ", error = " << err.message());
             if (handler_)
             {
                 handler_->OnHttpAcceptFailed();

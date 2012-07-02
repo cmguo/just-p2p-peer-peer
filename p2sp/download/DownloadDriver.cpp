@@ -36,11 +36,6 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
-#define DD_DEBUG(s)    LOG(__DEBUG, "P2P", s)
-#define DD_INFO(s)    LOG(__INFO, "P2P", s)
-#define DD_EVENT(s)    LOG(__EVENT, "P2P", s)
-#define DD_WARN(s)    LOG(__WARN, "P2P", s)
-#define DD_ERROR(s)    LOG(__ERROR, "P2P", s)
 const int MAX_SEND_LIST_LENGTH = 1024;
 
 using namespace network;
@@ -50,7 +45,9 @@ using namespace protocol;
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_download_driver = log4cplus::Logger::getInstance("[download_driver]");
+#endif
 
     const string SYNACAST_FLV_STREAMING = "synacast_flv_streaming";
     const string SYNACAST_MP4_STREAMING = "synacast_mp4_streaming";
@@ -191,7 +188,7 @@ namespace p2sp
         if (original_url_info_.refer_url_.find("www.pp.tv") != string::npos)
             original_url_info_.refer_url_ = "";
 
-        DD_EVENT("Downloader Driver Start" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Start" << shared_from_this());
 
         // 关联 Statistic 模块
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
@@ -237,7 +234,7 @@ namespace p2sp
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (instance_->HasRID())
         {
-            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete");
             proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
             // check
         }
@@ -246,7 +243,7 @@ namespace p2sp
         {
             if (false == instance_->GetRID().is_empty() || true == instance_->IsComplete())
             {
-                DD_DEBUG("instance is music file; rid available or file complete!");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "instance is music file; rid available or file complete!");
                 proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
             }
         }
@@ -336,7 +333,7 @@ namespace p2sp
         if (false == open_service && original_url_info_.refer_url_.find("www.pp.tv") != string::npos)
             original_url_info_.refer_url_ = "";
 
-        DD_EVENT("Downloader Driver Start" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Start" << shared_from_this());
 
 
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
@@ -412,8 +409,8 @@ namespace p2sp
         }
         else
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " AttachRidByUrl inst = " << instance_
-                << ", url = " << original_url_info_.url_ << ", rid = " << rid_info_);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " AttachRidByUrl inst = " 
+                << instance_ << ", url = " << original_url_info_.url_ << ", rid = " << rid_info_);
             Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, protocol::RID_BY_PLAY_URL);
             if (instance_->GetRID().is_empty())
             {
@@ -425,8 +422,8 @@ namespace p2sp
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (true == is_open_service_)
         {
-            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " IsOpenService = " << is_open_service_ <<
-                ", OpenServiceHeadLength = " << openservice_head_length_);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " IsOpenService = " << 
+                is_open_service_ << ", OpenServiceHeadLength = " << openservice_head_length_);
             init_local_data_bytes_ = instance_->GetDownloadBytes();
             if (openservice_head_length_ > 0)
             {
@@ -440,14 +437,14 @@ namespace p2sp
         }
         else if (instance_->HasRID())
         {
-            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete");
             proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
         }
         else if (IsFileExtension(original_url_info_.url_, ".mp3") || IsFileExtension(original_url_info_.url_, ".wma"))
         {
             if (false == instance_->GetRID().is_empty())
             {
-                DD_DEBUG("instance is music file; rid available or file complete!");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "instance is music file; rid available or file complete!");
                 proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
             }
         }
@@ -484,19 +481,20 @@ namespace p2sp
             IsPush() || (play_info && play_info->GetStartPosition() == 0)))
         {
             // 文件已经下载完成并且不需要获取headlength
-            LOGX(__DEBUG, "proxy", "OpenService Local Play!");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "OpenService Local Play!");
         }
         else
         {
             if (force_mode != FORCE_MODE_P2P_ONLY && force_mode != FORCE_MODE_P2P_TEST)
             {
-                LOGX(__DEBUG, "proxy", "Create HttpDownloader!");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "Create HttpDownloader!");
                 downloader = AddHttpDownloader(network::HttpRequest::p(), original_url_info_, true);
                 AddBakHttpDownloaders(original_url_info_);
             }
             else
             {
-                 LOGX(__DEBUG, "proxy", "ForceMode: " << force_mode << ", don't create httpdownloader");
+                 LOG4CPLUS_DEBUG_LOG(logger_download_driver, "ForceMode: " << force_mode << 
+                     ", don't create httpdownloader");
             }
         }
 
@@ -506,7 +504,8 @@ namespace p2sp
             switch_control_mode_ = static_cast<SwitchController::ControlModeType> (control_mode);
         }
 
-        DD_DEBUG("downloader = " << downloader << ", p2p_downloader = " << p2p_downloader_);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "downloader = " << downloader << 
+            ", p2p_downloader = " << p2p_downloader_);
         if (downloader || p2p_downloader_)
         {
             // start
@@ -554,7 +553,7 @@ namespace p2sp
         is_support_start_ = false;
         is_pragmainfo_noticed_ = false;
 
-        DD_EVENT("Downloader Driver Start" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Start" << shared_from_this());
 
         // 关联 Statistic 模块
         statistic_ = StatisticModule::Inst()->AttachDownloadDriverStatistic(id_, true);
@@ -596,7 +595,8 @@ namespace p2sp
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (instance_->HasRID())
         {
-            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " instance-IsComplete, RID = " << rid_for_play);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << 
+                " instance-IsComplete, RID = " << rid_for_play);
             proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
         }
 
@@ -642,11 +642,11 @@ namespace p2sp
         {
             if (!instance_)
             {
-                LOG(__DEBUG, "download", __FUNCTION__ << " instance is NULL.");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << " instance is NULL.");
             }
             else if (instance_->GetRID().is_empty())
             {
-                LOG(__DEBUG, "download", __FUNCTION__ << " instance does not have a valid RID.");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << " instance does not have a valid RID.");
             }
         }
     }
@@ -671,7 +671,7 @@ namespace p2sp
         SendDacStopData();
 #endif
 
-        DD_EVENT("Downloader Driver Stop" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Stop" << shared_from_this());
         // LOG(__EVENT, "leak", __FUNCTION__ << " p2p_downloader: " << p2p_downloader_);
 
         assert(statistic_);
@@ -724,7 +724,7 @@ namespace p2sp
 
             strncpy(lpResourceData->szVAParam, urlExt.c_str(), nSize - sizeof(RESOURCEID_DATA)-1);
 
-            DD_DEBUG("lpResourceData: Duration=" << meta.Duration << " FileLength=" << lpResourceData->uFileLength << " vaParam=" << urlExt);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "lpResourceData: Duration=" << meta.Duration << " FileLength=" << lpResourceData->uFileLength << " vaParam=" << urlExt);
 
     #ifdef NEED_TO_POST_MESSAGE
             WindowsMessage::Inst().PostWindowsMessage(UM_GOT_RESOURCEID, (WPARAM)id_, (LPARAM)lpResourceData);
@@ -804,7 +804,7 @@ namespace p2sp
             rate = (lpDownloadDriverStopData->ulP2pDownloadBytes * 100.0 / lpDownloadDriverStopData->ulDownloadBytes);
         }
 
-        LOGX(__DEBUG, "msg", "p2p = " << lpDownloadDriverStopData->ulP2pDownloadBytes <<
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "p2p = " << lpDownloadDriverStopData->ulP2pDownloadBytes <<
             ", download = " << lpDownloadDriverStopData->ulDownloadBytes <<
             ", size = " << lpDownloadDriverStopData->ulResourceSize <<
             ", p2p/download = " << rate << "%");
@@ -898,7 +898,7 @@ namespace p2sp
         // Y: 操作系统版本 （OSVersion）
         // Z：文件时长 （AccelerateTime） 视频大小I/码流率V  单位s
         // A1:下载时长(download_time) 单位豪秒
-        // B1:最后一刻下载速度（last_speed)
+        // B1:tinydrag结果
         // C1：是否获得RID
         // D1:有效下载字节数（不包括已经下载，不包括冗余）   J + K
         // E1: bwtype
@@ -1311,8 +1311,8 @@ namespace p2sp
 
         string log = log_stream.str();
 
-        LOGX(__DEBUG, "msg", "+-----------------DOWNLOADDRIVER_STOP_DAC_DATA-----------------+");
-        LOGX(__DEBUG, "msg", "| " << log);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "+-----------------DOWNLOADDRIVER_STOP_DAC_DATA-----------------+");
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "| " << log);
 
         // herain:2010-12-31:创建并填充实际发送给客户端的消息结构体
         LPDOWNLOADDRIVER_STOP_DAC_DATA dac_data =
@@ -1334,7 +1334,7 @@ namespace p2sp
         if (is_running_ == false)
             return HttpDownloader::p();
 
-        DD_EVENT("DownloadDriver::AddHttpDownloader " << url_info);
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::AddHttpDownloader " << url_info);
 
         if (url_indexer_.size() > 5)
             return HttpDownloader::p();
@@ -1345,14 +1345,14 @@ namespace p2sp
         if (iter != url_indexer_.end())
         {
             // 如果该 UrlInfo 已经存在，则不创建，直接返回该类对应的Url
-            DD_EVENT("HttpDownloader Existed " << url_info);
+            LOG4CPLUS_INFO_LOG(logger_download_driver, "HttpDownloader Existed " << url_info);
             return iter->http_downloader_;
         }
 
         HttpDownloader::p downloader;
         if (instance_->IsComplete())
         {
-            DD_EVENT("instance is complete! ");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, "instance is complete! ");
             downloader = Downloader::CreateByUrl(io_svc_, http_request, url_info, shared_from_this(), true, is_open_service_, is_head_only_);
         }
         else
@@ -1374,7 +1374,7 @@ namespace p2sp
         }
         else
         {
-            DD_ERROR("Downloader Creation Error!");
+            LOG4CPLUS_ERROR_LOG(logger_download_driver, "Downloader Creation Error!");
         }
 
         return downloader;
@@ -1388,7 +1388,8 @@ namespace p2sp
         HttpDownloader::p downloader;
 
         if (url_indexer_.size() > 5)
-            return downloader;DD_EVENT("DownloadDriver::AddHttpDownloader " << url_info);
+            return downloader;
+            LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::AddHttpDownloader " << url_info);
 
         std::list<UrlHttpDownloaderPair>::iterator iter = 
             std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(url_info.url_));
@@ -1396,13 +1397,13 @@ namespace p2sp
         if (iter != url_indexer_.end())
         {
             // 如果该 UrlInfo 已经存在，则不创建，直接返回该类对应的Url
-            DD_EVENT("HttpDownloader Existed " << url_info);
+            LOG4CPLUS_INFO_LOG(logger_download_driver, "HttpDownloader Existed " << url_info);
             return iter->http_downloader_;
         }
 
         if (instance_->IsComplete())
         {
-            DD_EVENT("instance is complete! ");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, "instance is complete! ");
             return HttpDownloader::p();
         }
         // 创建 HttpDownloader(url_info)
@@ -1422,7 +1423,7 @@ namespace p2sp
         }
         else
         {
-            DD_ERROR("Downloader Creation Error!");
+            LOG4CPLUS_ERROR_LOG(logger_download_driver, "Downloader Creation Error!");
         }
 
         return downloader;
@@ -1433,7 +1434,11 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        LOG(__EVENT, "downloaddriver", "DownloadDriver::OnPieceComplete " << GetDownloadDriverID() << " " << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << " " << piece_info);LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " " << id_ << " " << (downloader->IsP2PDownloader() ? "P2P" : "HTTP") << " " << piece_info);
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::OnPieceComplete " << GetDownloadDriverID() << " " 
+            << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << " " 
+            << piece_info);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " " << id_ << " " << 
+            (downloader->IsP2PDownloader() ? "P2P" : "HTTP") << " " << piece_info);
 
         piece_request_manager_->RemovePieceTask(piece_info, downloader);
 
@@ -1454,7 +1459,8 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        LOG(__EVENT, "downloader", "DownloadDriver::OnPiecefaild " << downloader << " protocol::PieceInfo: " << piece_info_);
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::OnPiecefaild " << downloader << 
+            " protocol::PieceInfo: " << piece_info_);
 
         piece_request_manager_->RemovePieceTask(piece_info_, downloader);
 
@@ -1498,10 +1504,11 @@ namespace p2sp
         //
         else if (downloader->IsOriginal() || downloader->IsP2PDownloader())
         {
-            DD_EVENT("DownloadDriver::SetDownloaderToDeath downloader is Original || P2P Downloader:" << downloader);
+            LOG4CPLUS_INFO_LOG(logger_download_driver, 
+                "DownloadDriver::SetDownloaderToDeath downloader is Original || P2P Downloader:" << downloader);
             return;
         }
-        DD_EVENT("DownloadDriver::SetDownloaderToDeath downloader:" << downloader);
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::SetDownloaderToDeath downloader:" << downloader);
         downloader->Stop();
 
         // 删除索引
@@ -1552,9 +1559,7 @@ namespace p2sp
     void DownloadDriver::OnNoticeConnentLength(uint32_t file_length, VodDownloader__p downloader, network::HttpResponse::p http_response)
     {
         // if (http_response)
-        //    DD_EVENT("DownloadDriver::OnNoticeConnentLength file_length: " << file_length << " " << http_response->ToString());
         // else
-        //    DD_EVENT("DownloadDriver::OnNoticeConnentLength file_length: " << file_length);
 
         if (is_running_ == false)
             return;
@@ -1566,7 +1571,8 @@ namespace p2sp
 
         if (file_length == 0)
         {
-            DD_EVENT(__FUNCTION__ << " file_length=" << file_length << " Change to DirectMode");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " file_length=" << file_length << 
+                " Change to DirectMode");
             // HTTP Response头部无ContentLength, 使用Direct模式
             proxy_connection_->OnNoticeDirectMode(shared_from_this());
         }
@@ -1575,7 +1581,7 @@ namespace p2sp
             // 如果 IInstance-> FileLength == 0
             //     ppassert(downloader 一定是origanel的
             //     调用 IInstance->SetFileLength(content_length)
-            DD_EVENT(__FUNCTION__ << " path 2");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " path 2");
             assert(downloader->IsOriginal());
             instance_->SetFileLength(file_length);
             proxy_connection_->OnNoticeGetContentLength(file_length, http_response);
@@ -1585,14 +1591,14 @@ namespace p2sp
         {
             // 否则 如果 IInstance-> FileLength == content-length
             //         直接返回
-            DD_EVENT(__FUNCTION__ << " path 3");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " path 3");
             proxy_connection_->OnNoticeGetContentLength(file_length, http_response);
             statistic_->SetFileLength(file_length);
             return;
         }
         else if (true == is_open_service_)
         {
-            DD_EVENT(__FUNCTION__ << " path 4 is_openservice = true");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " path 4 is_openservice = true");
             proxy_connection_->OnNoticeGetContentLength(file_length, http_response);
             statistic_->SetFileLength(instance_->GetFileLength());
             return;
@@ -1609,7 +1615,7 @@ namespace p2sp
             //              intance_->Storage->CreateIntance()
             //              intance_->AttachDownloaddriver();
             //              停掉所有 非origanel的 Httpdownloader 纯下
-            DD_EVENT(__FUNCTION__ << " path 5");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " path 5");
             instance_->DettachDownloadDriver(shared_from_this());
             protocol::UrlInfo url_info_;
             downloader->GetUrlInfo(url_info_);
@@ -1801,11 +1807,12 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        LOG(__EVENT, "downloaddriver", "DownloadDriver::ChangeToPoolModel original_url_info_:" << original_url_info_ << ", inst=" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::ChangeToPoolModel original_url_info_:" << 
+            original_url_info_ << ", inst=" << shared_from_this());
 
         if (true == is_pool_mode_)
         {
-            LOG(__EVENT, "downloaddriver", __FUNCTION__ << " is_pool_mode_ = true");
+            LOG4CPLUS_INFO_LOG(logger_download_driver, __FUNCTION__ << " is_pool_mode_ = true");
             return;
         }
 
@@ -1983,7 +1990,9 @@ namespace p2sp
             }
             else if (downloader->CanDownloadPiece(piece_info_to_download.GetPieceInfo()))
             {
-                DD_EVENT("DownloadDriver::RequestNextPiece " << GetDownloadDriverID() << " " << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << " " << piece_info_to_download);
+                LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::RequestNextPiece " << GetDownloadDriverID() 
+                    << " " << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << 
+                    " " << piece_info_to_download);
                 // piece_request_manager_->AddPieceTask(piece_info_to_download, downloader);
                 // downloader->PutPieceTask(piece_info_to_download, shared_from_this());
                 // MainThread::Post(boost::bind(&Downloader::PutPieceTask, downloader, piece_info_to_download, shared_from_this()));
@@ -2041,7 +2050,9 @@ namespace p2sp
                     return true;
                 }
 #endif
-                DD_EVENT("DownloadDriver::RequestNextPiece " << GetDownloadDriverID() << " " << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << " " << piece_info_to_download);
+                LOG4CPLUS_INFO_LOG(logger_download_driver, "DownloadDriver::RequestNextPiece " << GetDownloadDriverID() 
+                    << " " << downloader->IsOriginal() << " " << downloader->IsP2PDownloader() << " " << downloader << 
+                    " " << piece_info_to_download);
                 piece_request_manager_->AddPieceTask(piece_info_to_download, downloader);
 
                 // 将任务放入任务队列
@@ -2050,13 +2061,13 @@ namespace p2sp
                 if (downloader->IsP2PDownloader())
                 {
                     // P2PDownloader
-                    LOG(__DEBUG, "dbg", "RequestNextPiece p2p add " << piece_info_to_download);
+                    LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RequestNextPiece p2p add " << piece_info_to_download);
                     downloader->PutPieceTask(piece_info_ex_s, shared_from_this());
                 }
                 else
                 {
                     // HTTP
-                    LOG(__DEBUG, "dbg", "RequestNextPiece http add " << piece_info_to_download);
+                    LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RequestNextPiece http add " << piece_info_to_download);
                     boost::int32_t num = 0;
                     if (downloader->GetSpeedInfo().NowDownloadSpeed > 25*1024)
                     {
@@ -2064,7 +2075,7 @@ namespace p2sp
                     }
                     LIMIT_MIN_MAX(num, 0, 7);
 
-                    LOG(__DEBUG, "ppbug", "RequestPiecesssssss num = " << num);
+                    LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RequestPiecesssssss num = " << num);
 
                     for (boost::int32_t i = 0; i<num; i++)
                     {
@@ -2090,7 +2101,8 @@ namespace p2sp
 #endif
                                 piece_request_manager_->AddPieceTask(piece_info_to_download, downloader);
                                 // 将任务放入任务队列
-                                LOG(__DEBUG, "dbg", "RequestNextPiece http add " << piece_info_to_download);
+                                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RequestNextPiece http add " << 
+                                    piece_info_to_download);
                                 piece_info_ex_s.push_back(piece_info_to_download);
                             }
                         }
@@ -2200,7 +2212,7 @@ namespace p2sp
 
     bool DownloadDriver::IsDrag()
     {
-        LOG(__DEBUG, "switch", "IsDrag = " << is_drag_);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "IsDrag = " << is_drag_);
         return is_drag_;
     }
 
@@ -2300,11 +2312,13 @@ namespace p2sp
 
         if (true == is_pragmainfo_noticed_)
         {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " is_pragmainfo_noticed_ = true");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << 
+                " is_pragmainfo_noticed_ = true");
             return;
         }
 
-        LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " Notice, head_length = " << head_length << ", mode = " << server_mod);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " Notice, head_length = " 
+            << head_length << ", mode = " << server_mod);
         is_pragmainfo_noticed_ = true;
 
         // change piece request manager
@@ -2317,18 +2331,20 @@ namespace p2sp
         }
         else if (boost::algorithm::istarts_with(server_mod, SYNACAST_MP4_STREAMING))
         {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " start_position = " << openservice_start_position_);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " start_position = " 
+                << openservice_start_position_);
             uint32_t task_start_position = openservice_start_position_;
             if (true == is_head_only_)
             {
-                LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " task_range = [0, " << openservice_head_length_ << "]; head_only = true!");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " task_range = [0, " 
+                    << openservice_head_length_ << "]; head_only = true!");
                 piece_request_manager_->ClearTaskRangeMap();
                 piece_request_manager_->AddTaskRange(0, openservice_head_length_);
             }
             else if (task_start_position > openservice_head_length_)
             {
-                LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " task_range = [0, " << openservice_head_length_
-                    << "]; [" << openservice_start_position_ << ", EOF]");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " task_range = [0, " 
+                    << openservice_head_length_ << "]; [" << openservice_start_position_ << ", EOF]");
                 piece_request_manager_->ClearTaskRangeMap();
                 piece_request_manager_->AddTaskRange(0, openservice_head_length_);
                 piece_request_manager_->AddTaskRange(task_start_position, 0);
@@ -2345,11 +2361,11 @@ namespace p2sp
 
     void DownloadDriver::SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps)
     {
-        LOGX(__DEBUG, "http_downlimiter", "speed_limit_in_KBps = " << speed_limit_in_KBps);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "speed_limit_in_KBps = " << speed_limit_in_KBps);
         speed_limit_in_KBps_ = speed_limit_in_KBps;
         if (false == is_running_)
         {
-            LOGX(__DEBUG, "http_downlimiter", "DownloadDriver Not Running, Just Store!");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "DownloadDriver Not Running, Just Store!");
             return;
         }
         for (std::set<VodDownloader__p>::iterator it = downloaders_.begin(); it != downloaders_.end(); ++it)
@@ -2396,7 +2412,8 @@ namespace p2sp
         if (false == is_running_)
         {
             return;
-        }LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " OnNoticeFileDownloadComplete dd=" << shared_from_this() << ", proxy=" << proxy_connection_);
+        }LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << 
+            " OnNoticeFileDownloadComplete dd=" << shared_from_this() << ", proxy=" << proxy_connection_);
         // MainThread::Post(boost::bind(&ProxyConnection::OnNoticeStopDownloadDriver, proxy_connection_));
         proxy_connection_->OnNoticeStopDownloadDriver();
     }
@@ -2421,7 +2438,7 @@ namespace p2sp
 
     void DownloadDriver::SetRestPlayTime(boost::uint32_t rest_play_time)
     {
-        DD_DEBUG("SetRestPlayTime " << rest_play_time);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "SetRestPlayTime " << rest_play_time);
         rest_play_time_ = rest_play_time;
         rest_play_time_set_counter_.reset();
 
@@ -2542,7 +2559,8 @@ namespace p2sp
 
             statistic_->SetSmartPara(rest_play_time_, bandwidth, speed_limit);
 
-            LOG(__DEBUG, "test", "Rest Play Time = " << rest_play_time_ << " speed_limit = " << speed_limit << " alpha = " << alpha << " beta = " << beta);
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "Rest Play Time = " << rest_play_time_ << " speed_limit = " 
+                << speed_limit << " alpha = " << alpha << " beta = " << beta);
 
             if (times % 5 == 0)
             {
@@ -2578,7 +2596,7 @@ namespace p2sp
             {
                 rate = p2p_downloader_->GetStatistic()->GetUDPLostRate();
                 rate = (1 - (float)p2p_downloader_->GetStatistic()->GetUDPLostRate() / (float)100) + 0.001;
-                LOG(__DEBUG, "test", "RATE = " << rate);
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RATE = " << rate);
             }
 
             if (p2p_downloader_)
@@ -2605,7 +2623,7 @@ namespace p2sp
         if (switch_control_mode_ != SwitchController::CONTROL_MODE_VIDEO_OPENSERVICE)
         {
             state = (boost::int32_t)SwitchController::MS_UNDEFINED;
-            LOG(__DEBUG, "downloaddriver", "GetDragMachineState: MS_UNDEFINED");
+            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "GetDragMachineState: MS_UNDEFINED");
 
 
             return;
@@ -2615,13 +2633,13 @@ namespace p2sp
             if (is_drag_local_play_for_switch_)
             {
                 state = (boost::int32_t)SwitchController::MS_YES;
-                LOG(__DEBUG, "downloaddriver", "GetDragMachineState is_drag_local_play: MS_YES");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "GetDragMachineState is_drag_local_play: MS_YES");
                 return;
             }
             else
             {
                 state = drag_machine_state_;
-                LOG(__DEBUG, "downloaddriver", "GetDragMachineState: " << state);
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "GetDragMachineState: " << state);
                 return;
             }
         }
@@ -2651,14 +2669,16 @@ namespace p2sp
                 }
                 else
                 {
-                    LOG(__ERROR, "", "data rate = 0");
+                    LOG4CPLUS_ERROR_LOG(logger_download_driver, "data rate = 0");
                 }
             }
             else
             {
-                LOG(__DEBUG, "", "RestPlayableTime " << GetRestPlayableTime());
-                LOG(__DEBUG, "", "download_time_counter.running " << download_time_counter_.running());
-                LOG(__DEBUG, "", "download_time_counter.elapsed " << download_time_counter_.elapsed());
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "RestPlayableTime " << GetRestPlayableTime());
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "download_time_counter.running " << 
+                    download_time_counter_.running());
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "download_time_counter.elapsed " << 
+                    download_time_counter_.elapsed());
             }
         }
     }
@@ -2669,7 +2689,7 @@ namespace p2sp
         {
             if (is_open_service_)
             {
-                LOG(__DEBUG, "test", "DownloadDriver::OnTimerElapsed");
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "DownloadDriver::OnTimerElapsed");
                 SmartLimitSpeed(pointer->times());
             }
 
@@ -2778,8 +2798,9 @@ namespace p2sp
         assert(!rid_info_.HasRID());
         assert(ridinfo.HasRID());
 
-        LOG(__DEBUG, "", "SetRidInfo: this:" << shared_from_this() <<", instance:" << instance_);
-        LOG(__DEBUG, "", "SetRidInfo: " << ridinfo.GetRID().to_string());
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "SetRidInfo: this:" << shared_from_this() <<", instance:" 
+            << instance_);
+        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "SetRidInfo: " << ridinfo.GetRID().to_string());
 
         rid_info_ = ridinfo;
         if (proxy_connection_)

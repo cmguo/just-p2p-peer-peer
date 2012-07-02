@@ -9,16 +9,11 @@
 #include "p2sp/p2p/P2PDownloader.h"
 #include "p2sp/AppModule.h"
 
-#define IPPOOL_DEBUG(s)    LOG(__DEBUG, "ippool", s)
-#define IPPOOL_INFO(s)    LOG(__INFO, "ippool", s)
-#define IPPOOL_EVENT(s)    LOG(__EVENT, "ippool", s)
-#define IPPOOL_WARN(s)    LOG(__WARN, "ippool", s)
-#define IPPOOL_ERROR(s)    LOG(__ERROR, "ippool", s)
-
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("ippool");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_ippool = log4cplus::Logger::getInstance("[ippool]");
+#endif
     //////////////////////////////////////////////////////////////////////////
     // 用于 智能 添加索引 和 删除索引所用
     struct IPPoolIndexUpdating
@@ -55,7 +50,7 @@ namespace p2sp
     {
         if (is_running_ == true) return;
 
-        IPPOOL_INFO("IpPool::Start");
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::Start");
 
         assert(candidate_peers_.size() == 0);
 
@@ -70,7 +65,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_INFO("IpPool::Stop");
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::Stop");
 
         // 清除内部所有的 protocol::CandidatePeerInfo 结构
         candidate_peers_.clear();
@@ -86,7 +81,7 @@ namespace p2sp
 
         protocol::SocketAddr key = peer->GetKey();
 
-        // IPPOOL_INFO("UUP = " << *peer);
+        // LOG4CPLUS_INFO_LOG(logger_ippool, "UUP = " << *peer);
 
         if (black_list_.find(peer->GetKey()) !=  black_list_.end())
         {
@@ -97,12 +92,14 @@ namespace p2sp
         if (iter == candidate_peers_.end())
         {
             IPPoolIndexUpdating indexUpdating(peer, shared_from_this());
-            IPPOOL_INFO("IpPool::AddPeer because CandidatePeer " << *peer << " not found, so insert it");
+            LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::AddPeer because CandidatePeer " << *peer << 
+                " not found, so insert it");
             candidate_peers_.insert(std::make_pair(key, peer));
         }
         else
         {
-            IPPOOL_INFO("IpPool::AddPeer because CandidatePeer " << *peer << " existed, so update it");
+            LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::AddPeer because CandidatePeer " << *peer << 
+                " existed, so update it");
             CandidatePeer::p self_peer = iter->second;
             IPPoolIndexUpdating indexUpdating(self_peer, shared_from_this());
             self_peer->BeCopiedTo(peer);
@@ -141,7 +138,7 @@ namespace p2sp
 
             if (true == IsSelf(peer))
             {
-                IPPOOL_INFO("IpPool::AddCandidatePeers can not add self peer " << *iter);
+                LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::AddCandidatePeers can not add self peer " << *iter);
                 continue;
             }
             // 将这些 CadidatePeerInfo 结构 添加到内部
@@ -209,14 +206,16 @@ namespace p2sp
         // 连接策略 实现
         if (connect_index_.size() == 0)
         {
-            IPPOOL_WARN("IpPool::GetForConnect Failed! IpPoolSize = 0, CandidatePeer: " << peer_info);
+            LOG4CPLUS_WARN_LOG(logger_ippool, "IpPool::GetForConnect Failed! IpPoolSize = 0, CandidatePeer: " 
+                << peer_info);
             return false;
         }
 
         CandidatePeer::p peer = connect_index_.begin()->second;
         if (peer->CanConnect(is_udpserver) == false)
         {
-            IPPOOL_WARN("IpPool::GetForConnect Failed! CanConnect = false, CandidatePeer: " << (*peer));
+            LOG4CPLUS_WARN_LOG(logger_ippool, "IpPool::GetForConnect Failed! CanConnect = false, CandidatePeer: " 
+                << (*peer));
             return false;
         }
 
@@ -238,7 +237,8 @@ namespace p2sp
         CandidatePeer::p peer = exchange_index_.begin()->second;
         if (peer->CanExchange() == false)
         {
-            IPPOOL_WARN("IpPool::GetForExchange Failed because CandidatePeer " << *peer << " can not exchange");
+            LOG4CPLUS_WARN_LOG(logger_ippool, "IpPool::GetForExchange Failed because CandidatePeer " << *peer 
+                << " can not exchange");
             return false;
         }
 
@@ -253,7 +253,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_EVENT("IpPool::OnConnect Endpoint = " << end_point);
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::OnConnect Endpoint = " << end_point);
 
         protocol::SocketAddr socket_addr(end_point.address().to_v4().to_ulong(), end_point.port());
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(socket_addr);
@@ -274,7 +274,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_EVENT("IpPool::OnConnectFailed Endpoint=" << end_point);
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::OnConnectFailed Endpoint=" << end_point);
 
         protocol::SocketAddr socket_addr(end_point.address().to_v4().to_ulong(), end_point.port());
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(socket_addr);
@@ -294,7 +294,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_EVENT("IpPool::OnConnectTimeout Endpoint=" << end_point);
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::OnConnectTimeout Endpoint=" << end_point);
 
         protocol::SocketAddr socket_addr(end_point.address().to_v4().to_ulong(), end_point.port());
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(socket_addr);
@@ -313,7 +313,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_EVENT("IpPool::OnConnectSucced Endpoint=" << end_point);
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::OnConnectSucced Endpoint=" << end_point);
 
         protocol::SocketAddr socket_addr(end_point.address().to_v4().to_ulong(), end_point.port());
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(socket_addr);
@@ -333,7 +333,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        IPPOOL_EVENT("IpPool::OnDisConnect Endpoint=" << end_point);
+        LOG4CPLUS_INFO_LOG(logger_ippool, "IpPool::OnDisConnect Endpoint=" << end_point);
 
         protocol::SocketAddr socket_addr(end_point.address().to_v4().to_ulong(), end_point.port());
         std::map<protocol::SocketAddr, CandidatePeer::p>::iterator iter = candidate_peers_.find(socket_addr);
@@ -364,8 +364,6 @@ namespace p2sp
     void IpPool::AddIndex(CandidatePeer::p peer)
     {
         if (is_running_ == false) return;
-
-        // IPPOOL_INFO("UPP = " << *peer);
 
         exchange_index_.insert(std::make_pair(peer->GetExchangeIndicator(), peer));
         connect_index_.insert(std::make_pair(peer->GetConnectIndicator(), peer));

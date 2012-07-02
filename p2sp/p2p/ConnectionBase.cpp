@@ -9,8 +9,6 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
-
     bool ConnectionBase::IsRunning() const
     {
         return is_running_;
@@ -258,8 +256,6 @@ namespace p2sp
         {
             for (uint32_t i = 0; i < subpieces.size(); ++i)
             {
-                //LOG(__EVENT, "P2P", "PeerConnection::RequestSubPiece " << (*(p2p_downloader_->GetDownloadDrivers().begin()))->GetDownloadDriverID() << " " << 0 << " " << 1 << " " << shared_from_this() << " " << protocol::SubPieceInfo(subpieces[i]));
-                //LOG(__EVENT, "P2P", "PeerConnection::SubpieceTimeOut: " << *(p2p_downloader_->GetDownloadDrivers().begin()) << " " << shared_from_this() << " " << protocol::SubPieceInfo(subpieces[i]) << " " << curr_time_out_);
             }
         }
 

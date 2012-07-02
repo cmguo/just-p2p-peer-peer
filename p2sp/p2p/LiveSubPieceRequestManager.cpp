@@ -4,7 +4,10 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_subpiece_request_manager");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_subpiece_request_manager = log4cplus::Logger::
+        getInstance("[live_subpiece_request_manager]");
+#endif
 
     void LiveSubPieceRequestManager::Add(
         const protocol::LiveSubPieceInfo & subpiece_info, 
@@ -24,7 +27,7 @@ namespace p2sp
         {
             if (iter->second->IsTimeout())
             {
-                LOG(__DEBUG, "live_p2p", "subpiece timeout " << iter->first);
+                LOG4CPLUS_DEBUG_LOG(logger_live_subpiece_request_manager, "subpiece timeout " << iter->first);
                 iter->second->peer_connection_->OnSubPieceTimeout();
                 request_tasks_.erase(iter++);
             }
@@ -37,7 +40,7 @@ namespace p2sp
 
     void LiveSubPieceRequestManager::OnSubPiece(const protocol::LiveSubPiecePacket & packet)
     {
-        LOG(__DEBUG, "live_p2p", "recvive subpiece " << packet.sub_piece_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_live_subpiece_request_manager, "recvive subpiece " << packet.sub_piece_info_);
 
         std::pair<std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator,
             std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator> range = 

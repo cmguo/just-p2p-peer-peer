@@ -10,7 +10,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_file_resource = log4cplus::Logger::getInstance("[file_resource_info]");
+#endif
     using namespace base;
     using base::util::memcpy2;
 
@@ -214,7 +216,8 @@ namespace storage
     {
         if ((buf.Length() >= 2 * 1024 * 1024) || (buf.Length() < 4))
         {
-            STORAGE_ERR_LOG("FileResourceInfo::Parse SubPieceContent size error! " << buf.Length());
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, "FileResourceInfo::Parse SubPieceContent size error! " 
+                << buf.Length());
             return false;
         }
 
@@ -230,7 +233,8 @@ namespace storage
         memcpy2(&total_len, sizeof(total_len), p + offset, sizeof(uint32_t));
         if (total_len != buf.Length())
         {
-            STORAGE_ERR_LOG("FileResourceInfo::Parse length error! buf.Length():" << buf.Length() << " total_len:" << total_len);
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, "FileResourceInfo::Parse length error! buf.Length():" 
+                << buf.Length() << " total_len:" << total_len);
             return false;
         }
         offset += sizeof(uint32_t);

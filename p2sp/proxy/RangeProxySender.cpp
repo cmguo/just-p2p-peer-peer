@@ -11,15 +11,15 @@
 #include "p2sp/proxy/RangeInfo.h"
 #include "p2sp/download/DownloadDriver.h"
 
-#define RANGE_DEBUG(msg) LOGX(__DEBUG, "proxy", msg)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_range_proxy = log4cplus::Logger::getInstance("[range_proxy]");
+#endif
 
     void RangeProxySender::Start()
     {
-        RANGE_DEBUG("Invalid Start Function Call!!!");
+        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Invalid Start Function Call!!!");
         assert(!"RangeProxySender::Start()");
     }
 
@@ -35,18 +35,18 @@ namespace p2sp
     {
         if (is_running_ == true) return;
 
-        RANGE_DEBUG("");
+        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "");
         proxy_connection_ = proxy_connection;
         range_info_ = range_info;
         if (!range_info_) 
         {
-            RANGE_DEBUG("RangeInfo Should not be NULL!");
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "RangeInfo Should not be NULL!");
             assert(false);
         }
         else
         {
             playing_position_ = (range_info_->GetRangeBegin() / 1024) * 1024;
-            RANGE_DEBUG("playing_position = " << playing_position_);
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "playing_position = " << playing_position_);
         }
 
         is_running_ = true;
@@ -61,7 +61,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        RANGE_DEBUG("");
+        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "");
 
         if (http_server_socket_)
         {
@@ -93,13 +93,16 @@ namespace p2sp
         {
             uint32_t range_begin = range_info_->GetRangeBegin();
             uint32_t range_end = range_info_->GetRangeEnd();
-            RANGE_DEBUG("RangeInfo, begin = " << range_begin << ", end = " << range_end << ", start_position = " << start_position << ", buffer.length = " << buffer.Length());
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "RangeInfo, begin = " << range_begin << ", end = " << range_end 
+                << ", start_position = " << start_position << ", buffer.length = " << buffer.Length());
             if (start_position <= range_begin && range_begin < start_position + buffer.Length())
             {
-                RANGE_DEBUG("start_position <= range_begin && range_begin < start_position + buffer.Length()");
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, 
+                    "start_position <= range_begin && range_begin < start_position + buffer.Length()");
                 if (range_end + 1 < start_position + buffer.Length())
                 {
-                    RANGE_DEBUG("range_end + 1 < start_position + buffer.Length(), jump to end of file");
+                    LOG4CPLUS_DEBUG_LOG(logger_range_proxy, 
+                        "range_end + 1 < start_position + buffer.Length(), jump to end of file");
                     http_server_socket_->HttpSendBuffer(buffer.Data() + (range_begin - start_position), range_end - range_begin + 1);
                     playing_position_ = file_length_;
                 }
@@ -111,10 +114,11 @@ namespace p2sp
             }
             else if (start_position >= range_begin && start_position <= range_end)
             {
-                RANGE_DEBUG("start_position >= range_begin && start_position <= range_end");
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "start_position >= range_begin && start_position <= range_end");
                 if (range_end + 1 < start_position + buffer.Length())
                 {
-                    RANGE_DEBUG("range_end + 1 < start_position + buffer.Length(), jump to end of file");
+                    LOG4CPLUS_DEBUG_LOG(logger_range_proxy, 
+                        "range_end + 1 < start_position + buffer.Length(), jump to end of file");
                     http_server_socket_->HttpSendBuffer(buffer.Data(), range_end - start_position + 1);
                     playing_position_ = file_length_;
                 }
@@ -126,13 +130,15 @@ namespace p2sp
             }
             else if (start_position > range_end)
             {
-                RANGE_DEBUG("start_position > range_end, jump to end of file");
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "start_position > range_end, jump to end of file");
                 playing_position_ = file_length_;
             }
         }
         else
         {
-            RANGE_DEBUG("Send protocol::SubPieceContent to: " << http_server_socket_->GetEndPoint() << " start_possition: " << start_position << " buffer_length: " << buffer.Length());
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Send protocol::SubPieceContent to: " 
+                << http_server_socket_->GetEndPoint() << " start_possition: " << start_position 
+                << " buffer_length: " << buffer.Length());
 
             http_server_socket_->HttpSendBuffer(buffer);
             playing_position_ += buffer.Length();
@@ -140,7 +146,7 @@ namespace p2sp
 
         if (playing_position_ == file_length_)
         {
-            RANGE_DEBUG("playing_position_ == file_length_ send \\r\\n\\r\\n");
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "playing_position_ == file_length_ send \\r\\n\\r\\n");
         }
     }
 
@@ -153,19 +159,22 @@ namespace p2sp
             return;
         }
 
-        RANGE_DEBUG("Endpoint = " << http_server_socket_->GetEndPoint() << " content_length: " << content_length);
+        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Endpoint = " << http_server_socket_->GetEndPoint() 
+            << " content_length: " << content_length);
         file_length_ = content_length;
         if (range_info_)
         {
             if (range_info_->GetRangeEnd() == RangeInfo::npos)
             {
                 range_info_->SetRangeEnd(file_length_ - 1);
-                RANGE_DEBUG("RangeEnd == npos, SetRangeEnd = " << range_info_->GetRangeEnd());
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "RangeEnd == npos, SetRangeEnd = " 
+                    << range_info_->GetRangeEnd());
             }
             else if (range_info_->GetRangeEnd() >= file_length_)
             {
                 range_info_->SetRangeEnd(file_length_ - 1);
-                RANGE_DEBUG("RangeEnd >= file_length_, SetRangeEnd = " << range_info_->GetRangeEnd());
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "RangeEnd >= file_length_, SetRangeEnd = " 
+                    << range_info_->GetRangeEnd());
             }
         }
 
@@ -183,7 +192,7 @@ namespace p2sp
         if (true == is_response_header_)
             return;
 
-        RANGE_DEBUG("Notice 403 header");
+        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Notice 403 header");
 
         http_server_socket_->HttpSend403Header();
     }
@@ -244,7 +253,7 @@ namespace p2sp
             http_response->SetProperty("LocalPlay", proxy_connection_->GetDownloadDriver()->IsDragLocalPlayForClient() ? "yes" : "no");
             
             // send
-            RANGE_DEBUG("Send response string: \n" << http_response->ToString());
+            LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Send response string: \n" << http_response->ToString());
             http_server_socket_->HttpSendHeader(http_response->ToString());
         }
         else
@@ -256,7 +265,7 @@ namespace p2sp
             else
             {
                 http_response->SetProperty("Connection", "close");
-                RANGE_DEBUG("Send response string: \n" << http_response->ToString());
+                LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Send response string: \n" << http_response->ToString());
                 http_server_socket_->HttpSendHeader(http_response->ToString());
             }
         }

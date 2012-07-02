@@ -41,7 +41,9 @@ using p2sp::ProxyModule;
 #include "WindowsMessage.h"
 #endif
 
-FRAMEWORK_LOGGER_DECLARE_MODULE("struct");
+#ifdef LOG_ENABLE
+static log4cplus::Logger logger_peer = log4cplus::Logger::getInstance("[peer]");
+#endif
 
 #ifdef BOOST_WINDOWS_API
 
@@ -131,10 +133,6 @@ bool IsProxyModuleStarted()
         ProxyModule::Inst()->IsRunning();
 }
 
-#if (defined _DEBUG || defined DEBUG)
-    framework::configure::Config conf("peer.conf");
-#endif
-
 #ifdef PEER_PC_CLIENT
 void PEER_API Startup(LPWSTARTPARAM lpParam)
 #else
@@ -142,11 +140,12 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
 {
     boost::unique_lock<boost::mutex> ul(peer_mu_);
-    LOGX(__DEBUG, "app", "StartKernel");
  
-#if (defined _DEBUG || defined DEBUG)
-    framework::logger::glog.load_config(conf);
+#ifdef LOG_ENABLE
+    log4cplus::Logger root=log4cplus::Logger::getRoot();
+    PropertyConfigurator::doConfigure("C:\\Program Files\\Common Files\\PPLiveNetwork\\peer.config");
 #endif
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "StartKernel");
 
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().SetHWND((HWND)lpParam->hWnd);
@@ -248,7 +247,7 @@ void PEER_API SetUrlFileName(char const * lpszUrl, boost::uint32_t nUrlLength, w
 
     string url(lpszUrl, nUrlLength);
     string file_name(base::ws2s(std::wstring(lptszFileName, nFileNameLength)));
-    LOG(__INFO, "struct", "SetUrlFileName url:" << url << " name:" << file_name);
+    LOG4CPLUS_INFO_LOG(logger_peer, "SetUrlFileName url:" << url << " name:" << file_name);
 
     if (!storage::Storage::Inst())
         return;
@@ -301,7 +300,7 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
     string user_agent(lpszUserAgent, nUserAgentLength);
     string qualified_file_name(base::ws2s(std::wstring(lpszFileName, nFileNameLength)));
 
-    LOGX(__DEBUG, "struct", "\n\tUrl = " << url << "\n\tReferer = " << refer_url << "\n\tWebUrl = " << web_url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "\n\tUrl = " << url << "\n\tReferer = " << refer_url);
 
     // check name
     string ext = (".tpp");
@@ -312,7 +311,7 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
 
     global_io_svc().post(boost::bind(&p2sp::ProxyModule::StartDownloadFile, p2sp::ProxyModule::Inst(), url,
         refer_url, user_agent, qualified_file_name));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "global_io_svc().post");
 #endif
 }
 
@@ -320,7 +319,7 @@ void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
 {
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
-        LOGX(__DEBUG, "struct", "NULL == lpszUrl || 0 == nUrlLength");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "NULL == lpszUrl || 0 == nUrlLength");
         return;
     }
 
@@ -330,10 +329,10 @@ void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
     }
 
     string url(lpszUrl, nUrlLength);
-    LOGX(__DEBUG, "struct", "Url = " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "Url = " << url);
 
     global_io_svc().post(boost::bind(&p2sp::ProxyModule::StopProxyConnection, p2sp::ProxyModule::Inst(), url));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "global_io_svc().post");
 }
 
 void PEER_API ResetCompleteCount()
@@ -375,7 +374,7 @@ void PEER_API RemoveDownloadFileEx(char const * lpszUrl, boost::uint32_t nUrlLen
 */
 void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_t nUrlLength, boost::int32_t speed_in_KBps)
 {
-    LOGX(__DEBUG, "struct", "Url = " << lpszUrl);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "Url = " << lpszUrl);
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
         return;
@@ -391,7 +390,7 @@ void PEER_API LimitDownloadSpeedInKBpsByUrl(char const * lpszUrl, boost::uint32_
     // limit speed
     global_io_svc().post(boost::bind(&p2sp::ProxyModule::LimitDownloadSpeedInKBps, p2sp::ProxyModule::Inst(),
         url, speed_in_KBps));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "global_io_svc().post");
 }
 
 boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::uint32_t nRIDLength, boost::int32_t * pTotalSize)
@@ -399,7 +398,7 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
 #ifdef PEER_PC_CLIENT
     if (NULL == lpszRID || 0 == nRIDLength)
     {
-        LOGX(__DEBUG, "struct", " lpwszRID = NULL || nRIDLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszRID = NULL || nRIDLength == 0");
         return -1;
     }
 
@@ -408,21 +407,21 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "struct", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         return -2;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ProxyModule is not running!");
         return -3;
     }
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
 
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer,"ResultHolder: " << result);
 
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
 
@@ -431,7 +430,8 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
 
     event_wait->Wait();
 
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_progress = " << download_progress << ", total_size = " << pTotalSize);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "event_wait->Wait() Succeed: download_progress = " << download_progress << 
+        ", total_size = " << pTotalSize);
     return download_progress;
 #endif
 }
@@ -445,31 +445,31 @@ boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint3
 #ifdef PEER_PC_CLIENT
     if (NULL == lpszRID || 0 == nRIDLength)
     {
-        LOGX(__DEBUG, "struct", " lpwszRID = NULL || nRIDLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszRID = NULL || nRIDLength == 0");
         return -1;
     }
 
     string rid_str(base::ws2s(std::wstring(lpszRID, nRIDLength)));
 
 
-    LOGX(__DEBUG, "struct", " rid_str = " << rid_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " rid_str = " << rid_str);
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "struct", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         return -2;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ProxyModule is not running!");
         return -3;
     }
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     boost::int32_t download_speed;
@@ -478,7 +478,7 @@ boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint3
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
 
     return download_speed;
@@ -490,13 +490,13 @@ boost::int32_t PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszURL, boos
 #ifdef PEER_PC_CLIENT
     if (NULL == lpszURL || 0 == nURLLength)
     {
-        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszURL = NULL || nURLLength == 0");
         return -1;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ProxyModule is not running!");
         return -3;
     }
 
@@ -525,25 +525,25 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
 #ifdef PEER_PC_CLIENT
     if (NULL == lpszURL || 0 == nURLLength)
     {
-        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszURL = NULL || nURLLength == 0");
         return -1;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ProxyModule is not running!");
         return -3;
     }
 
     string url_str(base::ws2s(std::wstring(lpszURL, nURLLength)));
 
 
-    LOGX(__DEBUG, "struct", " url_str = " << url_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " url_str = " << url_str);
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "struct", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "struct", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     boost::int32_t download_speed;
@@ -552,7 +552,7 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "struct", "event_wait->Wait() Succeed: download_speed = " << download_speed);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "event_wait->Wait() Succeed: download_speed = " << download_speed);
 
     return download_speed;
 #endif
@@ -578,26 +578,26 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
 
     if (NULL == lpwszRID || 0 == nRIDLength)
     {
-        LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszRID = NULL || nRIDLength == 0");
         return peer_state;
     }
 
     string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
 
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " RID = " << rid_str);
 
 
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         return peer_state;
     }
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "interface", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     global_io_svc().post(
@@ -605,9 +605,8 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
        );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
-    // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);;
-
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << 
+        " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
     return peer_state;
 #endif
 }
@@ -653,18 +652,18 @@ void PEER_API SetRestPlayTime(const char * lpszRID, boost::uint32_t nRIDLength, 
     string rid_str(lpszRID, nRIDLength);
 #endif
 
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " RID = " << rid_str);
 
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         return;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
@@ -679,18 +678,18 @@ void PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLeng
 #ifdef PEER_PC_CLIENT
     string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
 
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " RID = " << rid_str);
 
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         return;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
@@ -709,43 +708,43 @@ void PEER_API SetPeerState(uint32_t nPeerState)
 {
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
-    LOGX(__DEBUG, "struct", "nPeerState " << nPeerState);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState " << nPeerState);
     boost::uint32_t peer_state = 0;
     switch (nPeerState & 0xffff0000)
     {
     case PEERSTATE_MAIN_STATE:
         peer_state |= PEERSTATE_MAIN_STATE;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_MAIN_STATE");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_MAIN_STATE");
         break;
     case PEERSTATE_RESIDE_STATE:
         peer_state |= PEERSTATE_RESIDE_STATE;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_RESIDE_STATE");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_RESIDE_STATE");
         break;
     default:
         peer_state |= PEERSTATE_MAIN_STATE;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_MAIN_STATE (default)");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_MAIN_STATE (default)");
     }
     switch (nPeerState & 0x0000ffff)
     {
     case PEERSTATE_LIVE_NONE:
         peer_state |= PEERSTATE_LIVE_NONE;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_LIVE_NONE");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_NONE");
         break;
     case PEERSTATE_LIVE_WORKING:
         peer_state |= PEERSTATE_LIVE_WORKING;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_LIVE_WORKING");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_WORKING");
         break;
     default:
         peer_state |= PEERSTATE_LIVE_NONE;
-        LOGX(__DEBUG, "struct", "nPeerState | PEERSTATE_LIVE_NONE (default)");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_NONE (default)");
     }
 
     global_io_svc().post(boost::bind(&p2sp::AppModule::SetPeerState, p2sp::AppModule::Inst(), peer_state));
-    LOGX(__DEBUG, "struct", "global_io_svc().post");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "global_io_svc().post");
 }
 
 // 拖动时查询内核状态
@@ -759,19 +758,19 @@ void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDL
 
     if (NULL == lpwszRID || 0 == nRIDLength)
     {
-        LOGX(__DEBUG, "interface", " lpwszRID = NULL || nRIDLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszRID = NULL || nRIDLength == 0");
         *state = 0;
         return;
     }
 
     string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
 
-    LOGX(__DEBUG, "interface", " RID = " << rid_str);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " RID = " << rid_str);
 
     RID rid;
     if (rid.from_string(rid_str))
     {
-        LOGX(__DEBUG, "interface", " rid Parse Failed!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " rid Parse Failed!");
         *state = 0;
         return;
     }
@@ -785,7 +784,7 @@ void PEER_API QueryDragPeerState(const wchar_t * lpwszRID, boost::uint32_t nRIDL
 
     event_wait->Wait();
 
-    LOGX(__DEBUG, "interface", "QUERYDRAGPEERSTATE Succeed: " << *state);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "QUERYDRAGPEERSTATE Succeed: " << *state);
 #endif
 }
 
@@ -808,16 +807,16 @@ boost::int32_t PEER_API GetBasicPeerInfo(
     if (tcp_port == NULL || udp_port == NULL || bs_ip == NULL
         || tracker_count == NULL || stun_count == NULL || upload_speed == NULL)
     {
-        LOGX(__DEBUG, "interface", " param NULL");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " param NULL");
         return 1;
     }
 
-    LOGX(__DEBUG, "interface", " GetBasicPeerInfo");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " GetBasicPeerInfo");
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "interface", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
     // 向StatisticModule发请求
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
@@ -845,13 +844,13 @@ boost::int32_t PEER_API GetBasicPeerInfo(
         std::wstring str_bs_ip(base::s2ws(bs_ip_s));
         wcscpy(bs_ip, str_bs_ip.c_str());
 
-        LOGX(__DEBUG, "interface", "-----------BasicPeerInfo-----------");
-        LOGX(__DEBUG, "interface", "tcp_port: " << *tcp_port);
-        LOGX(__DEBUG, "interface", "udp_port: " << *udp_port);
-        LOGX(__DEBUG, "interface", "tracker_count: " << *tracker_count);
-        LOGX(__DEBUG, "interface", "stun_count: " << *stun_count);
-        LOGX(__DEBUG, "interface", "upload_speed: " << *upload_speed);
-        LOGX(__DEBUG, "interface", "ips: " << bs_ip_s);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "-----------BasicPeerInfo-----------");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "tcp_port: " << *tcp_port);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "udp_port: " << *udp_port);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "tracker_count: " << *tracker_count);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "stun_count: " << *stun_count);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "upload_speed: " << *upload_speed);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ips: " << bs_ip_s);
 
         return 0;
     }
@@ -873,7 +872,7 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
     if (ilistCount == NULL || iConnectCount == NULL || iAverSpeed == NULL
         || strURL == NULL)
     {
-        LOGX(__DEBUG, "interface", " param NULL");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " param NULL");
         return 1;
     }
 
@@ -885,11 +884,11 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
     }
     else
     {
-        LOGX(__DEBUG, "interface", " play info failed, url: " << url);
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " play info failed, url: " << url);
         return 2;
     }
 
-    LOGX(__DEBUG, "interface", " start: " << start << ", url: " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " start: " << start << ", url: " << url);
 
     // 先解析出url和rid
 
@@ -898,9 +897,9 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
     case 0:  // 查询
         {
             Event::p event_wait = Event::Create();
-            LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
+            LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
             boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-            LOGX(__DEBUG, "interface", "ResultHolder: " << result);
+            LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
             boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
             global_io_svc().post(
@@ -911,7 +910,7 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
             event_wait->Wait();
 
 
-            LOGX(__DEBUG, "interface", "listcount: " << *ilistCount << ", speed: " << *iAverSpeed);
+            LOG4CPLUS_DEBUG_LOG(logger_peer, "listcount: " << *ilistCount << ", speed: " << *iAverSpeed);
         }
         break;
     case 1:  // 下载
@@ -950,7 +949,7 @@ void PEER_API StopLimitDownloadConnection()
 // 获得Peer统计的用户带宽值
 int PEER_API GetPeerBandWidthInKB()
 {
-    LOGX(__DEBUG, "", "GetPeerBandWidthInKB");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "GetPeerBandWidthInKB");
 
     if (!IsProxyModuleStarted())
     {
@@ -975,7 +974,7 @@ bool    PEER_API GetCompeletedFilePath(
    )
 {
 #ifdef PEER_PC_CLIENT
-    LOGX(__DEBUG, "interface", "GetCompeletedFilePath");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "GetCompeletedFilePath");
 
     if (NULL == lpwszRID || NULL == lpwszRID)
     {
@@ -1030,13 +1029,13 @@ bool    PEER_API GetCompeletedFilePath(
  */
 void PEER_API SetSendSpeedLimitByUrl(const char * url, boost::int32_t url_len, boost::int32_t send_speed_limit)
 {
-    LOGX(__DEBUG, "interface", "SetSendSpeedLimitByUrl");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "SetSendSpeedLimitByUrl");
 
     string url_str(url, url_len);
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
         return;
     }
 
@@ -1052,7 +1051,7 @@ void PEER_API DisableUpload(bool is_enable_or_disable)
 {
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
         return;
     }
 
@@ -1073,7 +1072,7 @@ boost::int32_t PEER_API QueryBlockHashFailed(const char * str_rid, boost::uint32
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
         return 0;
     }
 
@@ -1099,7 +1098,7 @@ boost::int32_t PEER_API QueryConnectionCount()
 {
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
         return 0;
     }
 
@@ -1120,12 +1119,12 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachineByUrl(const char * url)
         return peer_state;
     }
 
-    LOGX(__DEBUG, "interface", " url = " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " url = " << url);
 
     Event::p event_wait = Event::Create();
-    LOGX(__DEBUG, "interface", "CreateEvent: " << event_wait);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "CreateEvent: " << event_wait);
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
-    LOGX(__DEBUG, "interface", "ResultHolder: " << result);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "ResultHolder: " << result);
 
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
     global_io_svc().post(
@@ -1133,8 +1132,8 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachineByUrl(const char * url)
         );
 
     event_wait->Wait();
-    LOGX(__DEBUG, "interface", "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
-    // DBV_LOG("[PPLive::Peer] " << "DownloadSpeed Return: " << result->state_machine_ << " http_speed = " << result->http_speed_ << " p2p_speed = " << result->p2p_speed_);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "event_wait->Wait() Succeed: state = " << peer_state.state_machine_ << 
+        " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
 
     return peer_state;
 }
@@ -1142,11 +1141,11 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachineByUrl(const char * url)
 void PEER_API SetRestPlayTimeByUrl(const char * url, boost::uint32_t rest_play_time)
 {
     //DebugLog("SetRestPlayTimeByUrl url:%s, rest_play_time=%d", url, rest_play_time);
-    LOGX(__DEBUG, "interface", " url = " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " url = " << url);
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
@@ -1160,11 +1159,11 @@ void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 {
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
-    LOGX(__DEBUG, "interface", " url = " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " url = " << url);
 
     Event::p event_wait = Event::Create();
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
@@ -1175,7 +1174,7 @@ void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 
     event_wait->Wait();
 
-    LOGX(__DEBUG, "interface", "QueryDragPeerStateByUrl Succeed: " << *state);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "QueryDragPeerStateByUrl Succeed: " << *state);
 
     return;
 }
@@ -1183,11 +1182,11 @@ void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 void PEER_API SetDownloadModeByUrl(const char * url, boost::uint32_t download_mode)
 {
     DebugLog("SetDownloadModeByUrl url:%s", url);
-    LOGX(__DEBUG, "interface", " url = " << url);
+    LOG4CPLUS_DEBUG_LOG(logger_peer, " url = " << url);
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not started!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not started!");
         return;
     }
 
@@ -1201,7 +1200,7 @@ bool PEER_API GetCompeletedFilePathByUrl(const char * url, wchar_t* lpwszPath, b
 {
     DebugLog("GetCompeletedFilePathByUrl url:%s", url);
 #ifdef PEER_PC_CLIENT
-    LOGX(__DEBUG, "interface", "GetCompeletedFilePath");
+    LOG4CPLUS_DEBUG_LOG(logger_peer, "GetCompeletedFilePath");
 
     if (!IsProxyModuleStarted())
     {
@@ -1241,7 +1240,7 @@ boost::int32_t PEER_API QueryBlockHashFailedByUrl(const char * url)
     DebugLog("QueryBlockHashFailedByUrl url:%s", url);
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "interface", "Proxy Module is not running");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
         return 0;
     }
 
@@ -1272,13 +1271,13 @@ void PEER_API QueryDownloadProgressByUrlNew(char const * lpszUrl, boost::uint32_
 {
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
-        LOGX(__DEBUG, "struct", " lpwszURL = NULL || nURLLength == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, " lpwszURL = NULL || nURLLength == 0");
         return;
     }
 
     if (!IsProxyModuleStarted())
     {
-        LOGX(__DEBUG, "struct", "ProxyModule is not running!");
+        LOG4CPLUS_DEBUG_LOG(logger_peer, "ProxyModule is not running!");
         return;
     }
 

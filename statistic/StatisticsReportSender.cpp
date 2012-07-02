@@ -12,7 +12,10 @@
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics_collection");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistics_report_sender = log4cplus::Logger::
+        getInstance("[statistics_report_sender]");
+#endif
 
     StatisticsReportSender::StatisticsReportSender(const std::vector<string>& servers)
         : servers_(servers),selected_server_index_(-1),
@@ -68,7 +71,8 @@ namespace statistic
                 break;
             }
             
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Skipping a statistics report as it's not valid any more (may be already expired).");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_report_sender, __FUNCTION__ << 
+                " Skipping a statistics report as it's not valid any more (may be already expired).");
             
             pending_reports_.pop_front();
         }
@@ -97,13 +101,15 @@ namespace statistic
         boost::interprocess::basic_vectorstream<vector<char> > data;
         if (request_to_send->GetCompressedData(data))
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " successfully compressed statistics data.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_report_sender, __FUNCTION__ << 
+                " successfully compressed statistics data.");
             http_post_->AsyncPost(data);
         }
         else
         {
             //give up now
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics data is too large and will NOT be sent.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_report_sender, __FUNCTION__ << 
+                " statistics data is too large and will NOT be sent.");
 
             http_post_.reset();
             assert(pending_reports_.size() > 0);
@@ -136,7 +142,8 @@ namespace statistic
 
             http_post_.reset();
 
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Successfully posted statistics data to the server.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_report_sender, __FUNCTION__ << 
+                " Successfully posted statistics data to the server.");
 
             if (pending_reports_.size() > 0)
             {
@@ -145,7 +152,8 @@ namespace statistic
         }
         else
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Failed to post statistics data to the server. Retrying.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_report_sender, __FUNCTION__ << 
+                " Failed to post statistics data to the server. Retrying.");
 
             if (selected_server_index_ + 1 < static_cast<int>(servers_.size()))
             {

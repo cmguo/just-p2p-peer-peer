@@ -12,8 +12,6 @@
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics");
-
     StatisticsCollectionConfigurationFile::StatisticsCollectionConfigurationFile(string const& config_path)
     {
         local_config_file_path_ = config_path;

@@ -8,11 +8,11 @@
 #include "p2sp/p2p/P2PDownloader.h"
 #include "statistic/P2PDownloaderStatistic.h"
 
-#define DOWNLIMITER_DEBUG(msg) LOG(__DEBUG, "p2p_speed_limiter", __FUNCTION__ << " " << msg)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p_speed_limiter");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_speedlimiter = log4cplus::Logger::getInstance("[p2p_speed_limiter]");
+#endif
     const boost::uint32_t DOWNLIMIT_MIN_INTERVAL_IN_MS = 1000;
 
     DownloadSpeedLimiter::DownloadSpeedLimiter(boost::uint32_t max_data_queue_length, boost::uint32_t packet_life_limit_in_ms)
@@ -59,7 +59,8 @@ namespace p2sp
 
         if (pointer == &tick_timer_)
         {
-            DOWNLIMITER_DEBUG("data_queue_.size= " << data_queue_.size() << " packet_number_per_tick_ = " << packet_number_per_tick_);
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "data_queue_.size= " << data_queue_.size() << 
+                " packet_number_per_tick_ = " << packet_number_per_tick_);
             for (sent_count_ = 0; sent_count_ < packet_number_per_tick_ && !data_queue_.empty();)
             {
                 EndpointPacketInfo data = data_queue_.front();
@@ -106,7 +107,7 @@ namespace p2sp
         // 队列满
         if (data_queue_.size() >= max_data_queue_length_ || GetSpeedLimitInKBps() == 0)
         {
-            DOWNLIMITER_DEBUG("Data queue is full: size=" << data_queue_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "Data queue is full: size=" << data_queue_.size());
             // 抛弃最前面的包
             if (!data_queue_.empty())
             {
@@ -130,7 +131,7 @@ namespace p2sp
                 p2p_statistic->SubmitPeerUploadedBytes(packet.length());
             }
 
-            DOWNLIMITER_DEBUG("DoRequestSubPiece < 0");
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "DoRequestSubPiece < 0");
 
             AppModule::Inst()->DoSendPacket(packet, dest_protocol_version);
 
@@ -138,7 +139,8 @@ namespace p2sp
         }
         else
         {
-            DOWNLIMITER_DEBUG("DoRequestSubPiece >= 0 size = " << packet.subpiece_infos_.size() << " send_count = " << sent_count_);
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "DoRequestSubPiece >= 0 size = " << packet.subpiece_infos_.size() 
+                << " send_count = " << sent_count_);
             if (sent_count_ < packet_number_per_tick_)
             {
                 statistic::P2PDownloaderStatistic::p p2p_statistic = p2p_downloader->GetStatistic();
@@ -174,7 +176,7 @@ namespace p2sp
         // 队列满
         if (data_queue_.size() >= max_data_queue_length_ || GetSpeedLimitInKBps() == 0)
         {
-            DOWNLIMITER_DEBUG("Data queue is full: size=" << data_queue_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "Data queue is full: size=" << data_queue_.size());
             // 抛弃最前面的包
             if (!data_queue_.empty()) {
                 data_queue_.pop_front();
@@ -202,7 +204,8 @@ namespace p2sp
         }
         else
         {
-            DOWNLIMITER_DEBUG("DoRequestSubPiece >= 0 size = " << packet.subpiece_infos_.size() << " send_count = " << sent_count_);
+            LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "DoRequestSubPiece >= 0 size = " << packet.subpiece_infos_.size() 
+                << " send_count = " << sent_count_);
             if (sent_count_ < packet_number_per_tick_)
             {
                 statistic::P2PDownloaderStatistic::p p2p_statistic = p2p_downloader->GetStatistic();
@@ -241,7 +244,7 @@ namespace p2sp
         speed_limit_in_KBps_ = speed_limit_in_KBps;
         packet_number_per_tick_ = speed_limit_in_KBps_ * DOWNLIMIT_MIN_INTERVAL_IN_MS / 1000;
 
-        DOWNLIMITER_DEBUG("speed_limit_in_KBps_ = " << speed_limit_in_KBps_);
+        LOG4CPLUS_DEBUG_LOG(logger_speedlimiter, "speed_limit_in_KBps_ = " << speed_limit_in_KBps_);
     }
 
     boost::int32_t DownloadSpeedLimiter::GetSpeedLimitInKBps() const

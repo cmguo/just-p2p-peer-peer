@@ -8,6 +8,9 @@
 
 namespace statistic
 {
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[speed_info_statistic]");
+#endif
     SpeedInfoStatistic::SpeedInfoStatistic()
         : is_running_(false)
     {
@@ -16,10 +19,10 @@ namespace statistic
 
     void SpeedInfoStatistic::Start()
     {
-        STAT_DEBUG("SpeedInfoStatistic::Start [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "SpeedInfoStatistic::Start [IN]");
         if (is_running_ == true)
         {
-            STAT_WARN("SpeedInfoStatistic is running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "SpeedInfoStatistic is running, return.");
             return;
         }
 
@@ -30,15 +33,15 @@ namespace statistic
         download_speed_meter_.Start();
         upload_speed_meter_.Start();
 
-        STAT_DEBUG("SpeedInfoStatistic::Start [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "SpeedInfoStatistic::Start [OUT]");
     }
 
     void SpeedInfoStatistic::Stop()
     {
-        STAT_DEBUG("SpeedInfoStatistic::Stop [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "SpeedInfoStatistic::Stop [IN]");
         if (is_running_ == false)
         {
-            STAT_WARN("SpeedInfoStatistic is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "SpeedInfoStatistic is not running, return.");
             return;
         }
 
@@ -49,7 +52,7 @@ namespace statistic
         start_time_ = 0;
 
         is_running_ = false;
-        STAT_DEBUG("SpeedInfoStatistic::Stop [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "SpeedInfoStatistic::Stop [OUT]");
     }
 
     void SpeedInfoStatistic::Clear()

@@ -15,7 +15,10 @@ using namespace p2sp;
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_announce_map_builder = log4cplus::Logger::
+        getInstance("[live_announce_map_builder]");
+#endif
 
     void LiveAnnouceMapBuilder::Build(boost::uint32_t request_block_id)
     {
@@ -64,7 +67,8 @@ namespace storage
         assert(announce_map_.block_info_count_ == announce_map_.subpiece_nos_.size());
         assert(announce_map_.block_info_count_ == announce_map_.subpiece_map_.size());
 
-        LOGX(__DEBUG, "livestorage", "announce_map - number of blocks gathered:" << announce_map_.block_info_count_);
+        LOG4CPLUS_DEBUG_LOG(logger_live_announce_map_builder, "announce_map - number of blocks gathered:" 
+            << announce_map_.block_info_count_);
         return;
     }
 

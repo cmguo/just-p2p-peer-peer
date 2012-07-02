@@ -7,9 +7,9 @@
 
 using namespace p2sp;
 
-#define SPC_DEBUG(msg) LOGX(__DEBUG, "P2P", msg)
-
-FRAMEWORK_LOGGER_DECLARE_MODULE("P2P");
+#ifdef LOG_ENABLE
+static log4cplus::Logger logger_session_peer_cache = log4cplus::Logger::getInstance("[session_peer_cache]");
+#endif
 
 SessionPeerCache::SessionPeerCache()
 {
@@ -29,11 +29,11 @@ bool SessionPeerCache::IsHit(const string& session_id, boost::asio::ip::udp::end
 
 SESSION_PEER_INFO SessionPeerCache::GetSessionPeerInfo(const string& session_id, boost::asio::ip::udp::endpoint end_point)
 {
-    SPC_DEBUG("GetSessionPeerInfo");
+    LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "GetSessionPeerInfo");
     if (m_SessionPeerMap[session_id].find(end_point) != m_SessionPeerMap[session_id].end())
     {
         // 命中
-        SPC_DEBUG("GetSessionPeerInfo hit!");
+        LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "GetSessionPeerInfo hit!");
         return m_SessionPeerMap[session_id][end_point];
     }
     return SESSION_PEER_INFO();
@@ -41,7 +41,7 @@ SESSION_PEER_INFO SessionPeerCache::GetSessionPeerInfo(const string& session_id,
 
 bool SessionPeerCache::QuerySessionPeers(const string& session_id, std::vector<protocol::CandidatePeerInfo>& peers)
 {
-    SPC_DEBUG("session_id = " << session_id);
+    LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "session_id = " << session_id);
 
     peers.clear();
 
@@ -63,15 +63,16 @@ bool SessionPeerCache::QuerySessionPeers(const string& session_id, std::vector<p
         for (std::multimap<uint32_t, protocol::CandidatePeerInfo>::iterator it = result_cache.begin();
             it != result_cache.end() && peers.size() <= 20; ++it)
         {
-            SPC_DEBUG("Peer AvgDelt = " << it->first << ", Endpoint = " << it->second);
+            LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Peer AvgDelt = " << it->first << ", Endpoint = " 
+                << it->second);
             peers.push_back(it->second);
         }
-        SPC_DEBUG("Found Peers = " << peers.size());
+        LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Found Peers = " << peers.size());
         return true;
     }
     else
     {
-        SPC_DEBUG("No Such session_id");
+        LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "No Such session_id");
         // Cache未命中
         return false;
     }
@@ -79,7 +80,8 @@ bool SessionPeerCache::QuerySessionPeers(const string& session_id, std::vector<p
 
 void SessionPeerCache::AddSessionPeer(const string& session_id, boost::asio::ip::udp::endpoint end_point, SESSION_PEER_INFO session_peer_info)
 {
-    SPC_DEBUG("AddSessionPeer session_id = " << session_id << ", peer_info = " << session_peer_info.m_candidate_peer_info);
+    LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "AddSessionPeer session_id = " << session_id << ", peer_info = " 
+        << session_peer_info.m_candidate_peer_info);
     if (session_id != "")
     {
         // 设置更高优先级
@@ -97,28 +99,31 @@ void SessionPeerCache::AddSessionPeer(const string& session_id, boost::asio::ip:
             // 更新RTT
             if (m_SessionPeerMap[session_id][end_point].m_rtt > session_peer_info.m_rtt)
             {
-                SPC_DEBUG("Update RTT  = " << session_peer_info.m_rtt);
+                LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Update RTT  = " << session_peer_info.m_rtt);
                 m_SessionPeerMap[session_id][end_point].m_rtt = session_peer_info.m_rtt;
             }
 
             // 更新window_size
             if (m_SessionPeerMap[session_id][end_point].m_window_size < session_peer_info.m_window_size)
             {
-                SPC_DEBUG("Update window_size  = " << session_peer_info.m_request_size);
+                LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Update window_size  = " 
+                    << session_peer_info.m_request_size);
                 m_SessionPeerMap[session_id][end_point].m_window_size = session_peer_info.m_window_size;
             }
 
             // 更新m_request_size
             if (m_SessionPeerMap[session_id][end_point].m_request_size < session_peer_info.m_request_size)
             {
-                SPC_DEBUG("Update window_size  = " << session_peer_info.m_request_size);
+                LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Update window_size  = " 
+                    << session_peer_info.m_request_size);
                 m_SessionPeerMap[session_id][end_point].m_request_size = session_peer_info.m_request_size;
             }
 
             // 更新avg_delt_time
             if (m_SessionPeerMap[session_id][end_point].m_avg_delt_time > session_peer_info.m_avg_delt_time)
             {
-                SPC_DEBUG("Update avg_delt_time  = " << session_peer_info.m_avg_delt_time);
+                LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Update avg_delt_time  = " 
+                    << session_peer_info.m_avg_delt_time);
                 m_SessionPeerMap[session_id][end_point].m_avg_delt_time = session_peer_info.m_avg_delt_time;
             }
         }
@@ -132,7 +137,8 @@ void SessionPeerCache::AddSessionPeer(const string& session_id, boost::asio::ip:
 
 void SessionPeerCache::DelSessionPeer(const string& session_id, boost::asio::ip::udp::endpoint end_point)
 {
-    SPC_DEBUG("DelSessionPeer session_id = " << session_id << ", endpoint = " << end_point);
+    LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "DelSessionPeer session_id = " << session_id 
+        << ", endpoint = " << end_point);
 
     TimePeerMap::iterator i;
     for (i = m_SessionPeerMap[session_id].begin(); i != m_SessionPeerMap[session_id].end();)
@@ -151,21 +157,23 @@ void SessionPeerCache::DelSessionPeer(const string& session_id, boost::asio::ip:
 
 void SessionPeerCache::ExpireCache()
 {
-    SPC_DEBUG("");
+    LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "");
     time_t timenow = time(NULL);
     SessionPeerMap::iterator iter;
     for (iter = m_SessionPeerMap.begin(); iter != m_SessionPeerMap.end();)
     {
-        SPC_DEBUG("SessionID = " << iter->first << ", CacheSize = " << iter->second.size());
+        LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "SessionID = " << iter->first << ", CacheSize = " 
+            << iter->second.size());
         TimePeerMap::iterator i;
         for (i = iter->second.begin(); i != iter->second.end();)
         {
             boost::int32_t elapsed_time = (timenow - i->second.m_time);
-            SPC_DEBUG("CheckPeer, ElapsedTime: " << elapsed_time << ", peer = " << i->second.m_candidate_peer_info);
+            LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "CheckPeer, ElapsedTime: " << elapsed_time << ", peer = " 
+                << i->second.m_candidate_peer_info);
             // 如果超过10分钟，则过期
             if (elapsed_time >= 600)
             {
-                SPC_DEBUG("Peer Expired, ElapsedTime = " << elapsed_time);
+                LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "Peer Expired, ElapsedTime = " << elapsed_time);
                 iter->second.erase(i++);
             }
             else
@@ -177,7 +185,7 @@ void SessionPeerCache::ExpireCache()
         // 判断顶层是否为空
         if (iter->second.empty())
         {
-            SPC_DEBUG("cache empty, session_id = " << iter->first);
+            LOG4CPLUS_DEBUG_LOG(logger_session_peer_cache, "cache empty, session_id = " << iter->first);
             // 为空，删除iter.
             m_SessionPeerMap.erase(iter++);
         }

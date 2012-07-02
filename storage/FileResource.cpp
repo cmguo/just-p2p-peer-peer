@@ -19,7 +19,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_file_resource = log4cplus::Logger::getInstance("[file_resource]");
+#endif
     using namespace base;
 #ifdef DISK_MODE
 
@@ -90,7 +92,7 @@ namespace storage
                     else
                     {
                         base::filesystem::remove_nothrow(Storage::Inst_Storage()->GetCfgFilename(resource_info.file_path_));
-                        LOG(__DEBUG, "", "Cfg File Parse Error, delete Cfg File.");
+                        LOG4CPLUS_DEBUG_LOG(logger_file_resource, "Cfg File Parse Error, delete Cfg File.");
                     }
                 }
                 else
@@ -102,7 +104,7 @@ namespace storage
             else
             {
                 base::filesystem::remove_nothrow(Storage::Inst_Storage()->GetCfgFilename(resource_info.file_path_));
-                LOG(__DEBUG, "", "Cfg File Open Error, delete Cfg File.");
+                LOG4CPLUS_DEBUG_LOG(logger_file_resource, "Cfg File Open Error, delete Cfg File.");
             }
         }
 
@@ -165,7 +167,7 @@ namespace storage
 
         if (false == base::filesystem::exists_nothrow(fs::path(resource_info.file_path_)))
         {
-            STORAGE_DEBUG_LOG("FileNotExists: resource_info.file_path_ = "
+            LOG4CPLUS_DEBUG_LOG(logger_file_resource, "FileNotExists: resource_info.file_path_ = "
                 << resource_info.file_path_);
             return false;
         }
@@ -272,7 +274,7 @@ namespace storage
                 }
                 else
                 {
-                    STORAGE_ERR_LOG("buffs[" << i << "] is invalid");
+                    LOG4CPLUS_ERROR_LOG(logger_file_resource, "buffs[" << i << "] is invalid");
                     assert(false);
                     return false;
                 }
@@ -305,7 +307,7 @@ namespace storage
             if (readlen != length)
             {
                 assert(false);
-                STORAGE_ERR_LOG(" ReadFile Failed! ReadLength = " << readlen);
+                LOG4CPLUS_ERROR_LOG(logger_file_resource, " ReadFile Failed! ReadLength = " << readlen);
                 return base::AppBuffer();
             }
             return buff;
@@ -369,8 +371,9 @@ namespace storage
 
         if (write_len != total_bufsize)
         {
-            LOG(__ERROR, "bug", __FUNCTION__ << ":" << __LINE__ << " WriteFile Failed!! WriteLength = " << write_len << " BufferLength = " << total_bufsize);
-            LOG(__ERROR, "bug", "WriteFile Error: " <<  errno);
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, __FUNCTION__ << ":" << __LINE__ << 
+                " WriteFile Failed!! WriteLength = " << write_len << " BufferLength = " << total_bufsize);
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, "WriteFile Error: " <<  errno);
             return false;
         }
         need_saveinfo_to_disk_ = true;
@@ -417,8 +420,9 @@ namespace storage
 
         if (write_len != buffer->Length())
         {
-            LOG(__ERROR, "bug", __FUNCTION__ << ":" << __LINE__ << " WriteFile Failed!! WriteLength = " << write_len << " BufferLength = " << buffer->Length());
-            LOG(__ERROR, "bug", "WriteFile Error: " << errno);
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, __FUNCTION__ << ":" << __LINE__ << 
+                " WriteFile Failed!! WriteLength = " << write_len << " BufferLength = " << buffer->Length());
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, "WriteFile Error: " << errno);
             return false;
         }
         assert(write_len == buffer->Length());
@@ -443,7 +447,7 @@ namespace storage
         }
         if (NULL == file_handle_)
         {
-            STORAGE_ERR_LOG("file handle invalid");
+            LOG4CPLUS_ERROR_LOG(logger_file_resource, "file handle invalid");
             return;
         }
         fflush(file_handle_);
@@ -490,7 +494,7 @@ namespace storage
             return;
         }
 
-        STORAGE_DEBUG_LOG("DeleteFile: " << (file_name_));
+        LOG4CPLUS_DEBUG_LOG(logger_file_resource, "DeleteFile: " << (file_name_));
         try
         {
             fs::remove(fs::path(file_name_));
@@ -551,7 +555,8 @@ namespace storage
         string cfg_file = Storage::Inst_Storage()->GetCfgFilename(file_name_);
         boost::system::error_code ec;
         base::filesystem::rename_nothrow(fs::path(file_name_), fs::path(new_file_name), ec);
-        STORAGE_DEBUG_LOG("old filename:" << (file_name_) << " new_file_name: " << (new_file_name));
+        LOG4CPLUS_DEBUG_LOG(logger_file_resource, "old filename:" << (file_name_) << " new_file_name: " 
+            << (new_file_name));
         file_name_ = new_file_name;
 
         base::filesystem::remove_nothrow(fs::path(cfg_file));
@@ -587,7 +592,8 @@ namespace storage
         fclose(file_handle_);
         boost::system::error_code ec;
         base::filesystem::rename_nothrow(fs::path(file_name_), fs::path(new_file_name), ec);
-        STORAGE_DEBUG_LOG("old filename:" << (file_name_) << "  new_file_name: " << (new_file_name));
+        LOG4CPLUS_DEBUG_LOG(logger_file_resource, "old filename:" << (file_name_) << "  new_file_name: " 
+            << (new_file_name));
 
         file_name_ = new_file_name;
         file_handle_ = fopen(file_name_.c_str(), "r+b");
@@ -616,7 +622,7 @@ namespace storage
 
         do
         {
-            STORAGE_DEBUG_LOG("Rename From: " << (file_name_) << " To: " << (newname));
+            LOG4CPLUS_DEBUG_LOG(logger_file_resource, "Rename From: " << (file_name_) << " To: " << (newname));
             try {
                 fs::rename(fs::path(file_name_), fs::path(newname));
             }
@@ -633,7 +639,8 @@ namespace storage
                 catch(const fs::filesystem_error&) {
                     // ignore
                 }
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << " cfg_file = '" << (cfg_file) << "' file_name = '" << (file_name_) << "' new_name = '" << (newname) << "'");
+                LOG4CPLUS_DEBUG_LOG(logger_file_resource, __FUNCTION__ << " cfg_file = '" << (cfg_file) << 
+                    "' file_name = '" << (file_name_) << "' new_name = '" << (newname) << "'");
                 file_name_ = newname;
                 SecSaveResourceFileInfo();
             }

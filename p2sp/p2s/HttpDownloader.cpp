@@ -10,16 +10,8 @@
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "statistic/DownloadDriverStatistic.h"
 
-#define HTTP_DEBUG(s)    LOG(__DEBUG, "http", s)
-#define HTTP_INFO(s)    LOG(__INFO, "http", s)
-#define HTTP_EVENT(s)    LOG(__EVENT, "http", s)
-#define HTTP_WARN(s)    LOG(__WARN, "http", s)
-#define HTTP_ERROR(s)    LOG(__ERROR, "http", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("http");
-
     HttpDownloader::HttpDownloader(
         boost::asio::io_service & io_svc,
         const protocol::UrlInfo& url_info,

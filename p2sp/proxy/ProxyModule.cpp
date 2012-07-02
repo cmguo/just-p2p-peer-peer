@@ -29,7 +29,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_proxy = log4cplus::Logger::getInstance("[proxy_module]");
+#endif
 
     ProxyModule::p ProxyModule::inst_;
 
@@ -65,23 +67,27 @@ namespace p2sp
             for (port = local_http_proxy_port; port < end_port; port ++)
             {
 
-                LOG(__INFO, "proxy", __FUNCTION__ << ":" << __LINE__ << " Try Endpoint " << localhost.to_string() << ":" << port);
+                LOG4CPLUS_INFO_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << " Try Endpoint " << 
+                    localhost.to_string() << ":" << port);
                 acceptor_->Close();
                 // try 127.0.0.1
                 boost::asio::ip::tcp::endpoint ep(localhost, port);
                 if (acceptor_->Listen(ep))
                 {
-                    LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " OK, Try to Listen 0.0.0.0:" << port);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
+                        " OK, Try to Listen 0.0.0.0:" << port);
                     // ok, change to listen all
                     acceptor_->Close();
                     if (acceptor_->Listen(port))
                     {
-                        LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " OK, Listen port: " << port);
+                        LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
+                            " OK, Listen port: " << port);
                         acceptor_->TcpAccept();
                         // now try to hold "127.0.0.1:port"
                         acceptor_place_holder_ = network::HttpAcceptor::create(io_svc_, shared_from_this());
                         if (acceptor_place_holder_->Listen(ep)) {
-                            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " OK, Hold Address: " << ep);
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
+                                " OK, Hold Address: " << ep);
                             acceptor_place_holder_->TcpAccept();
                         }
                         break;
@@ -89,10 +95,10 @@ namespace p2sp
                     else
                     {
                         // 尝试 0.0.0.0 失败, 仅仅监听 127.0.0.1
-                        LOG(__INFO, "proxy", "Try 0.0.0.0 Failed");
+                        LOG4CPLUS_INFO_LOG(logger_proxy, "Try 0.0.0.0 Failed");
                         if (acceptor_->Listen(ep))
                         {
-                            LOG(__INFO, "proxy", "Listen 127.0.0.1 Succeed");
+                            LOG4CPLUS_INFO_LOG(logger_proxy, "Listen 127.0.0.1 Succeed");
                             acceptor_->TcpAccept();
                             break;
                         }
@@ -110,11 +116,11 @@ namespace p2sp
                 acceptor_->Close();
                 acceptor_.reset();
                 is_running_ = false;
-                LOG(__INFO, "proxy", "Try Failed: " << port);
+                LOG4CPLUS_INFO_LOG(logger_proxy, "Try Failed: " << port);
                 return;
             }
         }
-        LOG(__INFO, "proxy", "Succeed: " << GetHttpPort());
+        LOG4CPLUS_INFO_LOG(logger_proxy, "Succeed: " << GetHttpPort());
 
         statistic::StatisticModule::Inst()->SetLocalPeerTcpPort(GetHttpPort());
 
@@ -127,7 +133,7 @@ namespace p2sp
     void ProxyModule::Stop()
     {
         if (is_running_ == false) return;
-        LOGX(__EVENT, "proxy", "关闭ProxyModule");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "关闭ProxyModule");
 
         if (acceptor_)
         {
@@ -190,7 +196,7 @@ namespace p2sp
                 if ((*iter) && (*iter)->GetDownloadDriver())
                 {
                     curr_download_speed += (*iter)->GetDownloadDriver()->GetSecondDownloadSpeed();
-                    LOG(__WARN, "proxy", "second_speed " << (*iter)->GetDownloadDriver() << " : "
+                    LOG4CPLUS_WARN_LOG(logger_proxy, "second_speed " << (*iter)->GetDownloadDriver() << " : "
                         << (*iter)->GetDownloadDriver()->GetSecondDownloadSpeed() << "B/s");
                 }
                 (*iter)->OnProxyTimer(times);
@@ -201,7 +207,8 @@ namespace p2sp
             {
                 history_max_download_speed_ = curr_download_speed;
             }
-            LOG(__WARN, "proxy", "curr_download_speed:" << curr_download_speed << ", history_max_download_speed_" << history_max_download_speed_);
+            LOG4CPLUS_WARN_LOG(logger_proxy, "curr_download_speed:" << curr_download_speed << 
+                ", history_max_download_speed_" << history_max_download_speed_);
 
             // 全局限速管理
             GlobalSpeedLimit();
@@ -215,12 +222,13 @@ namespace p2sp
                 history_max_download_speed_ = 0;
                 history_max_download_speed_ini_ = 0;
                 local_ip_from_ini_ = local_ip;
-                LOG(__WARN, "proxy", "local_ip_from_ini_ != local_ip");
+                LOG4CPLUS_WARN_LOG(logger_proxy, "local_ip_from_ini_ != local_ip");
                 SaveHistoricalMaxDownloadSpeed();
             }
             else if (history_max_download_speed_ > history_max_download_speed_ini_)
             {
-                LOG(__WARN, "proxy", "history_max_download_speed_ini_ < history_max_download_speed_:" << history_max_download_speed_ini_ << "<" << history_max_download_speed_);
+                LOG4CPLUS_WARN_LOG(logger_proxy, "history_max_download_speed_ini_ < history_max_download_speed_:" 
+                    << history_max_download_speed_ini_ << "<" << history_max_download_speed_);
                 history_max_download_speed_ini_ = history_max_download_speed_;
                 SaveHistoricalMaxDownloadSpeed();
             }
@@ -252,18 +260,17 @@ namespace p2sp
 
         if (proxy_connections_.find(server_socket) == proxy_connections_.end())
         {
-            LOG(__WARN, "proxy", "RemoveProxyConnection but ServerSocket Not Found");
+            LOG4CPLUS_WARN_LOG(logger_proxy, "RemoveProxyConnection but ServerSocket Not Found");
             return;
         }
 
         // if (server_socket->GetSourceUrl().length() > 0 &&
         //    server_socket->GetSourceUrl() == PushModule::Inst()->GetCurrentTaskUrl())
         // {
-        //    LOG(__DEBUG, "push", __FUNCTION__ << " ProxyConnection Stop, Remove Push Task!");
         //    PushModule::Inst()->StopCurrentTask();
         // }
 
-        LOG(__EVENT, "proxy", "RemoveProxyConnection Succed");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "RemoveProxyConnection Succed");
         proxy_connections_.erase(server_socket);
 
         server_socket->Stop();
@@ -283,7 +290,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "OnHttpAccept Succed " << http_server_for_accept->GetEndPoint());
+        LOG4CPLUS_INFO_LOG(logger_proxy, "OnHttpAccept Succed " << http_server_for_accept->GetEndPoint());
 
         ProxyConnection::p pointer = ProxyConnection::create(io_svc_, http_server_for_accept);
         pointer->Start();
@@ -292,8 +299,8 @@ namespace p2sp
 
     void ProxyModule::OnHttpAcceptFailed()
     {
-        LOG(__EVENT, "proxy", "OnHttpAccept Failed ");
-        LOG(__EVENT, "pplive", "HttpAccept Failed");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "OnHttpAccept Failed ");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "HttpAccept Failed");
     }
 
     ProxyConnection::p ProxyModule::GetProxyConnection(const string& url)
@@ -392,11 +399,12 @@ namespace p2sp
         }
         ProxyConnection::p conn = GetProxyConnection(url);
         if (conn && conn->GetDownloadDriver()) {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << " LimitSpeedLimit = " << speed_limit_KBps << "(KBps), Url = " << url);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << " LimitSpeedLimit = " << speed_limit_KBps 
+                << "(KBps), Url = " << url);
             conn->GetDownloadDriver()->SetSpeedLimitInKBps(speed_limit_KBps);
         }
         else {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << " Url Not Found: " << url);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << " Url Not Found: " << url);
         }
     }
 
@@ -404,7 +412,7 @@ namespace p2sp
     {
         if (false == is_running_) return;
 
-        LOG(__DEBUG, "proxy", __FUNCTION__ << " proxy_type: " << proxy_type);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << " proxy_type: " << proxy_type);
 
         std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
         for (; it != proxy_connections_.end(); ++it) {
@@ -418,7 +426,7 @@ namespace p2sp
     {
         if (false == is_running_) return;
 
-        LOGX(__DEBUG, "proxy", " proxy_type: " << proxy_type);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, " proxy_type: " << proxy_type);
 
         // last segno
         string segno = "";
@@ -444,7 +452,7 @@ namespace p2sp
                 last_segno = -1;
         }
         string last_segno_str = framework::string::format(last_segno);
-        LOGX(__DEBUG, "proxy", "last_segno = " << last_segno_str << ", play_info = " << play_info);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "last_segno = " << last_segno_str << ", play_info = " << play_info);
 
         // foreach connection
         std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
@@ -461,11 +469,12 @@ namespace p2sp
                     network::Uri curr_uri(curr_playinfo->GetUrlInfo().url_);
                     curr_segno = curr_uri.getparameter("segno");
                 }
-                LOGX(__DEBUG, "proxy", "curr_segno = " << curr_segno);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "curr_segno = " << curr_segno);
                 // check segno
                 if (play_info && true == play_info->HasStart())
                 {
-                    LOGX(__DEBUG, "proxy", " StopConnection [HasStart]: " << proxy_conn << ", SourceUrl = " << proxy_conn->GetSourceUrl());
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy, " StopConnection [HasStart]: " << proxy_conn << ", SourceUrl = " 
+                        << proxy_conn->GetSourceUrl());
                     proxy_conn->WillStop();
                     it = proxy_connections_.begin();
                 }
@@ -473,20 +482,23 @@ namespace p2sp
                 {
                     if (curr_segno != last_segno_str)
                     {
-                        LOGX(__DEBUG, "proxy", " StopConnection [NoStart,SegnoInvalid]: " << proxy_conn << ", SourceUrl = " << proxy_conn->GetSourceUrl());
+                        LOG4CPLUS_DEBUG_LOG(logger_proxy, " StopConnection [NoStart,SegnoInvalid]: " << proxy_conn 
+                            << ", SourceUrl = " << proxy_conn->GetSourceUrl());
                         proxy_conn->WillStop();
                         it = proxy_connections_.begin();
 
                     }
                     else
                     {
-                        LOGX(__DEBUG, "proxy", " StopConnection [NoStart,SegnoValid]: " << proxy_conn << ", SourceUrl = " << proxy_conn->GetSourceUrl());
+                        LOG4CPLUS_DEBUG_LOG(logger_proxy, " StopConnection [NoStart,SegnoValid]: " << proxy_conn 
+                            << ", SourceUrl = " << proxy_conn->GetSourceUrl());
                         ++it;
                     }
                 }
                 else
                 {
-                    LOGX(__DEBUG, "proxy", " StopConnection [NoPlayInfo]: " << proxy_conn << ", SourceUrl = " << proxy_conn->GetSourceUrl());
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy, " StopConnection [NoPlayInfo]: " << proxy_conn << 
+                        ", SourceUrl = " << proxy_conn->GetSourceUrl());
                     proxy_conn->WillStop();
                     it = proxy_connections_.begin();
                 }
@@ -501,7 +513,7 @@ namespace p2sp
     void ProxyModule::QueryDownloadProgress(RID rid, boost::function<void()> result_handler, boost::int32_t *file_length, boost::int32_t *download_bytes)
     {
         if (false == is_running_) {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             if(result_handler)
             {
                  *file_length = 0;
@@ -513,7 +525,7 @@ namespace p2sp
         storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid));
         if (!inst)
         {
-            LOGX(__DEBUG, "downloadcenter", "No Such RID: " << rid);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "No Such RID: " << rid);
             if(result_handler)
             {
                 *file_length = 0;
@@ -525,7 +537,8 @@ namespace p2sp
 
         *file_length = inst->GetFileLength();
         *download_bytes = inst->GetDownloadBytes();
-        LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", FileLength: " << *file_length << ", DownloadedBytes: " << *download_bytes);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "Found RID: " << rid << ", FileLength: " << *file_length << 
+            ", DownloadedBytes: " << *download_bytes);
         if (result_handler)       //Push任务会传进一个空的function句柄
         {
             result_handler();
@@ -537,7 +550,7 @@ namespace p2sp
     {
         if (false == is_running_)
         {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             result_handler();
             return;
         }
@@ -551,7 +564,7 @@ namespace p2sp
                 storage::Storage::Inst()->GetInstanceByFileName(filename));
             if (!inst)
             {
-                LOGX(__DEBUG, "downloadcenter", "No Such url: " << url);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "No Such url: " << url);
                 result_handler();
                 return;
             }  
@@ -616,7 +629,7 @@ namespace p2sp
     void ProxyModule::QueryDownloadSpeed(RID rid, boost::function<void()> result_handler, boost::int32_t *download_speed)
     {
         if (false == is_running_) {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             *download_speed = 0;
             result_handler();
             return;
@@ -627,7 +640,7 @@ namespace p2sp
         {
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
             DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
@@ -642,7 +655,7 @@ namespace p2sp
                     if (dd->GetP2PDownloader() && dd->GetP2PDownloader()->GetStatistic()) {
                         now_speed += dd->GetP2PDownloader()->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
                     }
-                    LOGX(__DEBUG, "downloadcenter", "Found RID: " << rid << ", DownloadSpeed: " << now_speed);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy, "Found RID: " << rid << ", DownloadSpeed: " << now_speed);
                     *download_speed = now_speed;
                     result_handler();
                     return;
@@ -650,10 +663,10 @@ namespace p2sp
             }
             else
             {
-                LOGX(__DEBUG, "downloadcenter", "DownloadDriver NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "DownloadDriver NULL!!");
             }
         }
-        LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Downloading, RID: " << rid);
         *download_speed = 0;
         result_handler();
     }
@@ -662,7 +675,7 @@ namespace p2sp
     {
         if (false == is_running_) 
         {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             *download_speed = 0;
             result_handler();
             return;
@@ -675,7 +688,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -693,13 +706,13 @@ namespace p2sp
                 {
                     now_speed += dd->GetP2PDownloader()->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
                 }
-                LOGX(__DEBUG, "downloadcenter", "Found url: " << url << ", DownloadSpeed: " << now_speed);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "Found url: " << url << ", DownloadSpeed: " << now_speed);
                 *download_speed = now_speed;
                 result_handler();
                 return;
             }
         }
-        LOGX(__DEBUG, "downloadcenter", "Not Downloading, URL: " << url);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Downloading, URL: " << url);
         *download_speed = 0;
         result_handler();
     }
@@ -717,7 +730,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -745,7 +758,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -787,7 +800,7 @@ namespace p2sp
         {
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn) {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -813,7 +826,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -829,7 +842,7 @@ namespace p2sp
     {
         if (false == is_running_) 
         {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             peer_state->http_speed_ = -1;
             peer_state->p2p_speed_ = -1;
             peer_state->state_machine_ = -1;
@@ -854,7 +867,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -888,7 +901,8 @@ namespace p2sp
                         p2p_speed += dd->GetP2PControlTarget()->GetSecondDownloadSpeed();
                     }
 
-                    LOGX(__DEBUG, "proxy", "Found RID: " << rid << ", HTTP_Speed: " << http_speed << " , P2P_speed = " << p2p_speed);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy, "Found RID: " << rid << ", HTTP_Speed: " << http_speed << 
+                        " , P2P_speed = " << p2p_speed);
                     peer_state->http_speed_ = http_speed;
                     peer_state->p2p_speed_ = p2p_speed;
                     peer_state->state_machine_ = state_machine;
@@ -898,7 +912,7 @@ namespace p2sp
             }
         }
 
-        LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Downloading, RID: " << rid);
         peer_state->http_speed_ = -1;
         peer_state->p2p_speed_ = -1;
         peer_state->state_machine_ = -1;
@@ -909,7 +923,7 @@ namespace p2sp
     {
         if (false == is_running_)
         {
-            LOGX(__DEBUG, "downloadcenter", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             peer_state->http_speed_ = -1;
             peer_state->p2p_speed_ = -1;
             peer_state->state_machine_ = -1;
@@ -938,7 +952,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -972,7 +986,6 @@ namespace p2sp
                         p2p_speed += dd->GetP2PControlTarget()->GetSecondDownloadSpeed();
                     }
 
-                    //LOGX(__DEBUG, "proxy", "Found RID: " << rid << ", HTTP_Speed: " << http_speed << " , P2P_speed = " << p2p_speed);
                     peer_state->http_speed_ = http_speed;
                     peer_state->p2p_speed_ = p2p_speed;
                     peer_state->state_machine_ = state_machine;
@@ -982,7 +995,6 @@ namespace p2sp
             }
         }
 
-        //LOGX(__DEBUG, "downloadcenter", "Not Downloading, RID: " << rid);
         peer_state->http_speed_ = -1;
         peer_state->p2p_speed_ = -1;
         peer_state->state_machine_ = -1;
@@ -993,7 +1005,7 @@ namespace p2sp
     {
         if (false == is_running_) 
         {
-            LOGX(__DEBUG, "proxy", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             *state = 0;
             return;
         }
@@ -1005,7 +1017,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "proxy", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -1027,7 +1039,7 @@ namespace p2sp
     {
         if (false == is_running_) 
         {
-            LOGX(__DEBUG, "proxy", "Not Running!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "Not Running!");
             *state = 0;
             return;
         }
@@ -1040,7 +1052,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) 
             {
-                LOGX(__DEBUG, "proxy", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -1057,17 +1069,13 @@ namespace p2sp
 
     bool ProxyModule::IsHttpDownloading()
     {
-        // LOGX(__DEBUG, "proxy", "IsHttpDownloading: proxy_connections_.size() = " << proxy_connections_.size());
-
         std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
         for (; it != proxy_connections_.end(); ++it)
         {
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn /*|| !proxy_conn->IsRunning()*/) {
-                // LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL or Not Running!!");
                 continue;
             }
-            // LOGX(__DEBUG, "proxy", "IsHttpDownloading: proxy_connection " << proxy_conn);
 
             if (proxy_conn->IsLiveConnection())
             {
@@ -1103,24 +1111,19 @@ namespace p2sp
 
     bool ProxyModule::IsP2PDownloading()
     {
-        // LOGX(__DEBUG, "proxy", "IsP2PDownloading: proxy_connections_.size() = " << proxy_connections_.size());
 
         std::set<ProxyConnection::p>::iterator it = proxy_connections_.begin();
         for (; it != proxy_connections_.end(); ++it)
         {
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn /*|| !proxy_conn->IsRunning()*/) {
-                // LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL or Not Running!!");
                 continue;
             }
-            // LOGX(__DEBUG, "proxy", "IsP2PDownloading: proxy_connection " << proxy_conn);
 
             DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
             if (!dd || !dd->IsRunning()) {
-                // LOGX(__DEBUG, "downloadcenter", "DownloadDriver NULL or Not Running or HTTPControlTarget NULL!!");
                 continue;
             }
-            // LOGX(__DEBUG, "proxy", "IsP2PDownloading: DownloadDriver " << dd);
 
             IP2PControlTarget::p p2p = dd->GetP2PControlTarget();
             if (p2p && !p2p->IsPausing())
@@ -1140,7 +1143,7 @@ namespace p2sp
         {
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn) {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
             if (proxy_conn->IsMovieUrl()) return true;
@@ -1161,7 +1164,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *it;
             if (!proxy_conn)
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
 
@@ -1183,7 +1186,8 @@ namespace p2sp
         // client is watching
         if (speed_query_counter_.running() && speed_query_counter_.elapsed() <= 10 * 1000)
         {
-            LOGX(__DEBUG, "downloadcenter", "speed_query_counter_ != 0 && speed_query_counter_.GetElapsed() <= 10 * 1000, "
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, 
+                "speed_query_counter_ != 0 && speed_query_counter_.GetElapsed() <= 10 * 1000, "
                 << "value = " << speed_query_counter_.elapsed());
             return true;
         }
@@ -1213,17 +1217,17 @@ namespace p2sp
 
     void ProxyModule::ExpireSegno()
     {
-        LOG(__DEBUG, "switch", "ExpireSegno");
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "ExpireSegno");
         time_t now = time(NULL);
         std::map< string, std::pair<int, time_t> >::iterator iter;
         for (iter = drag_record_.begin(); iter != drag_record_.end();)
         {
             int elapsed_time = now - iter->second.second;
-            LOG(__DEBUG, "switch", "elapsed time = " << elapsed_time);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "elapsed time = " << elapsed_time);
             if (elapsed_time > 600)
             {
                 drag_record_.erase(iter++);
-                LOG(__DEBUG, "switch", "ExpireSegno bingo");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ExpireSegno bingo");
             }
             else
             {
@@ -1321,7 +1325,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn)
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL");
                 continue;
             }
 
@@ -1493,7 +1497,7 @@ namespace p2sp
 
         if (!inst)
         {
-            LOGX(__DEBUG, "proxy", "GetBlockHashFailed No Such RID: " << rid);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy, "GetBlockHashFailed No Such RID: " << rid);
             *failed_num =  0;
         }
         else
@@ -1520,7 +1524,6 @@ namespace p2sp
 
         if (!inst)
         {
-            //LOGX(__DEBUG, "proxy", "GetBlockHashFailed No Such RID: " << rid);
             *failed_num =  0;
         }
         else
@@ -1540,7 +1543,7 @@ namespace p2sp
         filename = network::UrlCodec::Decode(filename);
 #endif
         string segno = base::util::GetSegno(uri);
-        LOG(__DEBUG, "proxy", "segno = " << segno);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy, "segno = " << segno);
 
         string ext = "[" + segno + "]";
         uint32_t pos = filename.rfind('.');
@@ -1602,7 +1605,7 @@ namespace p2sp
             ProxyConnection::p proxy_conn = *iter;
             if (!proxy_conn)
             {
-                LOGX(__DEBUG, "downloadcenter", "ProxyConnection NULL!!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
                 continue;
             }
             if (proxy_conn->IsLiveConnection())

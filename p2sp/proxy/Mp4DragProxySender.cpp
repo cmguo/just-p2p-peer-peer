@@ -15,11 +15,11 @@
 
 #include "storage/format/Mp4Spliter.h"
 
-#define OPEN_DEBUG(message) LOG(__WARN, "openservice", __FUNCTION__ << " " << message)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_mp4_drag_proxy_sender = log4cplus::Logger::getInstance("[mp4_drag_proxy_sender]");
+#endif
 
     Mp4DragProxySender::p Mp4DragProxySender::create(
         boost::asio::io_service & io_svc,
@@ -76,7 +76,7 @@ namespace p2sp
 
         file_length_ = 0;
 
-        OPEN_DEBUG("start_offset=" << start_offset_);
+        LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "start_offset=" << start_offset_);
 
     }
 
@@ -177,7 +177,8 @@ namespace p2sp
                 // calc content length
                 uint32_t content_length = file_length_ - key_frame_position_ + media_header.Length();
 
-                OPEN_DEBUG("media_header_length=" << media_header.Length() << " content_length=" << content_length);
+                LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "media_header_length=" << media_header.Length() 
+                    << " content_length=" << content_length);
 
                 // send http header
                 if (!header_response_template_) {
@@ -193,7 +194,8 @@ namespace p2sp
                     // std::set content length
                     header_response_template_->SetContentLength(content_length);
                     // send head
-                    OPEN_DEBUG("mock response:\n" << header_response_template_->ToString());
+                    LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "mock response:\n" 
+                        << header_response_template_->ToString());
                     // send
                     http_server_socket_->HttpSendHeader(header_response_template_->ToString());
                 }
@@ -246,11 +248,12 @@ namespace p2sp
             header_response_template_ = http_response;
         }
         else {
-            OPEN_DEBUG(" rid_content_length=" << file_length_ << " server_content_length=" << content_length);
+            LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, " rid_content_length=" << file_length_ 
+                << " server_content_length=" << content_length);
             // uint32_t i = file_length_;
         }
 
-        OPEN_DEBUG("file_length=" << file_length_);
+        LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "file_length=" << file_length_);
     }
     // 失败
     void Mp4DragProxySender::OnNotice403Header()
@@ -261,7 +264,7 @@ namespace p2sp
         if (true == is_response_header_)
             return;
 
-        OPEN_DEBUG("");
+        LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "");
 
         http_server_socket_->HttpSend403Header();
     }
@@ -280,11 +283,12 @@ namespace p2sp
             // to be fix
             // head_buffer_.Malloc(head_length_);
 
-            OPEN_DEBUG("head_length=" << head_length << " key_frame=" << key_frame_position_ << " head_offset=" << header_offset_in_first_piece_);
+            LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "head_length=" << head_length << " key_frame=" 
+                << key_frame_position_ << " head_offset=" << header_offset_in_first_piece_);
         }
         else
         {
-            OPEN_DEBUG("head_length=" << head_length << "(Too Large)");
+            LOG4CPLUS_DEBUG_LOG(logger_mp4_drag_proxy_sender, "head_length=" << head_length << "(Too Large)");
         }
     }
 

@@ -14,12 +14,11 @@
 #include "count_cpu_time.h"
 #endif
 
-#define HTTPSVR_DEBUG(msg) LOG(__DEBUG, "httpserver", __FUNCTION__ << ":" << __LINE__ << ":" << shared_from_this() << " " << msg)
-
 namespace network
 {
-
-    FRAMEWORK_LOGGER_DECLARE_MODULE("httpserver");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_httpserver = log4cplus::Logger::getInstance("[http_server]");
+#endif
 
     class ObjectStates
     {
@@ -74,13 +73,13 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("endpoint: " << socket_.remote_endpoint() << ", is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "endpoint: " << socket_.remote_endpoint() << ", is_open = false");
             return;
         }
 
         protocol::SubPieceBuffer buffer(new protocol::SubPieceContent, 1024);
 
-        HTTPSVR_DEBUG("endpoint: " << socket_.remote_endpoint());
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "endpoint: " << socket_.remote_endpoint());
 
         boost::asio::async_read(socket_, boost::asio::buffer(buffer.Data(), buffer.Length()),
             boost::asio::transfer_at_least(1), boost::bind(&HttpServer::HandleHttpRecvTillClose, shared_from_this(),
@@ -94,19 +93,19 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false");
             return;
         }
 
         if (!err)
         {
-            HTTPSVR_DEBUG("Endpoint: " << socket_.remote_endpoint() << ", GetBuffer: size = " << buffer.Length()
-                << "Content: \n" << string((char*)buffer.Data(), buffer.Length()));
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "Endpoint: " << socket_.remote_endpoint() << ", GetBuffer: size = " 
+                << buffer.Length() << "Content: \n" << string((char*)buffer.Data(), buffer.Length()));
             HttpRecvTillClose();
         }
         else
         {
-            HTTPSVR_DEBUG("err: " << err.message() << ", handler: " << handler_);
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "err: " << err.message() << ", handler: " << handler_);
             if (handler_)
             {
                 handler_->OnHttpRecvFailed(2);
@@ -120,7 +119,7 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open_ = false, error = " << err.message());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open_ = false, error = " << err.message());
             return;
         }
 
@@ -131,12 +130,12 @@ namespace network
             string request_string;
             std::copy(std::istreambuf_iterator<char> (&request_), std::istreambuf_iterator<char> (), std::back_inserter(request_string));
 
-            HTTPSVR_DEBUG("RequestString:\n" << request_string << ", Handler = " << handler_);
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "RequestString:\n" << request_string << ", Handler = " << handler_);
 
             HttpRequest::p http_request = HttpRequest::ParseFromBuffer(request_string);
             if (!http_request)
             {
-                HTTPSVR_DEBUG("HttpRequest Parse Error!");
+                LOG4CPLUS_DEBUG_LOG(logger_httpserver, "HttpRequest Parse Error!");
                 if (handler_)
                 {
                     handler_->OnHttpRecvFailed(1);
@@ -165,18 +164,18 @@ namespace network
 
         if (false == is_open_)
         {
-            HTTPSVR_DEBUG(" is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, " is_open = false");
             return;
         }
 
         if (pointer == &recv_timer_)
         {
-            HTTPSVR_DEBUG("timer = recv_timer_");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "timer = recv_timer_");
             HandleHttpRecvTimeout();
         }
         else if (pointer == &close_timer_)
         {
-            HTTPSVR_DEBUG("timer = close_timer_");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "timer = close_timer_");
             HandleCloseTimerElapsed();
         }
     }
@@ -185,7 +184,7 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false");
             return;
         }
 
@@ -202,7 +201,7 @@ namespace network
 #endif
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("send_buffer, is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send_buffer, is_open = false");
             return;
         }
 
@@ -235,7 +234,7 @@ namespace network
         {
             sended_bytes_ += bytes_transferred;
 
-            HTTPSVR_DEBUG("send_list = " << send_list_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send_list = " << send_list_.size());
 
             send_list_.pop_front();
             if (!send_list_.empty())
@@ -247,14 +246,15 @@ namespace network
 
             if (send_list_.empty() && will_close_ == true)
             {
-                HTTPSVR_DEBUG("send_set_.size() == 0 && will_close_ == true");
+                LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send_set_.size() == 0 && will_close_ == true");
                 DelayClose();
             }
         }
         else
         {
             boost::system::error_code err_code;
-            HTTPSVR_DEBUG(" endpoint: " << socket_.remote_endpoint(err_code) << ", bytes_transferred: " << bytes_transferred << ", err: " << err.message());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, " endpoint: " << socket_.remote_endpoint(err_code) << 
+                ", bytes_transferred: " << bytes_transferred << ", err: " << err.message());
 
             if (handler_)
             {
@@ -269,12 +269,12 @@ namespace network
     {
         if (false == is_open_)
         {
-            HTTPSVR_DEBUG("is_open = false, send_list.size = " << send_list_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false, send_list.size = " << send_list_.size());
             return;
         }
 
         will_close_ = true;
-        HTTPSVR_DEBUG("send_list = " << send_list_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send_list = " << send_list_.size());
         if (send_list_.empty() && send_list_.empty())
         {
             DelayClose();
@@ -285,11 +285,11 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false");
             return;
         }
 
-        HTTPSVR_DEBUG("sended_length = " << sended_bytes_);
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "sended_length = " << sended_bytes_);
 
         // clear
         send_list_.clear();
@@ -299,7 +299,7 @@ namespace network
 
         if (handler_)
         {
-            HTTPSVR_DEBUG("Handler " << handler_);
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "Handler " << handler_);
             handler_->OnClose();
             handler_.reset();
         }
@@ -308,7 +308,7 @@ namespace network
         socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
         if (error)
         {
-            HTTPSVR_DEBUG("socket_.shutdown error = " << error.message());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "socket_.shutdown error = " << error.message());
         }
 
         //
@@ -318,7 +318,7 @@ namespace network
         socket_.close(error);
         if (error)
         {
-            HTTPSVR_DEBUG("socket_.close error = " << error.message());
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "socket_.close error = " << error.message());
         }
     }
 
@@ -326,7 +326,7 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false");
             return;
         }
         close_timer_.start();
@@ -336,7 +336,7 @@ namespace network
     {
         if (is_open_ == false)
         {
-            HTTPSVR_DEBUG("is_open = false");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "is_open = false");
             return;
         }
         Close();
@@ -354,14 +354,14 @@ namespace network
             return end_point;
         else
         {
-            HTTPSVR_DEBUG("GetEndPoint Error.");
+            LOG4CPLUS_DEBUG_LOG(logger_httpserver, "GetEndPoint Error.");
             return boost::asio::ip::tcp::endpoint();
         }
     }
 
     void HttpServer::HttpSendHeader(uint32_t content_length, string content_type)
     {
-        HTTPSVR_DEBUG("content_length: " << content_length << ", type " << content_type);
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "content_length: " << content_length << ", type " << content_type);
 
         std::ostringstream response_stream;
         response_stream << "HTTP/1.0 200 OK\r\n";
@@ -376,7 +376,7 @@ namespace network
 
     void HttpServer::HttpSendKeepAliveHeader(uint32_t content_length, string content_type)
     {
-        HTTPSVR_DEBUG("content_length: " << content_length << ", type " << content_type);
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "content_length: " << content_length << ", type " << content_type);
 
         std::ostringstream response_stream;
         response_stream << "HTTP/1.0 200 OK\r\n";
@@ -426,7 +426,7 @@ namespace network
 
     void HttpServer::HttpSend403Header()
     {
-        HTTPSVR_DEBUG("send 403");
+        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send 403");
 
         std::ostringstream response_stream;
         response_stream << "HTTP 403 Forbidden\r\n";

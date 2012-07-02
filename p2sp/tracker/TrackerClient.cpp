@@ -17,7 +17,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_tracker_client = log4cplus::Logger::getInstance("[tracker_client]");
+#endif
 
     void TrackerClient::Start()
     {
@@ -34,7 +36,6 @@ namespace p2sp
         last_transaction_id_ = 0;
         local_resources_.clear();
         is_sync_ = false;
-        // TRACK_DEBUG("TrackerClient::Stop " << tracker_info_);
     }
 
     void TrackerClient::SetRidCount(uint32_t rid_count)
@@ -58,7 +59,7 @@ namespace p2sp
                 MAX_REQUEST_PEER_COUNT_, end_point_);
 
         // 从该TrackerClient发送ListRequestPacket
-        LOG(__EVENT, "tracker", "TrackerClient::DoList " << rid << " " << end_point_);
+        LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoList " << rid << " " << end_point_);
 
         p2sp::AppModule::Inst()->DoSendPacket(list_request_packet);
 
@@ -70,7 +71,6 @@ namespace p2sp
     {
         // 讲List到的peer加入ip pool
         // 将packet解析出 vector<PeerInfo::p> peers
-        // LOG(__EVENT, "tracker", "TrackerClient::OnListPacket peers.size()=" << peers.size());
         std::vector<protocol::CandidatePeerInfo> peers = packet.response.peer_infos_;
         for (uint32_t i = 0; i < peers.size(); ++i) {
             if (peers[i].UploadPriority < 255 && peers[i].UploadPriority > 0) {
@@ -86,7 +86,7 @@ namespace p2sp
 
     void TrackerClient::OnReportResponsePacket(protocol::ReportPacket const & packet)
     {
-        TRACK_DEBUG("Report Response RID Count: " << last_response_rid_count_);
+        LOG4CPLUS_DEBUG_LOG(logger_tracker_client, "Report Response RID Count: " << last_response_rid_count_);
 
         // 统计信息
         statistic::StatisticModule::Inst()->SubmitCommitResponse(tracker_info_);
@@ -121,13 +121,14 @@ namespace p2sp
         }
         else
         {
-            TRACK_WARN("TrackerClient::OnReportPacket: Unexpected Transaction ID, " << packet.transaction_id_);
+            LOG4CPLUS_WARN_LOG(logger_tracker_client, "TrackerClient::OnReportPacket: Unexpected Transaction ID, " 
+                << packet.transaction_id_);
         }
     }
 
     boost::uint32_t TrackerClient::DoSubmit()
     {
-        TRACK_INFO("TrackerClient::DoSubmit ModNO:" << (uint32_t)tracker_info_.ModNo
+        LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoSubmit ModNO:" << (uint32_t)tracker_info_.ModNo
             << ", IP:" << framework::network::Endpoint(tracker_info_.IP, tracker_info_.Port).to_string());
 
         uint32_t result = 0;
@@ -216,7 +217,7 @@ namespace p2sp
     uint32_t TrackerClient::DoReport()
     {
         // 统计信息
-        TRACK_INFO("TrackerClient::DoReport ");
+        LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoReport ");
 
         statistic::StatisticModule::Inst()->SubmitCommitRequest(tracker_info_);
 
@@ -322,7 +323,7 @@ namespace p2sp
                 p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload()
            );
 
-        LOG(__DEBUG, "tracker", "DoReport, TrackerInfo: " << end_point_);
+        LOG4CPLUS_DEBUG_LOG(logger_tracker_client, "DoReport, TrackerInfo: " << end_point_);
 
         // post
         p2sp::AppModule::Inst()->DoSendPacket(report_request);

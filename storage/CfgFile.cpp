@@ -23,7 +23,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_cfg_file = log4cplus::Logger::getInstance("[cfg_file]");
+#endif
     bool SecFile::SecCreate(const char* path)
     {
         crash_b_ = false;
@@ -111,7 +113,7 @@ namespace storage
 
         if (false == CheckVersion(head_.verison_))
         {
-            STORAGE_ERR_LOG("CheckVersion failed!");
+            LOG4CPLUS_ERROR_LOG(logger_cfg_file, "CheckVersion failed!");
             return false;
         }
 
@@ -183,7 +185,7 @@ namespace storage
             {
                 if (!DoSign())
                 {
-                    STORAGE_ERR_LOG("SecFile::SecClose error: DoSign()");
+                    LOG4CPLUS_ERROR_LOG(logger_cfg_file, "SecFile::SecClose error: DoSign()");
                 }
             }
         }
@@ -295,9 +297,9 @@ namespace storage
 
         if (resource_file_name_ != resource_file_path)
         {
-            STORAGE_ERR_LOG("resource_file_name_ != resource_file_path");
-            STORAGE_ERR_LOG("resource_file_name_ = " << resource_file_name_);
-            STORAGE_ERR_LOG("resource_file_path = " << resource_file_path);
+            LOG4CPLUS_ERROR_LOG(logger_cfg_file, "resource_file_name_ != resource_file_path");
+            LOG4CPLUS_ERROR_LOG(logger_cfg_file, "resource_file_name_ = " << resource_file_name_);
+            LOG4CPLUS_ERROR_LOG(logger_cfg_file, "resource_file_path = " << resource_file_path);
             SecClose();
             return false;
         }
@@ -393,7 +395,7 @@ namespace storage
         for (size_t i = 0; i < r_info_vec.size(); ++i)
         {
             base::AppBuffer buf = r_info_vec[i].ToBuffer();
-            STORAGE_DEBUG_LOG("buf length:" << buf.Length());
+            LOG4CPLUS_DEBUG_LOG(logger_cfg_file, "buf length:" << buf.Length());
             SecWrite(buf.Data(), buf.Length());
         }
     }

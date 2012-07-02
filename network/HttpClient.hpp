@@ -6,7 +6,6 @@
 #include "network/Uri.h"
 
 #include <framework/network/Endpoint.h>
-using namespace framework::logger;
 
 #include <boost/asio/placeholders.hpp>
 #include <boost/asio/read.hpp>
@@ -17,17 +16,13 @@ using namespace framework::logger;
 #include "count_cpu_time.h"
 #endif
 
-#define NETHTTP_DEBUG(s) LOG(__DEBUG, "httpclient", __FUNCTION__ << ":" << __LINE__ << " " << s)
-#define NETHTTP_INFO(s) LOG(__INFO, "httpclient", __FUNCTION__ << ":" << __LINE__ << " " << s)
-#define NETHTTP_EVENT(s) LOG(__EVENT, "httpclient", __FUNCTION__ << ":" << __LINE__ << " " << s)
-#define NETHTTP_WARN(s) LOG(__WARN, "httpclient", __FUNCTION__ << ":" << __LINE__ << " " << s)
-#define NETHTTP_ERROR(s) LOG(__ERROR, "httpclient", __FUNCTION__ << ":" << __LINE__ << " " << s)
-
 // #define COUT(msg)  // std::cout << msg
 
 namespace network
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("httpclient");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_httpclient = log4cplus::Logger::getInstance("[http_client]");
+#endif
     template <typename ContentType>
     HttpClient<ContentType>::HttpClient(
         boost::asio::io_service & io_svc,
@@ -95,7 +90,7 @@ namespace network
         boost::system::error_code ec = framework::string::parse2(uri.getport(), port);
         if (ec)
         {
-            NETHTTP_WARN("get port faildd. use dafault port 80.");
+            LOG4CPLUS_WARN_LOG(logger_httpclient, "get port faildd. use dafault port 80.");
             port = 80;
         }
 
@@ -153,7 +148,7 @@ namespace network
         boost::system::error_code ec = framework::string::parse2(uri.getport(), port);
         if (ec)
         {
-            NETHTTP_WARN("get port faildd. use dafault port 80.");
+            LOG4CPLUS_WARN_LOG(logger_httpclient, "get port faildd. use dafault port 80.");
             port = 80;
         }
         boost::shared_ptr<HttpClient<ContentType> > http_client = 
@@ -183,7 +178,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::Close()
     {
-        NETHTTP_INFO(shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_httpclient, shared_from_this());
         is_connecting_ = false;
         is_connected_ = false;
         is_requesting_ = false;
@@ -230,7 +225,7 @@ namespace network
         {
             if (handler_)
             {
-                NETHTTP_INFO("post IHttpClientListener::OnConnectFailed 1");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnConnectFailed 1");
                 handler_->OnConnectFailed(1);
             }
 
@@ -253,7 +248,7 @@ namespace network
             catch(boost::system::system_error&)
             {
                 // to avoid async_resolve throw exception
-                NETHTTP_INFO("HttpClient::Connect() - async_resolve failed 401");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "HttpClient::Connect() - async_resolve failed 401");
 
                 if (handler_)
                 {
@@ -266,7 +261,8 @@ namespace network
             }
 
             resolver_timer_.start();
-            NETHTTP_INFO("async_resolve " << domain << ", TargetHost: " << target_host_ << ", TargetPort: " << target_port_);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "async_resolve " << domain << ", TargetHost: " << target_host_ << 
+                ", TargetPort: " << target_port_);
         }
         else
         {
@@ -281,7 +277,7 @@ namespace network
             catch(boost::system::system_error&)
             {
                 // async_conect sometimes throws
-                NETHTTP_INFO("HttpClient::Connect() - async_connect failed 402");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "HttpClient::Connect() - async_connect failed 402");
 
                 if (handler_)
                 {
@@ -294,7 +290,8 @@ namespace network
             }
 
             connect_timer_.start();
-            NETHTTP_INFO("async_connect " << domain << ", endpoint = " << endpoint_ << ", TargetHost: " << target_host_ << ", TargetPort: " << target_port_);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "async_connect " << domain << ", endpoint = " << endpoint_ << 
+                ", TargetHost: " << target_host_ << ", TargetPort: " << target_port_);
         }
     }
 
@@ -304,7 +301,7 @@ namespace network
         assert(is_connecting_);
         if (false == is_connecting_)
             return;
-        NETHTTP_INFO("Handler = " << handler_);
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_);
         if (handler_)
         {
             handler_->OnConnectFailed(2);
@@ -325,7 +322,8 @@ namespace network
         if (!err)
         {
             endpoint_ = *endpoint_iterator;
-            NETHTTP_INFO("Succed " << endpoint_ << ", TargetHost: " << target_host_ << ", TargetPort: " << target_port_);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << endpoint_ << ", TargetHost: " << target_host_ << 
+                ", TargetPort: " << target_port_);
 
             try
             {
@@ -335,7 +333,7 @@ namespace network
             catch(boost::system::system_error&)
             {
                 // async_connect sometimes throws
-                NETHTTP_DEBUG("HttpClient::HandleResolve() - async_connect failed 403");
+                LOG4CPLUS_DEBUG_LOG(logger_httpclient, "HttpClient::HandleResolve() - async_connect failed 403");
 
                 if (handler_)
                 {
@@ -351,21 +349,21 @@ namespace network
         }
         else if (err == boost::asio::error::operation_aborted)
         {
-            NETHTTP_ERROR("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_ERROR_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 handler_->OnConnectFailed(103);
-                NETHTTP_INFO("post IHttpClientListener::OnConnectFailed 103");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnConnectFailed 103");
             }
             Close();
         }
         else
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 handler_->OnConnectFailed(3);
-                NETHTTP_INFO("post IHttpClientListener::OnConnectFailed 3");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnConnectFailed 3");
             }
             Close();
         }
@@ -380,7 +378,7 @@ namespace network
         if (handler_)
         {
             handler_->OnConnectTimeout();
-            NETHTTP_INFO("post IHttpClientListener::OnConnectTimeout");
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnConnectTimeout");
         }
         Close();
     }
@@ -399,13 +397,13 @@ namespace network
 
         if (!err)
         {
-            NETHTTP_INFO("Succed " << err.message() << ", " << shared_from_this());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << err.message() << ", " << shared_from_this());
             if (handler_)
             {
                 handler_->OnConnectSucced();
             }
             recv_timer_.start();
-            NETHTTP_INFO("post IHttpClientListener::OnConnectSucced" << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnConnectSucced" << err.message());
         }
         else if (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator())
         {
@@ -421,7 +419,7 @@ namespace network
             catch(boost::system::system_error&)
             {
                 // async_connect sometimes throws
-                NETHTTP_DEBUG("HttpClient::HandleConnect() - async_connect failed 404");
+                LOG4CPLUS_DEBUG_LOG(logger_httpclient, "HttpClient::HandleConnect() - async_connect failed 404");
 
                 if (handler_)
                 {
@@ -435,11 +433,11 @@ namespace network
 
             connect_timer_.interval(connect_timeout_);
             connect_timer_.start();
-            NETHTTP_INFO("async_connect " << endpoint_);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "async_connect " << endpoint_);
         }
         else if (err == boost::asio::error::operation_aborted)
         {
-            NETHTTP_INFO("Error because operation_aborted");
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Error because operation_aborted");
             if (handler_)
             {
                 handler_->OnConnectFailed(101);
@@ -448,7 +446,7 @@ namespace network
         }
         else
         {
-            NETHTTP_INFO("Error because " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Error because " << err.message());
             if (handler_)
             {
                 handler_->OnConnectFailed(1);
@@ -468,7 +466,7 @@ namespace network
         assert(get_count_ == 0);
         get_count_++;
 
-        LOG(__EVENT, "packet", "HTTP GET " << request_string_);
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "HTTP GET " << request_string_);
 
         assert(is_requesting_ == false);
         if (is_requesting_ == true)
@@ -479,7 +477,7 @@ namespace network
         boost::asio::async_write(socket_, boost::asio::buffer(request_string_), boost::bind(
             &HttpClient::HandleWriteRequest, this->shared_from_this(), boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
-        NETHTTP_INFO("async_write " << request_string_);
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "async_write " << request_string_);
     }
 
     template <typename ContentType>
@@ -495,7 +493,8 @@ namespace network
         request_string_ = request_info_.ToString();
         std::ostream os(&request_);
         os << request_string_;
-        NETHTTP_DEBUG("RemoteEndpoint: " << socket_.remote_endpoint(error) << " Request:\n" << request_string_);
+        LOG4CPLUS_DEBUG_LOG(logger_httpclient, "RemoteEndpoint: " << socket_.remote_endpoint(error) << 
+            " Request:\n" << request_string_);
 
         assert(is_requesting_ == false);
         if (is_requesting_ == true)
@@ -506,7 +505,7 @@ namespace network
         boost::asio::async_write(socket_,  request_, boost::bind(
             &HttpClient::HandleWriteRequest, this->shared_from_this(), boost::asio::placeholders::error,
             boost::asio::placeholders::bytes_transferred));
-        NETHTTP_INFO("async_write " << request_string_);
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "async_write " << request_string_);
     }
 
     template <typename ContentType>
@@ -576,7 +575,7 @@ namespace network
             if (handler_)
             {
                 handler_->OnRecvTimeout();
-                NETHTTP_INFO("post IHttpClientListener::OnRecvTimeout");
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvTimeout");
             }
 
             Close();
@@ -591,29 +590,29 @@ namespace network
         if (!err)
         {
             string delim("\r\n\r\n");
-            NETHTTP_INFO("Succed " << bytes_transferred);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << bytes_transferred);
             boost::asio::async_read_until(socket_, response_, delim, boost::bind(&HttpClient::HandleReadHttpHeader,
                 this->shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
             recv_time_counter_.start();
-            NETHTTP_INFO("HttpClient::HandleWriteRequest async_read_until");
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "HttpClient::HandleWriteRequest async_read_until");
         }
         else if (err == boost::asio::error::operation_aborted)
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 handler_->OnRecvHttpHeaderFailed(105);
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 105);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 105);
             }
             Close();
         }
         else
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 handler_->OnRecvHttpHeaderFailed(5);
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 5);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 5);
             }
             Close();
         }
@@ -635,7 +634,8 @@ namespace network
 
         if (!err)
         {
-            NETHTTP_INFO("Succed, BytesTransferred = " << bytes_transferred << ", ResponseSize = " << response_.size());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed, BytesTransferred = " << bytes_transferred << 
+                ", ResponseSize = " << response_.size());
             assert(bytes_transferred <= response_.size());
             string response_string;
             uint32_t header_length;
@@ -648,7 +648,7 @@ namespace network
                 if (handler_)
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpHeaderFailed, handler_, 1));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 1);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 1);
                     handler_->OnRecvHttpHeaderFailed(1);
                 }
                 Close();
@@ -663,20 +663,21 @@ namespace network
                 if (handler_)
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpHeaderFailed, handler_, 2));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 2);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 2);
                     handler_->OnRecvHttpHeaderFailed(1);
                 }
                 Close();
                 return;
             }
             assert(header_length == bytes_transferred);
-            NETHTTP_DEBUG("HeaderLength = " << header_length << ", BytesTransferred = " << bytes_transferred);
+            LOG4CPLUS_DEBUG_LOG(logger_httpclient, "HeaderLength = " << header_length << ", BytesTransferred = " << 
+                bytes_transferred);
             if (header_length > bytes_transferred)
             {
                 if (handler_)
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpHeaderFailed, handler_, 3));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 3);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 3);
                     handler_->OnRecvHttpHeaderFailed(3);
                 }
                 Close();
@@ -698,33 +699,36 @@ namespace network
             {
                 uint32_t range_begin = http_response_->GetRangeBegin();
                 file_offset_ = range_begin;
-                NETHTTP_INFO("http_response_->GetRangeBegin(): " << range_begin << " file_offset=" << file_offset_ << " client=" << shared_from_this());
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "http_response_->GetRangeBegin(): " << range_begin << 
+                    " file_offset=" << file_offset_ << " client=" << shared_from_this());
             }
 
             if (handler_)
             {
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderSucced \n" << http_response_->ToString());
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderSucced \n" << 
+                    http_response_->ToString());
                 handler_->OnRecvHttpHeaderSucced(http_response_);
             }
         }
         else if (err == boost::asio::error::operation_aborted)
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpHeaderFailed, handler_, 104));
-                NETHTTP_INFO("HttpClient::HandleReadHttpHeader post IHttpClientListener::OnRecvHttpHeaderFailed " << 104);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, 
+                    "HttpClient::HandleReadHttpHeader post IHttpClientListener::OnRecvHttpHeaderFailed " << 104);
                 handler_->OnRecvHttpHeaderFailed(104);
             }
             Close();
         }
         else
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpHeaderFailed, handler_, 4));
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpHeaderFailed " << 4);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpHeaderFailed " << 4);
                 handler_->OnRecvHttpHeaderFailed(4);
             }
             Close();
@@ -747,7 +751,7 @@ namespace network
                 handler_->OnComplete();
             }
 
-            NETHTTP_INFO("post IHttpClientListener::OnComplete -> HttpClient.Close()");
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnComplete -> HttpClient.Close()");
             Close();
             return;
         }
@@ -781,7 +785,8 @@ namespace network
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataSucced, handler_, buffer, file_offset_,
                 //    content_offset_));
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset_ << " " << content_offset_);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataSucced " << 
+                    file_offset_ << " " << content_offset_);
                 
                 handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
             }
@@ -808,7 +813,8 @@ namespace network
 
             is_requesting_ = true;
 
-            NETHTTP_INFO("async_read length= " << length << " network_length=" << network_length << " response.size()=" << buffer_offset);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "async_read length= " << length << " network_length=" << 
+                network_length << " response.size()=" << buffer_offset);
             boost::asio::async_read(socket_,
                 boost::asio::buffer(buffer.Data() + buffer_offset, network_length),  // response_,
                 boost::asio::transfer_all(),  // boost::asio::transfer_at_least(network_length),
@@ -817,7 +823,8 @@ namespace network
                 content_offset_, buffer, buffer_offset));
 
             recv_time_counter_.start();
-            NETHTTP_INFO("async_read " << length << " " << file_offset_ << " " << content_offset_);
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "async_read " << length << " " << file_offset_ << 
+                " " << content_offset_);
 
             file_offset_ += length;
             content_offset_ += length;
@@ -827,7 +834,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::HttpRecvSubPiece()
     {
-        NETHTTP_INFO("HttpClient::HttpRecvSubPiece");
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "HttpClient::HttpRecvSubPiece");
         HttpRecv(ContentType::sub_piece_size);
     }
 
@@ -835,7 +842,7 @@ namespace network
     void HttpClient<ContentType>::HandleReadHttp(const boost::system::error_code& err, uint32_t bytes_transferred, uint32_t buffer_length,
         uint32_t file_offset, uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, uint32_t buffer_offset)
     {
-        NETHTTP_INFO("BytesTransferred = " << bytes_transferred);
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "BytesTransferred = " << bytes_transferred);
         if (false == is_connected_)
             return;
 
@@ -852,7 +859,9 @@ namespace network
         buffer.Length(buffer.Length() + bytes_transferred);
         if (!err)
         {
-            NETHTTP_INFO("Succed " << buffer_length << " file_offset=" << file_offset << " content_offset=" << content_offset << " range_begin=" << request_info_.range_begin_ << " client=" << shared_from_this());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << buffer_length << " file_offset=" << file_offset << 
+                " content_offset=" << content_offset << " range_begin=" << request_info_.range_begin_ << " client=" 
+                << shared_from_this());
             assert(buffer_length>0);
             // assert(response_.size() >= buffer_length);
             // protocol::SubPieceBuffer buffer(buffer_length);
@@ -862,18 +871,19 @@ namespace network
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataSucced, handler_, buffer, file_offset,
                 //    content_offset));
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataSucced " << file_offset << " " << content_offset);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataSucced " << 
+                    file_offset << " " << content_offset);
 
                 handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
             }
         }
         else if (err == boost::asio::error::operation_aborted)
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataFailed, handler_, 101));
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataFailed " << 101);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataFailed " << 101);
                 handler_->OnRecvHttpDataFailed(101);
             }
             Close();
@@ -881,7 +891,7 @@ namespace network
         else if (err == boost::asio::error::eof)
         {
             //
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (response_.size() > 0)
             {
                 assert(!"Don't come here!");
@@ -890,7 +900,8 @@ namespace network
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataPartial, handler_, buffer,
                     //    file_offset, content_offset));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataPartial " << file_offset << " " << content_offset);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataPartial " << 
+                        file_offset << " " << content_offset);
                     handler_->OnRecvHttpDataPartial(buffer, file_offset, content_offset);
                 }
             }
@@ -909,7 +920,8 @@ namespace network
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataPartial, handler_, buffer,
                     //    file_offset, content_offset));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataPartial " << file_offset << " " << content_offset);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataPartial " << 
+                        file_offset << " " << content_offset);
 
                     handler_->OnRecvHttpDataSucced(buffer, file_offset, content_offset, is_response_gzip_);
                 }
@@ -920,7 +932,7 @@ namespace network
                 if (handler_)
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataFailed, handler_, 2));
-                    NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataFailed " << 2);
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataFailed " << 2);
                     handler_->OnRecvHttpDataFailed(2);
                 }
             }
@@ -929,7 +941,7 @@ namespace network
                 if (handler_)
                 {
                     // MainThread::Post(boost::bind(&IHttpClientListener::OnComplete, handler_));
-                    NETHTTP_INFO("post IHttpClientListener::OnComplete, because it is chunked");
+                    LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnComplete, because it is chunked");
                     handler_->OnComplete();
                 }
             }
@@ -937,11 +949,11 @@ namespace network
         }
         else
         {
-            NETHTTP_INFO("Handler = " << handler_ << ", Error = " << err.message());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Handler = " << handler_ << ", Error = " << err.message());
             if (handler_)
             {
                 // MainThread::Post(boost::bind(&IHttpClientListener::OnRecvHttpDataFailed, handler_, 1));
-                NETHTTP_INFO("post IHttpClientListener::OnRecvHttpDataFailed " << 1);
+                LOG4CPLUS_INFO_LOG(logger_httpclient, "post IHttpClientListener::OnRecvHttpDataFailed " << 1);
                 handler_->OnRecvHttpDataFailed(1);
             }
             Close();

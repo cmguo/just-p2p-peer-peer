@@ -14,8 +14,9 @@
 
 namespace p2sp
 {
-
-    FRAMEWORK_LOGGER_DECLARE_MODULE("download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_piece_request = log4cplus::Logger::getInstance("[piece_request]");
+#endif
 
     bool PieceTask::IsTimeout() const
     {
@@ -38,24 +39,24 @@ namespace p2sp
                 // P2P被暂停
                 if (downloader_->IsPausing())
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 0");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 0");
                     return true;
                 }
                 // P2P分的了Piece但是尚未开始下载
                 else if (!bStartDownloading)
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 1");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 1");
                     return true;
                 }
                 // P2P下载超时并且HTTP下载速度超过30KB/S
                 else if (get_elapsed_ > 2 * timeout_)
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 2");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 2");
                     return true;
                 }
                 else if (get_elapsed_ > timeout_ && downloader->GetSpeedInfoEx().SecondDownloadSpeed >= 30*1024)
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 3");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 3");
                     P2PDownloader * p2p = (P2PDownloader*)downloader_.get();
                     return p2p->CanPreemptive(download_driver_, piece_info);
                 }
@@ -69,23 +70,24 @@ namespace p2sp
                 // HTTP被暂停
                 if (downloader_->IsPausing())
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 4");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 4");
                     return true;
                 }
 
                 // HTTP下载超过8秒 且 HTTP速度 < 20KBps  或者  12秒超时
                 if ((get_elapsed_ > timeout_ * 0.5 && downloader_->GetSpeedInfo().NowDownloadSpeed < 20*1024) || get_elapsed_ > timeout_)
                 {
-                    LOG(__DEBUG, "dbg", "IsTimeout 5");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 5");
                     return true;
                 }
             }
         }
         else
         {
-            LOG(__DEBUG, "dbg", "IsP2PDownloader = " << downloader_->IsP2PDownloader() << " PieceInfo = " << piece_info);
+            LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsP2PDownloader = " << downloader_->IsP2PDownloader() << 
+                " PieceInfo = " << piece_info);
         }
-        LOG(__DEBUG, "dbg", "IsTimeout 6");
+        LOG4CPLUS_DEBUG_LOG(logger_piece_request, "IsTimeout 6");
         return false;
     }
 
@@ -182,11 +184,14 @@ namespace p2sp
         //
         if (!download_driver_ || !(download_driver_->GetInstance()))
         {
-            LOG(__WARN, "downloader", __FUNCTION__ << ":" << __LINE__ << " download_driver_ = " << download_driver_);
-            LOG(__WARN, "downloader", __FUNCTION__ << ":" << __LINE__ << " download_driver_->GetInstance() = " << download_driver_->GetInstance());
+            LOG4CPLUS_WARN_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << " download_driver_ = " 
+                << download_driver_);
+            LOG4CPLUS_WARN_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                " download_driver_->GetInstance() = " << download_driver_->GetInstance());
             return false;
         }
-        LOG(__EVENT, "downloader", "PieceRequestManager::HasNextPieceForDownload   playing_possition:" << playing_possition);
+        LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::HasNextPieceForDownload   playing_possition:" 
+            << playing_possition);
 
         uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
 
@@ -196,7 +201,7 @@ namespace p2sp
         {
             if (false == download_driver_->GetInstance()->GetNextPieceForDownload(possition_for_download, piece_info_ex))
             {
-                LOG(__EVENT, "downloader", "PieceRequest Failed" << possition_for_download);
+                LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequest Failed" << possition_for_download);
                 return false;
             }
 
@@ -208,7 +213,8 @@ namespace p2sp
                     return true;
                 }
                 if (block_size == 0) {
-                    LOG(__DEBUG, "downloader", __FUNCTION__ << ":" << __LINE__ << " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " True");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                        " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " True");
                     return true;
                 }
 
@@ -244,21 +250,26 @@ namespace p2sp
             else
             {
                 PieceTask::p piece_task = iter->second;
-                LOG(__EVENT, "downloader", "PieceRequestManager::GetNextPieceForDownload check timeout: " << iter->first);
+                LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload check timeout: " 
+                    << iter->first);
                 if (piece_task->IsTimeout(downloader, piece_info_ex) || piece_task->downloader_->IsPausing())
                 {
                     return true;
                 }
                 else if (block_size == 0) {
-                    LOG(__DEBUG, "downloader", __FUNCTION__ << ":" << __LINE__ << " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " False");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                        " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " False");
                     return false;
                 }
             }
 
             // move to next piece
-            LOG(__DEBUG, "downloader", "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading :" << piece_info_ex);
+            LOG4CPLUS_DEBUG_LOG(logger_piece_request, 
+                "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading :" << piece_info_ex);
             possition_for_download = piece_info_ex.GetEndPosition(block_size);
-            LOG(__DEBUG, "downloader", "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading EndPosition:" << possition_for_download << " blocksize: " << block_size);
+            LOG4CPLUS_DEBUG_LOG(logger_piece_request, 
+                "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading EndPosition:" << 
+                possition_for_download << " blocksize: " << block_size);
         }
         return false;
     }
@@ -271,11 +282,14 @@ namespace p2sp
         //
         if (!download_driver_ || !(download_driver_->GetInstance()))
         {
-            LOG(__WARN, "downloader", __FUNCTION__ << ":" << __LINE__ << " download_driver_ = " << download_driver_);
-            LOG(__WARN, "downloader", __FUNCTION__ << ":" << __LINE__ << " download_driver_->GetInstance() = " << download_driver_->GetInstance());
+            LOG4CPLUS_WARN_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                " download_driver_ = " << download_driver_);
+            LOG4CPLUS_WARN_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                " download_driver_->GetInstance() = " << download_driver_->GetInstance());
             return false;
         }
-        LOG(__EVENT, "downloader", "PieceRequestManager::GetNextPieceForDownload   playing_possition:" << playing_possition);
+        LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload   playing_possition:" 
+            << playing_possition);
 
         uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
 
@@ -285,7 +299,7 @@ namespace p2sp
         {
             if (false == download_driver_->GetInstance()->GetNextPieceForDownload(possition_for_download, piece_info_ex))
             {
-                LOG(__EVENT, "downloader", "PieceRequest Failed" << possition_for_download);
+                LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequest Failed" << possition_for_download);
                 return false;
             }
 
@@ -297,7 +311,8 @@ namespace p2sp
                     return true;
                 }
                 if (block_size == 0) {
-                    LOG(__DEBUG, "downloader", __FUNCTION__ << ":" << __LINE__ << " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " True");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                        " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " True");
                     return true;
                 }
 
@@ -371,7 +386,8 @@ namespace p2sp
             else
             {
                 PieceTask::p piece_task = iter->second;
-                LOG(__EVENT, "downloader", "PieceRequestManager::GetNextPieceForDownload check timeout: " << iter->first);
+                LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload check timeout: " 
+                    << iter->first);
                 if (piece_task->IsTimeout(downloader, piece_info_ex) || piece_task->downloader_->IsPausing())
                 {
                     if (!downloader->IsPausing())
@@ -382,15 +398,19 @@ namespace p2sp
                     return true;
                 }
                 else if (block_size == 0) {
-                    LOG(__DEBUG, "downloader", __FUNCTION__ << ":" << __LINE__ << " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " False");
+                    LOG4CPLUS_DEBUG_LOG(logger_piece_request, __FUNCTION__ << ":" << __LINE__ << 
+                        " BlockSize = 0, protocol::PieceInfo = " << piece_info_ex << " False");
                     return false;
                 }
             }
 
             // move to next piece
-            LOG(__DEBUG, "downloader", "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading :" << piece_info_ex);
+            LOG4CPLUS_DEBUG_LOG(logger_piece_request, 
+                "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading :" << piece_info_ex);
             possition_for_download = piece_info_ex.GetEndPosition(block_size);
-            LOG(__DEBUG, "downloader", "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading EndPosition:" << possition_for_download << " blocksize: " << block_size);
+            LOG4CPLUS_DEBUG_LOG(logger_piece_request, 
+                "PieceRequestManager::GetNextPieceForDownload   PieceIsDownloading EndPosition:" << 
+                possition_for_download << " blocksize: " << block_size);
         }
         return false;
     }

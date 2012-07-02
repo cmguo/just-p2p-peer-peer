@@ -18,7 +18,10 @@
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics_collection");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistics_collection = log4cplus::Logger::
+        getInstance("[statistics_collection_controller]");
+#endif
 
     StatisticsCollectionController::StatisticsCollectionController(
         boost::shared_ptr<p2sp::BootStrapGeneralConfig> bootstrap_config, 
@@ -33,11 +36,11 @@ namespace statistic
 
         if (!bootstrap_config_->IsDataCollectionOn())
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics collection is OFF.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << " statistics collection is OFF.");
             return;
         }
 
-        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics collection is ON.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << " statistics collection is ON.");
 
         StatisticsCollectionConfigurationFile config_file(config_path_);
 
@@ -47,18 +50,21 @@ namespace statistic
         std::time_t file_modified_time;
         if (config_file.TryLoad(config_xml, file_modified_time))
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " existing statistics configuration is loaded.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << 
+                " existing statistics configuration is loaded.");
 
             StatisticsConfigurationsParser parser;
             boost::shared_ptr<StatisticsConfigurations> config = parser.Parse(config_xml);
 
             if (config)
             {
-                LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " successfully parsed existing statistics configuration.");
+                LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << 
+                    " successfully parsed existing statistics configuration.");
 
                 if (false == IsConfigurationExpired(file_modified_time, config->expires_in_minutes_))
                 {
-                    LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " existing statistics configuration is NOT yet expired and will be used for this session.");
+                    LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << 
+                        " existing statistics configuration is NOT yet expired and will be used for this session.");
                     needs_to_download_config_from_server = false;
                     StartStatisticsCollection(config);
                 }
@@ -69,7 +75,8 @@ namespace statistic
         {
             config_file.Remove();
 
-            LOG(__INFO, "statistics_collection", __FUNCTION__ << "starting download of statistics collection configuration.");
+            LOG4CPLUS_INFO_LOG(logger_statistics_collection, __FUNCTION__ << 
+                "starting download of statistics collection configuration.");
             StartAsyncDownload();
         }
     }
@@ -97,7 +104,8 @@ namespace statistic
 
         if (statistics_configurations->statistics_configurations_.size() ==0)
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " There's no active statistics configurations.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << 
+                " There's no active statistics configurations.");
             return;
         }
 
@@ -135,7 +143,7 @@ namespace statistic
     //这里的重点是，如果新的BS里日志收集开关与之前cached的状态不一致，以新的设置为准
     void StatisticsCollectionController::OnConfigUpdated()
     {
-        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Detected change of BS configuration.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << " Detected change of BS configuration.");
 
         if (bootstrap_config_->IsDataCollectionOn())
         {
@@ -148,13 +156,13 @@ namespace statistic
             }
         }
 
-        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Stopping statistics collection.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << " Stopping statistics collection.");
 
         Stop();
 
         if (bootstrap_config_->IsDataCollectionOn())
         {
-            LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Starting statistics collection.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistics_collection, __FUNCTION__ << " Starting statistics collection.");
             Start();
         }
     }

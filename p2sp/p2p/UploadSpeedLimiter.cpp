@@ -10,11 +10,11 @@
 
 #include <boost/date_time.hpp>
 
-#define UPLIMITER_DEBUG(msg) LOG(__DEBUG, "uplimiter", __FUNCTION__ << " " << msg)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("uploadlimiter");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_upload_speed_limiter = log4cplus::Logger::getInstance("[upload_speed_limiter]");
+#endif
 
     UploadSpeedLimiter::UploadSpeedLimiter()
         : speed_limit_in_KBps_(-1)
@@ -47,7 +47,8 @@ namespace p2sp
 
             framework::timer::TickCounter counter_;
 
-            LOG(__DEBUG, "upload", boost::posix_time::to_simple_string(boost::posix_time::microsec_clock::local_time())
+            LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, boost::posix_time::to_simple_string(
+                boost::posix_time::microsec_clock::local_time())
                 << ", packet_number_per_tick_ = " << packet_number_per_tick_
                 << ", data_queue_.size()=" << data_queue_.size());
             std::multiset<EndpointPacketInfo>::iterator iter = data_queue_.begin();            
@@ -99,14 +100,14 @@ namespace p2sp
         if (ignoreUploadSpeedLimit || static_cast<boost::int32_t>(GetSpeedLimitInKBps()) < 0)
         {
             packet->SendPacket(dest_protocol_version);
-            LOG(__DEBUG, "upload", "DoSendSubPiecePacket GetSpeedLimitInKBps() < 0");
+            LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, "DoSendSubPiecePacket GetSpeedLimitInKBps() < 0");
             return;
         }
 
         // 限速为0
         if (GetSpeedLimitInKBps() == 0)
         {
-            LOG(__DEBUG, "upload", "DoSendSubPiecePacket GetSpeedLimitInKBps() == 0");
+            LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, "DoSendSubPiecePacket GetSpeedLimitInKBps() == 0");
             return;
         }
 
@@ -123,13 +124,13 @@ namespace p2sp
         if (sent_count_ < packet_number_per_tick_ + packet_number_make_up_)
         {
             packet->SendPacket(dest_protocol_version);
-            LOG(__DEBUG, "upload", "DoSendSubPiecePacket packet sended");
+            LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, "DoSendSubPiecePacket packet sended");
             sent_count_++;
         }
         else
         {
             data_queue_.insert(EndpointPacketInfo(packet, priority, dest_protocol_version));
-            LOG(__DEBUG, "upload", "DoSendSubPiecePacket packet inserted to queue");
+            LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, "DoSendSubPiecePacket packet inserted to queue");
         }
     }
 
@@ -154,7 +155,8 @@ namespace p2sp
             packet_number_make_up_per_second_ = speed_limit_in_KBps_ - packet_number_per_tick_ * 4;
         }
 
-        UPLIMITER_DEBUG("speed_limit_in_KBps_=" << speed_limit_in_KBps_ << " packet_number_per_tick_=" << packet_number_per_tick_);
+        LOG4CPLUS_DEBUG_LOG(logger_upload_speed_limiter, "speed_limit_in_KBps_=" << speed_limit_in_KBps_ << 
+            " packet_number_per_tick_=" << packet_number_per_tick_);
     }
 
     uint32_t UploadSpeedLimiter::GetSpeedLimitInKBps() const

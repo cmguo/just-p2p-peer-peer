@@ -67,7 +67,9 @@ framework::timer::TimerQueue & global_250ms_timer()
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("app");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_appmodule = log4cplus::Logger::getInstance("[app_module]");
+#endif
 
     AppModule::p AppModule::inst_;
     boost::mutex AppModule::mu_;
@@ -95,8 +97,8 @@ namespace p2sp
         ((framework::timer::AsioTimerManager &)global_second_timer()).start();
         ((framework::timer::AsioTimerManager &)global_250ms_timer()).start();
         
-        LOG(__DEBUG, "app", "PeerVersion " << PEER_KERNEL_VERSION_STR);
-        LOG(__DEBUG, "app", "AppModule::Start");
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "PeerVersion " << PEER_KERNEL_VERSION_STR);
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "AppModule::Start");
 
         peer_state_ = (PEERSTATE_MAIN_STATE | PEERSTATE_LIVE_NONE);
 
@@ -147,7 +149,7 @@ namespace p2sp
 
         if (false == ProxyModule::Inst()->IsRunning())
         {
-            LOG(__DEBUG, "app", "Proxy Module Start Failed.");
+            LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Proxy Module Start Failed.");
 #ifdef NEED_TO_POST_MESSAGE
             WindowsMessage::Inst().PostWindowsMessage(UM_STARTUP_FAILED, NULL, NULL);
 #endif
@@ -166,10 +168,11 @@ namespace p2sp
         {
             local_udp_port ++;
             try_count++;
-            LOG(__WARN, "app", "Udp Listen To port " << local_udp_port << "Failed, so local_udp_port++");
+            LOG4CPLUS_WARN_LOG(logger_appmodule, "Udp Listen To port " << local_udp_port << 
+                "Failed, so local_udp_port++");
             if (local_udp_port >= 65534 || try_count >= 1000)
             {
-                LOG(__ERROR, "app", "Udp Listen To port " << local_udp_port << " So Failed");
+                LOG4CPLUS_ERROR_LOG(logger_appmodule, "Udp Listen To port " << local_udp_port << " So Failed");
                 udp_server_->Close();
 #ifdef NEED_TO_POST_MESSAGE
                 WindowsMessage::Inst().PostWindowsMessage(UM_STARTUP_FAILED, NULL, NULL);
@@ -177,7 +180,7 @@ namespace p2sp
                 return false;
             }
         }
-        LOG(__DEBUG, "app", "UdpServer Listening on port: " << local_udp_port);
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "UdpServer Listening on port: " << local_udp_port);
 
         is_running_ = true;
 
@@ -186,7 +189,7 @@ namespace p2sp
         udp_server_->Recv(40);
 
         // StorageModule
-        LOG(__DEBUG, "app", "Begin to Start Storage Module.");
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Begin to Start Storage Module.");
         uint32_t storage_mode =
             (appmodule_start_interface->disk_read_only_ ? STORAGE_MODE_READONLY : STORAGE_MODE_NORMAL);
 
@@ -276,7 +279,7 @@ namespace p2sp
 
         fun();
 
-        LOG(__DEBUG, "app", "Start Finish!");
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Start Finish!");
 
         return true;
     }
@@ -304,7 +307,7 @@ namespace p2sp
             tcp_server_843_->Stop();
         }
 
-        LOG(__EVENT, "app", "AppModule is stopping...");
+        LOG4CPLUS_INFO_LOG(logger_appmodule, "AppModule is stopping...");
 
 #ifdef DISK_MODE
         PushModule::Inst()->Stop();
@@ -355,7 +358,7 @@ namespace p2sp
         // 启动DACStatisticModule模块
         DACStatisticModule::Inst()->Stop();
 
-        LOGX(__EVENT, "app", "Storage::Inst()->Stop()");
+        LOG4CPLUS_INFO_LOG(logger_appmodule, "Storage::Inst()->Stop()");
         if (Storage::Inst())
         {
             // Storage有可能为空，如果9000端口或UDP 5041监听失败
@@ -378,7 +381,7 @@ namespace p2sp
             udp_server_.reset();
         }
 
-        LOG(__EVENT, "app", "AppModule has stopped.");
+        LOG4CPLUS_INFO_LOG(logger_appmodule, "AppModule has stopped.");
         // AppModule暂时不析构
         // inst_.reset();
 
@@ -393,7 +396,7 @@ namespace p2sp
         {
             return;
         }
-        LOG(__DEBUG, "tracker", "Add Candidate Peers: ");
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Add Candidate Peers: ");
         // LOG(__DEBUG, "tracker", "RID: " << rid << " Peers: " << peers);
 
         // 1.在 map<RID, Instance::p> rid_indexer 找到 rid 对应的 Instance
@@ -564,7 +567,8 @@ namespace p2sp
 #endif  // #ifdef DISK_MODE
 
         (void)used_disk_space;
-        LOG(__DEBUG, "app", __FUNCTION__ << ":" << __LINE__ << " UploadPriority = " << (uint32_t)upload_priority << ", " << used_disk_space << " / " << max_store_size);
+        LOG4CPLUS_DEBUG_LOG(logger_appmodule, __FUNCTION__ << ":" << __LINE__ << " UploadPriority = " << 
+            (uint32_t)upload_priority << ", " << used_disk_space << " / " << max_store_size);
 
         return upload_priority;
     }

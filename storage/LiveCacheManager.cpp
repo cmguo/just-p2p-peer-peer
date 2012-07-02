@@ -11,7 +11,9 @@ using namespace base;
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_cache = log4cplus::Logger::getInstance("[live_cache_manager]");
+#endif
 
     bool LiveCacheManager::AddSubPiece(const protocol::LiveSubPieceInfo & subpiece, const protocol::LiveSubPieceBuffer & subpiece_buffer)
     {
@@ -181,12 +183,12 @@ namespace storage
     {
         if (block_nodes_.find(block_id) == block_nodes_.end())
         {
-            LOGX(__DEBUG, "live_storage", "block_nodes_.size(): " << block_nodes_.size());
+            LOG4CPLUS_DEBUG_LOG(logger_live_cache, "block_nodes_.size(): " << block_nodes_.size());
             
             LiveBlockNode::p node(new LiveBlockNode(block_id, rid_));
             block_nodes_.insert(std::make_pair(block_id, node));
 
-            STORAGE_DEBUG_LOG("new LiveBlockNode:" << block_id);
+            LOG4CPLUS_DEBUG_LOG(logger_live_cache, "new LiveBlockNode:" << block_id);
         }
     }
 
@@ -206,7 +208,7 @@ namespace storage
             data_rate += iter->second->GetBlockSizeInBytes();
         }
 
-        LOG(__DEBUG, "live_storage", "cache memory = " << data_rate / 1024 << " KB\n");
+        LOG4CPLUS_DEBUG_LOG(logger_live_cache, "cache memory = " << data_rate / 1024 << " KB\n");
 
         return data_rate /(block_nodes_.size() * GetLiveInterval());
     }

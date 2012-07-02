@@ -10,8 +10,6 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
-
     void TrackerGroup::Start()
     {
         if (is_running_)

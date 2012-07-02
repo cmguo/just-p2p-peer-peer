@@ -20,7 +20,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("downloadcenter");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_play_info = log4cplus::Logger::getInstance("[play_info]");
+#endif
 
     using network::UrlCodec;
 
@@ -529,26 +531,26 @@ namespace p2sp
 
             // player id
             play_info->player_id_ = uri.getparameter("id");
-            LOGX(__DEBUG, "proxy", "Parse PlayerID: " << play_info->player_id_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse PlayerID: " << play_info->player_id_);
             play_info->has_player_id_ = (play_info->player_id_.empty()) ? false : true;
 
             // head length
             if (false == ParseHeadLength(uri, play_info->head_length_)) {
                 play_info->head_length_ = 0;
             }
-            LOGX(__DEBUG, "proxy", "Parse HeadLength = " << play_info->head_length_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse HeadLength = " << play_info->head_length_);
 
             // source type
             if (false == ParseSourceType(uri, play_info->source_type_)) {
                 play_info->source_type_ = PlayInfo::SOURCE_PPVOD;
             }
-            LOGX(__DEBUG, "proxy", "Parse SourceType = " << play_info->source_type_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info,"Parse SourceType = " << play_info->source_type_);
 
             // is drag
             if (false == ParseIsDrag(uri, play_info->is_drag_)) {
                 play_info->is_drag_ = -1;
             }
-            LOGX(__DEBUG, "proxy", "Parse IsDrag = " << play_info->is_drag_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse IsDrag = " << play_info->is_drag_);
 
             // head only
             if (false == ParseHeadOnly(uri, play_info->head_only_)) {
@@ -573,7 +575,7 @@ namespace p2sp
                 }
             }
 
-            LOGX(__DEBUG, "proxy", "Parse HeadOnly = " << play_info->head_only_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse HeadOnly = " << play_info->head_only_);
             if (false == ParseBWType(uri, play_info->bwtype_)) {
                 play_info->bwtype_ = 0;
             }
@@ -589,7 +591,7 @@ namespace p2sp
             string channel_name = uri.getparameter("channelname");
             play_info->channel_name_ = UrlCodec::Decode(channel_name);
             ParseBakHosts(uri, play_info->bak_hosts_);
-            LOGX(__DEBUG, "proxy", "Parse BWType = " << play_info->bwtype_);
+            LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse BWType = " << play_info->bwtype_);
 
             play_info->range_info_ = ParseRangeInfo(uri);
         }

@@ -39,7 +39,9 @@ namespace fs = boost::filesystem;
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_storage = log4cplus::Logger::getInstance("[storage]");
+#endif
 
     Storage::p Storage::inst_;
 
@@ -85,7 +87,7 @@ namespace storage
         uint32_t storage_mode
        )
     {
-        STORAGE_EVENT_LOG("storage system start.............");
+        LOG4CPLUS_INFO_LOG(logger_storage, "storage system start.............");
 #ifdef BOOST_WINDOWS_API
         framework::configure::Config conf;
         framework::configure::ConfigModule & storage_conf =
@@ -143,12 +145,14 @@ namespace storage
 
         resourceinfo_file_ = (config_path / ("ResourceInfo.dat")).file_string();
         resourceinfo_bak_file_ = (config_path / ("ResourceInfo.dat.bak")).file_string();
-        STORAGE_EVENT_LOG(" ConfigPath = " << (ConfigPath) << ", ResourceFile = " << (resourceinfo_file_));
+        LOG4CPLUS_INFO_LOG(logger_storage, " ConfigPath = " << (ConfigPath) << ", ResourceFile = " 
+            << (resourceinfo_file_));
 
         string store_path;
         store_path.assign(DiskPathName);
         space_manager_ = SpaceManager::Create(io_svc_, store_path, disk_limit_size, bUseDisk);
-        STORAGE_EVENT_LOG(" store_path:" << (store_path) << " disk_limit_size:" << disk_limit_size << " bUseDisk" << bUseDisk);
+        LOG4CPLUS_INFO_LOG(logger_storage, " store_path:" << (store_path) << " disk_limit_size:" 
+            << disk_limit_size << " bUseDisk" << bUseDisk);
 
         StorageThread::Inst().Start();
         space_manager_timer_->start();
@@ -177,7 +181,7 @@ namespace storage
         RemoveExpiredInvisibleFiles();
 #endif  // #ifdef DISK_MODE
 
-        STORAGE_EVENT_LOG("storage system start success!");
+        LOG4CPLUS_INFO_LOG(logger_storage, "storage system start success!");
     }
 
     // storage被通知instance关闭，storage取消instance的资源申请，释放资源空间
@@ -207,7 +211,7 @@ namespace storage
         if (is_running_ == false)
             return;
 
-        STORAGE_EVENT_LOG("storage system stop!");
+        LOG4CPLUS_INFO_LOG(logger_storage, "storage system stop!");
 #ifdef DISK_MODE
         space_manager_timer_->cancel();
         res_info_timer_->cancel();
@@ -233,7 +237,7 @@ namespace storage
         StorageThread::Inst().Stop();
 #endif  // #ifdef DISK_MODE
 
-        STORAGE_TEST_DEBUG("Storage stop complate");
+        LOG4CPLUS_INFO_LOG(logger_storage, "Storage stop complate");
         inst_.reset();
     }
 
@@ -258,12 +262,12 @@ namespace storage
                 // 找到一个Instance
                 if (!is_force)
                 {
-                    STORAGE_EVENT_LOG("CreateInstance " << rid_info);
+                    LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance " << rid_info);
                     t_inst->AddUrlInfo(url_info);
                     url_instance_map_.insert(std::make_pair(url_info.url_, t_inst));
                     if (t_inst->IsComplete())
                     {
-                        STORAGE_DEBUG_LOG("local_complete_ = true");
+                        LOG4CPLUS_INFO_LOG(logger_storage, "local_complete_ = true");
                         t_inst->local_complete_ = true;
                     }
                     return t_inst;
@@ -272,7 +276,7 @@ namespace storage
                 t_inst->RemoveUrl(url_info.url_);
                 url_instance_map_.erase(url_info.url_);
                 rid_instance_map_.erase(rid_info.GetRID());
-                STORAGE_EVENT_LOG("CreateInstance OK, " << rid_info << (is_force?"force!":""));
+                LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance OK, " << rid_info << (is_force?"force!":""));
             }
             else
             {
@@ -289,22 +293,22 @@ namespace storage
             Instance::p t_inst = it->second;
             if (!is_force)
             {
-                STORAGE_EVENT_LOG("CreateInstance " << url_info << (is_force?"force!":""));
+                LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance " << url_info << (is_force?"force!":""));
                 t_inst->AddUrlInfo(url_info);  // ?
                 // do not insert to rid_instance_map_, should use AttachRidByUrl
                 if (t_inst->IsComplete())
                 {
-                    STORAGE_DEBUG_LOG("local_complete_ = true");
+                    LOG4CPLUS_INFO_LOG(logger_storage, "local_complete_ = true");
                     t_inst->local_complete_ = true;
                 }
                 return t_inst;
             }
             t_inst->RemoveUrl(url_info.url_);
             url_instance_map_.erase(url_info.url_);
-            STORAGE_EVENT_LOG("CreateInstance OK, " << url_info << (is_force?"force!":""));
+            LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance OK, " << url_info << (is_force?"force!":""));
         }
 
-        STORAGE_EVENT_LOG("CreateInstance URL " << url_info << (is_force?"force!":""));
+        LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance URL " << url_info << (is_force?"force!":""));
         Instance::p inst_p = Instance::Create(url_info);
         if (!inst_p)
         {
@@ -317,7 +321,7 @@ namespace storage
         inst_p->Start();
         instance_set_.insert(inst_p);
         url_instance_map_.insert(std::make_pair(url_info.url_, inst_p));
-        STORAGE_EVENT_LOG("CreateInstance success!");
+        LOG4CPLUS_INFO_LOG(logger_storage, "CreateInstance success!");
         return inst_p;
     }
 
@@ -345,7 +349,7 @@ namespace storage
         live_instance->Start(shared_from_this());
         rid_to_live_instance_map_[rid] = live_instance;
 
-        STORAGE_EVENT_LOG("CreateLiveInstance succeeded.");
+        LOG4CPLUS_INFO_LOG(logger_storage, "CreateLiveInstance succeeded.");
 
         return live_instance;
     }
@@ -356,7 +360,7 @@ namespace storage
             return;
         if (!pointer)
             return;
-        STORAGE_EVENT_LOG("AddInstanceToRidMap!instance: " << pointer);
+        LOG4CPLUS_INFO_LOG(logger_storage, "AddInstanceToRidMap!instance: " << pointer);
 
         RID rid = pointer->GetRID();
         assert(!rid.is_empty());
@@ -409,7 +413,8 @@ namespace storage
             return;
         }
         // 更新Storage的url和rid列表，将原来与inst2匹配的url和rid删除，并与inst1匹配
-        STORAGE_EVENT_LOG("MergeInstance! merge inst2: " << instance_p2 << " To inst1: " << instance_p1);
+        LOG4CPLUS_INFO_LOG(logger_storage, "MergeInstance! merge inst2: " << instance_p2 << " To inst1: " 
+            << instance_p1);
         assert(!instance_p1->GetRID().is_empty());
         // check move
         if (instance_p2->IsSaveMode())
@@ -438,7 +443,8 @@ namespace storage
             uint32_t dc = url_instance_map_.erase(in_url_info_s[i].url_);
             assert(dc == 1);
             url_instance_map_.insert(std::make_pair(in_url_info_s[i].url_, instance_p1));
-            STORAGE_DEBUG_LOG("合并URL: " << in_url_info_s[i].url_ << "到  instance: " << instance_p1);
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "合并URL: " << in_url_info_s[i].url_ << "到  instance: " 
+                << instance_p1);
         }
         instance_p1->AddUrlInfo(in_url_info_s);
 
@@ -446,11 +452,13 @@ namespace storage
         if (!instance_p2->GetRID().is_empty())
         {
             uint32_t dc = rid_instance_map_.erase(instance_p2->GetRID());
-            STORAGE_DEBUG_LOG("Erase " << instance_p2->GetRID() << " ( " << instance_p2 << " ) from rid_instance_map_");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "Erase " << instance_p2->GetRID() << " ( " << instance_p2 
+                << " ) from rid_instance_map_");
             assert(dc == 1);
             assert(!instance_p1->GetRID().is_empty());
             rid_instance_map_.insert(std::make_pair(instance_p1->GetRID(), instance_p1));
-            STORAGE_DEBUG_LOG("Add " << instance_p2->GetRID() << " ( " << instance_p1 << " ) to rid_instance_map_");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "Add " << instance_p2->GetRID() << " ( " << instance_p1 
+                << " ) to rid_instance_map_");
         }
 
         // 将instance_p2资源拷贝到instance_p1
@@ -542,7 +550,7 @@ namespace storage
                 base::filesystem::rename_nothrow(fs::path(resourceinfo_file_tmp), fs::path(resourceinfo_file_), ec_rename);
             }
             else
-                STORAGE_DEBUG_LOG("ResourceInfoFile Delete Failed: " << e.what());
+                LOG4CPLUS_DEBUG_LOG(logger_storage, "ResourceInfoFile Delete Failed: " << e.what());
 #endif
         }
         else
@@ -557,7 +565,7 @@ namespace storage
             boost::system::error_code ec;
             fs::remove(fs::path(resinfo), ec);
         }
-        STORAGE_EVENT_LOG("SaveResourceInfoToDisk! resource count:" << count);
+        LOG4CPLUS_INFO_LOG(logger_storage, "SaveResourceInfoToDisk! resource count:" << count);
     }
 
     bool Storage::CreateDirectoryRecursive(const string& directory)
@@ -629,7 +637,7 @@ namespace storage
         }
 
         const string resource_name = inst->GetResourceName();
-        STORAGE_EVENT_LOG("检查文件资源：" << (resource_name));
+        LOG4CPLUS_INFO_LOG(logger_storage, "检查文件资源：" << (resource_name));
 
         if (STORAGE_MODE_NORMAL == GetStorageMode() &&
             false == base::filesystem::exists_nothrow(fs::path(space_manager_->store_path_)))
@@ -681,7 +689,7 @@ namespace storage
 
     void Storage::CheckResourceFromDisk()
     {
-        STORAGE_EVENT_LOG("检查磁盘资源 ");
+        LOG4CPLUS_INFO_LOG(logger_storage, "检查磁盘资源 ");
 
         if (false == use_disk_)
         {
@@ -746,11 +754,11 @@ namespace storage
         }
 
         ResourceInfoListFile r_file;
-        STORAGE_DEBUG_LOG("LoadResourceData: " << (resourceinfo_file_));
+        LOG4CPLUS_DEBUG_LOG(logger_storage, "LoadResourceData: " << (resourceinfo_file_));
         if (!r_file.SecOpen(resourceinfo_file_.c_str()))
         {
             r_file.SecClose();
-            STORAGE_DEBUG_LOG("");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "");
         }
         else
         {
@@ -797,13 +805,14 @@ namespace storage
 
                 if (r_info.down_mode_ == DM_BY_ACCELERATE && false == IsRidInfoValid(r_info.rid_info_))
                 {
-                    STORAGE_WARN_LOG("RIDInfo Invalid: " << r_info.rid_info_);
+                    LOG4CPLUS_WARN_LOG(logger_storage, "RIDInfo Invalid: " << r_info.rid_info_);
                     continue;
                 }
 
                 Instance::p pointer = Instance::Open(r_info, resource_p);
-                STORAGE_EVENT_LOG("OpenResource Success! local_file_name:" << r_info.file_path_
-                    << " 已下载：" << pointer->GetDownloadBytes() << "/" << pointer->GetFileLength() << " rid_info:" << r_info.rid_info_);
+                LOG4CPLUS_INFO_LOG(logger_storage, "OpenResource Success! local_file_name:" << r_info.file_path_
+                    << " 已下载：" << pointer->GetDownloadBytes() << "/" << pointer->GetFileLength() << " rid_info:" 
+                    << r_info.rid_info_);
 
                 // 创建Instance
                 assert(pointer);
@@ -818,7 +827,7 @@ namespace storage
             {
                 boost::system::error_code ec;
                 fs::remove(fs::path(resourceinfo_file_), ec);
-                STORAGE_EVENT_LOG("LoadResourceInfoFromDisk!资源文件非法!" << resourceinfo_file_);
+                LOG4CPLUS_INFO_LOG(logger_storage, "LoadResourceInfoFromDisk!资源文件非法!" << resourceinfo_file_);
             }
 
             CheckResourceFromDisk();
@@ -902,7 +911,7 @@ namespace storage
             r_file.SecClose();
             boost::system::error_code ec;
             fs::remove(fs::path(read_resinfo_file), ec);
-            STORAGE_EVENT_LOG("LoadResourceInfoFromDisk!读取资源信息失败!" << read_resinfo_file);
+            LOG4CPLUS_INFO_LOG(logger_storage, "LoadResourceInfoFromDisk!读取资源信息失败!" << read_resinfo_file);
         }
         else
         {
@@ -917,7 +926,7 @@ namespace storage
                     fs::path app_path_cfg = fs::path(resource_data_path_) / filename.filename();
                     boost::system::error_code ec;
                     base::filesystem::rename_nothrow(filename, app_path_cfg, ec);
-                    STORAGE_EVENT_LOG("MoveFile From: " << filename << " To: " << app_path_cfg);
+                    LOG4CPLUS_INFO_LOG(logger_storage, "MoveFile From: " << filename << " To: " << app_path_cfg);
                 }
             }
 
@@ -1007,13 +1016,14 @@ namespace storage
 
                 if (r_info.down_mode_ == DM_BY_ACCELERATE && false == IsRidInfoValid(r_info.rid_info_))
                 {
-                    STORAGE_WARN_LOG("RIDInfo Invalid: " << r_info.rid_info_);
+                    LOG4CPLUS_WARN_LOG(logger_storage, "RIDInfo Invalid: " << r_info.rid_info_);
                     continue;
                 }
 
                 Instance::p pointer = Instance::Open(r_info, resource_p);
-                STORAGE_EVENT_LOG("OpenResource Success! local_file_name:" << (r_info.file_path_)
-                    << " " << pointer->GetDownloadBytes() << "/" << pointer->GetFileLength() << " rid_info:" << r_info.rid_info_);
+                LOG4CPLUS_INFO_LOG(logger_storage, "OpenResource Success! local_file_name:" << (r_info.file_path_)
+                    << " " << pointer->GetDownloadBytes() << "/" << pointer->GetFileLength() << " rid_info:" 
+                    << r_info.rid_info_);
                 //
                 filename_list.erase(r_info.file_path_);
                 app_file_list.erase(GetCfgFilename(r_info.file_path_));
@@ -1031,10 +1041,10 @@ namespace storage
             {
                 boost::system::error_code ec;
                 fs::remove(fs::path(read_resinfo_file), ec);
-                STORAGE_EVENT_LOG("LoadResourceInfoFromDisk!资源文件非法!" << read_resinfo_file);
+                LOG4CPLUS_INFO_LOG(logger_storage, "LoadResourceInfoFromDisk!资源文件非法!" << read_resinfo_file);
             }
             CheckResourceFromDisk();
-            STORAGE_EVENT_LOG("LoadResourceInfoFromDisk! resource count:" << count);
+            LOG4CPLUS_INFO_LOG(logger_storage, "LoadResourceInfoFromDisk! resource count:" << count);
 
             for (std::set<Instance::p>::iterator i = instance_set_.begin(); i != instance_set_.end(); ++i)
             {
@@ -1090,7 +1100,7 @@ namespace storage
         {
             pointer = it->second;
         }
-        STORAGE_EVENT_LOG("RID = " << rid << " instance = " << pointer);
+        LOG4CPLUS_INFO_LOG(logger_storage, "RID = " << rid << " instance = " << pointer);
         return pointer;
     }
 
@@ -1109,7 +1119,7 @@ namespace storage
         {
             pointer = it->second;
         }
-        STORAGE_EVENT_LOG("Url = " << url << " instance = " << pointer);
+        LOG4CPLUS_INFO_LOG(logger_storage, "Url = " << url << " instance = " << pointer);
         return pointer;
     }
 
@@ -1127,7 +1137,7 @@ namespace storage
             pointer = it->second;
         }
 
-        STORAGE_EVENT_LOG("RID = " << rid << " instance = " << pointer);
+        LOG4CPLUS_INFO_LOG(logger_storage, "RID = " << rid << " instance = " << pointer);
         return pointer;
     }
 
@@ -1173,7 +1183,7 @@ namespace storage
             }
         }
 
-        STORAGE_EVENT_LOG("filename = " << filename << " instance = " << pointer);
+        LOG4CPLUS_INFO_LOG(logger_storage, "filename = " << filename << " instance = " << pointer);
         return pointer;
     }
 
@@ -1213,7 +1223,7 @@ namespace storage
 
         if (STORAGE_MODE_READONLY == GetStorageMode())
         {
-            STORAGE_DEBUG_LOG("[DENY] Try to Attach SaveModeFilename in the Storage ReadOnlyMode");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "[DENY] Try to Attach SaveModeFilename in the Storage ReadOnlyMode");
             return;
         }
 
@@ -1249,13 +1259,15 @@ namespace storage
         if (it == url_instance_map_.end())
         {
             assert(!"Instance should be created now!!");
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " no such url in instance_map, url = " << url);
+            LOG4CPLUS_DEBUG_LOG(logger_storage, __FUNCTION__ << ":" << __LINE__ << 
+                " no such url in instance_map, url = " << url);
             return;
         }
 
         // instance已经创建，改名字
         Instance::p inst = it->second;
-        LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " Set Instance to SaveMode, inst = " << inst);
+        LOG4CPLUS_DEBUG_LOG(logger_storage, __FUNCTION__ << ":" << __LINE__ << 
+            " Set Instance to SaveMode, inst = " << inst);
 
         // save mode
         inst->SetSaveMode(true);
@@ -1303,7 +1315,7 @@ namespace storage
 
         if (STORAGE_MODE_READONLY == GetStorageMode())
         {
-            STORAGE_DEBUG_LOG("[DENY] Try to Attach filename in the Storage ReadOnlyMode");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "[DENY] Try to Attach filename in the Storage ReadOnlyMode");
             return;
         }
 
@@ -1326,7 +1338,6 @@ namespace storage
         // instance尚未创建
         if (it == url_instance_map_.end())
         {
-            // STORAGE_DEBUG_LOG("instance尚未创建，保存到map中");
             // url_filename_map_.insert(make_pair(url, file_name));
             return;
         }
@@ -1335,8 +1346,8 @@ namespace storage
 
         if (inst->IsSaveMode())
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode = true, Instance = " << inst
-                << ", AttachFilenameByUrl Fail!");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, __FUNCTION__ << ":" << __LINE__ << 
+                " SaveMode = true, Instance = " << inst << ", AttachFilenameByUrl Fail!");
             return;
         }
 
@@ -1373,7 +1384,6 @@ namespace storage
             }
             else
             {
-                // STORAGE_DEBUG_LOG("命名失败，保存到map中");
                 // url_filename_map_.insert(make_pair(url, file_name));
             }
         }
@@ -1520,17 +1530,17 @@ namespace storage
 #ifdef DISK_MODE
         if (STORAGE_MODE_READONLY == GetStorageMode())
         {
-            STORAGE_DEBUG_LOG("[DENY] Try to Attach Rid in the Storage ReadOnlyMode");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "[DENY] Try to Attach Rid in the Storage ReadOnlyMode");
             return;
         }
 #endif  // #ifdef DISK_MODE
 
-        STORAGE_EVENT_LOG("Storage::AttachRidByUrl, URL: " << url << ", RID: " << rid);
+        LOG4CPLUS_INFO_LOG(logger_storage, "Storage::AttachRidByUrl, URL: " << url << ", RID: " << rid);
 
         // 验证rid
         if (false == IsRidInfoValid(rid))
         {
-            STORAGE_EVENT_LOG("RIDInfo Invalid. RID: " << rid);
+            LOG4CPLUS_INFO_LOG(logger_storage, "RIDInfo Invalid. RID: " << rid);
             return;
         }
 
@@ -1538,7 +1548,7 @@ namespace storage
         std::map<string, Instance::p>::const_iterator it = url_instance_map_.find(url);
         if (it == url_instance_map_.end())
         {
-            STORAGE_ERR_LOG("Storage::AttachRidByUrl, not such url:" << url);
+            LOG4CPLUS_ERROR_LOG(logger_storage, "Storage::AttachRidByUrl, not such url:" << url);
             return;
         }
         Instance::p inst1 = it->second;
@@ -1546,7 +1556,7 @@ namespace storage
         // 是纯下模式
         if (inst1->IsPureDownloadMode())
         {
-            STORAGE_DEBUG_LOG("Storage::AttachRidByUrl, IsPureDownloadMode");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "Storage::AttachRidByUrl, IsPureDownloadMode");
             return;
         }
 
@@ -1554,7 +1564,7 @@ namespace storage
         // ! 如何即时更新RID
         if (inst1->HasRID())
         {
-            STORAGE_DEBUG_LOG("Storage::AttachRidByUrl, inst rid is not empty");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "Storage::AttachRidByUrl, inst rid is not empty");
             return;
         }
 
@@ -1563,7 +1573,7 @@ namespace storage
         // 没有重复的，不需要融合, 直接设置RidInfo
         if (iter == rid_instance_map_.end())
         {
-            STORAGE_DEBUG_LOG("No such rid, no need Merge");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "No such rid, no need Merge");
 
             if ((inst1->GetFileLength() != 0) && (inst1->GetFileLength() != rid.GetFileLength()))
             {
@@ -1583,7 +1593,7 @@ namespace storage
             // 文件已经不存在
             if (false == CheckInstanceResource(iter->second))
             {
-                STORAGE_DEBUG_LOG("No such rid, no need Merge");
+                LOG4CPLUS_DEBUG_LOG(logger_storage, "No such rid, no need Merge");
 
                 if ((inst1->GetFileLength() != 0) && (inst1->GetFileLength() != rid.GetFileLength()))
                 {
@@ -1673,7 +1683,8 @@ namespace storage
     // 从url和rid列表中删除某个instance，并添加到spacemanager的释放资源列表中
     void Storage::RemoveInstance(Instance::p inst, bool need_remove_file)
     {
-        STORAGE_INFO_LOG("" << inst->GetResourceName() << " disk_file_size:" << inst->GetDiskFileSize());
+        LOG4CPLUS_INFO_LOG(logger_storage, "" << inst->GetResourceName() << " disk_file_size:" 
+            << inst->GetDiskFileSize());
         assert((inst->GetDDNum() == 0));
 
         if (!inst)
@@ -1681,7 +1692,7 @@ namespace storage
             return;
         }
 
-        STORAGE_DEBUG_LOG("\nResourceName: " << (inst->resource_name_)
+        LOG4CPLUS_DEBUG_LOG(logger_storage, "\nResourceName: " << (inst->resource_name_)
             << "\n\tFileLength: " << float(inst->GetFileLength())/1024/1024 << "MB"
             << "\tRID: " << inst->GetRID()
             // << "\tValue: " << inst->GetInstanceValue()
@@ -1758,7 +1769,7 @@ namespace storage
         }
         if (inst_minvalue.get() == 0 && inst_rm.get() == 0)
         {
-            STORAGE_DEBUG_LOG("inst_minvalue and inst_rm null");
+            LOG4CPLUS_DEBUG_LOG(logger_storage, "inst_minvalue and inst_rm null");
             return;
         }
         RemoveInstance(inst_minvalue.get() ? inst_minvalue : inst_rm, true);
@@ -1915,14 +1926,15 @@ namespace storage
             boost::uint16_t data;
         } endian;
         endian.data = 0x0102u;
-        STORAGE_DEBUG_LOG("bytes = " << (uint32_t)endian.bytes[0] << " " << (uint32_t)endian.bytes[1]);
+        LOG4CPLUS_DEBUG_LOG(logger_storage, "bytes = " << (uint32_t)endian.bytes[0] << " " << 
+            (uint32_t)endian.bytes[1]);
 
         framework::string::Md5 hash;
         for (uint32_t i = 0; i < rid_info.GetBlockCount(); i++)
         {
             if (rid_info.block_md5_s_[i].is_empty())
             {
-                STORAGE_DEBUG_LOG(" false: rid_info_.block_md5_s_[i].IsEmpty() " << rid_info);
+                LOG4CPLUS_DEBUG_LOG(logger_storage, " false: rid_info_.block_md5_s_[i].IsEmpty() " << rid_info);
                 return false;
             }
             hash.update(rid_info.block_md5_s_[i].to_little_endian_bytes().data(), sizeof(framework::string::UUID));
@@ -1934,7 +1946,8 @@ namespace storage
 
         if (valid_rid != rid_info.GetRID())
         {
-            STORAGE_DEBUG_LOG(" valid_rid =  " << valid_rid << ", argument_rid = " << rid_info.GetRID());
+            LOG4CPLUS_DEBUG_LOG(logger_storage, " valid_rid =  " << valid_rid << ", argument_rid = " << 
+                rid_info.GetRID());
             return false;
         }
 #endif
@@ -1992,7 +2005,7 @@ namespace storage
         inst->GetBlockPosition(rb_index.block_index, block_offset, block_len);
         uint32_t sub_offset, sub_len;
         inst->GetSubPiecePosition(subpiece_info, sub_offset, sub_len);
-        STORAGE_TEST_DEBUG("block index:" << rb_index.block_index << "--block offset, block len:<"
+        LOG4CPLUS_DEBUG_LOG(logger_storage, "block index:" << rb_index.block_index << "--block offset, block len:<"
             << block_offset << "," << block_len << ">--sub offset, sub len:<" << sub_offset << "," << sub_len << ">"
             << "--buf len:" << block_buf.Length());
         assert(sub_offset >= block_offset);

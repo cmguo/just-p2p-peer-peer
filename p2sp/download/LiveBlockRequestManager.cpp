@@ -4,7 +4,10 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_block_request_manager");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_block_request_manager = log4cplus::Logger::
+        getInstance("[live_block_request_manager]");
+#endif
 
     LiveBlockTask::LiveBlockTask(const protocol::LiveSubPieceInfo & live_block, LiveDownloader__p & download, boost::uint32_t & timeout)
         : live_block_(live_block)
@@ -40,7 +43,7 @@ namespace p2sp
 
     void LiveBlockRequestManager::RemoveBlockTask(boost::uint32_t block_id)
     {
-        LOG(__DEBUG, "live_block_request_manager", "Remove block = " << block_id);
+        LOG4CPLUS_DEBUG_LOG(logger_live_block_request_manager, "Remove block = " << block_id);
         std::map<boost::uint32_t, LiveBlockTask__p>::iterator iter = live_block_requesting_map_.find(block_id);
 
         if (iter != live_block_requesting_map_.end())

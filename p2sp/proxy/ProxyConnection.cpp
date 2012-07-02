@@ -55,7 +55,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_proxy_connection = log4cplus::Logger::getInstance("[proxy_connection]");
+#endif
 
     ProxyConnection::ProxyConnection(
         boost::asio::io_service & io_svc,
@@ -156,7 +158,7 @@ namespace p2sp
 
         is_running_ = true;
 
-        LOG(__EVENT, "proxy", "ProxyConnection::Start " << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, "ProxyConnection::Start " << shared_from_this());
         if (http_server_socket_)
         {
             http_server_socket_->SetListener(shared_from_this());
@@ -170,14 +172,15 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "ProxyConnection::Stop " << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, "ProxyConnection::Stop " << shared_from_this());
         // assert(http_server_socket_);
 
         clear();
 
         if (http_server_socket_)
         {
-            LOG(__EVENT, "httpserver", __FUNCTION__ << " close http_server_socket_ = " << http_server_socket_);
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << " close http_server_socket_ = " << 
+                http_server_socket_);
             // std::set handler to null, do not need notice any more
             http_server_socket_->SetListener(IHttpServerListener::pointer());
             http_server_socket_->WillClose();
@@ -207,7 +210,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "ProxyConnection::WillStop " << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, "ProxyConnection::WillStop " << shared_from_this());
 #ifdef DISK_MODE
         if (play_history_item_handle_ != PlayHistoryManager::InvalidHandle()) {
             PushModule::Inst()->GetPlayHistoryManager()->StopVideoPlay(play_history_item_handle_);
@@ -265,7 +268,7 @@ namespace p2sp
         uint32_t start_position,
         std::vector<base::AppBuffer> const & buffers)
     {
-        LOG(__DEBUG, "proxy", "OnRecvSubPiece start_position = " << start_position);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "OnRecvSubPiece start_position = " << start_position);
         if (is_running_ == false) return;
 
         silent_time_counter_.reset();
@@ -279,7 +282,7 @@ namespace p2sp
         assert(proxy_sender_);
         if (GetPlayingPosition() != start_position)
         {
-            LOG(__WARN, "proxy", "ProxyConnection::OnAsyncGetSubPieceSucced playing position "
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, "ProxyConnection::OnAsyncGetSubPieceSucced playing position "
                 << GetPlayingPosition() << " start_possition " << start_position);
             return;
         }
@@ -292,7 +295,7 @@ namespace p2sp
             PushModule::Inst()->GetPlayHistoryManager()->SetVideoPlayPosition(play_history_item_handle_, GetPlayingPosition());
         }
 #endif
-        LOG(__WARN, "proxy", "proxy_sender_->OnRecvSubPiece, position = " << start_position
+        LOG4CPLUS_WARN_LOG(logger_proxy_connection, "proxy_sender_->OnRecvSubPiece, position = " << start_position
             << ", buffer.size = " << buffers.size());
 
         int can_send_cout = send_speed_limit_ - send_count_;
@@ -331,7 +334,8 @@ namespace p2sp
 
         if (!download_driver_)
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << ":" << __LINE__ << " download_driver_ = " << download_driver_);
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " download_driver_ = " 
+                << download_driver_);
             return;
         }
 
@@ -371,11 +375,11 @@ namespace p2sp
                             data_rate_info->uSize = sizeof(RESOURCE_DATA_RATE_INFO);
                             data_rate_info->fDataRate = static_cast<float>(download_driver_->GetInstance()->GetMetaData().VideoDataRate);
                             string orig_url = source_url_;
-                            LOGX(__DEBUG, "msg", "source_url dest_length = " << _countof(data_rate_info->szOriginalUrl) <<
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "source_url dest_length = " << _countof(data_rate_info->szOriginalUrl) <<
                                 ", length = " << orig_url.length() << ", url = " << orig_url);
                             strncpy(data_rate_info->szOriginalUrl, orig_url.c_str(), sizeof(data_rate_info->szOriginalUrl)-1);
                             // log
-                            LOGX(__DEBUG, "msg", "Post UM_GOT_RESOURCE_DATARATE:" <<
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Post UM_GOT_RESOURCE_DATARATE:" <<
                                 "  uSize = " << data_rate_info->uSize <<
                                 ", fDataRate = " << data_rate_info->fDataRate <<
                                 ", szOriginalUrl = " << data_rate_info->szOriginalUrl);
@@ -391,14 +395,17 @@ namespace p2sp
 
 
         //DebugLog("proxy_sender_->GetPlayingPosition() = %d file length = %d", proxy_sender_->GetPlayingPosition(), file_length_);
-        LOGX(__WARN, "proxy", "proxy_sender_->GetPlayingPosition() = " << proxy_sender_->GetPlayingPosition() << " file length = " << file_length_);
+        LOG4CPLUS_WARN_LOG(logger_proxy_connection, "proxy_sender_->GetPlayingPosition() = " << 
+            proxy_sender_->GetPlayingPosition() << " file length = " << file_length_);
         if (proxy_sender_->GetPlayingPosition() >= file_length_)
         {
-            LOGX(__WARN, "proxy", "PlayingPosition >= file_length_, IsComplete = " << download_driver_->GetInstance()->IsComplete());
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, "PlayingPosition >= file_length_, IsComplete = " << 
+                download_driver_->GetInstance()->IsComplete());
             if (download_driver_ && download_driver_->GetInstance() && download_driver_->GetInstance()->IsComplete())
             {
                 DebugLog("line 409 : proxy StopDownloadDriver();");
-                LOG(__WARN, "proxy", __FUNCTION__ << ":" << __LINE__ << " StopDownloadDriver();");
+                LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                    " StopDownloadDriver();");
                 StopDownloadDriver();
             }
             return;
@@ -420,7 +427,8 @@ namespace p2sp
         // parameters
         protocol::UrlInfo url_info = play_info->GetUrlInfo();
         protocol::RidInfo rid_info = play_info->GetRidInfo();
-        LOGX(__DEBUG, "proxy", "protocol::UrlInfo = " << url_info << "\n\t protocol::RidInfo = " << rid_info);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "protocol::UrlInfo = " << url_info << 
+            "\n\t protocol::RidInfo = " << rid_info);
         network::HttpRequest::p http_request;
         int speed_limit_in_kBps = play_info->GetSpeedLimit();
 
@@ -428,7 +436,7 @@ namespace p2sp
         string url = url_info_local.url_;
         if (!boost::algorithm::istarts_with(url, "http://"))
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << "Invalid url! " << url_info.url_);
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << "Invalid url! " << url_info.url_);
             url_info_local.url_ = "http://" + url_info_local.url_;
         }
 
@@ -465,14 +473,16 @@ namespace p2sp
         if (false == is_running_)
             return;
 
-        LOG(__EVENT, "proxy", __FUNCTION__ << "\n\tUrl: " << url_info.url_ << "\n\tRefer: " << url_info.refer_url_);
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << "\n\tUrl: " << url_info.url_ << 
+            "\n\tRefer: " << url_info.refer_url_);
         if (http_request) {
-            LOG(__EVENT, "proxy" , __FUNCTION__ << "Request:\n" << http_request->GetRequestString());
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << "Request:\n" << 
+                http_request->GetRequestString());
         }
         // check url
         if (url_info.url_.length() == 0 || url_info.url_.find("'") != string::npos|| url_info.url_.find("\"") != string::npos)
         {
-            LOG(__ERROR, "proxy", __FUNCTION__ << " Url ERROR !! Contain ',\"");
+            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, __FUNCTION__ << " Url ERROR !! Contain ',\"");
             WillStop();
             return;
         }
@@ -510,7 +520,7 @@ namespace p2sp
         {
             if (http_request)
             {
-                LOG(__INFO, "proxy", "OnHttpRecvSucced DirectProxySender" << url_info.url_);
+                LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced DirectProxySender" << url_info.url_);
                 if (false == save_mode_)
                 {
                     if (http_request->HasProperty("Range") && RangeInfo::IsSupportedRangeFormat(http_request->GetProperty("Range")))
@@ -566,7 +576,7 @@ namespace p2sp
             boost::algorithm::to_lower(url);
             if (!boost::algorithm::starts_with(url, "http://"))
             {
-                LOG(__ERROR, "proxy", __FUNCTION__ << "Invalid url! " << url_info.url_);
+                LOG4CPLUS_ERROR_LOG(logger_proxy_connection, __FUNCTION__ << "Invalid url! " << url_info.url_);
                 url_info_local.url_ = "http://" + url_info_local.url_;
             }
 
@@ -614,7 +624,7 @@ namespace p2sp
                 boost::algorithm::icontains(uri.getfile(), ".wma") ||
                 boost::algorithm::icontains(uri.getfile(), ".mp3"))
             {
-                LOGX(__DEBUG, "proxy", "QianQian: " << url_info.url_);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "QianQian: " << url_info.url_);
                 expected_subpieces_per_interval_ = 128 * time_interval_in_ms_ / 1000;
             }
         }
@@ -630,7 +640,8 @@ namespace p2sp
             return;
 
 
-        LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " RID = " << play_info->GetRidInfo() << " Url = " << play_info->GetUrlInfo());
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " RID = " << 
+            play_info->GetRidInfo() << " Url = " << play_info->GetUrlInfo());
         if (play_info->HasUrlInfo())
         {
             // speed limit
@@ -653,18 +664,18 @@ namespace p2sp
             network::Uri uri(url_info.url_);
             if (false == save_mode_)
             {
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode = false");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " SaveMode = false");
                 if (http_request_demo_->HasProperty("Range") && RangeInfo::IsSupportedRangeFormat(http_request_demo_->GetProperty("Range")))
                 {
                     P();
-                    LOGX(__DEBUG, "proxy", "RangeProxySender::create");
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "RangeProxySender::create");
                     proxy_sender_ = RangeProxySender::create(http_server_socket_);
                     proxy_sender_->Start(http_request_demo_, shared_from_this());
                 }
                 else if(play_info->GetRangeInfo())
                 {
                     RangeInfo__p range_info = play_info->GetRangeInfo();
-                    LOGX(__DEBUG, "proxy", "RangeProxySender range:" 
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "RangeProxySender range:" 
                         << range_info->GetRangeBegin() << "-" << range_info->GetRangeEnd());
                     RangeProxySender::p sender = RangeProxySender::create(http_server_socket_);
                     proxy_sender_ = sender;
@@ -673,14 +684,16 @@ namespace p2sp
                 else if (start_position == 0)
                 {
                     P();
-                    LOGX(__DEBUG, "proxy", "CommonProxySender start_position = " << start_position);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "CommonProxySender start_position = " 
+                        << start_position);
                     proxy_sender_ = CommonProxySender::create(io_svc_, http_server_socket_);
                     proxy_sender_->Start();
                 }
                 else
                 {
                     P();
-                    LOGX(__DEBUG, "proxy", "OpenServiceProxySender start_position = " << start_position);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "OpenServiceProxySender start_position = " 
+                        << start_position);
                     proxy_sender_ = OpenServiceProxySender::create(http_server_socket_, shared_from_this());
                     proxy_sender_->Start(start_position);
                 }
@@ -694,23 +707,24 @@ namespace p2sp
             }
             else
             {
-                LOGX(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode = true");
-                LOGX(__DEBUG, "ppdebug", "is_openservice_range - true, save_mode_ = " << save_mode_);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " SaveMode = true");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "is_openservice_range - true, save_mode_ = " 
+                    << save_mode_);
                 proxy_sender_ = NullProxySender::create(shared_from_this());
                 proxy_sender_->Start();
             }
 
             string str_user_agent = http_request_demo_->GetProperty("User-Agent");
             url_info.user_agent_ = str_user_agent;
-            LOGX(__DEBUG, "ppdebug", "user agent - " << str_user_agent);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "user agent - " << str_user_agent);
             if (false == save_mode_ && str_user_agent.find("PPLive-Media-Player") != string::npos)
             {
-                LOGX(__DEBUG, "ppdebug", "user agent - true");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "user agent - true");
             }
 
             P();
             // is_drag
-            LOG(__DEBUG, "ppdebug", "play_info->GetIsDrag = " << play_info->GetIsDrag());
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "play_info->GetIsDrag = " << play_info->GetIsDrag());
 
             // 客户端的默认发送限速为2MB
             if (play_info->GetPlayerId() == "")
@@ -757,22 +771,23 @@ namespace p2sp
             {
                 int lastsegno = ProxyModule::Inst()->GetLastSegno(play_info->GetPlayerId());
                 int nowsegno = atoi(segno.c_str());
-                LOGX(__DEBUG, "switch", "lastsegno = " << lastsegno << " nowsegno = " << nowsegno);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "lastsegno = " << lastsegno << " nowsegno = " << nowsegno);
 
                 if (download_driver_->IsPPLiveClient())
                 {
-                    LOG(__DEBUG, "switch", "IsPPLiveClient");
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "IsPPLiveClient");
                     download_driver_->SetIsDrag(play_info->GetIsDrag() == 1 ? true : false);
                 }
                 else
                 {
-                    LOG(__DEBUG, "switch", "Is NOT PPLiveClient");
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Is NOT PPLiveClient");
                     if (lastsegno + 1 == nowsegno)
                     {
                         if (start_position == 0)
                         {
                             P();
-                            LOGX(__DEBUG, "switch", "GetDragPrecent = " << ProxyModule::Inst()->GetDragPrecent() << ", download_driver = " << download_driver_);
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "GetDragPrecent = " <<
+                                ProxyModule::Inst()->GetDragPrecent() << ", download_driver = " << download_driver_);
                             if (ProxyModule::Inst()->GetDragPrecent() > 96)
                             {
                                 download_driver_->SetIsDrag(true);
@@ -814,13 +829,14 @@ namespace p2sp
             {
                 if (file_length_ != 0)
                 {
-                    LOGX(__DEBUG, "switch", "Start = " << start_position << "filelength = " << file_length_ << " SetLastDragPrecent = " << start_position * 100 / file_length_);
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Start = " << start_position << "filelength = " 
+                        << file_length_ << " SetLastDragPrecent = " << start_position * 100 / file_length_);
                     ProxyModule::Inst()->SetLastDragPrecent(start_position * 100 / file_length_);
                 }
             }
             else
             {
-                LOGX(__DEBUG, "switch", "save_mode_ = " << save_mode_);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "save_mode_ = " << save_mode_);
                 download_driver_->SetIsDrag(false);
             }
             P();
@@ -828,7 +844,8 @@ namespace p2sp
             // rename
             if (false == save_mode_)
             {
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " AttachFilenameByUrl, url = " << url_info.url_
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                    " AttachFilenameByUrl, url = " << url_info.url_
                     << ", filename = " << filename);
                 // framework::MainThread::Post(boost::bind(&ppva_peer::storage::Storage::AttachFilenameByUrl, ppva_peer::storage::Storage::Inst_Storage(), url_info.url_, filename));
                 storage::Storage::Inst_Storage()->AttachFilenameByUrl(url_info.url_, filename);
@@ -842,7 +859,8 @@ namespace p2sp
         else
         {
             assert(!"Should have url and rid!");
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " Should have url and rid!");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " Should have url and rid!");
         }
     }
 
@@ -899,7 +917,6 @@ namespace p2sp
                 // 成功了
                 if (false == PlayInfo::IsLocalHost(remote_address, 0) && false == PlayInfo::IsLocalIP(remote_address, 0))
                 {
-                    LOGX(__EVENT, "proxy", "NOT_FROM_LOCALHOST " << http_server_socket_->GetEndPoint() << " \r\n" << *http_request);
                     WillStop();
                     return;
                 }
@@ -913,12 +930,14 @@ namespace p2sp
 
         if (false == save_mode_)
         {
-            LOG(__EVENT, "proxy", "OnHttpRecvSucced " << http_server_socket_->GetEndPoint() << " \r\n" << *http_request);
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced " << http_server_socket_->GetEndPoint() 
+                << " \r\n" << *http_request);
 
         }
         else
         {
-            LOG(__EVENT, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode Mock network::HttpRequest\n" << *http_request);
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " SaveMode Mock network::HttpRequest\n" << *http_request);
         }
 
         // save
@@ -927,11 +946,13 @@ namespace p2sp
         if (false == save_mode_)
         {
             source_url_ = http_request->GetUrl();
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " save_mode = false, source_url = " << source_url_);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " save_mode = false, source_url = " << source_url_);
         }
         else
         {
-            LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " save_mode = true, source_url = " << source_url_);
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                " save_mode = true, source_url = " << source_url_);
         }
 
         // 过滤掉含有非法字符的请求
@@ -941,7 +962,7 @@ namespace p2sp
             http_request->GetUrl().find("\"") != string::npos
            )
         {
-            LOG(__ERROR, "proxy", "OnHttpRecvSucced Url ERROR !! Contain '  \"");
+           LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvSucced Url ERROR !! Contain '  \"");
             WillStop();
             return;
         }
@@ -964,7 +985,7 @@ namespace p2sp
             {
                 if (boost::algorithm::istarts_with(request_path, "/crossdomain.xml") == true)
                 {
-                    LOG(__EVENT, "proxy", "OnHttpRecvSucced Request CrossDomain.xml");
+                    LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced Request CrossDomain.xml");
                     string cross_domain_xml =
                         "<!-- PPVA -->\n"
                         "<?xml version=\"1.0\" ?>\n"
@@ -989,7 +1010,7 @@ namespace p2sp
                 }
                 else
                 {
-                    LOG(__EVENT, "proxy", "OnHttpRecvSucced Reject: \n" << *http_request);
+                    LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced Reject: \n" << *http_request);
                     http_server_socket_->HttpSend403Header();
                 }
             }
@@ -1002,15 +1023,15 @@ namespace p2sp
             if (http_request->GetUrl().substr(0, 4) != "http")
             {
                 http_request->ReSetHttpUrl();
-                LOG(__EVENT, "proxy", "OnHttpRecvSucced ReSetHttpUrl" << http_request->GetUrl());
+                LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced ReSetHttpUrl" << http_request->GetUrl());
             }
 
             url_info_.type_ = protocol::UrlInfo::HTTP;
             url_info_.url_ = http_request->GetUrl();
             url_info_.refer_url_ = http_request->GetRefererUrl();
 
-            LOG(__INFO, "proxy", "OnHttpRecvSucced Url  = " << url_info_.url_);
-            LOG(__INFO, "proxy", "OnHttpRecvSucced Refer= " << url_info_.refer_url_);
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced Url  = " << url_info_.url_);
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced Refer= " << url_info_.refer_url_);
 
             if (url_info_.url_ == "")
             {
@@ -1062,13 +1083,14 @@ namespace p2sp
                     {
                         if (play_info->GetPlayType() == PlayInfo::PLAY_BY_OPEN)
                         {
-                            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " PlayInfo::PLAY_BY_OPEN");
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                " PlayInfo::PLAY_BY_OPEN");
                             if (play_info->HasUrlInfo())
                             {
                                 if (play_info->HasPlayerId() /* && play_info->HasStart() */)
                                 {
                                     ProxyType tmp_proxy_type(play_info->GetPlayType(), play_info->GetPlayerId());
-                                    LOG(__DEBUG, "proxy", __FUNCTION__  << "(" << __LINE__ \
+                                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__  << "(" << __LINE__ \
                                         << ") Check ProxyType: " << tmp_proxy_type);
                                     // ProxyModule::Inst()->StopProxyDownload(tmp_proxy_type, shared_from_this());
                                     ProxyModule::Inst()->StopProxyConnection(tmp_proxy_type, shared_from_this());
@@ -1086,18 +1108,19 @@ namespace p2sp
                         }
                         else if (play_info->GetPlayType() == PlayInfo::DOWNLOAD_BY_URL)
                         {
-                            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " PlayInfo::DOWNLOAD_BY_URL");
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                " PlayInfo::DOWNLOAD_BY_URL");
                             if (play_info->HasUrlInfo() || play_info->HasRidInfo())
                             {
                                 if (play_info->GetRidInfo().rid_.is_empty() && play_info->HasRidInfo())
                                 {
-                                    LOG(__DEBUG, "proxy", "rid empty, will stop");
+                                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "rid empty, will stop");
                                     WillStop();
                                     return;
                                 }
                                 else
                                 {
-                                    LOG(__DEBUG, "proxy", "rid not empty, OnDownloadByUrlRequest");
+                                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "rid not empty, OnDownloadByUrlRequest");
                                 // OnDownloadByUrlRequest(play_info->GetUrlInfo(), play_info->GetRidInfo(), network::HttpRequest::p(), play_info->GetSpeedLimit());
                                     OnDownloadByUrlRequest(play_info);
                                 }
@@ -1109,18 +1132,20 @@ namespace p2sp
                         }
                         else if (play_info->HasUrlInfo())
                         {
-                            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " OnUrlInfoRequest");
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                " OnUrlInfoRequest");
                             OnUrlInfoRequest(play_info->GetUrlInfo(), play_info->GetRidInfo(), network::HttpRequest::p());
                         }
                         else if (play_info->HasRidInfo())
                         {
-                            LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " RID_PLAY");
+                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                                " RID_PLAY");
                             OnPlayByRidRequest(play_info);
                         }
                     }
                     else
                     {
-                        LOG(__ERROR, "proxy", __FUNCTION__ << "Invalid Url: " << url_info_.url_);
+                        LOG4CPLUS_ERROR_LOG(logger_proxy_connection, __FUNCTION__ << "Invalid Url: " << url_info_.url_);
                         WillStop();
                         return;
                     }
@@ -1128,7 +1153,7 @@ namespace p2sp
                 else if (PlayInfo::IsLocalHost(http_request->GetHost(), ProxyModule::Inst()->GetHttpPort()) ||
                     PlayInfo::IsLocalIP(http_request->GetHost(), ProxyModule::Inst()->GetHttpPort()))
                 {
-                    LOG(__ERROR, "proxy", __FUNCTION__ << ":" << __LINE__ << "Invalid Request");
+                    LOG4CPLUS_ERROR_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << "Invalid Request");
                     WillStop();
                     return;
                 }
@@ -1142,7 +1167,7 @@ namespace p2sp
             {
                 if (false == save_mode_)
                 {
-                    LOG(__EVENT, "proxy", "=========================> HttpRecv()");
+                    LOG4CPLUS_INFO_LOG(logger_proxy_connection, "=========================> HttpRecv()");
                     /*
                     http_server_socket_->HttpRecvTillClose();
                     /*/
@@ -1152,7 +1177,8 @@ namespace p2sp
                 }
                 else
                 {
-                    LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SaveMode, Do not RecvHttp");
+                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
+                        " SaveMode, Do not RecvHttp");
                 }
             }
         }
@@ -1163,12 +1189,14 @@ namespace p2sp
         if (is_running_ == false) return;
         if (false == save_mode_)
         {
-            LOG(__ERROR, "proxy", "OnHttpRecvFailed " << " " << error_code << " " << shared_from_this());
+            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvFailed " << " " << error_code << " " << 
+                shared_from_this());
             WillStop();
         }
         else
         {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " error_code = " << error_code << " " << shared_from_this());
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " error_code = " << 
+                error_code << " " << shared_from_this());
             WillStop();
         }
     }
@@ -1179,12 +1207,14 @@ namespace p2sp
 
         if (false == save_mode_)
         {
-            LOG(__ERROR, "proxy", "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() << " " << shared_from_this());
-            LOG(__ERROR, "pplive", "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() << " " << shared_from_this());
+            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() 
+                << " " << shared_from_this());
+            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() 
+                << " " << shared_from_this());
         }
         else
         {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
         }
 
         WillStop();
@@ -1196,11 +1226,12 @@ namespace p2sp
 
         if (false == save_mode_)
         {
-            LOG(__WARN, "proxy", "OnTcpSendFailed " << http_server_socket_->GetEndPoint()  << " " << shared_from_this());
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, "OnTcpSendFailed " << http_server_socket_->GetEndPoint()  
+                << " " << shared_from_this());
         }
         else
         {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
         }
 
         WillStop();
@@ -1209,18 +1240,18 @@ namespace p2sp
     void ProxyConnection::StopDownloadDriver()
     {
         if (false == is_running_) {
-            LOG(__WARN, "proxy", __FUNCTION__ << ":" << __LINE__ << " is_running_ = false");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " is_running_ = false");
             return;
         }
 
-        LOG(__WARN, "proxy", __FUNCTION__ << ":" << __LINE__ << " will_stop_download_ = true");
+        LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " will_stop_download_ = true");
 
         will_stop_download_ = true;
 
         // download driver
         if (download_driver_)
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << "(" << shared_from_this() << ") Stop!");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << "(" << shared_from_this() << ") Stop!");
             global_io_svc().post(boost::bind(&DownloadDriver::Stop, download_driver_));
         }
 
@@ -1234,7 +1265,6 @@ namespace p2sp
     void ProxyConnection::OnTimerElapsed(framework::timer::Timer * pointer, uint32_t times)
     {
 
-        // LOG(__EVENT, "proxy", "ProxyConnection::OnTimerElapsed ");
         assert(0);
 
         if (is_running_ == false) return;
@@ -1255,7 +1285,6 @@ namespace p2sp
             {
                 download_driver_->SetRestPlayTime(rest_time);
 
-                LOG(__DEBUG, "test", "rest_time = " << rest_time << " sessionid =  " << download_driver_->GetSessionID());
             }
             if (send_subpieces_per_interval_ >= expected_subpieces_per_interval_) {
                 send_subpieces_per_interval_ = 0;
@@ -1267,7 +1296,6 @@ namespace p2sp
         }
         else
         {
-            LOG(__EVENT, "proxy", "ProxyConnection::OnTimerElapsed assert(0)");
             // assert(0);
         }
     }
@@ -1286,7 +1314,7 @@ namespace p2sp
 
         if (!proxy_sender_)
         {
-            LOGX(__EVENT, "proxy", "ProxySender is Null. " << shared_from_this());
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "ProxySender is Null. " << shared_from_this());
             return;
         }
 
@@ -1333,18 +1361,20 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            LOG(__EVENT, "proxy", __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() << " IsWillStopDownload = " << IsWillStopDownload());
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this() 
+                << " IsWillStopDownload = " << IsWillStopDownload());
              // has play info
             if (download_driver_ && play_info_ && file_length_ > 0 && proxy_sender_->GetPlayingPosition() >= file_length_)
             {
                 if (!download_driver_->GetInstance())
                 {
-                    LOGX(__WARN, "proxy", "Instance Null");
+                    LOG4CPLUS_WARN_LOG(logger_proxy_connection, "Instance Null");
                     WillStop();
                 }
                 else if (download_driver_->GetInstance()->IsComplete())
                 {
-                    LOGX(__WARN, "proxy", "Instance IsComplete = " << download_driver_->GetInstance()->IsComplete());
+                    LOG4CPLUS_WARN_LOG(logger_proxy_connection, "Instance IsComplete = " 
+                        << download_driver_->GetInstance()->IsComplete());
                     WillStop();
                 }
             }
@@ -1356,7 +1386,7 @@ namespace p2sp
             // accelerate
             else
             {
-                LOG(__EVENT, "proxy", "accelerate");
+                LOG4CPLUS_INFO_LOG(logger_proxy_connection, "accelerate");
                 WillStop();
             }
         }
@@ -1366,7 +1396,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "ProxyConnection::OnClose");
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, "ProxyConnection::OnClose");
         WillStop();
     }
 
@@ -1379,14 +1409,16 @@ namespace p2sp
         if (content_length == file_length_)
             return;
 
-        LOG(__WARN, "proxy", "ProxyConnection::OnNoticeGetContentLength content_length" << content_length);
+        LOG4CPLUS_WARN_LOG(logger_proxy_connection, "ProxyConnection::OnNoticeGetContentLength content_length" 
+            << content_length);
 
         proxy_sender_->OnNoticeGetContentLength(content_length, http_response);
 
         file_length_ = content_length;
 
         if (content_length != 0) {
-            LOG(__DEBUG, "proxy", __FUNCTION__ << ":" << __LINE__ << " content_length != 0, OnPlayTimer(0)");
+            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ 
+                << " content_length != 0, OnPlayTimer(0)");
             // OnPlayTimer(0);
         }
     }
@@ -1404,31 +1436,32 @@ namespace p2sp
     {
         if (false == is_running_)
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << " Proxy connection is not running.");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << " Proxy connection is not running.");
             return;
         }
         if (!download_driver_)  // already direct mode
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << " Using direct mode already.");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << " Using direct mode already.");
             return;
         }
         if (!http_request_demo_)
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << " No http request demo, can not use direct mode.");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection,__FUNCTION__ << 
+                " No http request demo, can not use direct mode.");
             return;
         }
         if (!download_driver || download_driver != download_driver_)
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << " Invalid download driver given.");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << " Invalid download driver given.");
             return;
         }
         if (proxy_sender_->IsHeaderResopnsed())
         {
-            LOG(__WARN, "proxy", __FUNCTION__ << " Header has been responsed.");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << " Header has been responsed.");
             return;
         }
 
-        LOG(__EVENT, "proxy", __FUNCTION__ << " download_driver=" << download_driver);
+        LOG4CPLUS_INFO_LOG(logger_proxy_connection, __FUNCTION__ << " download_driver=" << download_driver);
         // release download driver
         download_driver_->Stop();
         download_driver_.reset();
@@ -1463,8 +1496,10 @@ namespace p2sp
             proxy_sender_->GetPlayingPosition() >= file_length_)
         {
 
-            LOGX(__WARN, "proxy", " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; openservice; playingpos >= file_length");
-            LOGX(__WARN, "proxy", " playingpos >= file_length " << proxy_sender_->GetPlayingPosition() << ">" << file_length_);
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection,
+                " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; openservice; playingpos >= file_length");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, 
+                " playingpos >= file_length " << proxy_sender_->GetPlayingPosition() << ">" << file_length_);
             WillStop();
             return;
         }
@@ -1477,7 +1512,8 @@ namespace p2sp
            )
         {
 
-            LOG(__WARN, "proxy", __FUNCTION__ << " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; MinuteSpeed=0; RID=Empty");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << 
+                " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; MinuteSpeed=0; RID=Empty");
             proxy_sender_->OnNotice403Header();
             WillStop();
             return;
@@ -1499,7 +1535,8 @@ namespace p2sp
            )
         {
 
-            LOG(__WARN, "proxy", __FUNCTION__ << " silent_time_counter_ > 20s; !Http&!P2P; 403&!P2P");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << 
+                " silent_time_counter_ > 20s; !Http&!P2P; 403&!P2P");
             proxy_sender_->OnNotice403Header();
             WillStop();
             return;
@@ -1560,9 +1597,11 @@ namespace p2sp
                 }
             }
 #endif
-            LOGX(__EVENT, "proxy", "key_frame_position = " << key_frame_position << ", source_headlength = " << header_buffer.Length());
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "key_frame_position = " << key_frame_position << 
+                ", source_headlength = " << header_buffer.Length());
             header = Mp4Spliter::Mp4HeadParse(header_buffer, key_frame_position);
-            LOGX(__EVENT, "proxy", "key_frame_position = " << key_frame_position << ", generated_headlength = " << header.Length());
+            LOG4CPLUS_INFO_LOG(logger_proxy_connection, "key_frame_position = " << key_frame_position << 
+                ", generated_headlength = " << header.Length());
             // 这里判断一下返回值，如果失败直接返回
             if (0 == header.Length())
             {
@@ -1610,7 +1649,7 @@ namespace p2sp
         }
 
 
-        LOGX(__DEBUG, "downloadcenter", "SaveMode = " << save_mode_);
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "SaveMode = " << save_mode_);
         if (true == save_mode_)
         {
             source_url_ = url;
@@ -1630,20 +1669,20 @@ namespace p2sp
 
             if (http_request)
             {
-                LOGX(__DEBUG, "downloadcenter", "SourceUrl = " << source_url_);
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "SourceUrl = " << source_url_);
                 OnHttpRecvSucced(http_request);
             }
             else
             {
-                LOGX(__DEBUG, "downloadcenter", "network::HttpRequest Parse Error!");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "network::HttpRequest Parse Error!");
                 return;
             }
 
             if (false == will_stop_)
             {
                 protocol::UrlInfo url_info = download_driver_->GetOriginalUrlInfo();
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " << source_url_
-                    << ", Url = " << url_info.url_
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " SourceUrl = " 
+                    << source_url_ << ", Url = " << url_info.url_
                     << ", FileName = " << (qualified_file_name_));
 #ifdef DISK_MODE
                 if (qualified_file_name_.length() > 0) {
@@ -1653,7 +1692,7 @@ namespace p2sp
             }
             else
             {
-                LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " will_stop_ = true");
+                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " will_stop_ = true");
             }
         }
         else {
@@ -1748,13 +1787,15 @@ namespace p2sp
     void ProxyConnection::OnNoticeStopDownloadDriver()
     {
         if (false == is_running_) {
-            LOGX(__WARN, "proxy", "Not Running!!");
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, "Not Running!!");
             return;
         }
-        LOGX(__WARN, "proxy", "PlayingPosition = " << proxy_sender_->GetPlayingPosition() << ", FileLength = " << file_length_ << ", DownloadDriver = " << download_driver_);
+        LOG4CPLUS_WARN_LOG(logger_proxy_connection, "PlayingPosition = " << proxy_sender_->GetPlayingPosition() 
+            << ", FileLength = " << file_length_ << ", DownloadDriver = " << download_driver_);
         if (proxy_sender_->GetPlayingPosition() >= file_length_)
         {
-            LOGX(__WARN, "proxy", "PlayingPosition >= file_length_, download_driver = " << download_driver_);
+            LOG4CPLUS_WARN_LOG(logger_proxy_connection, "PlayingPosition >= file_length_, download_driver = " 
+                << download_driver_);
             StopDownloadDriver();
         }
     }
@@ -1772,7 +1813,7 @@ namespace p2sp
     // 直播请求的处理
     void ProxyConnection::OnLiveRequest(PlayInfo::p play_info)
     {
-        LOG(__DEBUG, "proxy", "Recv live request start:" <<
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Recv live request start:" <<
             play_info->GetLiveStart() << ", interval: " << play_info->GetLiveStart());
 
         is_live_connection_ = true;
@@ -1821,7 +1862,8 @@ namespace p2sp
         // 这里我打算把直播和点播的收数据统一起来，所以暂时先没写
         proxy_sender_->OnRecvSubPiece(block_id, buffers);
 
-        LOG(__DEBUG, "proxy", "OnRecvLivePiece piece:" << block_id << ", buffer size:" << buffers.size());
+        LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "OnRecvLivePiece piece:" << block_id << ", buffer size:" 
+            << buffers.size());
 
         return true;
     }

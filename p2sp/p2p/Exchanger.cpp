@@ -8,21 +8,17 @@
 #include "p2sp/p2p/IpPool.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 
-#define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
-#define P2P_INFO(s)    LOG(__INFO, "P2P", s)
-#define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
-#define P2P_WARN(s)    LOG(__WARN, "P2P", s)
-#define P2P_ERROR(s) LOG(__ERROR, "P2P", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_exchanger = log4cplus::Logger::getInstance("[exchanger]");
+#endif
 
     void Exchanger::Start()
     {
         if (is_running_ == true) return;
 
-        P2P_EVENT("Exchanger Start");
+        LOG4CPLUS_INFO_LOG(logger_exchanger, "Exchanger Start");
 
         is_running_ = true;
     }
@@ -31,7 +27,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        P2P_EVENT("Exchanger Stop");
+        LOG4CPLUS_INFO_LOG(logger_exchanger, "Exchanger Stop");
 
         if (p2p_downloader_) { p2p_downloader_.reset(); }
         if (ip_pool_) { ip_pool_.reset(); }
@@ -64,7 +60,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        P2P_EVENT("Exchanger::DoPeerExchange " << candidate_peerinfo);
+        LOG4CPLUS_INFO_LOG(logger_exchanger, "Exchanger::DoPeerExchange " << candidate_peerinfo);
 
         std::vector<protocol::CandidatePeerInfo> candidate_peers;
         p2p_downloader_->GetCandidatePeerInfos(candidate_peers);

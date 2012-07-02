@@ -6,11 +6,11 @@
 #include "p2sp/p2p/UploadSpeedLimitTracker.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 
-#define UPLOAD_LIMIT_TRACKER_DEBUG(msg) LOG(__DEBUG, "upload_limit_tracker", __FUNCTION__ << " " << msg)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("upload_limit_tracker");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_upload_limit_tracker = log4cplus::Logger::getInstance("[upload_limit_tracker]");
+#endif
 
     UploadSpeedLimitTracker::UploadSpeedLimitTracker()
     {
@@ -21,7 +21,8 @@ namespace p2sp
     {
         DoReset(max_unlimited_upload_speed_in_record);
 
-        UPLOAD_LIMIT_TRACKER_DEBUG("max_unlimited_upload_speed_in_record_ reset:" << max_unlimited_upload_speed_in_record_);
+        LOG4CPLUS_DEBUG_LOG(logger_upload_limit_tracker, "max_unlimited_upload_speed_in_record_ reset:" << 
+            max_unlimited_upload_speed_in_record_);
     }
 
     void UploadSpeedLimitTracker::DoReset(boost::uint32_t max_unlimited_upload_speed_in_record)
@@ -48,7 +49,7 @@ namespace p2sp
             ticks_since_last_changed_to_unlimited_upload_.reset();
 
             upload_without_limit_ = upload_without_limit;
-            UPLOAD_LIMIT_TRACKER_DEBUG("upload_without_limit_ updated:" << upload_without_limit_);
+            LOG4CPLUS_DEBUG_LOG(logger_upload_limit_tracker, "upload_without_limit_ updated:" << upload_without_limit_);
         }
     }
 
@@ -62,7 +63,8 @@ namespace p2sp
         if (current_upload_speed > max_upload_speed_since_last_reset_)
         {
             max_upload_speed_since_last_reset_ = current_upload_speed;
-            UPLOAD_LIMIT_TRACKER_DEBUG("max_upload_speed_since_last_reset_ updated:" << max_upload_speed_since_last_reset_);
+            LOG4CPLUS_DEBUG_LOG(logger_upload_limit_tracker, "max_upload_speed_since_last_reset_ updated:" << 
+                max_upload_speed_since_last_reset_);
         }
 
         UpdateMaxUnlimitedUploadSpeedInRecordIfAppropriate();
@@ -92,7 +94,8 @@ namespace p2sp
                     recorded_speed_ratio*max_unlimited_upload_speed_in_record_ + 
                     new_speed_ratio*max_upload_speed_since_last_reset_);
 
-            UPLOAD_LIMIT_TRACKER_DEBUG("max_unlimited_upload_speed_in_record_ updated:" << max_unlimited_upload_speed_in_record_);
+            LOG4CPLUS_DEBUG_LOG(logger_upload_limit_tracker, "max_unlimited_upload_speed_in_record_ updated:" << 
+                max_unlimited_upload_speed_in_record_);
 
             DoReset(max_unlimited_upload_speed_in_record_);
         }

@@ -20,7 +20,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_proxy = log4cplus::Logger::getInstance("[direct_proxy_sender]");
+#endif
 
     void DirectProxySender::Start()
     {
@@ -31,7 +33,7 @@ namespace p2sp
     {
         if (is_running_ == true)
             return;
-        LOG(__EVENT, "proxy", "DirectProxySender::Start");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::Start");
 
         is_running_ = true;
 
@@ -83,7 +85,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "DirectProxySender::Stop");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::Stop");
         if (http_server_socket_)
         {
             http_server_socket_.reset();
@@ -130,7 +132,7 @@ namespace p2sp
 
         have_send_http_header_ = true;
 
-        LOG(__INFO, "proxy", "DirectProxySender::SendHttpRequest ");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::SendHttpRequest ");
         http_client_ = network::HttpClient<protocol::SubPieceContent>::create(
             io_svc_, http_request_, http_request_->GetUrl(), "", 0, 0, false);
 
@@ -153,7 +155,7 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
-        LOG(__INFO, "proxy", "DirectProxySender::OnConnectSucced");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnConnectSucced");
         http_client_->HttpGetByString(network::ProxyRequestToDirectRequest(http_request_->GetRequestString()));
     }
 
@@ -164,7 +166,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnConnectFailed");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnConnectFailed");
 
         proxy_connection_->WillStop();
 
@@ -177,7 +179,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnConnectTimeout");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnConnectTimeout");
 
         proxy_connection_->WillStop();
 
@@ -190,7 +192,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpHeaderSucced");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvHttpHeaderSucced");
 
         if (http_server_socket_)
         {
@@ -207,7 +209,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpHeaderFailed");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvHttpHeaderFailed");
 
         proxy_connection_->WillStop();
 
@@ -221,7 +223,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataSucced");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvHttpDataSucced");
 
         if (need_bubble_)
         {
@@ -243,7 +245,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataPartial");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvHttpDataPartial");
 
         if (http_server_socket_)
         {
@@ -258,7 +260,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvHttpDataFailed");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvHttpDataFailed");
 
         proxy_connection_->WillStop();
     }
@@ -270,7 +272,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnRecvTimeout");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnRecvTimeout");
 
         proxy_connection_->WillStop();
     }
@@ -282,7 +284,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "proxy", "DirectProxySender::OnComplete");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "DirectProxySender::OnComplete");
         proxy_connection_->WillStop();
     }
 
@@ -298,7 +300,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__EVENT, "proxy", __FUNCTION__ << ": Notice 403 header");
+        LOG4CPLUS_INFO_LOG(logger_proxy, __FUNCTION__ << ": Notice 403 header");
 
         if (http_server_socket_)
         {

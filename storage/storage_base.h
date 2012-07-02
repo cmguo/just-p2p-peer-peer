@@ -65,14 +65,6 @@ namespace storage
         static const uint32_t sec_version8 = 0x00000008;
     }
 
-#define STORAGE_LOG(a)     LOG(__DEBUG, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_ERR_LOG(a)  LOG(__ERROR, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_WARN_LOG(a)  LOG(__WARN, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_EVENT_LOG(a)  LOG(__EVENT, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_INFO_LOG(a)  LOG(__INFO, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_DEBUG_LOG(a)  LOG(__DEBUG, "storage", __FUNCTION__ << " line:" << __LINE__ << " " << a)
-#define STORAGE_TEST_DEBUG(a) LOG(__DEBUG, "storage_test", a)
-
     static const string tpp_extname(".tpp");
     static const string cfg_extname(".cfg");
     static const int max_size_cfg_file_g_ = 2 * 1024 * 1024;

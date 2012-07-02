@@ -8,7 +8,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_switch = log4cplus::Logger::getInstance("[switch_push_control]");
+#endif
 
     //////////////////////////////////////////////////////////////////////////
     // OpenServiceControlMode
@@ -36,7 +38,7 @@ namespace p2sp
         state_.timer_using_ = State::TIMER_USING_NONE;
         // parameters
 
-        SWITCH_DEBUG(string(20, '-'));
+        LOG4CPLUS_DEBUG_LOG(logger_switch, string(20, '-'));
 
         assert(GetHTTPControlTarget());
         assert(GetP2PControlTarget());
@@ -73,7 +75,7 @@ namespace p2sp
             {
                 assert(GetHTTPControlTarget());
             }
-            SWITCH_DEBUG((string)state_ << " " << times);
+            LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << " " << times);
 
             // <3300>
             if (
@@ -312,7 +314,7 @@ namespace p2sp
             }
             else
             {
-                SWITCH_DEBUG("No Such State: " << (string)state_);
+                LOG4CPLUS_DEBUG_LOG(logger_switch, "No Such State: " << (string)state_);
                 assert(!"SwitchController::OpenServicePushControlMode::OnControlTimer: No Such State");
                 break;
             }

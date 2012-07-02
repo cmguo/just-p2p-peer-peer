@@ -16,7 +16,9 @@ namespace storage
     using protocol::SubPieceBuffer;
     using protocol::SubPieceContent;
     using base::util::memcpy2;
-    FRAMEWORK_LOGGER_DECLARE_MODULE("subpiecemanager");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_subpiecemanager = log4cplus::Logger::getInstance("[subpiece_manager]");
+#endif
     //////////////////////////////////////////////////////////////////////////
 
     SubPieceManager::p SubPieceManager::Create(uint32_t file_length, bool b_full_file)
@@ -63,7 +65,7 @@ namespace storage
 
     bool SubPieceManager::GenerateRid() {
         if (rid_info_.HasRID()) {
-            STORAGE_DEBUG_LOG("false: !rid_info_.GetRID().IsEmpty()" << rid_info_);
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "false: !rid_info_.GetRID().IsEmpty()" << rid_info_);
             return false;
         }
         if (!IsFullFile()) {
@@ -72,7 +74,8 @@ namespace storage
         framework::string::Md5 hash;
         for (uint32_t i = 0; i < rid_info_.GetBlockCount(); i++) {
             if (rid_info_.block_md5_s_[i].is_empty()) {
-                STORAGE_DEBUG_LOG(" false: rid_info_.block_md5_s_[i].IsEmpty() " << rid_info_);
+                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, 
+                    " false: rid_info_.block_md5_s_[i].IsEmpty() " << rid_info_);
                 return false;
             }
             hash.update(rid_info_.block_md5_s_[i].to_little_endian_bytes().data(), sizeof(RID));
@@ -80,7 +83,7 @@ namespace storage
 
         hash.final();
         rid_info_.rid_.from_little_endian_bytes(hash.to_bytes());
-        STORAGE_DEBUG_LOG("Resource download finish! RidInfo:" << rid_info_);
+        LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Resource download finish! RidInfo:" << rid_info_);
         return true;
     }
 
@@ -92,13 +95,13 @@ namespace storage
     bool SubPieceManager::AddSubPiece(const protocol::SubPieceInfo& in, const protocol::SubPieceBuffer& buf) {
         if (block_bit_map_->HasBlock(in.block_index_))
         {
-            STORAGE_DEBUG_LOG("Block[" << in.block_index_ << "] is already full!");
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block[" << in.block_index_ << "] is already full!");
             return false;
         }
 
         if (!buf.IsValid(SUB_PIECE_SIZE))
         {
-            STORAGE_DEBUG_LOG("add " << in << "failed, buffer invalid");
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "add " << in << "failed, buffer invalid");
             return false;
         }
 
@@ -109,7 +112,8 @@ namespace storage
             }
             blocks_[in.block_index_] = BlockNode::Create(in.block_index_, block_cap);
             ++blocks_count_;
-            STORAGE_DEBUG_LOG("New BlockNode[" << in.block_index_ << "] : block_cap = " << block_cap << ", blocks_count = " <<  blocks_count_);
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "New BlockNode[" << in.block_index_ << "] : block_cap = " 
+                << block_cap << ", blocks_count = " <<  blocks_count_);
         }
         BlockNode::p & node = blocks_[in.block_index_];
         if (false == node->IsFull()) {
@@ -117,7 +121,7 @@ namespace storage
             download_bytes_ += buf.Length();
             if (node->IsFull()) {
                 block_bit_map_->Set(in.block_index_);
-                STORAGE_DEBUG_LOG("Bolck[" << in.block_index_ << "] Full");
+                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Bolck[" << in.block_index_ << "] Full");
             }
             return true;
         }
@@ -128,7 +132,7 @@ namespace storage
     bool SubPieceManager::LoadSubPiece(const protocol::SubPieceInfo& in, protocol::SubPieceContent::pointer con) {
         if (!blocks_[in.block_index_])
         {
-            STORAGE_DEBUG_LOG("SubPiece " << in << " Block is null.");
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "SubPiece " << in << " Block is null.");
             return true;
         }
 
@@ -177,7 +181,7 @@ namespace storage
 #ifdef DISK_MODE
         if (node->NeedWrite())
         {
-            STORAGE_DEBUG_LOG("Block " << block_index << " WriteBlockToResource.");
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block " << block_index << " WriteBlockToResource.");
             WriteBlockToResource(resource_p, block_index);
             return;
         }
@@ -213,7 +217,7 @@ namespace storage
         if (!HasSubPiece(in) || HasSubPieceInMem(in))
             return false;
 
-        STORAGE_DEBUG_LOG("subpiece " << in);
+        LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "subpiece " << in);
 
         BlockNode::p & node = blocks_[in.block_index_];
         if (!node) {
@@ -228,7 +232,8 @@ namespace storage
             else
                 block_capacity = rid_info_.GetBlockSize() / bytes_num_per_subpiece_g_;
             blocks_[in.block_index_] = BlockNode::Create(in.block_index_, block_capacity, true);
-            STORAGE_DEBUG_LOG("New BlockNode[" << in.block_index_ << "] : block_capacity = " << block_capacity);
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "New BlockNode[" << in.block_index_ << "] : block_capacity = " 
+                << block_capacity);
         }
 
         return node->SetSubPieceReading(in.subpiece_index_);
@@ -328,7 +333,7 @@ namespace storage
 #ifdef DISK_MODE
     void SubPieceManager::WriteBlockToResource(Resource::p resource_p, uint32_t block_index)
     {
-        STORAGE_DEBUG_LOG("block " << block_index);
+        LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "block " << block_index);
         BlockNode::p & node = blocks_[block_index];
         if (node && node->NeedWrite())
         {
@@ -345,9 +350,10 @@ namespace storage
                 }
                 StorageThread::Post(
                     boost::bind(&Resource::ThreadPendingHashBlock, resource_p, block_index, buffer_set_p));
-                STORAGE_DEBUG_LOG("will post to ThreadPendingHashBlock:" << block_index << " buffer count:" << buffer_set_p->size());
+                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to ThreadPendingHashBlock:" << block_index << 
+                    " buffer count:" << buffer_set_p->size());
                 StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
-                STORAGE_DEBUG_LOG("will post to SecSaveResourceFileInfo");
+                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to SecSaveResourceFileInfo");
             }
             else
             {
@@ -502,7 +508,7 @@ namespace storage
             {
                 if (blocks_[bidx] && (blocks_[bidx]->NeedWrite() || blocks_[bidx]->IsSaving()))
                 {
-                    STORAGE_INFO_LOG("blocks_ " << bidx << " NeedWrite or IsSaving!");
+                    LOG4CPLUS_INFO_LOG(logger_subpiecemanager, "blocks_ " << bidx << " NeedWrite or IsSaving!");
                     return false;
                 }
             }

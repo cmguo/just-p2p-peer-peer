@@ -40,8 +40,6 @@
 #include <framework/timer/Timer.h>
 #include <framework/timer/TimerQueue.h>
 #include <framework/configure/Config.h>
-#include <framework/logger/Logger.h>
-#include <framework/logger/LoggerStreamRecord.h>
 
 #include <util/Util.h>
 
@@ -55,27 +53,27 @@
 #undef min
 #endif
 
-enum LOG_LEVEL
-{
-    __DEBUG = framework::logger::Logger::kLevelDebug,
-    __INFO = framework::logger::Logger::kLevelInfor,
-    __EVENT = framework::logger::Logger::kLevelEvent,
-    __WARN = framework::logger::Logger::kLevelAlarm,
-    __ERROR = framework::logger::Logger::kLevelError
-};
+#if (defined _DEBUG || defined DEBUG)
+#include <log4cplus/logger.h>
+#include <log4cplus/fileappender.h>
+#include <log4cplus/configurator.h>
+#define LOG_ENABLE
+using namespace log4cplus;
+#endif
 
 #define  STRINGIFY(x) #x
 #define  TOSTRING(x) STRINGIFY(x)
 
 #if (defined _DEBUG || defined DEBUG)
-// TODO:yujinwu:日志占用CPU过高，在Debug状态下暂时设为默认关闭
-// #  define LOG(level, type, msg) LOG_S(level, msg)
-// #  define LOGX(level, type, msg) LOG_S(level, __FILE__":"TOSTRING(__LINE__)" " << msg)
-#  define LOG(level, type, msg)
-#  define LOGX(level, type, msg)
+#define LOG4CPLUS_DEBUG_LOG(logger,msg) LOG4CPLUS_DEBUG(logger,msg)
+#define LOG4CPLUS_INFO_LOG(logger,msg) LOG4CPLUS_INFO(logger,msg)
+#define LOG4CPLUS_WARN_LOG(logger,msg) LOG4CPLUS_WARN(logger,msg)
+#define LOG4CPLUS_ERROR_LOG(logger,msg) LOG4CPLUS_ERROR(logger,msg)
 #else
-#  define LOG(level, type, msg)
-#  define LOGX(level, type, msg)
+#define LOG4CPLUS_DEBUG_LOG(logger,msg)
+#define LOG4CPLUS_INFO_LOG(logger,msg)
+#define LOG4CPLUS_WARN_LOG(logger,msg)
+#define LOG4CPLUS_ERROR_LOG(logger,msg)
 #endif
 
 void DebugLog(const char* format, ...);

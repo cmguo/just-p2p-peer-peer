@@ -9,18 +9,20 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_tracker = log4cplus::Logger::getInstance("[tracker_manager]");
+#endif
 
     void TrackerManager::Start(const string& config_path)
     {
         if (is_running_ == true)
         {
-            LOG(__WARN, "tracker", "TrackerManager is running...");
+            LOG4CPLUS_WARN_LOG(logger_tracker, "TrackerManager is running...");
             return;
         }
 
         // config path
-        LOGX(__WARN, "tracker", "config_path = " << config_path);
+        LOG4CPLUS_WARN_LOG(logger_tracker, "config_path = " << config_path);
         tracker_list_save_path_ = config_path;
 
         boost::filesystem::path list_path(tracker_list_save_path_);
@@ -36,7 +38,7 @@ namespace p2sp
         
         tracker_list_save_path_ = list_path.file_string();
 
-        LOG(__EVENT, "tracker", "Tracker Manager has started successfully.");
+        LOG4CPLUS_INFO_LOG(logger_tracker, "Tracker Manager has started successfully.");
 
         load_tracker_list_timer_.start();
 
@@ -57,7 +59,7 @@ namespace p2sp
 
     void TrackerManager::LoadTrackerList()
     {
-        LOGX(__DEBUG, "tracker", "");
+        LOG4CPLUS_DEBUG_LOG(logger_tracker, "");
         uint32_t save_group_count;
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
         uint32_t info_size = 0;
@@ -67,7 +69,7 @@ namespace p2sp
             std::ifstream ifs(tracker_list_save_path_.c_str());
             if (!ifs)
             {
-                LOGX(__DEBUG, "tracker", " File Read Error");
+                LOG4CPLUS_DEBUG_LOG(logger_tracker, " File Read Error");
                 return;
             }
             util::archive::BinaryIArchive<>  ia(ifs);
@@ -105,7 +107,7 @@ namespace p2sp
         }
         catch(...)
         {
-            LOGX(__DEBUG, "tracker", " File Read Error");
+            LOG4CPLUS_DEBUG_LOG(logger_tracker, " File Read Error");
             return;
         }
 
@@ -115,7 +117,7 @@ namespace p2sp
 
     void TrackerManager::SaveTrackerList()
     {
-        LOGX(__DEBUG, "tracker", "");
+        LOG4CPLUS_DEBUG_LOG(logger_tracker, "");
         uint32_t save_group_count = list_mod_indexer_.size();
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
 
@@ -137,7 +139,7 @@ namespace p2sp
         }
         catch(...)
         {
-            LOGX(__DEBUG, "tracker", " File Write Error");
+            LOG4CPLUS_DEBUG_LOG(logger_tracker, " File Write Error");
         }
     }
 
@@ -234,7 +236,7 @@ namespace p2sp
 
         if (is_running_ == true && tracker_type == p2sp::LIST)
         {
-            LOG(__EVENT, "tracker", "TrackerManager::SetTrackerList    Start All Groups");
+            LOG4CPLUS_INFO_LOG(logger_tracker, "TrackerManager::SetTrackerList    Start All Groups");
             SaveTrackerList();
         }
     }
@@ -281,7 +283,6 @@ namespace p2sp
             break;
         default:
             {
-                // LOG(__WARN, "tracker", "Ignoring unknown action: 0x" << std::hex << packet_header->GetAction());
             }
             break;
         }
@@ -302,7 +303,7 @@ namespace p2sp
     {
         if (is_running_ == false)
         {
-            LOG(__DEBUG, "tracker", "Tracker Manager is not running...");
+            LOG4CPLUS_DEBUG_LOG(logger_tracker, "Tracker Manager is not running...");
             return;
         }
 
@@ -317,13 +318,13 @@ namespace p2sp
         }
         else
         {
-            LOG(__DEBUG, "tracker", "No such end point");
+            LOG4CPLUS_DEBUG_LOG(logger_tracker, "No such end point");
         }
     }
 
     void TrackerManager::StopAllGroups()
     {
-        LOG(__INFO, "tracker", "Stopping all tracker groups.");
+        LOG4CPLUS_INFO_LOG(logger_tracker, "Stopping all tracker groups.");
         for (ModIndexer::iterator it = list_mod_indexer_.begin(); it != list_mod_indexer_.end(); ++it)
         {
             it->second->Stop();
@@ -334,7 +335,7 @@ namespace p2sp
             it->second->Stop();
         }
 
-        LOG(__EVENT, "tracker", "All tracker groups has been stopped.");
+        LOG4CPLUS_INFO_LOG(logger_tracker, "All tracker groups has been stopped.");
     }
 
     void TrackerManager::ClearAllGroups()
@@ -354,7 +355,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__INFO, "tracker", "Leave");
+        LOG4CPLUS_INFO_LOG(logger_tracker, "Leave");
 
         for (std::map<int, boost::shared_ptr<TrackerGroup> > ::iterator iter = report_mod_indexer_.begin();
             iter != report_mod_indexer_.end(); ++iter)

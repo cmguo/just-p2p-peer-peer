@@ -7,7 +7,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("msg");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_msg = log4cplus::Logger::getInstance("[msg_buffer_manager]");
+#endif
 
     MessageBufferManager::p MessageBufferManager::inst_(new MessageBufferManager());
 
@@ -15,7 +17,7 @@ namespace p2sp
     {
         if (buffer_size == 0)
         {
-            LOGX(__DEBUG, "msg", "BufferSize = 0!");
+            LOG4CPLUS_DEBUG_LOG(logger_msg, "BufferSize = 0!");
             return NULL;
         }
 
@@ -23,12 +25,14 @@ namespace p2sp
 
         if (NULL == buffer)
         {
-            LOGX(__DEBUG, "msg", "BufferSize = " << buffer_size << ", protocol::SubPieceContent malloc failed!");
+            LOG4CPLUS_DEBUG_LOG(logger_msg, "BufferSize = " << buffer_size << 
+                ", protocol::SubPieceContent malloc failed!");
             return NULL;
         }
 
         assert(buffer_cache_map_.find(buffer) == buffer_cache_map_.end());
-        LOGX(__DEBUG, "msg", "BufferSize = " << buffer_size << ", protocol::SubPieceContent: " << (void*)buffer);
+        LOG4CPLUS_DEBUG_LOG(logger_msg, "BufferSize = " << buffer_size << 
+            ", protocol::SubPieceContent: " << (void*)buffer);
         buffer_cache_map_[buffer].reset();
         return buffer;
     }
@@ -40,29 +44,30 @@ namespace p2sp
             BufferCacheMap::iterator it = buffer_cache_map_.find(buffer);
             if (it != buffer_cache_map_.end())
             {
-                LOGX(__DEBUG, "msg", "protocol::SubPieceContent: " << (void*)buffer);
+                LOG4CPLUS_DEBUG_LOG(logger_msg, "protocol::SubPieceContent: " << (void*)buffer);
                 free(buffer);
                 buffer_cache_map_.erase(it);
             }
             else
             {
-                LOGX(__DEBUG, "msg", "protocol::SubPieceContent: " << (void*)buffer << ", Not found!");
+                LOG4CPLUS_DEBUG_LOG(logger_msg, "protocol::SubPieceContent: " << (void*)buffer << ", Not found!");
             }
         }
         else
         {
-            LOGX(__DEBUG, "msg", "Invalid protocol::SubPieceContent");
+            LOG4CPLUS_DEBUG_LOG(logger_msg, "Invalid protocol::SubPieceContent");
         }
     }
 
     uint32_t MessageBufferManager::ExpireCache()
     {
-        LOGX(__DEBUG, "msg", "");
+        LOG4CPLUS_DEBUG_LOG(logger_msg, "");
         uint32_t count = 0;
         BufferCacheMap::iterator it;
         for (it = buffer_cache_map_.begin(); it != buffer_cache_map_.end();)
         {
-            LOGX(__DEBUG, "msg", "protocol::SubPieceContent: " << (void*)it->first << ", ElapsedTime: " << it->second.elapsed());
+            LOG4CPLUS_DEBUG_LOG(logger_msg, "protocol::SubPieceContent: " << (void*)it->first << 
+                ", ElapsedTime: " << it->second.elapsed());
             if (it->second.elapsed() > 180 * 1000)  // 3 min
             {
                 ++count;
@@ -74,7 +79,7 @@ namespace p2sp
                 ++it;
             }
         }
-        LOGX(__DEBUG, "msg", "EraseCount: " << count);
+        LOG4CPLUS_DEBUG_LOG(logger_msg, "EraseCount: " << count);
         return count;
     }
 

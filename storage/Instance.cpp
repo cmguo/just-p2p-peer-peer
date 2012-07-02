@@ -32,7 +32,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_instance = log4cplus::Logger::getInstance("[instance]");
+#endif
     using namespace base;
 
     const uint32_t storage_send_speed_limit = 2048;
@@ -63,8 +65,8 @@ namespace storage
         , filesystem_last_write_time_(0)
         , have_upload_at_least_one_subpiece_(false)
     {
-        STORAGE_DEBUG_LOG(
-            "traffic_timer_:" << (void*)&traffic_timer_ <<
+        LOG4CPLUS_DEBUG_LOG(
+            logger_instance, "traffic_timer_:" << (void*)&traffic_timer_ <<
             ", cfg_timer_:" << (void*)&cfg_timer_ <<
             ", merge_timer_" << (void*)&merge_timer_);
     }
@@ -77,10 +79,10 @@ namespace storage
     Instance::p Instance::Create(const protocol::UrlInfo& url_info)
     {
         // TODO:yujinwu:需要验证url_info不为空？
-        STORAGE_DEBUG_LOG("Instance::Create " << url_info);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::Create " << url_info);
         if (url_info.url_.empty())
         {
-            STORAGE_DEBUG_LOG("********************************************");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "********************************************");
         }
 
         Instance::p pointer(new Instance());
@@ -93,7 +95,7 @@ namespace storage
 
         if (true == pointer->IsComplete())
         {
-            STORAGE_DEBUG_LOG("local_complete_ = true");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "local_complete_ = true");
             pointer->local_complete_ = true;
         }
 
@@ -106,7 +108,6 @@ namespace storage
     {
         assert(resource_p);
         Instance::p pointer;
-        // STORAGE_DEBUG_LOG("Instance::Create" << r_f.url_info_ << r_f.rid_info_);
         // 解析ResourceInfo
         pointer = Instance::p(new Instance());
         assert(pointer);
@@ -128,7 +129,8 @@ namespace storage
         pointer->file_name_ = r_f.file_name_;
         pointer->is_open_service_ = r_f.is_open_service_;
         pointer->is_push_ = r_f.is_push_;
-        LOGX(__DEBUG, "msg", "Load File IsOpenService = " << r_f.is_open_service_ << ", FileName = " << (r_f.file_name_));
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Load File IsOpenService = " << r_f.is_open_service_ << 
+            ", FileName = " << r_f.file_name_);
 
         assert(resource_p->subpiece_manager_);
         resource_p->subpiece_manager_->InitRidInfo(r_f.rid_info_);  // wired
@@ -140,7 +142,7 @@ namespace storage
 
         if (pointer->IsComplete())
         {
-            STORAGE_DEBUG_LOG("local_complete_ = true");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "local_complete_ = true");
             pointer->local_complete_ = true;
         }
 
@@ -153,7 +155,7 @@ namespace storage
     {
         if (is_running_ == false)
             return;
-        STORAGE_DEBUG_LOG("Instance::SetFileLength" << file_length);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::SetFileLength" << file_length);
 
         if (file_length == 0)
         {
@@ -183,7 +185,7 @@ namespace storage
         is_running_ = false;
 
         assert(download_driver_s_.empty());
-        STORAGE_DEBUG_LOG("Instance::Stop! ");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::Stop! ");
         instance_state_ = INSTANCE_CLOSING;
 
         ReleaseData();
@@ -227,7 +229,7 @@ namespace storage
             return;
         is_running_ = false;
 
-        STORAGE_DEBUG_LOG("Instance::Remove! ");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::Remove! ");
 
         if (instance_state_ == INSTANCE_REMOVING)
         {
@@ -274,7 +276,7 @@ namespace storage
     // 通知storage关闭instance，释放资源空间
     void Instance::OnResourceCloseFinish(Resource::p resource_p, bool need_remove_file)
     {
-        STORAGE_DEBUG_LOG("Instance::OnResourceCloseFinish! ");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::OnResourceCloseFinish! ");
 
         resource_p_.reset();
         url_info_s_.clear();
@@ -293,15 +295,15 @@ namespace storage
 
         if (!subpiece_manager_)  // 文件描述为空
         {
-            STORAGE_DEBUG_LOG("no");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "no");
             return false;
         }
         if (subpiece_manager_->IsFull())
         {
-            STORAGE_DEBUG_LOG("yes");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "yes");
             return true;
         }
-        STORAGE_DEBUG_LOG("no");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "no");
         return false;
     }
 
@@ -316,7 +318,8 @@ namespace storage
 
         while (iter != download_driver_s_.end())
         {
-            STORAGE_DEBUG_LOG("Instance::BeMergedTo Notify!! IDownloadDriver::OnNoticeChangeResource");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, 
+                "Instance::BeMergedTo Notify!! IDownloadDriver::OnNoticeChangeResource");
             if (*iter)
             {
                 global_io_svc().post(boost::bind(&IDownloadDriver::OnNoticeChangeResource, *iter, shared_from_this(), new_instance));
@@ -332,7 +335,7 @@ namespace storage
         {
             // MainThread::Post(boost::bind(&Storage::RemoveInstanceForMerge, Storage::Inst_Storage(), shared_from_this()));
             Storage::Inst_Storage()->RemoveInstanceForMerge(shared_from_this());
-            STORAGE_DEBUG_LOG(" merging finish!");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, " merging finish!");
             return;
         }
 
@@ -367,7 +370,7 @@ namespace storage
             }
         }
 
-        STORAGE_ERR_LOG(" merging_count" << merging_count);
+        LOG4CPLUS_ERROR_LOG(logger_instance, " merging_count" << merging_count);
         if ((!merge_finish) || (!download_driver_s_.empty()))
         {
             merge_timer_.start();
@@ -377,7 +380,7 @@ namespace storage
         // merge完成
         global_io_svc().post(boost::bind(&Storage::RemoveInstanceForMerge, Storage::Inst_Storage(), shared_from_this()));
         // Storage::Inst_Storage()->RemoveInstanceForMerge(shared_from_this());
-        STORAGE_ERR_LOG(" merging finish!" << merging_count);
+        LOG4CPLUS_ERROR_LOG(logger_instance, " merging finish!" << merging_count);
         return;
     }
 
@@ -388,7 +391,7 @@ namespace storage
         url_s.insert(url_info_s_.begin(), url_info_s_.end());
         if (!url_s.empty())
         {
-            STORAGE_DEBUG_LOG(" " << *(url_s.begin()) << " url_s.size" << url_s.size());
+            LOG4CPLUS_DEBUG_LOG(logger_instance, " " << *(url_s.begin()) << " url_s.size" << url_s.size());
         }
     }
 
@@ -397,7 +400,7 @@ namespace storage
         if (is_running_ == false) return;
         url_s.assign(url_info_s_.begin(), url_info_s_.end());
 
-        STORAGE_DEBUG_LOG(" " << " url_s.size" << url_s.size());
+        LOG4CPLUS_DEBUG_LOG(logger_instance, " " << " url_s.size" << url_s.size());
     }
 
     // 如果资源描述为空(正常情况)，则根据rid_info创建资源描述符，进而创建文件资源
@@ -416,7 +419,7 @@ namespace storage
             // 已经有资源描述符
             if (b_pure_download_mode_)
             {
-                STORAGE_EVENT_LOG(
+                LOG4CPLUS_INFO_LOG(logger_instance, 
                     "Instance::SetRidInfo block hash !"
                     << rid_info
                     << " subpiece_manager_->rid_info_"
@@ -427,13 +430,15 @@ namespace storage
 
             if (subpiece_manager_->HasRID())
             {
-                STORAGE_EVENT_LOG("Instance::SetRidInfo RID已存在，返回!" << rid_info << " subpiece_manager_->rid_info_" << subpiece_manager_->GetRidInfo());
+                LOG4CPLUS_INFO_LOG(logger_instance, "Instance::SetRidInfo RID已存在，返回!" << rid_info << 
+                    " subpiece_manager_->rid_info_" << subpiece_manager_->GetRidInfo());
                 return false;
             }
 
             if (subpiece_manager_->GetFileLength() != rid_info.GetFileLength())
             {
-                STORAGE_EVENT_LOG("Instance::SetRidInfo rid_info:" << rid_info << " subpiece_manager_->rid_info_:" << subpiece_manager_->GetRidInfo());
+                LOG4CPLUS_INFO_LOG(logger_instance, "Instance::SetRidInfo rid_info:" << rid_info << 
+                    " subpiece_manager_->rid_info_:" << subpiece_manager_->GetRidInfo());
                 return false;
             }
 
@@ -443,7 +448,7 @@ namespace storage
                 {
                     if (subpiece_manager_->GetRidInfo().block_md5_s_[i] != rid_info.block_md5_s_[i])
                     {
-                        STORAGE_EVENT_LOG("Instance::SetRidInfo block hash 不同，返回！" << rid_info);
+                        LOG4CPLUS_INFO_LOG(logger_instance, "Instance::SetRidInfo block hash 不同，返回！" << rid_info);
                         // 已下载block hash 不符，返回
                         return false;
                     }
@@ -473,7 +478,7 @@ namespace storage
                 iter++;
             }
         }
-        STORAGE_EVENT_LOG(" success!" << rid_info);
+        LOG4CPLUS_INFO_LOG(logger_instance, " success!" << rid_info);
         // 注意
 
         // 创建文件资源
@@ -498,7 +503,8 @@ namespace storage
         protocol::UrlInfo url_info = *(url_info_s_.begin());
         ParseFileNameFromUrl(url_info);
 
-        STORAGE_DEBUG_LOG("try create resource file :" << (resource_name_) << " length:" << subpiece_manager_->GetFileLength());
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "try create resource file :" << (resource_name_) << " length:" 
+            << subpiece_manager_->GetFileLength());
         Storage::Inst_Storage()->ApplyResource(shared_from_this());
 
 #ifdef DISK_MODE
@@ -519,7 +525,7 @@ namespace storage
         bool need_notify = false;
         for (std::vector<protocol::UrlInfo>::const_iterator it = url_infos.begin(); it != url_infos.end(); ++it)
         {
-            STORAGE_DEBUG_LOG("Instance::AddUrlInfo, URL: " << *it);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::AddUrlInfo, URL: " << *it);
             if (url_info_s_.find(*it) == url_info_s_.end())
             {
                 need_notify = true;
@@ -527,7 +533,7 @@ namespace storage
             }
         }
 
-        STORAGE_DEBUG_LOG("Instance::AddUrlInfo, 添加URL之后:" << url_info_s_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::AddUrlInfo, 添加URL之后:" << url_info_s_.size());
 
         if (!need_notify)
         {
@@ -589,7 +595,7 @@ namespace storage
         }
         if (count == 0)  // 什么都没删
         {
-            STORAGE_ERR_LOG("erase error!");
+            LOG4CPLUS_ERROR_LOG(logger_instance, "erase error!");
             return;
         }
     }
@@ -601,20 +607,20 @@ namespace storage
             return;
         if (!subpiece_manager_)
         {
-            STORAGE_ERR_LOG("subpiece_manager_ is null!");
+            LOG4CPLUS_ERROR_LOG(logger_instance, "subpiece_manager_ is null!");
             return;
         }
 
         if (!subpiece_manager_->IsSubPieceValid(subpiece_info))
         {
-            STORAGE_ERR_LOG("subpiece_info " << subpiece_info << " is not valid.");
+            LOG4CPLUS_ERROR_LOG(logger_instance, "subpiece_info " << subpiece_info << " is not valid.");
             return;
         }
 
         // 重复的直接丢弃
         if (subpiece_manager_->HasSubPiece(subpiece_info))
         {
-            STORAGE_ERR_LOG("subpiece_manager_->HasSubPiece " << subpiece_info);
+            LOG4CPLUS_ERROR_LOG(logger_instance, "subpiece_manager_->HasSubPiece " << subpiece_info);
             return;
         }
 
@@ -623,7 +629,8 @@ namespace storage
             if (send_count_ < send_speed_limit_)
             {
                 uint32_t position = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
-                STORAGE_ERR_LOG("Notify OnRecvSubPiece, subpiece:" << subpiece_info << ", position = " << position);
+                LOG4CPLUS_ERROR_LOG(logger_instance, "Notify OnRecvSubPiece, subpiece:" << subpiece_info 
+                    << ", position = " << position);
                 for (std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin(); iter != download_driver_s_.end(); ++iter) {
                     (*iter)->OnRecvSubPiece(position, buffer);
                 }
@@ -631,7 +638,8 @@ namespace storage
             }
             else
             {
-                STORAGE_ERR_LOG("send_count_ full, send_count_=" << send_count_ << ", send_speed_limit_=" << send_speed_limit_);
+                LOG4CPLUS_ERROR_LOG(logger_instance, "send_count_ full, send_count_=" << send_count_ << 
+                    ", send_speed_limit_=" << send_speed_limit_);
             }
         }
     }
@@ -644,7 +652,7 @@ namespace storage
         assert(subpiece_manager_);
         if (subpiece_manager_)
         {
-            STORAGE_DEBUG_LOG("OnWriteSubPieceFinish subpiece:" << subpiece_info);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "OnWriteSubPieceFinish subpiece:" << subpiece_info);
             subpiece_manager_->OnWriteSubPieceFinish(subpiece_info);
         }
     }
@@ -655,7 +663,7 @@ namespace storage
             return;
         if (subpiece_manager_)
         {
-            STORAGE_DEBUG_LOG("OnWriteBlockFinish block_index:" << block_index);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "OnWriteBlockFinish block_index:" << block_index);
             subpiece_manager_->OnWriteBlockFinish(block_index);
         }
     }
@@ -678,7 +686,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index] == hash_val)
         {
             // MD5校验成功--------------------------------
-            STORAGE_TEST_DEBUG("Hash ok and Upload------>block index:" << block_index);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Hash ok and Upload------>block index:" << block_index);
             UpdateBlockHashTime(block_index);
             if (listener)
             {
@@ -688,7 +696,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         else
         {
             // MD5校验失败--------------------------------
-            STORAGE_TEST_DEBUG("Hash failed----->block index:" << block_index);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Hash failed----->block index:" << block_index);
             if (listener)
             {
                 listener->OnAsyncGetBlockFailed(GetRID(), block_index, (int) ERROR_GET_SUBPIECE_BLOCK_VERIFY_FAILED);
@@ -719,7 +727,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (!subpiece_manager_)
             return;
 
-        STORAGE_DEBUG_LOG(" block_index:" << block_index << " md5:" << hash_val);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, " block_index:" << block_index << " md5:" << hash_val);
 
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index].is_empty())
         {
@@ -728,13 +736,14 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         if (subpiece_manager_->GetRidInfo().block_md5_s_[block_index] == hash_val)
         {
-            STORAGE_DEBUG_LOG("Hash Block Verifed, block_index = " << block_index << ", HAS_BEEN_VERIFIED");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Hash Block Verifed, block_index = " << block_index << 
+                ", HAS_BEEN_VERIFIED");
 
             // 告诉download_driver，hash成功
             OnNotifyHashBlock(block_index, true);
             if (subpiece_manager_->GenerateRid())
             {
-                STORAGE_DEBUG_LOG(" Finished: ");
+                LOG4CPLUS_DEBUG_LOG(logger_instance, " Finished: ");
                 OnHashResourceFinish();
             }
         }
@@ -742,7 +751,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             assert(false);
             md5_hash_failed_++;
-            STORAGE_DEBUG_LOG(" MD5CheckFailed! md5[block_index] (" << subpiece_manager_->GetRidInfo().block_md5_s_[block_index] << ")  != " << hash_val);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, " MD5CheckFailed! md5[block_index] (" << 
+                subpiece_manager_->GetRidInfo().block_md5_s_[block_index] << ")  != " << hash_val);
             if (resource_p_)
             {
 #ifdef DISK_MODE
@@ -767,7 +777,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             return;
         }
-        STORAGE_DEBUG_LOG(" block_index:" << block_index << "rid_info: " << subpiece_manager_->GetRidInfo());
+        LOG4CPLUS_DEBUG_LOG(logger_instance, " block_index:" << block_index << "rid_info: " << 
+            subpiece_manager_->GetRidInfo());
         subpiece_manager_->RemoveBlockInfo(block_index);
 
         OnNotifyHashBlock(block_index, false);
@@ -808,7 +819,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         if (!subpiece_manager_)
         {
-            STORAGE_ERR_LOG("AsyncGetBlock: subpiece_manager_==null");
+            LOG4CPLUS_ERROR_LOG(logger_instance, "AsyncGetBlock: subpiece_manager_==null");
             return;
         }
 
@@ -855,13 +866,13 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             return;
         }
-        STORAGE_DEBUG_LOG("");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "");
         assert(subpiece_manager_->HasSubPiece(subpiece_info));
 
         protocol::SubPieceBuffer ret_buf = subpiece_manager_->GetSubPiece(subpiece_info);
         if (ret_buf.Length() != 0)
         {
-            STORAGE_DEBUG_LOG("success! pending return:" << subpiece_info);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "success! pending return:" << subpiece_info);
             if (merge_to_instance_p)
                 merge_to_instance_p->OnMergeSubPieceSuccess(subpiece_info, ret_buf);
             return;
@@ -881,13 +892,13 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     {
         if (is_running_ == false)
             return;
-        STORAGE_DEBUG_LOG("" << subpiece_info);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "" << subpiece_info);
         AsyncAddSubPiece(subpiece_info, buffer);
     }
 
     bool Instance::GetSubPieceForPlay(IDownloadDriver::p dd, uint32_t start_position, std::vector<protocol::SubPieceBuffer> & buffers)
     {
-        STORAGE_DEBUG_LOG(" start_position:" << start_position);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, " start_position:" << start_position);
         if (is_running_ == false)
             return false;
         if (!subpiece_manager_)
@@ -909,7 +920,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             {
                 if (!subpiece_manager_->HasSubPieceInMem(start_s_info))
                 {
-                    STORAGE_DEBUG_LOG("HasSubPieceInMem = False, subpiece_info = " << start_s_info);
+                    LOG4CPLUS_DEBUG_LOG(logger_instance, "HasSubPieceInMem = False, subpiece_info = " << start_s_info);
                     break;
                 }
                 ret_buf = subpiece_manager_->GetSubPiece(start_s_info);
@@ -919,17 +930,16 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
                     buffers.push_back(ret_buf);
                     ++send_count_;
                     playing_s_info = start_s_info;
-                    // STORAGE_DEBUG_LOG("HasSubPieceInMem = True, Push SubPieceBuffer, " << start_s_info << ", address@" << (void*)ret_buf.Data());
                 }
                 else
                 {
-                    STORAGE_DEBUG_LOG("GetSubPiece failed! " << start_s_info);
+                    LOG4CPLUS_DEBUG_LOG(logger_instance, "GetSubPiece failed! " << start_s_info);
                     break;
                 }
 
                 if (!subpiece_manager_->IncSubPieceInfo(start_s_info))
                 {
-                    STORAGE_DEBUG_LOG("End of IncSubPieceInfo " << start_s_info);
+                    LOG4CPLUS_DEBUG_LOG(logger_instance, "End of IncSubPieceInfo " << start_s_info);
                     break;
                 }
             }
@@ -943,7 +953,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             }
             else if (send_count_ >= send_speed_limit_)
             {
-                STORAGE_ERR_LOG("send_count_ full, send_count_=" << send_count_ << ", send_speed_limit_=" << send_speed_limit_);
+                LOG4CPLUS_ERROR_LOG(logger_instance, "send_count_ full, send_count_=" << send_count_ << 
+                    ", send_speed_limit_=" << send_speed_limit_);
             }
 #endif
 
@@ -951,7 +962,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         }
         else
         {
-            STORAGE_DEBUG_LOG("Play to the end of file! ");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Play to the end of file! ");
             return false;
         }
     }
@@ -961,7 +972,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (is_running_ == false)
             return false;
 
-        STORAGE_DEBUG_LOG("start_piece_index:" << start_piece_index);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "start_piece_index:" << start_piece_index);
 
         piece_for_download = protocol::PieceInfoEx();
         if (!subpiece_manager_)
@@ -974,13 +985,13 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         subpiece_manager_->PieceInfoExToSubPieceInfo(start_piece_index, start_subpiece_info);
         if (!subpiece_manager_->GetNextNullSubPiece(start_subpiece_info, subpiece_for_download))
         {
-            STORAGE_DEBUG_LOG("Failed!");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Failed!");
             return false;
         }
         else
         {
             subpiece_manager_->SubPieceInfoToPieceInfoEx(subpiece_for_download, piece_for_download);
-            STORAGE_DEBUG_LOG("Succeed! piece_for_download=" << piece_for_download);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Succeed! piece_for_download=" << piece_for_download);
             return true;
         }
     }
@@ -999,13 +1010,15 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         protocol::PieceInfoEx piece_index;
         if (!subpiece_manager_->PosToPieceInfoEx(start_position, piece_index))
         {
-            STORAGE_DEBUG_LOG("Instance::GetNextPieceForDownload false!" << " start_position:" << start_position << " piece_for_download" << piece_for_download);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::GetNextPieceForDownload false!" << " start_position:" 
+                << start_position << " piece_for_download" << piece_for_download);
             return false;
         }
 
         if (!GetNextPieceForDownload(piece_index, piece_for_download))
         {
-            STORAGE_DEBUG_LOG("Instance::GetNextPieceForDownload false!" << " start_position:" << start_position << " piece_for_download" << piece_for_download);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Instance::GetNextPieceForDownload false!" << " start_position:" 
+                << start_position << " piece_for_download" << piece_for_download);
             return false;
         }
         return true;
@@ -1014,7 +1027,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     // 向instance加入某个download_driver
     void Instance::AttachDownloadDriver(IDownloadDriver::p download_driver)
     {
-        STORAGE_EVENT_LOG(" download_driver" << download_driver);
+        LOG4CPLUS_INFO_LOG(logger_instance, " download_driver" << download_driver);
         if (is_running_ == false)
             return;
         assert(download_driver != 0);
@@ -1044,7 +1057,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         if (download_driver_s_.empty())
         {
-            STORAGE_DEBUG_LOG("download_driver_s_.empty");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "download_driver_s_.empty");
             delete_tc_.reset();
             deattach_timer_.start();
 
@@ -1058,7 +1071,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     // TODO:yujinwu: url_info在origanel_url_info_存在的情况下是不起作用的
     void Instance::ParseFileNameFromUrl(const protocol::UrlInfo &url_info)
     {
-        STORAGE_DEBUG_LOG("url " << url_info);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "url " << url_info);
 
         string tmp_url = url_info.url_;
 
@@ -1066,7 +1079,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             tmp_url = origanel_url_info_.url_;
 
-            STORAGE_DEBUG_LOG("Warning: use original url: " << tmp_url);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Warning: use original url: " << tmp_url);
         }
 
         string tmp_name = Storage::Inst_Storage()->FindRealName(tmp_url);
@@ -1122,7 +1135,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (is_running_ == false)
             return;
 
-        STORAGE_DEBUG_LOG("block_index:" << block_index << (b_success?"hash success!":"hash fail! ") << subpiece_manager_->GetRidInfo());
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "block_index:" << block_index << (b_success?"hash success!":"hash fail! ") 
+            << subpiece_manager_->GetRidInfo());
         std::set<IDownloadDriver::p>::const_iterator iter;
 
         for (iter = download_driver_s_.begin(); iter != download_driver_s_.end(); ++iter)
@@ -1159,7 +1173,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (!is_opening)
         {
             // 在打开Instance的时候不需要SaveResourceInfoToDisk
-            STORAGE_DEBUG_LOG("add bind SaveResourceInfoToDisk");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "add bind SaveResourceInfoToDisk");
             global_io_svc().post(boost::bind(&Storage::SaveResourceInfoToDisk, Storage::Inst_Storage()));
         }
 #endif  // #ifdef DISK_MODE
@@ -1216,7 +1230,9 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             {
                 if (delete_tc_.elapsed() > default_delay_tickcount_for_delete)
                 {
-                    STORAGE_EVENT_LOG("delete_tc_.GetElapsed()>default_delay_tickcount_for_delete kill myslef! notice storage to remove myself!");
+                    LOG4CPLUS_INFO_LOG(logger_instance, 
+                        "delete_tc_.GetElapsed()>default_delay_tickcount_for_delete kill myslef!" 
+                        << "notice storage to remove myself!");
                     Storage::Inst_Storage()->RemoveInstance(shared_from_this(), true);
                 }
             }
@@ -1263,7 +1279,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         send_count_ = 0;
         if (download_driver_s_.size())
         {
-            STORAGE_DEBUG_LOG("---------------OnTimerElapsed:" << download_driver_s_.size() << "----------------");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "---------------OnTimerElapsed:" << download_driver_s_.size() 
+                << "----------------");
             std::set<IDownloadDriver::p>::iterator iter = download_driver_s_.begin();
             for (; iter != download_driver_s_.end() && (*iter)->IsHeaderResopnsed(); ++iter)
             {
@@ -1278,19 +1295,21 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
                     }
                     if (subpiece_manager_->HasSubPieceInMem(play_s_info))
                     {
-                        STORAGE_DEBUG_LOG("Has SubPiece " << play_s_info << " In Memory, call OnRecvSubPiece ");
+                        LOG4CPLUS_DEBUG_LOG(logger_instance, "Has SubPiece " << play_s_info << 
+                            " In Memory, call OnRecvSubPiece ");
                         dd->OnRecvSubPiece(play_position, subpiece_manager_->GetSubPiece(play_s_info));
                     }
                     else if (subpiece_manager_->HasSubPiece(play_s_info))
                     {
-                        STORAGE_DEBUG_LOG("Has SubPiece " << play_s_info << " In Disk, call ReadFromDisk ");
+                        LOG4CPLUS_DEBUG_LOG(logger_instance, "Has SubPiece " << play_s_info << 
+                            " In Disk, call ReadFromDisk ");
 #ifdef DISK_MODE
                         ReadFromDisk(play_s_info);
 #endif
                     }
                     else
                     {
-                        STORAGE_DEBUG_LOG("Don't Has SubPiece " << play_s_info);
+                        LOG4CPLUS_DEBUG_LOG(logger_instance, "Don't Has SubPiece " << play_s_info);
                     }
                 }
             }
@@ -1306,7 +1325,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         if (resource_p_ && subpiece_manager_ && download_driver_s_.empty())
         {
-            LOG(__DEBUG, "", "OnDeAttachTimerElapsed SaveAllBlock");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "OnDeAttachTimerElapsed SaveAllBlock");
             subpiece_manager_->SaveAllBlock(resource_p_);
         }
     }
@@ -1374,7 +1393,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
             return true;
         }
-        STORAGE_DEBUG_LOG("命名失败，原因：resource_p == 0");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "命名失败，原因：resource_p == 0");
         return false;
     }
 
@@ -1382,7 +1401,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     {
         resource_name_ = newname;
         is_have_rename_ = true;
-        STORAGE_DEBUG_LOG("resource_name_ " << (resource_name_));
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "resource_name_ " << (resource_name_));
 #ifdef DISK_MODE
         Storage::Inst_Storage()->SaveResourceInfoToDisk();
 #endif  // #ifdef DISK_MODE
@@ -1390,13 +1409,13 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
     float Instance::GetInstanceValue()
     {
-        STORAGE_DEBUG_LOG("--------------" << resource_p_->file_name_);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "--------------" << resource_p_->file_name_);
         uint32_t total_time = traffic_list_.size();
         float protect_value = 0.0;
         if (total_time <= TRAFFIC_PROTECT_TIME)
         {
             // 应该被保护，不该被删除
-            STORAGE_DEBUG_LOG("in protect period as before");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "in protect period as before");
             protect_value = 65535;
         }
 
@@ -1408,18 +1427,19 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         double sum = 0;
         int i = 0;
         int n = traffic_list_.size();
-        STORAGE_DEBUG_LOG("天数 = " << n);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "天数 = " << n);
         for (std::list<uint32_t>::iterator it = begin; it != end; ++it)
         {
-            STORAGE_DEBUG_LOG("i = " << i << " 分子 = " << pow((double)2, (double)i) << " 分母 = " << (pow((double)2, (double)n)-1) << " 值 = " << *it);
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "i = " << i << " 分子 = " << pow((double)2, (double)i) << " 分母 = " 
+                << (pow((double)2, (double)n)-1) << " 值 = " << *it);
             if (i != total_time-1)
             {
-                STORAGE_DEBUG_LOG("时间参数 = " << TRAFFIC_UNIT_TIME);
+                LOG4CPLUS_DEBUG_LOG(logger_instance, "时间参数 = " << TRAFFIC_UNIT_TIME);
                 sum += pow((double)2, (double)i) * (*it) / (pow((double)2, (double)n)-1) / TRAFFIC_UNIT_TIME;
             }
             else
             {
-                STORAGE_DEBUG_LOG("时间参数 = " << last_push_time_);
+                LOG4CPLUS_DEBUG_LOG(logger_instance, "时间参数 = " << last_push_time_);
                 sum += pow((double)2, (double)i) * (*it) / (pow((double)2, (double)n)-1) / last_push_time_;
             }
 
@@ -1427,11 +1447,12 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         }
         if (resource_p_->actual_size_ == 0)
         {
-            STORAGE_DEBUG_LOG("Actual size == 0");
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "Actual size == 0");
             return 0;
         }
 
-        STORAGE_DEBUG_LOG("码流1 = " << data_rate_ << " 码流2 = " << GetMetaData().VideoDataRate << " 时长 = " << GetMetaData().Duration << " FileLength = " << GetMetaData().FileLength);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "码流1 = " << data_rate_ << " 码流2 = " << GetMetaData().VideoDataRate 
+            << " 时长 = " << GetMetaData().Duration << " FileLength = " << GetMetaData().FileLength);
         // 码流
         // 将码流率由 B 转换为 kb
         float dr = data_rate_ * 8 / 1024;
@@ -1440,7 +1461,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         dr = dr / 500;
 
         assert(resource_p_->actual_size_ > 0);
-        STORAGE_DEBUG_LOG("码流系数 = " << dr << " value = " << float(sum * SUB_PIECE_SIZE) / (resource_p_->actual_size_) * dr * 1024);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "码流系数 = " << dr << " value = " 
+            << float(sum * SUB_PIECE_SIZE) / (resource_p_->actual_size_) * dr * 1024);
         return protect_value + float(sum * SUB_PIECE_SIZE) / (resource_p_->actual_size_) * dr * 1024;
     }
 
@@ -1525,7 +1547,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             return;
         }
-        STORAGE_DEBUG_LOG("OnFileWriteFinish!");
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "OnFileWriteFinish!");
         STL_FOR_EACH(std::set<IDownloadDriver::p>, download_driver_s_, it)
         {
             if (*it)
@@ -1547,12 +1569,13 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 #ifdef DISK_MODE
     void Instance::ReadFromDisk(protocol::SubPieceInfo & start_s_info)
     {
-        STORAGE_DEBUG_LOG("ReadFromDisk" << start_s_info);
+        LOG4CPLUS_DEBUG_LOG(logger_instance, "ReadFromDisk" << start_s_info);
         assert(!download_driver_s_.empty());
 #ifndef PEER_PC_CLIENT
         if (protocol::SubPieceContent::get_left_capacity() < 100)
         {
-            STORAGE_DEBUG_LOG("no more memory! left = " << protocol::SubPieceContent::get_left_capacity());
+            LOG4CPLUS_DEBUG_LOG(logger_instance, "no more memory! left = " << 
+                protocol::SubPieceContent::get_left_capacity());
         }
         else
 #endif
@@ -1579,8 +1602,8 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             if (buffs.size() > 0)
             {
                 StorageThread::Post(boost::bind(&Resource::ThreadReadBufferForPlay, resource_p_, start_s_info, buffs));
-                LOG(__DEBUG, "", "ReadFromDisk " << (int)buffs.size());
-                STORAGE_DEBUG_LOG("post ThreadReadBufferForPlay. size=" << (int)buffs.size());
+                LOG4CPLUS_DEBUG_LOG(logger_instance, "ReadFromDisk " << (int)buffs.size());
+                LOG4CPLUS_DEBUG_LOG(logger_instance, "post ThreadReadBufferForPlay. size=" << (int)buffs.size());
             }
         }
     }

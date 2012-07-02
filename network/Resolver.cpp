@@ -11,7 +11,9 @@
 
 namespace network
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("resolver");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_resolver = log4cplus::Logger::getInstance("[resolver]");
+#endif
 
     Resolver::Resolver(boost::asio::io_service & io_svc, string const & url, boost::uint16_t port, IResolverListener::p handler)
         : resolver_(io_svc)
@@ -82,7 +84,7 @@ namespace network
         if (false == is_resolving_)
             return;
 
-        LOG(__INFO, "test", "HandleResolveTimeout failed times:" << failed_times_ << url_);
+        LOG4CPLUS_INFO_LOG(logger_resolver, "HandleResolveTimeout failed times:" << failed_times_ << url_);
 
         is_resolving_ = false;
 
@@ -113,7 +115,7 @@ namespace network
         if (!err)
         {
             endpoint_ = *endpoint_iterator;
-            LOG(__INFO, "test", "HandleResolveSucced " << endpoint_ << url_);
+            LOG4CPLUS_INFO_LOG(logger_resolver, "HandleResolveSucced " << endpoint_ << url_);
             if (handler_)
             {
                 handler_->OnResolverSucced(endpoint_.address().to_v4().to_ulong(), port_);
@@ -126,7 +128,7 @@ namespace network
         {  // ??????handler_???? ?????????? ???????
             if (handler_)
             {
-                LOG(__INFO, "test", "HandleResolveFailed" << url_);
+                LOG4CPLUS_INFO_LOG(logger_resolver, "HandleResolveFailed" << url_);
                 handler_->OnResolverFailed(2);
             }
             Close();

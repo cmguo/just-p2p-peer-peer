@@ -7,8 +7,6 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("memory_management");
-
     void MemoryQuotaAssigner::AssignQuota(uint32_t overall_bytes)
     {
         quota_left_ = overall_bytes;

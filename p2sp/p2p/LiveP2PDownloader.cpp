@@ -9,7 +9,6 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_p2p");
     LiveP2PDownloader::LiveP2PDownloader(const RID & rid, LiveStream__p live_stream)
         : rid_(rid)
         , live_stream_(live_stream)

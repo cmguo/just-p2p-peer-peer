@@ -12,7 +12,9 @@
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("statistics_collection");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistics_reporter = log4cplus::Logger::getInstance("[statistics_reporter]");
+#endif
 
     StatisticsReporter::StatisticsReporter(
         const StatisticsReportingConfiguration &reporting_configuration, 
@@ -78,17 +80,20 @@ namespace statistic
             {
                 if (iter->first->IsTrue())
                 {
-                    LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Condition '" << iter->first->GetConditionId() << "' is TRUE.");
+                    LOG4CPLUS_DEBUG_LOG(logger_statistics_reporter, __FUNCTION__ << " Condition '" 
+                        << iter->first->GetConditionId() << "' is TRUE.");
 
                     std::vector<boost::shared_ptr<StatisticsData> > statistics_data = statistics_collector_->Collect(*(iter->second));
                     if (statistics_data.size() > 0)
                     {
-                        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " Sending statistics data to report sender");
+                        LOG4CPLUS_DEBUG_LOG(logger_statistics_reporter, __FUNCTION__ << 
+                            " Sending statistics data to report sender");
                         report_sender_->AddReport(iter->second->GetResourceId(), iter->first, statistics_data);
                     }
                     else
                     {
-                        LOG(__DEBUG, "statistics_collection", __FUNCTION__ << " statistics data is empty and will NOT be sent.");
+                        LOG4CPLUS_DEBUG_LOG(logger_statistics_reporter, __FUNCTION__ << 
+                            " statistics data is empty and will NOT be sent.");
                     }
 
                     iter->first->Reset();

@@ -20,7 +20,9 @@ namespace bi = boost::interprocess;
 
 namespace interprocess
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("app");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_share_memory = log4cplus::Logger::getInstance("[share_memory]");
+#endif
 
     SharedMemory::SharedMemory()
     {
@@ -141,7 +143,7 @@ namespace interprocess
         result = bi::shared_memory_object::remove(name.c_str());
         (void)result;
 #endif
-        LOGX(__DEBUG, "app", "name = " << name << ", Result = " << result);
+        LOG4CPLUS_DEBUG_LOG(logger_share_memory, "name = " << name << ", Result = " << result);
 #endif  // NO_SHARED_MEMORY
     }
 

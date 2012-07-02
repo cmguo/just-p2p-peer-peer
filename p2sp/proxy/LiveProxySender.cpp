@@ -11,7 +11,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_proxy = log4cplus::Logger::getInstance("[live_proxy_sender]");
+#endif
 
     void LiveProxySender::Start()
     {
@@ -21,7 +23,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__EVENT, "proxy", "LiveProxySender::Strat");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "LiveProxySender::Strat");
         is_running_ = true;
     }
 
@@ -43,7 +45,7 @@ namespace p2sp
             return;
         }
 
-        LOG(__EVENT, "proxy", "LiveProxySender::Stop");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "LiveProxySender::Stop");
 
         if (http_server_socket_)
         {

@@ -29,12 +29,14 @@ const uint32_t PARAM = 15;
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("notify");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_notify = log4cplus::Logger::getInstance("[notify]");
+#endif
     NotifyModule::p NotifyModule::inst_(new NotifyModule());
 
     void NotifyModule::Start()
     {
-        LOGX(__DEBUG, "notify", "peer notify 启动 PeerGuid = " << AppModule::Inst()->GetPeerGuid());
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "peer notify 启动 PeerGuid = " << AppModule::Inst()->GetPeerGuid());
         if (is_running_)
         {
             return;
@@ -98,17 +100,17 @@ namespace p2sp
                     if (key == "MAX_PEER_NODE")
                     {
                         max_peer_node = boost::lexical_cast<uint32_t>(value);
-                        LOGX(__DEBUG, "notify", "max_peer_node = " << max_peer_node);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "max_peer_node = " << max_peer_node);
                     }
                     else if (key == "MAX_PEER_RETURN")
                     {
                         max_peer_return = boost::lexical_cast<uint32_t>(value);
-                        LOGX(__DEBUG, "notify", "max_peer_return = " << max_peer_return);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "max_peer_return = " << max_peer_return);
                     }
                     else if (key == "START_TIME")
                     {
                         start_time = boost::lexical_cast<uint32_t>(value);
-                        LOGX(__DEBUG, "notify", "start_time = " << start_time);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "start_time = " << start_time);
                     }
                 }
             }
@@ -137,7 +139,7 @@ namespace p2sp
                 protocol::ConnectPacket const & connect_packet = (protocol::ConnectPacket const &)packet;
                 if (connect_packet.basic_info_ %2 == 0)  // connect_packet.IsRequest
                 {
-                    LOGX(__DEBUG, "notify", "Receive ConnectPacket, send Reconnect packet");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "Receive ConnectPacket, send Reconnect packet");
                     // 回发ConnectPacket
                     RID spec_rid("00000000000000000000000000000001");
                     // const string str_rid = "00000000000000000000000000000001";
@@ -156,7 +158,7 @@ namespace p2sp
                 }
                 else
                 {
-                    LOGX(__DEBUG, "notify", "收到上层发回的Reconnect报文表示穿越成功，发送JoinRequest报文");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "收到上层发回的Reconnect报文表示穿越成功，发送JoinRequest报文");
                     // 发JoinRequestPacket报文
                     DoSendJoinRequestPacket(connect_packet.end_point);
                 }
@@ -164,7 +166,8 @@ namespace p2sp
             }
         case protocol::JoinRequestPacket::Action:
             {
-                LOGX(__DEBUG, "notify", "收到JoinRequestPacket报文，此时子节点个数为 " << peer_node_map_.size());
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "收到JoinRequestPacket报文，此时子节点个数为 " << 
+                    peer_node_map_.size());
                 // 0xA0 请求加入
                 // 作为上层节点，判断是否超过最大连接数。如果没有超过，加入成功；否则，加入失败。
                 protocol::JoinRequestPacket const & join_request_packet = (protocol::JoinRequestPacket const &)packet;
@@ -192,7 +195,7 @@ namespace p2sp
                         ip = ep.ip_v4();
                         port = ep.port();
 
-                        LOGX(__DEBUG, "notify", "!!!!加入成功，IP = " << ip << "Port = " << port);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "!!!!加入成功，IP = " << ip << "Port = " << port);
 
                         peer_node_status.intern_ip_ = join_request_packet.internal_ip_;
                         peer_node_status.intern_port_ = join_request_packet.internal_port_;
@@ -204,11 +207,11 @@ namespace p2sp
                         peer_node_status.peer_online_ = 0;
 
                         peer_node_map_.insert(std::make_pair(join_request_packet.peer_guid_, peer_node_status));
-                        LOGX(__DEBUG, "notify", "加入成功，子节点列表维护成功");
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "加入成功，子节点列表维护成功");
                     }
                     else
                     {
-                        LOGX(__DEBUG, "notify", "已经加入");
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "已经加入");
                     }
                 }
                 else
@@ -216,7 +219,7 @@ namespace p2sp
                     // 子节点个数超过上限，加入失败。
                     if (peer_node_map_.size() == 0)
                     {
-                        LOGX(__DEBUG, "notify", "子节点个数超过上限，加入失败，但是子节点个数为0");
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "子节点个数超过上限，加入失败，但是子节点个数为0");
                         return;
                     }
 
@@ -262,14 +265,14 @@ namespace p2sp
             break;
         case protocol::JoinResponsePacket::Action:
             {
-                LOGX(__DEBUG, "notify", "JoinResponsePacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "JoinResponsePacket");
                 // 0xA1 请求加入回包
                 // 作为下层节点，判断是否加入成功。如成功，则启动定时器，发送心跳包；否则，继续Join。
                 protocol::JoinResponsePacket const & join_response_packet = (protocol::JoinResponsePacket const &)packet;
 
                 if (join_response_packet.ret_ == 0)
                 {
-                    LOGX(__DEBUG, "notify", "JoinResponsePacket: Join Success");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "JoinResponsePacket: Join Success");
                     // 加入成功
                     is_join_success_ = true;
 
@@ -284,7 +287,7 @@ namespace p2sp
                 }
                 else
                 {
-                    LOGX(__DEBUG, "notify", "JoinResponsePacket: Join failed");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "JoinResponsePacket: Join failed");
                     // 解出节点
                     boost::uint32_t node_count = join_response_packet.node_vec_.size();
 
@@ -314,7 +317,7 @@ namespace p2sp
             break;
         case protocol::NotifyKeepAliveRequestPacket::Action:
             {
-                LOGX(__DEBUG, "notify", "收到心跳包NotifyKeepAliveRequestPacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "收到心跳包NotifyKeepAliveRequestPacket");
                 // 0xA2 心跳包
                 // 作为上层节点，收到下层节点的心跳包。回包 & 统计
                 protocol::NotifyKeepAliveRequestPacket const & keepalive_request_packet = (protocol::NotifyKeepAliveRequestPacket const &)packet;
@@ -374,13 +377,13 @@ namespace p2sp
                 else
                 {
                     // 找不到该子节点
-                    LOGX(__DEBUG, "notify", "cannot find subnode");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "cannot find subnode");
                 }
             }
             break;
         case protocol::NotifyKeepAliveResponsePacket::Action:
             {
-                LOGX(__DEBUG, "notify", "收到心跳回报NotifyKeepAliveResponsePacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "收到心跳回报NotifyKeepAliveResponsePacket");
                 // 0xA3 心跳回包
                 // 作为下层节点，收到上层节点的心跳包回包。认为上层断线的定时器重置。
                 god_node_time = 0;
@@ -388,7 +391,7 @@ namespace p2sp
             break;
         case protocol::NotifyRequestPacket::Action:
             {
-                LOGX(__DEBUG, "notify", "收到通知包NotifyRequestPacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "收到通知包NotifyRequestPacket");
                 // 0xA4 通知包
                 // 作为下层节点，收到上层节点的通知包。
                 protocol::NotifyRequestPacket const & notify_request_packet = (protocol::NotifyRequestPacket const &) packet;
@@ -447,7 +450,7 @@ namespace p2sp
                             notify_request_packet.buffer_.c_str(), 
                             notify_request_packet.buffer_.size());
 #ifdef NEED_TO_POST_MESSAGE
-                        LOGX(__DEBUG, "notify", "PostWindowsMessage UM_NOTIFY_PPTV_TASK Task id = " << notify_task->task_id);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "PostWindowsMessage UM_NOTIFY_PPTV_TASK Task id = " << notify_task->task_id);
                         WindowsMessage::Inst().PostWindowsMessage(UM_NOTIFY_PPTV_TASK, NULL, (LPARAM)notify_task);
 #endif
                     }
@@ -464,7 +467,7 @@ namespace p2sp
                             notify_task->content_len = notify_request_packet.buffer_.size();
                             base::util::memcpy2(notify_task->content, sizeof(notify_task->content), notify_request_packet.buffer_.c_str(), notify_request_packet.buffer_.size());
 #ifdef NEED_TO_POST_MESSAGE
-                            LOGX(__DEBUG, "notify", "PostWindowsMessage UM_NOTIFY_PPTV_TASK TaskID = " << notify_task->task_id);
+                            LOG4CPLUS_DEBUG_LOG(logger_notify, "PostWindowsMessage UM_NOTIFY_PPTV_TASK TaskID = " << notify_task->task_id);
                             WindowsMessage::Inst().PostWindowsMessage(UM_NOTIFY_PPTV_TASK, NULL, (LPARAM)notify_task);
 #endif
                         }
@@ -479,14 +482,14 @@ namespace p2sp
 
                             task_map_[notify_request_packet.task_id_].task_delay_time_ = delay_time_;
 
-                            LOGX(__DEBUG, "notify", "delay_time = " << delay_time_);
+                            LOG4CPLUS_DEBUG_LOG(logger_notify, "delay_time = " << delay_time_);
                         }
                     }
                 }
                 else
                 {
                     // 本地存在该任务
-                   LOGX(__DEBUG, "notify", "该任务已经存在 ");
+                   LOG4CPLUS_DEBUG_LOG(logger_notify, "该任务已经存在 ");
                 }
 
                 // 依次通知每个Peer
@@ -499,7 +502,7 @@ namespace p2sp
             break;
         case protocol::NotifyResponsePacket::Action:
             {
-                LOGX(__DEBUG, "notify", "收到通知的回包NotifyResponsePacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "收到通知的回包NotifyResponsePacket");
                 // 0xA5 通知回包
                 // 作为上层节点，收到字节点的通知回包，说明子节点已经收到通知。
                 protocol::NotifyResponsePacket const & notify_response_packet = (protocol::NotifyResponsePacket const &) packet;
@@ -514,18 +517,18 @@ namespace p2sp
                     }
                     else
                     {
-                        LOGX(__DEBUG, "notify", "不存在该任务");
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "不存在该任务");
                     }
                 }
                 else
-                {LOGX(__DEBUG, "notify", "不存在该子节点 ");
+                {LOG4CPLUS_DEBUG_LOG(logger_notify, "不存在该子节点 ");
 
                 }
             }
             break;
         case protocol::PeerLeavePacket::Action:
             {
-                LOGX(__DEBUG, "notify", "节点离线PeerLeavePacket");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "节点离线PeerLeavePacket");
                 // 0xA6 离线包
                 // 判断是上层节点发的包，还是下层节点。
                 // 如果是上层节点，重新加入；如果是下层节点，则删除。否则，忽略。
@@ -535,7 +538,7 @@ namespace p2sp
                 {
                     // 上层节点离线，立刻重新加入
                     is_join_success_ = false;
-                    LOGX(__DEBUG, "notify", "上层节点离线驱动加入网络");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "上层节点离线驱动加入网络");
                     JoinNotifyNetwork();
                 }
                 else
@@ -555,13 +558,13 @@ namespace p2sp
 
     void NotifyModule::JoinNotifyNetwork()
     {
-        LOGX(__DEBUG, "notify", "JoinNotifyNetwork");
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "JoinNotifyNetwork");
         if (peer_to_connect_.size() == 0)
         {
             if (is_have_server_endpoint)
             {
                 // 从服务器加入
-                LOGX(__DEBUG, "notify", "加入网络JoinNotifyNetwork, join server");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "加入网络JoinNotifyNetwork, join server");
                 server_connect_hops_++;
                 server_endpoint_ = framework::network::Endpoint(notify_server_s_[server_connect_hops_ % notify_server_s_.size()].IP,
                     notify_server_s_[server_connect_hops_ % notify_server_s_.size()].Port);
@@ -570,7 +573,7 @@ namespace p2sp
         }
         else
         {
-            LOGX(__DEBUG, "notify", "JoinNotifyNetwork, join peer");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "JoinNotifyNetwork, join peer");
             // 从节点加入, 先发送Connect报文
             // 构造特殊的RID
             RID spec_rid;
@@ -583,13 +586,13 @@ namespace p2sp
             peer_to_connect_.erase(peer_to_connect_.begin() + index);
             hops_ *= 3;
 
-            LOGX(__DEBUG, "notify", "取出待发送的Peer IP = " <<  candidate_peer_info.IP);
-            LOGX(__DEBUG, "notify", "取出待发送的Peer PORT = " << candidate_peer_info.UdpPort);
-            LOGX(__DEBUG, "notify", "取出待发送的Peer detect ip = " << candidate_peer_info.DetectIP);
-            LOGX(__DEBUG, "notify", "取出待发送的Peer detect PORT = " << candidate_peer_info.DetectUdpPort);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "取出待发送的Peer IP = " <<  candidate_peer_info.IP);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "取出待发送的Peer PORT = " << candidate_peer_info.UdpPort);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "取出待发送的Peer detect ip = " << candidate_peer_info.DetectIP);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "取出待发送的Peer detect PORT = " << candidate_peer_info.DetectUdpPort);
 
             boost::uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
-            LOGX(__DEBUG, "notify", "本机的detect ip = " << local_detected_ip);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "本机的detect ip = " << local_detected_ip);
 
             boost::asio::ip::udp::endpoint end_point = candidate_peer_info.GetConnectEndPoint(local_detected_ip);
 
@@ -609,7 +612,7 @@ namespace p2sp
 
             // packet.end_point = end_point;
 
-            LOGX(__DEBUG, "notify", "DoSendPacket ip = " << ip_ << " port = " << port_);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "DoSendPacket ip = " << ip_ << " port = " << port_);
 
             AppModule::Inst()->DoSendPacket(packet, protocol::PEER_VERSION_V4);
 
@@ -630,7 +633,7 @@ namespace p2sp
 
                 // stun_invoke_packet.end_point = stun_ep_;
                 AppModule::Inst()->DoSendPacket(stun_invoke_packet);
-                LOGX(__DEBUG, "notify", "穿越进行中 ");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "穿越进行中 ");
             }
         }
     }
@@ -653,7 +656,7 @@ namespace p2sp
                 boost::uint32_t ip = ep.ip_v4();
                 boost::uint16_t port = ep.port();
 
-                LOGX(__DEBUG, "notify", "!!!!发送通知，IP = " << ip << "Port = " << port);
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "!!!!发送通知，IP = " << ip << "Port = " << port);
 
                 // notify_request_packet.end_point = peer_node_map_[peer_guid].end_point;
 
@@ -666,7 +669,7 @@ namespace p2sp
         }
         else
         {
-            LOGX(__DEBUG, "notify", "NotifyPeer: 不存在该Peer");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "NotifyPeer: 不存在该Peer");
         }
     }
 
@@ -679,7 +682,7 @@ namespace p2sp
 
         if (pointer == &join_timer_ && is_need_join_)
         {
-            LOGX(__DEBUG, "notify", "join in " << start_time << "second");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "join in " << start_time << "second");
             JoinNotifyNetwork();
         }
         else if (pointer == &notify_timer_)
@@ -695,7 +698,8 @@ namespace p2sp
                 else
                 {
                     iter->second.rest_time_ -= 1;
-                    LOGX(__DEBUG, "notify", "任务 task_id = " << iter->first << " RestTime = " << iter->second.rest_time_);
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "任务 task_id = " << iter->first << " RestTime = " << 
+                        iter->second.rest_time_);
 
                     if (is_join_success_)
                     {
@@ -726,7 +730,8 @@ namespace p2sp
             for (std::map<boost::uint32_t, TASK_RECORD>::iterator iter = task_map_.begin();
                 iter != task_map_.end(); ++iter)
             {
-                LOGX(__DEBUG, "notify", "TaskID = " << iter->first << " task_delay_time = " << iter->second.task_delay_time_);
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "TaskID = " << iter->first << " task_delay_time = " << 
+                    iter->second.task_delay_time_);
                 if (iter->second.task_delay_time_ > 1)
                 {
                     iter->second.task_delay_time_--;
@@ -743,7 +748,7 @@ namespace p2sp
                         notify_task->content_len = iter->second.buffer_len_;
                         base::util::memcpy2(notify_task->content, sizeof(notify_task->content), iter->second.buf, iter->second.buffer_len_);
 #ifdef NEED_TO_POST_MESSAGE
-                        LOGX(__DEBUG, "notify", "已经加入网络，时间到PostWindowsMessage UM_NOTIFY_PPTV_TASK TaskID = " << notify_task->task_id);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "已经加入网络，时间到PostWindowsMessage UM_NOTIFY_PPTV_TASK TaskID = " << notify_task->task_id);
                         WindowsMessage::Inst().PostWindowsMessage(UM_NOTIFY_PPTV_TASK, NULL, (LPARAM)notify_task);
 #endif
 
@@ -752,7 +757,7 @@ namespace p2sp
                     else
                     {
                         iter->second.task_delay_time_ = -1;
-                        LOGX(__DEBUG, "notify", "退出网络，但时间到");
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "退出网络，但时间到");
                     }
                 }
                 else if (iter->second.task_delay_time_ == -1)
@@ -768,7 +773,7 @@ namespace p2sp
                         notify_task->content_len = iter->second.buffer_len_;
                         base::util::memcpy2(notify_task->content, sizeof(notify_task->content), iter->second.buf, iter->second.buffer_len_);
 #ifdef NEED_TO_POST_MESSAGE
-                        LOGX(__DEBUG, "notify", "已经加入网络，时间过PostWindowsMessage UM_NOTIFY_PPTV_TASK Taskid = " << notify_task->task_id);
+                        LOG4CPLUS_DEBUG_LOG(logger_notify, "已经加入网络，时间过PostWindowsMessage UM_NOTIFY_PPTV_TASK Taskid = " << notify_task->task_id);
                         WindowsMessage::Inst().PostWindowsMessage(UM_NOTIFY_PPTV_TASK, NULL, (LPARAM)notify_task);
 #endif
 
@@ -787,7 +792,7 @@ namespace p2sp
                 if (god_node_time > 3 * KEEPALIVE_INTERVAL)
                 {
                     // 超过3倍的KEEPALIVE_INTERVAL，认为上层节点离线
-                    LOGX(__DEBUG, "notify", "超过3倍的KEEPALIVE_INTERVAL，认为上层节点离线 ");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "超过3倍的KEEPALIVE_INTERVAL，认为上层节点离线 ");
                     is_join_success_ = false;
                 }
 
@@ -838,7 +843,7 @@ namespace p2sp
                 // 加入不成功
                 if (is_need_join_ && time_count_.elapsed() > (start_time + 3) * 1000 && pointer->times() % 3 == 0)
                 {
-                    LOGX(__DEBUG, "notify", "定时器驱动加入网络 ");
+                    LOG4CPLUS_DEBUG_LOG(logger_notify, "定时器驱动加入网络 ");
                     JoinNotifyNetwork();
                 }
             }
@@ -849,12 +854,12 @@ namespace p2sp
     {
         if (task_status == 1)
         {
-            LOGX(__DEBUG, "notify", "PPAP调用OnNotifyTaskStatusChange接口");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "PPAP调用OnNotifyTaskStatusChange接口");
 
             if (task_map_.find(task_id) != task_map_.end() && !task_map_[task_id].is_my_finish_)
             {
                 task_map_[task_id].is_my_finish_ = true;
-                LOGX(__DEBUG, "notify", "任务完成 task_id = " << task_id);
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "任务完成 task_id = " << task_id);
 
                 // 统计在线人数
                 CalPeerOnline();
@@ -868,7 +873,8 @@ namespace p2sp
             }
             else
             {
-                LOGX(__DEBUG, "notify", "任务不存在 或者 任务已经完成过了，不再重复向上汇报 task_id = " << task_id);
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "任务不存在 或者 任务已经完成过了，不再重复向上汇报 task_id = " 
+                    << task_id);
             }
         }
     }
@@ -877,7 +883,7 @@ namespace p2sp
     {
         if (join_or_leave == 1 && !is_need_join_)
         {
-            LOGX(__DEBUG, "notify", "PPAP调用OnNotifyJoinLeave接口，加入通知网络");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "PPAP调用OnNotifyJoinLeave接口，加入通知网络");
             // Join
             is_need_join_ = true;
 
@@ -887,7 +893,7 @@ namespace p2sp
         }
         else if (join_or_leave == 0 && is_need_join_)
         {
-            LOGX(__DEBUG, "notify", "PPAP调用OnNotifyJoinLeave接口，离开通知网络");
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "PPAP调用OnNotifyJoinLeave接口，离开通知网络");
             // Leave
             is_need_join_ = false;
 
@@ -924,7 +930,9 @@ namespace p2sp
         {
             DetectIP = AppModule::Inst()->GetCandidatePeerInfo().IP;
             DetectUdpPort = AppModule::Inst()->GetCandidatePeerInfo().UdpPort;
-            LOGX(__DEBUG, "notify", "DetectIP为0，替换为内网IP = " << AppModule::Inst()->GetCandidatePeerInfo().IP << " port = " << AppModule::Inst()->GetCandidatePeerInfo().UdpPort);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "DetectIP为0，替换为内网IP = " << 
+                AppModule::Inst()->GetCandidatePeerInfo().IP << " port = " << 
+                AppModule::Inst()->GetCandidatePeerInfo().UdpPort);
         }
 
         // 加入包的构造
@@ -939,7 +947,9 @@ namespace p2sp
             AppModule::Inst()->GetCandidatePeerInfo().PeerNatType,
             end_point);
 
-        LOGX(__DEBUG, "notify", "加入ip = " << AppModule::Inst()->GetCandidatePeerInfo().IP << " port = " << AppModule::Inst()->GetCandidatePeerInfo().UdpPort << " detect ip = " << DetectIP << " detect port = " << DetectUdpPort);
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "加入ip = " << AppModule::Inst()->GetCandidatePeerInfo().IP << 
+            " port = " << AppModule::Inst()->GetCandidatePeerInfo().UdpPort << " detect ip = " << DetectIP << 
+            " detect port = " << DetectUdpPort);
 
         // join_request_packet.end_point = end_point;
 
@@ -976,12 +986,12 @@ namespace p2sp
             // 在线人数统计
             total_peer_online_ += iter->second.peer_online_;
         }
-        LOGX(__DEBUG, "notify", "在线人数 = " << total_peer_online_);
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "在线人数 = " << total_peer_online_);
     }
 
     void NotifyModule::CalTaskComplete()
     {
-        LOGX(__DEBUG, "notify", "统计任务完成数 ");
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "统计任务完成数 ");
         // 任务完成数清零
         for (std::map<boost::uint32_t, TASK_RECORD>::iterator iter = task_map_.begin();
             iter != task_map_.end(); ++iter)
@@ -997,7 +1007,8 @@ namespace p2sp
                 i != iter->second.peer_task_map_.end(); ++i)
             {
                 task_map_[i->first].finish_num_ += i->second.finish_num_;
-                LOGX(__DEBUG, "notify", "Peer统计任务完成数  task_map[" << i->first << "].finish_num = " << task_map_[i->first].finish_num_);
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "Peer统计任务完成数  task_map[" << i->first << "].finish_num = " << 
+                    task_map_[i->first].finish_num_);
             }
         }
 
@@ -1007,7 +1018,7 @@ namespace p2sp
         {
             if (iter->second.is_my_finish_)
             {
-                LOGX(__DEBUG, "notify", "任务task_id = " << iter->first << " 完成了 ");
+                LOG4CPLUS_DEBUG_LOG(logger_notify, "任务task_id = " << iter->first << " 完成了 ");
                 iter->second.finish_num_ += 1;
             }
         }
@@ -1016,7 +1027,7 @@ namespace p2sp
     // 发送KeepAlive包
     void NotifyModule::DoSendKeepAlive()
     {
-        LOGX(__DEBUG, "notify", "向上级发送KeepAliveRequest包 ");
+        LOG4CPLUS_DEBUG_LOG(logger_notify, "向上级发送KeepAliveRequest包 ");
         // 向上级发送KeepAliveRequest包
         std::vector<protocol::TASK_INFO> my_task_;
         for (std::map<boost::uint32_t, TASK_RECORD>::iterator iter = task_map_.begin();
@@ -1054,7 +1065,8 @@ namespace p2sp
         server_connect_hops_ = boost::hash_value(AppModule::Inst()->GetPeerGuid()) % notify_server_s_.size();
         for (boost::uint32_t i = 0; i<notify_server_s_.size(); i++)
         {
-            LOG(__DEBUG, "notify", "IP = " << notify_server_s_[i].IP << " Port = " << notify_server_s_[i].Port);
+            LOG4CPLUS_DEBUG_LOG(logger_notify, "IP = " << notify_server_s_[i].IP << " Port = " << 
+                notify_server_s_[i].Port);
         }
 
         is_have_server_endpoint = true;

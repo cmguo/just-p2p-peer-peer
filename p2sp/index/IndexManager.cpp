@@ -26,7 +26,9 @@ using namespace protocol;
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("index");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_index = log4cplus::Logger::getInstance("[index]");
+#endif
 
     IndexManager::p IndexManager::inst_;
 
@@ -72,13 +74,13 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
-        LOG(__EVENT, "index", "Start OnResolverSucced ,index_end_point" << ip << " " << port);
+        LOG4CPLUS_INFO_LOG(logger_index, "Start OnResolverSucced ,index_end_point" << ip << " " << port);
 
         // IndexServer 的 IP 和 端口设置
         server_list_endpoint_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address_v4(ip), port);
         protocol::SocketAddr index_socket(server_list_endpoint_);
 
-        LOG(__DEBUG, "user", "Resolve Succeed: ");
+        LOG4CPLUS_DEBUG_LOG(logger_index, "Resolve Succeed: ");
 
         statistic::StatisticModule::Inst()->SetBsInfo(server_list_endpoint_);
         statistic::StatisticModule::Inst()->SetIndexServerInfo(index_socket);
@@ -114,7 +116,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__DEBUG, "user", "Resolve Failed: ");
+        LOG4CPLUS_DEBUG_LOG(logger_index, "Resolve Failed: ");
         change_domain_resolver_timer_.stop();
         is_resolving_ = false;
         // 域名尚未切换至世纪互联
@@ -160,7 +162,7 @@ namespace p2sp
             DoQuerySnList();
         }
 
-        LOG(__WARN, "index", "IndexManager::OnResolverFailed " << error_code);
+        LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnResolverFailed " << error_code);
     }
 
     void IndexManager::Start(string domain, boost::uint16_t port)
@@ -211,7 +213,7 @@ namespace p2sp
 
     void IndexManager::Stop()
     {
-        LOG(__EVENT, "index", "Stop");
+        LOG4CPLUS_INFO_LOG(logger_index, "Stop");
 
         if (is_running_ == false) return;
 
@@ -275,7 +277,7 @@ namespace p2sp
 
     void IndexManager::DoQueryVodReportTrackerList()
     {
-        LOG(__EVENT, "index", "DoQueryTrackerList");
+        LOG4CPLUS_INFO_LOG(logger_index, "DoQueryTrackerList");
 
         if (is_running_ == false) return;
 
@@ -300,7 +302,7 @@ namespace p2sp
 
     void IndexManager::DoQueryStunServerList()
     {
-        LOG(__EVENT, "index", "DoQueryStunServerList");
+        LOG4CPLUS_INFO_LOG(logger_index, "DoQueryStunServerList");
 
         if (is_running_ == false) return;
 
@@ -348,10 +350,10 @@ namespace p2sp
 #ifdef NOTIFY_ON
         case protocol::QueryNotifyListPacket::Action:
             {
-                LOG(__DEBUG, "index", "收到QueryNotifyListResponsePacket");
+                LOG4CPLUS_DEBUG_LOG(logger_index, "收到QueryNotifyListResponsePacket");
 
                 is_have_notify_server_ = true;
-                LOG(__DEBUG, "index", "post OnGetNotifyServerList");
+                LOG4CPLUS_DEBUG_LOG(logger_index, "post OnGetNotifyServerList");
                 global_io_svc().post(boost::bind(&p2sp::NotifyModule::OnGetNotifyServerList, NotifyModule::Inst(), (protocol::QueryNotifyListPacket const &)packet));
             }
             break;
@@ -372,7 +374,7 @@ namespace p2sp
 
     void IndexManager::OnQueryVodReportTrackerListPacket(protocol::QueryTrackerListPacket const & packet)
     {
-        LOG(__INFO, "index", "IndexManager::OnQueryTrackerListPacket");
+        LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryTrackerListPacket");
 
         if (is_running_ == false) return;
 
@@ -395,22 +397,21 @@ namespace p2sp
             // TrackerModule::Inst()->SetTrackerList(group_count, tracker_vector);
             for (uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
             {
-                LOG(__INFO, "index", "Tracker List :[" << i << "] ModNo:" << packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
+                LOG4CPLUS_INFO_LOG(logger_index, "Tracker List :[" << i << "] ModNo:" << 
+                    packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
             }
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true,  p2sp::REPORT);
-
-            //    LOG(__ERROR, "user", "QueryTList Succeed, g = " << packet->GetTrackerGroupCount() << ", t = " << packet->GetTrackerCount());
         }
         else
         {
-            LOG(__INFO, "index", "IndexManager::OnQueryTrackerListPacketERROR");
-            LOG(__ERROR, "user", "QueryTList Failed.");
+            LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryTrackerListPacketERROR");
+            LOG4CPLUS_ERROR_LOG(logger_index, "QueryTList Failed.");
         }
     }
 
     void IndexManager::OnQueryLiveReportTrackerListPacket(protocol::QueryLiveTrackerListPacket const & packet)
     {
-        LOG(__INFO, "index", "IndexManager::OnQueryLiveTrackerListPacket");
+        LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryLiveTrackerListPacket");
 
         if (is_running_ == false)
         {
@@ -433,21 +434,22 @@ namespace p2sp
 
             for (uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
             {
-                LOG(__INFO, "index", "Tracker List :[" << i << "] ModNo:" << packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
+                LOG4CPLUS_INFO_LOG(logger_index, "Tracker List :[" << i << "] ModNo:" << 
+                    packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
             }
 
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::REPORT);
         }
         else
         {
-            LOG(__INFO, "index", "IndexManager::OnQueryTrackerListPacketERROR");
-            LOG(__ERROR, "user", "QueryTList Failed.");
+            LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryTrackerListPacketERROR");
+            LOG4CPLUS_ERROR_LOG(logger_index, "QueryTList Failed.");
         }
     }
 
     void IndexManager::OnQueryBootStrapConfigPacket(protocol::QueryConfigStringPacket const & packet)
     {
-        LOG(__INFO, "index", "IndexManager::OnQueryBootStrapConfigPacket");
+        LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryBootStrapConfigPacket");
 
         if (is_running_ == false) return;
 
@@ -474,7 +476,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
         uint32_t times = pointer->times();
-        LOG(__WARN, "index", "IndexManager::OnTimerElapsed");
+        LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnTimerElapsed");
 
         if (pointer == &query_vod_list_tracker_list_timer_)
         {
@@ -508,7 +510,7 @@ namespace p2sp
         }
         else if (pointer == &change_domain_resolver_timer_)
         {
-            LOG(__WARN, "index", "IndexManager::OnTimerElapsed DoResolver");
+            LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnTimerElapsed DoResolver");
 
             assert(resolver_);
             // 收包失败，需要再次解析或者切换域名(如果已经切换域名，则不该有此定时器)
@@ -535,7 +537,7 @@ namespace p2sp
                 // 锟劫次斤拷锟斤拷
                 resolver_->DoResolver();
                 is_resolving_ = true;
-                LOG(__EVENT, "user", "Resolve again.");
+                LOG4CPLUS_INFO_LOG(logger_index, "Resolve again.");
             }
             else    // 不需要切换域名，也不需要解析，只是开启一次性定时器
             {
@@ -549,13 +551,13 @@ namespace p2sp
         else
         {    // 本类中不存在这个定时器
             // assert(!"No Such framework::timer::Timer");
-            LOG(__WARN, "index", "IndexManager::OnTimerElapsed No Such framework::timer::Timer, Ignored");
+            LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnTimerElapsed No Such framework::timer::Timer, Ignored");
         }
     }
 
     void IndexManager::OnQueryStunServerListPacket(protocol::QueryStunServerListPacket const & packet)
     {
-        LOG(__INFO, "index", "IndexManager::OnQueryStunServerListPacket");
+        LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryStunServerListPacket");
 
         if (is_running_ == false) return;
 
@@ -580,8 +582,8 @@ namespace p2sp
         else
         {
             // 不管
-            LOG(__INFO, "index", "IndexManager::OnQueryTrackerListPacketERROR");
-            LOG(__ERROR, "user", "QuerySList Failed.");
+            LOG4CPLUS_INFO_LOG(logger_index, "IndexManager::OnQueryTrackerListPacketERROR");
+            LOG4CPLUS_ERROR_LOG(logger_index, "QuerySList Failed.");
         }
 
     }
@@ -695,12 +697,10 @@ namespace p2sp
 
         //         if (true == is_have_stun_server_list_/*锟角凤拷锟秸碉拷锟斤拷trackerlist*/)
         //         {
-        //             LOG(__INFO, "index", "IndexManager::OnQueryStunServerListTimerElapsed is_have_stun_server_list_" << is_have_stun_server_list_);
         //             DoQueryStunServerList();
         //         }
         //         else
         //         {
-        //             LOG(__INFO, "index", "IndexManager::OnQueryStunServerListTimerElapsed is_have_stun_server_list_" << is_have_stun_server_list_);
         //             DoQueryStunServerList();
         //
         //             last_querystunlist_intervaltimes_ *= 2;
@@ -753,7 +753,7 @@ namespace p2sp
 #ifdef NOTIFY_ON
     void IndexManager::DoQueryNotifyServerList()
     {
-        LOG(__EVENT, "index", "DoQueryNotifyServerList");
+        LOG4CPLUS_INFO_LOG(logger_index, "DoQueryNotifyServerList");
 
         if (!is_running_)
         {
@@ -773,7 +773,7 @@ namespace p2sp
 
     void IndexManager::DoQueryLiveReportTrackerList()
     {
-        LOG(__EVENT, "index", "DoQueryLiveTrackerList");
+        LOG4CPLUS_INFO_LOG(logger_index, "DoQueryLiveTrackerList");
 
         if (is_running_ == false)
         {
@@ -794,7 +794,7 @@ namespace p2sp
 
     void IndexManager::DoQueryBootStrapConfig()
     {
-        LOG(__EVENT, "index", "DoQueryNotifyServerList");
+        LOG4CPLUS_INFO_LOG(logger_index, "DoQueryNotifyServerList");
 
         if (!is_running_)
         {

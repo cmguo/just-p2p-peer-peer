@@ -9,14 +9,17 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("livestorage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_block_node = log4cplus::Logger::getInstance("[live_block_node]");
+#endif
 
     bool LiveBlockNode::AddSubPiece(uint16_t subpiece_index, const protocol::LiveSubPieceBuffer& subpiece_buffer)
     {
         if (subpiece_index < subpieces_.size() && subpieces_[subpiece_index])
         {
             //不重复插入数据，但如果数据校验失败，会丢掉该数据(header subpiece 或 一个piece)
-            STORAGE_DEBUG_LOG("SubPiece ("<< block_id_ << "|"<< subpiece_index << ") already exist!");
+            LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "SubPiece (" << block_id_ << "|" 
+                << subpiece_index << ") already exist!");
             return false;
         }
 
@@ -25,17 +28,19 @@ namespace storage
             assert(!HasHeaderSubPiece());
             if (HasHeaderSubPiece())
             {
-                STORAGE_DEBUG_LOG("AddSubPiece ("<< block_id_ << ", "<< subpiece_index << ") - subpiece_index is out of range(size = "<<subpieces_.size()<<")");
+                LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "AddSubPiece ("<< block_id_ << ", "<< subpiece_index 
+                    << ") - subpiece_index is out of range(size = "<<subpieces_.size()<<")");
                 return false;
             }
 
             subpieces_.resize(subpiece_index + 1);
-            STORAGE_DEBUG_LOG("resize subpieces_ size to " << subpiece_index+1);
+            LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "resize subpieces_ size to " << subpiece_index+1);
         }
 
         subpieces_[subpiece_index] = subpiece_buffer;
 
-        STORAGE_DEBUG_LOG("Add SubPiece ("<< block_id_ << "|"<< subpiece_index << ")  succeed.");
+        LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "Add SubPiece ("<< block_id_ << "|"<< subpiece_index 
+            << ")  succeed.");
 
         if (subpiece_index == 0)
         {
@@ -184,7 +189,8 @@ namespace storage
 
         // 获得piece length之后计算出subpiece的真实数目
         uint16_t real_subpieces_count = static_cast<uint16_t>( 1 + (header_subpiece_->GetDataLength() + LIVE_SUB_PIECE_SIZE - 1) / LIVE_SUB_PIECE_SIZE);
-        STORAGE_DEBUG_LOG("data_length_=" << header_subpiece_->GetDataLength() << ", real_subpieces_count=" << real_subpieces_count);
+        LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "data_length_=" << header_subpiece_->GetDataLength() << 
+            ", real_subpieces_count=" << real_subpieces_count);
 
         assert(subpieces_.size() <= real_subpieces_count);
         subpieces_.resize(real_subpieces_count);
@@ -369,7 +375,8 @@ namespace storage
             return true;
         }
         ++checksum_failed_times_;
-        STORAGE_DEBUG_LOG("Checksum Failed!!! block id = " << block_id_ << ", piece index = " << piece_index);
+        LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "Checksum Failed!!! block id = " << block_id_ << 
+            ", piece index = " << piece_index);
         return false;
     }
 

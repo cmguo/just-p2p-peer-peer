@@ -12,7 +12,9 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("node");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_node = log4cplus::Logger::getInstance("[piece_node]");
+#endif
     using protocol::SubPieceBuffer;
     using protocol::SubPieceContent;
     using base::util::memcpy2;
@@ -155,20 +157,23 @@ namespace storage
 
         if (subpiece_set_.test(index))
         {
-            STORAGE_EVENT_LOG("AddSubPieceInfo Again! subpiece[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "]");
+            LOG4CPLUS_INFO_LOG(logger_node, "AddSubPieceInfo Again! subpiece[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "]");
             return false;
         }
 
         if (subpieces_[index])
         {
-            STORAGE_EVENT_LOG("SubPieceNode state_ not identical! subpiece[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "]");
+            LOG4CPLUS_INFO_LOG(logger_node, "SubPieceNode state_ not identical! subpiece[" << info_.block_index_ 
+                << "|" << info_.piece_index_ << "|" << index << "]");
             assert(false);
             return false;
         }
 
         subpiece_set_.set(index);
         subpieces_[index] = subpiece_node;
-        STORAGE_EVENT_LOG("AddSubPiece subpiece_index=" << index << ", length=" << subpiece_node->subpiece_.Length() << ", address@" << (void*)subpiece_node->subpiece_.Data());
+        LOG4CPLUS_INFO_LOG(logger_node, "AddSubPiece subpiece_index=" << index << ", length=" 
+            << subpiece_node->subpiece_.Length() << ", address@" << (void*)subpiece_node->subpiece_.Data());
         return true;
     }
 
@@ -178,28 +183,33 @@ namespace storage
 
         if (!buf.GetSubPieceBuffer())
         {
-            STORAGE_EVENT_LOG("LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "] with illegal SubPieceBuffer");
+            LOG4CPLUS_INFO_LOG(logger_node, "LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "] with illegal SubPieceBuffer");
             assert(false);
             return false;
         }
 
         if (!subpiece_set_.test(index) || !subpieces_[index])
         {
-            STORAGE_EVENT_LOG("LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "] not exist");
+            LOG4CPLUS_INFO_LOG(logger_node, "LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "] not exist");
             assert(false);
             return false;
         }
         // assert(subpieces_[index]->state_ == NDST_READING);
         if (subpieces_[index]->state_ == NDST_READING)
         {
-            STORAGE_EVENT_LOG("LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "] succed, to address@" << (void*)buf.Data());
+            LOG4CPLUS_INFO_LOG(logger_node, "LoadSubPieceBuffer subpieces_[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "] succed, to address@" << (void*)buf.Data());
             subpieces_[index]->subpiece_ = buf;
             subpieces_[index]->state_ = NDST_ALL;
             return true;
         }
         else
         {
-            STORAGE_EVENT_LOG("LoadSubPiece subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "] Failed. state:" << subpieces_[index]->state_ << " PieceNode:@" << this);
+            LOG4CPLUS_INFO_LOG(logger_node, "LoadSubPiece subpieces_[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "] Failed. state:" << subpieces_[index]->state_ 
+                << " PieceNode:@" << this);
         }
         return false;
     }
@@ -248,7 +258,8 @@ namespace storage
 
         if (subpieces_[index]->state_ == NDST_DISK)
         {
-            STORAGE_EVENT_LOG("SetSubPieceReading subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << index << "] NDST_READING. PieceNode:@" << this);
+            LOG4CPLUS_INFO_LOG(logger_node, "SetSubPieceReading subpieces_[" << info_.block_index_ << "|" 
+                << info_.piece_index_ << "|" << index << "] NDST_READING. PieceNode:@" << this);
             subpieces_[index]->state_ = NDST_READING;
             return true;
         }
@@ -320,7 +331,7 @@ namespace storage
                 protocol::SubPieceInfo subpiece(info_.block_index_, info_.piece_index_*subpiece_num_per_piece_g_ + sidx);
                 StorageThread::Post(boost::bind(&Resource::ThreadSecWriteSubPiece, resource_p_,
                     subpiece, new protocol::SubPieceBuffer(subpieces_[sidx]->subpiece_), true));
-                STORAGE_DEBUG_LOG("will post to ThreadSecWriteSubPiece: subpiece:" << subpiece);
+                LOG4CPLUS_DEBUG_LOG(logger_node, "will post to ThreadSecWriteSubPiece: subpiece:" << subpiece);
                 subpieces_[sidx]->state_ = NDST_SAVING;
             }
         }
@@ -340,14 +351,16 @@ namespace storage
 #ifdef DISK_MODE
             if (subpieces_[sidx] && subpieces_[sidx]->state_ == NDST_ALL)
             {
-                STORAGE_EVENT_LOG("subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << sidx << "] cleared.");
+                LOG4CPLUS_INFO_LOG(logger_node, "subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ 
+                    << "|" << sidx << "] cleared.");
                 subpieces_[sidx]->subpiece_ = protocol::SubPieceBuffer();
                 subpieces_[sidx]->state_ = NDST_DISK;
             }
 #else
             if (subpieces_[sidx] && subpieces_[sidx]->state_ == NDST_MEM)
             {
-                STORAGE_EVENT_LOG("subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ << "|" << sidx << "] cleared.");
+                LOG4CPLUS_INFO_LOG(logger_node, "subpieces_[" << info_.block_index_ << "|" << info_.piece_index_ 
+                    << "|" << sidx << "] cleared.");
                 subpieces_[sidx].reset();
                 subpiece_set_.reset(sidx);
             }

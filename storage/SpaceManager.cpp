@@ -26,7 +26,9 @@ namespace fs = boost::filesystem;
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_space_manager = log4cplus::Logger::getInstance("[space_manager]");
+#endif
 
 #ifdef DISK_MODE
 
@@ -52,7 +54,7 @@ namespace storage
         will_be_free_space_size_ = 0;
         curr_resource_files_total_size_ = 0;
         free_size_ = space_size;
-        STORAGE_DEBUG_LOG("free_size_ = " << free_size_);
+        LOG4CPLUS_DEBUG_LOG(logger_space_manager, "free_size_ = " << free_size_);
 
         boost::filesystem::path store_p(store_path);
 
@@ -137,7 +139,8 @@ namespace storage
 
     void SpaceManager::OnRemoveResourceFinish(Resource::p resource_p, bool need_remove_file)
     {
-        STORAGE_DEBUG_LOG(" file_name:" << resource_p->GetLocalFileName() << " file_size:" << resource_p->GetLocalFileSize());
+        LOG4CPLUS_DEBUG_LOG(logger_space_manager, " file_name:" << resource_p->GetLocalFileName() << " file_size:" 
+            << resource_p->GetLocalFileSize());
 
         StorageThread::Post(boost::bind(&Resource::FreeDiskSpace, resource_p, need_remove_file));
     }
@@ -146,7 +149,7 @@ namespace storage
     {
         if (removing_fileresource_set_.find(resource_p) == removing_fileresource_set_.end())
         {
-            STORAGE_ERR_LOG("removing_fileresource_set_");
+            LOG4CPLUS_ERROR_LOG(logger_space_manager, "removing_fileresource_set_");
             return;
         }
         if (filesize != 0)
@@ -156,7 +159,7 @@ namespace storage
         }
         else
         {
-            STORAGE_ERR_LOG("Delete file error!");
+            LOG4CPLUS_ERROR_LOG(logger_space_manager, "Delete file error!");
         }
 
         DiskSpaceMaintain();
@@ -164,7 +167,7 @@ namespace storage
 
     bool SpaceManager::CancelResourceRequest(Instance::p inst_p)
     {
-        STORAGE_EVENT_LOG("inst_p = " << inst_p);
+        LOG4CPLUS_INFO_LOG(logger_space_manager, "inst_p = " << inst_p);
         std::set<Instance::p>::iterator it = pending_instance_need_resource_set.find(inst_p);
         if (it != pending_instance_need_resource_set.end())
         {
@@ -229,7 +232,7 @@ namespace storage
         boost::uint64_t curr_free_disk_size = 0;
         if (!GetDiskFreeSpace(store_path_, curr_free_disk_size))
         {
-            STORAGE_ERR_LOG("DiskSpaceMaintain::GetDiskFreeSpace error!");
+            LOG4CPLUS_ERROR_LOG(logger_space_manager, "DiskSpaceMaintain::GetDiskFreeSpace error!");
             return;
         }
         //
@@ -252,8 +255,8 @@ namespace storage
             }
         }
 
-        STORAGE_DEBUG_LOG("min_free_size=" << min_free_size << ", min_init_size=" << min_init_size
-            << ", reserve_space_size= " << reserve_space_size << ", free_size_" << free_size_
+        LOG4CPLUS_DEBUG_LOG(logger_space_manager, "min_free_size=" << min_free_size << ", min_init_size=" 
+            << min_init_size << ", reserve_space_size= " << reserve_space_size << ", free_size_" << free_size_
             << ", curr_free_disk_size=" << curr_free_disk_size << " "
             << removing_fileresource_set_.size());
 
@@ -275,14 +278,17 @@ namespace storage
 
             if (resource_inst->GetStatus() != INSTANCE_APPLY_RESOURCE)
             {
-                STORAGE_DEBUG_LOG("SpaceManager::DiskSpaceMaintain() resource_inst->GetStatus()!=INSTANCE_APPLY_RESOURCE ");
+                LOG4CPLUS_DEBUG_LOG(logger_space_manager, 
+                    "SpaceManager::DiskSpaceMaintain() resource_inst->GetStatus()!=INSTANCE_APPLY_RESOURCE ");
                 pending_instance_need_resource_set.erase(it++);
                 continue;
             }
 
             uint32_t init_size = std::min((uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
 
-            STORAGE_DEBUG_LOG("curr_free_disk_size = " << curr_free_disk_size << ", init_size = " << init_size << ", free_size_ = " << free_size_ << ", reult: " << ((curr_free_disk_size >= init_size)&&(free_size_ >= init_size)));
+            LOG4CPLUS_DEBUG_LOG(logger_space_manager, "curr_free_disk_size = " << curr_free_disk_size << 
+                ", init_size = " << init_size << ", free_size_ = " << free_size_ << ", reult: " << 
+                ((curr_free_disk_size >= init_size)&&(free_size_ >= init_size)));
             if ((curr_free_disk_size >= init_size) && (free_size_ >= init_size))
             {
                 if (OnCreateResource(resource_inst, init_size))
@@ -323,7 +329,6 @@ namespace storage
     void SpaceManager::RequestResource(Instance::p resource_inst)
     {
         // uint32_t resource_length = resource_inst->GetResourceLength();
-        // STORAGE_DEBUG_LOG(" free_size:" << free_size_ << " instance-size:" << resource_length);
         assert(pending_instance_need_resource_set.find(resource_inst) == pending_instance_need_resource_set.end());
         pending_instance_need_resource_set.insert(resource_inst);
         DiskSpaceMaintain();
@@ -342,7 +347,7 @@ namespace storage
         assert(filename.size()>0);
         uint32_t file_size = resource_inst->GetResourceLength();
         assert(file_size>0);
-        STORAGE_DEBUG_LOG(" try create resource_name_" << (filename));
+        LOG4CPLUS_DEBUG_LOG(logger_space_manager, " try create resource_name_" << (filename));
         string full_file_name;
         if (Storage::Inst_Storage()->IsFileNameNeedHide(filename))
         {
@@ -379,14 +384,14 @@ namespace storage
         FILE* file_handle = TryCreateFile(full_file_name, last_filename, init_size);
         if (file_handle != NULL)
         {
-            STORAGE_DEBUG_LOG(" success! full_file_name" << (full_file_name));
+            LOG4CPLUS_DEBUG_LOG(logger_space_manager, " success! full_file_name" << (full_file_name));
             Resource::p resource_p = FileResource::CreateResource(io_svc_, file_size, last_filename, file_handle, Instance::p(),
                 init_size);
             assert(resource_p);
             Storage::Inst_Storage()->OnCreateResourceSuccess(resource_p, resource_inst);
             return true;
         }
-        STORAGE_DEBUG_LOG(" fail! full_file_name" << (full_file_name));
+        LOG4CPLUS_DEBUG_LOG(logger_space_manager, " fail! full_file_name" << (full_file_name));
         return false;
     }
 
@@ -442,7 +447,8 @@ namespace storage
         {
             if (ENOENT != errno)  // 2 -> no such file or directory
             {
-                STORAGE_EVENT_LOG("can not create file! filename:" << (last_filename) << " error code: " << errno);
+                LOG4CPLUS_INFO_LOG(logger_space_manager, "can not create file! filename:" << (last_filename) << 
+                    " error code: " << errno);
                 return NULL;
             }
             std::ostringstream oss;
@@ -460,7 +466,8 @@ namespace storage
             file_handle = fopen(last_filename.c_str(), "w+b");
             if (NULL == file_handle)
             {
-                STORAGE_EVENT_LOG("can not create file! filename:" << last_filename << " error code:" << errno);
+                LOG4CPLUS_INFO_LOG(logger_space_manager, "can not create file! filename:" << last_filename << 
+                    " error code:" << errno);
                 return NULL;
             }
         }
@@ -537,7 +544,7 @@ namespace storage
         {
             free_size_ -= alloc_space;
             curr_resource_files_total_size_ += alloc_space;
-            STORAGE_DEBUG_LOG("free_size=" << free_size_ << ", alloc_space=" << alloc_space);
+            LOG4CPLUS_DEBUG_LOG(logger_space_manager, "free_size=" << free_size_ << ", alloc_space=" << alloc_space);
         }
         else if (DM_BY_BHOSAVE == down_mode)
         {
@@ -551,7 +558,7 @@ namespace storage
             free_size_ += alloc_space;
             curr_resource_files_total_size_ -= alloc_space;
             will_be_free_space_size_ -= alloc_space;
-            STORAGE_DEBUG_LOG("free_size=" << free_size_ << ", alloc_space=" << alloc_space);
+            LOG4CPLUS_DEBUG_LOG(logger_space_manager, "free_size=" << free_size_ << ", alloc_space=" << alloc_space);
         }
         else if (DM_BY_BHOSAVE == down_mode)
         {

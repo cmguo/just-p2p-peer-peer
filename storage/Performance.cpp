@@ -15,8 +15,6 @@
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("storage");
-
     Performance::p Performance::inst_;
 
     Performance::Performance()

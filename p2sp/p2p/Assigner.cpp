@@ -21,21 +21,17 @@
 #include "count_cpu_time.h"
 #endif
 
-#define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
-#define P2P_INFO(s)    LOG(__INFO, "P2P", s)
-#define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
-#define P2P_WARN(s)    LOG(__WARN, "P2P", s)
-#define P2P_ERROR(s) LOG(__ERROR, "P2P", s)
-
 using namespace storage;
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("assigner");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_assigner = log4cplus::Logger::getInstance("[assigner]");
+#endif
     void Assigner::Start()
     {
         if (is_running_ == true) return;
 
-        P2P_EVENT("Assigner Start");
+        LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner Start");
 
         is_running_ = true;
 
@@ -55,7 +51,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        P2P_EVENT("Assigner Stop" << p2p_downloader_);
+        LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner Stop" << p2p_downloader_);
         // 两个std::std::map 的 clear
 
         subpiece_assign_map_.clear();
@@ -107,7 +103,7 @@ namespace p2sp
 #endif
         if (is_running_ == false) return;
 
-        P2P_EVENT("Assigner::CaclPeerConnectionRecvTimeMap " << p2p_downloader_);
+        LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclPeerConnectionRecvTimeMap " << p2p_downloader_);
 
         // 清空 peer_connection_recvtime_list_ 以便于重新计算 预测收报时间
         peer_connection_recvtime_list_.clear();
@@ -117,7 +113,8 @@ namespace p2sp
         {
             ConnectionBase__p peer = iter->second;
             
-            P2P_EVENT("Assigner::CaclPeerConnectionRecvTimeMap p2p_downloader:" << p2p_downloader_ << " peer:" << peer << ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
+            LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclPeerConnectionRecvTimeMap p2p_downloader:" << 
+                p2p_downloader_ << " peer:" << peer << ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
             peer->GetStatistic()->SetAssignedLeftSubPieceCount(peer->GetTaskQueueSize());
             peer->ClearTaskQueue();
             if (peer->HasRidInfo() && peer->IsRidInfoValid())
@@ -151,7 +148,7 @@ namespace p2sp
             return 0;
         }
 
-        P2P_EVENT("Assigner::CaclSubPieceAssignCount" << p2p_downloader_);
+        LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclSubPieceAssignCount" << p2p_downloader_);
 
         uint32_t subpiece_count = 0;
         protocol::PieceInfo piece;
@@ -218,7 +215,7 @@ namespace p2sp
             return;
         }
 
-        P2P_EVENT("Assigner::CaclSubPieceAssignMap " << p2p_downloader_);
+        LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclSubPieceAssignMap " << p2p_downloader_);
 
         // 总的可供分配的subpiece数，与分段结尾的强冗余算法相关
         boost::uint32_t total_subpiece_count = 0;
@@ -241,7 +238,7 @@ namespace p2sp
         uint32_t index = 0;
         bool eof_file = false;
 
-        LOG(__DEBUG, "ppdebug", "piece task size = " << p2p_downloader_->piece_tasks_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_assigner, "piece task size = " << p2p_downloader_->piece_tasks_.size());
 
         if (p2p_downloader_->piece_tasks_.size() > 0)
         {
@@ -268,7 +265,8 @@ namespace p2sp
                 if (end_position >= file_length_)
                 {
                     // 文件末尾情况，subpiece_end 需要计算
-                    P2P_EVENT("Assigner::CaclSubPieceAssignMap EndPiece: FileLength:" << file_length_ << " piece.getpossition:" << piece.GetPosition(block_size_));
+                    LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclSubPieceAssignMap EndPiece: FileLength:" << 
+                        file_length_ << " piece.getpossition:" << piece.GetPosition(block_size_));
                     assert(end_position < file_length_ + PIECE_SIZE);
                     subpiece_end = (file_length_ - (end_position - PIECE_SIZE) - 1) / SUB_PIECE_SIZE;
                 }
@@ -316,7 +314,7 @@ namespace p2sp
                                 {
                                     // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                     subpiece_assign_map_.push_back(sub_piece);
-                                    P2P_DEBUG("redundant subpiece " << sub_piece);
+                                    LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece " << sub_piece);
                                 }
                             }
                         }
@@ -333,7 +331,7 @@ namespace p2sp
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
                                         subpiece_assign_map_.push_back(sub_piece);
-                                        P2P_DEBUG("redundant subpiece twice: " << sub_piece);
+                                        LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece twice: " << sub_piece);
                                         continue;
                                     }
 
@@ -341,7 +339,7 @@ namespace p2sp
                                     if (needdown_sp_num <= 10)
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
-                                        P2P_DEBUG("redundant subpiece: " << sub_piece);
+                                        LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece: " << sub_piece);
                                         continue;
                                     }
 
@@ -350,7 +348,7 @@ namespace p2sp
                                         && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
-                                        P2P_DEBUG("redundant subpiece: " << sub_piece);
+                                        LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece: " << sub_piece);
                                         continue;
                                     }
                                 }
@@ -376,7 +374,7 @@ namespace p2sp
                                         {
                                             // 正在请求的subpiece按一定条件冗余
                                             subpiece_assign_map_.push_back(sub_piece);
-                                            P2P_DEBUG("redundant subpiece " << sub_piece);
+                                            LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece " << sub_piece);
                                         }
                                     }
                                 }
@@ -398,14 +396,14 @@ namespace p2sp
                                 {
                                     subpiece_assign_map_.push_back(sub_piece);
                                     subpiece_assign_map_.push_back(sub_piece);
-                                    P2P_DEBUG("redundant subpiece twice: " << sub_piece);
+                                    LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece twice: " << sub_piece);
                                 }
 
                                 // 如果剩余subpiece数小于5片，每一次预分配冗余1次
                                 else if (needdown_sp_num <= 15)
                                 {
                                     subpiece_assign_map_.push_back(sub_piece);
-                                    P2P_DEBUG("redundant subpiece: " << sub_piece);
+                                    LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece: " << sub_piece);
                                 }
 
                                 // 正在请求的subpiece每一秒冗余一次
@@ -413,7 +411,7 @@ namespace p2sp
                                     && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                 {
                                     subpiece_assign_map_.push_back(sub_piece);
-                                    P2P_DEBUG("redundant subpiece: " << sub_piece);
+                                    LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece: " << sub_piece);
                                 }
                             }
                         }
@@ -429,7 +427,7 @@ namespace p2sp
                             {
                                 // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                 subpiece_assign_map_.push_back(sub_piece);
-                                P2P_DEBUG("redundant subpiece " << sub_piece);
+                                LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece " << sub_piece);
                             }
                         }
                     }
@@ -448,7 +446,7 @@ namespace p2sp
                                         && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT, 10)))
                                     {
                                         subpiece_assign_map_.push_back(sub_piece);
-                                        P2P_DEBUG("redundant subpiece: " << sub_piece);
+                                        LOG4CPLUS_DEBUG_LOG(logger_assigner, "redundant subpiece: " << sub_piece);
                                         continue;
                                     }
                                 }
@@ -467,7 +465,7 @@ namespace p2sp
                             {
                                 // 下载到文件结尾所有正在请求且未到达的piece每次预分配冗余一次
                                 subpiece_assign_map_.push_back(sub_piece);
-                                P2P_DEBUG("FAST_MODE redundant subpiece " << sub_piece); 
+                                LOG4CPLUS_DEBUG_LOG(logger_assigner, "FAST_MODE redundant subpiece " << sub_piece); 
                             }
                         }
                     }
@@ -517,7 +515,7 @@ namespace p2sp
             subpiece_assign_map_.push_back(*iter);
         }
 
-        LOG(__DEBUG, "assigner", "subpiece_assign_map_.size() = " << subpiece_assign_map_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_assigner, "subpiece_assign_map_.size() = " << subpiece_assign_map_.size());
     }
 
     // 预分配，将subpiece_assign_map_中的指定任务按照peer_connection_recvtime_list_的顺序依次分配
@@ -549,7 +547,7 @@ namespace p2sp
         uint32_t rcvtime;
         ConnectionBase__p peer;
         std::map<ConnectionBase__p, boost::uint32_t> assigned_peers;
-        P2P_DEBUG("Assigner: subpiece_assign_map size = " << subpiece_assign_map_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_assigner, "Assigner: subpiece_assign_map size = " << subpiece_assign_map_.size());
         for (iter_subpiece = subpiece_assign_map_.begin(); iter_subpiece != subpiece_assign_map_.end(); ++iter_subpiece)
         {
             for (iter_peer = peer_connection_recvtime_list_.begin(); iter_peer != peer_connection_recvtime_list_.end(); ++iter_peer)
@@ -626,14 +624,15 @@ namespace p2sp
             capacity_ += 200;
         }
 
-        P2P_DEBUG(__FUNCTION__ << " AssignCapacity = " << capacity_ << " subpiece_count_ = " << subpiece_count_);
+        LOG4CPLUS_DEBUG_LOG(logger_assigner, __FUNCTION__ << " AssignCapacity = " << capacity_ << 
+            " subpiece_count_ = " << subpiece_count_);
 
         // 根据已有的subpiece_cout和需要分配的capacity
         // 计算出还需要请求多少片piece才能到capacity
         if (capacity_ > subpiece_count_)
         {
             boost::int32_t piece_num_to_request = (capacity_ - subpiece_count_-1) / 128 + 1;
-            P2P_DEBUG(__FUNCTION__ << " RequestNextPiece Num =" << piece_num_to_request);
+            LOG4CPLUS_DEBUG_LOG(logger_assigner, __FUNCTION__ << " RequestNextPiece Num =" << piece_num_to_request);
             for (boost::int32_t i = piece_num_to_request; i > 0; --i)
             {
                 // If there are multiple downloaders, it means the same RID is being played from two 

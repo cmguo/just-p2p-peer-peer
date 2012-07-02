@@ -21,6 +21,9 @@
 namespace statistic
 {
     StatisticModule::p StatisticModule::inst_;
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[statistic_module]");
+#endif
 
     StatisticModule::StatisticModule()
         : share_memory_timer_(
@@ -33,11 +36,12 @@ namespace statistic
 
     void StatisticModule::Start(uint32_t flush_interval_in_seconds, string config_path)
     {
-        STAT_DEBUG("StatisticModule::Start [IN]"); STAT_EVENT("StatisticModule is starting.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::Start [IN]");
+        LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule is starting.");
 
         if (is_running_ == true)
         {
-            STAT_WARN("StatisticModule::Start when module is running.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule::Start when module is running.");
             return;
         }
 
@@ -54,34 +58,35 @@ namespace statistic
 
         if (CreateSharedMemory() == false)
         {
-            STAT_ERROR("Create Shared Memory Failed");
+            LOG4CPLUS_ERROR_LOG(logger_statistic, "Create Shared Memory Failed");
         }
 
         speed_info_.Start();
         upload_speed_meter_.Start();
 
         share_memory_timer_.interval(flush_interval_in_seconds * 1000);
-        STAT_DEBUG("framework::timer::Timer Created, Interval: " << flush_interval_in_seconds << "(s)");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "framework::timer::Timer Created, Interval: " << 
+            flush_interval_in_seconds << "(s)");
 
         share_memory_timer_.start();
 
-        STAT_EVENT("StatisticModule starts successfully.");
+        LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule starts successfully.");
     }
 
     void StatisticModule::Stop()
     {
-        STAT_INFO("StatisticModule::Stop [IN]");
+        LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule::Stop [IN]");
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule::Stop when module is not running.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule::Stop when module is not running.");
             return;
         }
 
         SaveBandwidth();
 
         share_memory_timer_.stop();
-        STAT_DEBUG("framework::timer::Timer stopped.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "framework::timer::Timer stopped.");
 
         upload_speed_meter_.Stop();
 
@@ -93,19 +98,19 @@ namespace statistic
         is_running_ = false;
         inst_.reset();
 
-        STAT_EVENT("StatisticModule is stopped successfully.");
-        STAT_DEBUG("StatisticModule::Stop [OUT]");
+        LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule is stopped successfully.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::Stop [OUT]");
     }
 
     LiveDownloadDriverStatistic::p StatisticModule::AttachLiveDownloadDriverStatistic(uint32_t id)
     {
-        STAT_DEBUG("StatisticModule::AttachLiveDownloadDriverStatistic [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachLiveDownloadDriverStatistic [IN]");
 
         assert(is_running_ == true);
 
         if (live_download_driver_statistic_map_.find(id) != live_download_driver_statistic_map_.end())
         {
-            STAT_WARN("ID " << id << " exists, return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "ID " << id << " exists, return null.");
             if (live_download_driver_statistic_map_[id])
             {
                 // 不为空，返回
@@ -118,7 +123,7 @@ namespace statistic
 
         AddLiveDownloadDriverID(id);
 
-        STAT_DEBUG("StatisticModule::AttachLiveDownloadDriverStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachLiveDownloadDriverStatistic [OUT]");
 
         return live_download_driver_statistics;
     }
@@ -127,7 +132,7 @@ namespace statistic
         uint32_t id,
         bool is_create_shared_memory)
     {
-        STAT_DEBUG("StatisticModule::AttachDownloadDriverStatistic [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachDownloadDriverStatistic [IN]");
 
         assert(is_running_ == true);
         
@@ -136,7 +141,7 @@ namespace statistic
         // 如果这里出问题，最多造成的后果是2个downloaddriver写同一个statistic，不会挂
         if (download_driver_statistic_map_.find(id) != download_driver_statistic_map_.end())
         {
-            STAT_WARN("ID " << id << " exists, return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "ID " << id << " exists, return null.");
             if (download_driver_statistic_map_[id])
             {
                 // 不为空，返回
@@ -154,7 +159,8 @@ namespace statistic
         // 如果这里出问题，最多造成的后果是内存增长，不会挂
         if (statistic_info_.DownloadDriverCount == UINT8_MAX_VALUE - 1)
         {
-            STAT_WARN("Download Driver Map is Full, size: " << statistic_info_.DownloadDriverCount << ". Return null");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Download Driver Map is Full, size: " << 
+                statistic_info_.DownloadDriverCount << ". Return null");
             assert(false);
         }
 
@@ -166,7 +172,7 @@ namespace statistic
         // start it
         download_driver->Start();
 
-        STAT_DEBUG("StatisticModule::AttachDownloadDriverStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachDownloadDriverStatistic [OUT]");
 
         if (is_create_shared_memory)
         {
@@ -182,18 +188,19 @@ namespace statistic
 
     bool StatisticModule::DetachDownloadDriverStatistic(int id)
     {
-        STAT_DEBUG("StatisticModule::DetachDownloadDriverStatistic [IN]"); STAT_EVENT("StatisticModule is detaching download driver with id " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachDownloadDriverStatistic [IN]"); 
+        LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule is detaching download driver with id " << id);
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule is not running, return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return false.");
             return false;
         }
 
         // 如果 不存该 DownloadDriverStatistic  返回false
         if (download_driver_statistic_map_.find(id) == download_driver_statistic_map_.end())
         {
-            STAT_WARN("Download Driver with id " << id << " does not exist.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Download Driver with id " << id << " does not exist.");
             return false;
         }
 
@@ -206,13 +213,13 @@ namespace statistic
 
         // 停止该 DownloadDriverStatistic
         download_driver->Stop();
-        STAT_DEBUG("Download Driver " << id << " has been stopped.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Download Driver " << id << " has been stopped.");
 
         // 删除该 DownloadDriverStatistic
         download_driver_statistic_map_.erase(id);
-        STAT_DEBUG("Download Driver " << id << " has been removed from statistic std::map.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Download Driver " << id << " has been removed from statistic std::map.");
 
-        STAT_DEBUG("StatisticModule::DetachDownloadDriverStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachDownloadDriverStatistic [OUT]");
 
         return true;
     }
@@ -226,17 +233,18 @@ namespace statistic
     {
         uint32_t id = live_download_driver_statistic->GetLiveDownloadDriverId();
 
-        STAT_DEBUG("StatisticModule::DetachLiveDownloadDriverStatistic [IN]"); STAT_EVENT("StatisticModule is detaching live download driver with id " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachLiveDownloadDriverStatistic [IN]");
+        LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule is detaching live download driver with id " << id);
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule is not running, return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return false.");
             return false;
         }
 
         if (live_download_driver_statistic_map_.find(id) == live_download_driver_statistic_map_.end())
         {
-            STAT_WARN("Live Download Driver with id " << id << " does not exist.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Live Download Driver with id " << id << " does not exist.");
             return false;
         }
 
@@ -244,9 +252,10 @@ namespace statistic
         
         // 删除该 DownloadDriverStatistic
         live_download_driver_statistic_map_.erase(id);
-        STAT_DEBUG("Live Download Driver " << id << " has been removed from statistic std::map.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Live Download Driver " << id << 
+            " has been removed from statistic std::map.");
 
-        STAT_DEBUG("StatisticModule::DetachLiveDownloadDriverStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachLiveDownloadDriverStatistic [OUT]");
 
         return true;
     }
@@ -280,20 +289,21 @@ namespace statistic
 
     P2PDownloaderStatistic::p StatisticModule::AttachP2PDownloaderStatistic(const RID& rid)
     {
-        STAT_DEBUG("StatisticModule::AttachP2PDownloaderStatistic [IN]"); STAT_EVENT("StatisticModule is attaching p2p downloader with RID " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachP2PDownloaderStatistic [IN]"); 
+        LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule is attaching p2p downloader with RID " << rid);
         P2PDownloaderStatistic::p p2p_downloader_ = P2PDownloaderStatistic::Create(rid);
 
         if (is_running_ == false)
         {
             assert(false);
-            STAT_WARN("StatisticModule is not running, return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return null.");
             return p2p_downloader_;
         }
 
         // 如果已经存在 则返回 空
         if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
         {
-            STAT_WARN("p2p downloader " << rid << " exists. Return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "p2p downloader " << rid << " exists. Return null.");
             return p2p_downloader_statistic_map_[rid];
         }
 
@@ -301,7 +311,8 @@ namespace statistic
         if (statistic_info_.P2PDownloaderCount == UINT8_MAX_VALUE - 1)
         {
             assert(false);
-            STAT_WARN("p2p downloader std::map is full. size: " << statistic_info_.P2PDownloaderCount << ". Return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "p2p downloader std::map is full. size: " << 
+                statistic_info_.P2PDownloaderCount << ". Return null.");
             return p2p_downloader_;
         }
 
@@ -311,25 +322,26 @@ namespace statistic
         // 新建一个 P2PDownloaderStatistic::p, 然后添加到 download_driver_statistic_s_ 中
         p2p_downloader_statistic_map_[rid] = p2p_downloader_;
 
-        STAT_DEBUG("Created P2P Downloader with RID: " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Created P2P Downloader with RID: " << rid);
 
         // 该 P2PDownloadeStatisticr::p -> Start()
         p2p_downloader_->Start();
 
-        STAT_DEBUG("Started P2P Downloader: " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Started P2P Downloader: " << rid);
 
         // 返回这个新建的 P2PDownloaderStatistic::p
-        STAT_DEBUG("StatisticModule::AttachP2PDownloaderStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachP2PDownloaderStatistic [OUT]");
         return p2p_downloader_;
     }
 
     bool StatisticModule::DetachP2PDownloaderStatistic(const RID& rid)
     {
-        STAT_DEBUG("StatisticModule::DetachP2PDownloaderStatistic [IN]"); STAT_EVENT("StatisticModule is detaching P2PDownloader: " << rid);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachP2PDownloaderStatistic [IN]"); 
+        LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule is detaching P2PDownloader: " << rid);
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule is not running, return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return false.");
             return false;
         }
 
@@ -338,7 +350,7 @@ namespace statistic
         // 不存在, 返回
         if (it == p2p_downloader_statistic_map_.end())
         {
-            STAT_WARN("P2PDownloader does not exist. Return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "P2PDownloader does not exist. Return false.");
             return false;
         }
 
@@ -346,10 +358,10 @@ namespace statistic
 
         it->second->Stop();
         p2p_downloader_statistic_map_.erase(it);
-        STAT_DEBUG("P2PDownloader " << rid << " has been stopped and removed.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloader " << rid << " has been stopped and removed.");
         RemoveP2PDownloaderRID(rid);
 
-        STAT_DEBUG("StatisticModule::DetachP2PDownloaderStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachP2PDownloaderStatistic [OUT]");
         return true;
     }
 
@@ -376,11 +388,11 @@ namespace statistic
     void StatisticModule::OnTimerElapsed(
         framework::timer::Timer * pointer)
     {
-        STAT_EVENT("StatisticModule::OnTimerElapsed, times: " << pointer->times());
+        LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule::OnTimerElapsed, times: " << pointer->times());
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return.");
             return;
         }
 
@@ -390,7 +402,7 @@ namespace statistic
         }
         else
         {
-            STAT_ERROR("Invalid framework::timer::Timer Pointer.");
+            LOG4CPLUS_ERROR_LOG(logger_statistic, "Invalid framework::timer::Timer Pointer.");
             assert(0);
         }
     }
@@ -445,18 +457,19 @@ namespace statistic
 
     void StatisticModule::OnShareMemoryTimer(uint32_t times)
     {
-        STAT_DEBUG("StatisticModule::OnShareMemoryTimer [IN], times: " << times); STAT_EVENT("StatisticModule::OnShareMemoryTimer, Writing data into shared memory.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::OnShareMemoryTimer [IN], times: " << times); 
+        LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule::OnShareMemoryTimer, Writing data into shared memory.");
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "StatisticModule is not running, return.");
             return;
         }
 
         // 将内部变量拷贝到共享内存中
         DoTakeSnapshot();
 
-        STAT_EVENT("Updated Statistic Information has been written to shared memory.");
+        LOG4CPLUS_INFO_LOG(logger_statistic, "Updated Statistic Information has been written to shared memory.");
         FlushSharedMemory();
 
         uint32_t upload_speed = (uint32_t) (statistic_info_.SpeedInfo.MinuteUploadSpeed / 1024.0 + 0.5);
@@ -465,22 +478,22 @@ namespace statistic
         UploadStatisticModule::Inst()->OnShareMemoryTimer(times);
 
         // 遍历所有的  DownloadDriverStatistic::p->OnShareMemoryTimer(times)
-        STAT_DEBUG("Starting to update downloader driver statistic.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Starting to update downloader driver statistic.");
         for (DownloadDriverStatisticMap::iterator it = download_driver_statistic_map_.begin(); it
             != download_driver_statistic_map_.end(); it++)
         {
             assert(it->second);
             it->second->OnShareMemoryTimer(times);
-        } STAT_EVENT("All Downloader Drirvers shared memory has been updated.");
+        } LOG4CPLUS_INFO_LOG(logger_statistic, "All Downloader Drirvers shared memory has been updated.");
 
         // 遍历所有的  P2PDownloaderStatistic::p->OnShareMemoryTimer(times)
-        STAT_DEBUG("Starting to update p2p downloader statistic.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Starting to update p2p downloader statistic.");
         for (P2PDownloadDriverStatisticMap::iterator it = p2p_downloader_statistic_map_.begin(); it
             != p2p_downloader_statistic_map_.end(); it++)
         {
             assert(it->second);
             it->second->OnShareMemoryTimer(times);
-        } STAT_EVENT("All P2PDownloader shared memory has been updated.");
+        } LOG4CPLUS_INFO_LOG(logger_statistic, "All P2PDownloader shared memory has been updated.");
 
         // flush bandwidth info
         if (times % (10 * 60) == 0)  // 10mins
@@ -488,7 +501,7 @@ namespace statistic
             SaveBandwidth();
         }
 
-        STAT_DEBUG("StatisticModule::OnShareMemoryTimer [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::OnShareMemoryTimer [OUT]");
     }
 
     STASTISTIC_INFO StatisticModule::GetStatisticInfo()
@@ -524,10 +537,11 @@ namespace statistic
 
     bool StatisticModule::CreateSharedMemory()
     {
-        STAT_DEBUG("StatisticModule::CreateSharedMemory Creating Shared Memory.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::CreateSharedMemory Creating Shared Memory.");
         shared_memory_.Close();
         shared_memory_.Create(GetSharedMemoryName(), GetSharedMemorySize());
-        STAT_DEBUG("Created Shared Memory: " << ((const char*) GetSharedMemoryName().c_str()) << ", size: " << GetSharedMemorySize() << " Byte(s).");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Created Shared Memory: " << 
+            ((const char*) GetSharedMemoryName().c_str()) << ", size: " << GetSharedMemorySize() << " Byte(s).");
 
         return shared_memory_.IsValid();
     }
@@ -553,13 +567,13 @@ namespace statistic
     void StatisticModule::SubmitDownloadedBytes(uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
-        STAT_DEBUG("StatisticModule::SubmitDownloadedBytes added: " << downloaded_bytes);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SubmitDownloadedBytes added: " << downloaded_bytes);
     }
 
     void StatisticModule::SubmitUploadedBytes(uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
-        STAT_DEBUG("StatisticModule::SubmitUploadedBytes added: " << uploaded_bytes);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SubmitUploadedBytes added: " << uploaded_bytes);
     }
 
     SPEED_INFO StatisticModule::GetSpeedInfo()
@@ -622,7 +636,8 @@ namespace statistic
 
         if (is_running_ == false)
         {
-            STAT_WARN("StatisticModule::GetLocalPeerDownloadInfo Statistic is not running. Return. ");
+            LOG4CPLUS_WARN_LOG(logger_statistic, 
+                "StatisticModule::GetLocalPeerDownloadInfo Statistic is not running. Return. ");
             return local_download_info;
         }
 
@@ -675,15 +690,15 @@ namespace statistic
     void StatisticModule::UpdateSpeedInfo()
     {
         statistic_info_.SpeedInfo = speed_info_.GetSpeedInfo();
-        STAT_DEBUG("StatisticModule::UpdateSpeedInfo Speed Info has been updated.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::UpdateSpeedInfo Speed Info has been updated.");
     }
 
     void StatisticModule::UpdateTrackerInfo()
     {
-        STAT_DEBUG("StatisticModule::UpdateTrackerInfo [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::UpdateTrackerInfo [IN]");
 
         statistic_info_.TrackerCount = statistic_tracker_info_map_.size();
-        STAT_DEBUG("Current Tracker Number: " << (uint32_t)statistic_info_.TrackerCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Current Tracker Number: " << (uint32_t)statistic_info_.TrackerCount);
 
         assert(statistic_info_.TrackerCount <= UINT8_MAX_VALUE - 1);
 
@@ -691,7 +706,7 @@ namespace statistic
         for (uint32_t i = 0; it != statistic_tracker_info_map_.end(); it++, i++)
         {
             statistic_info_.TrackerInfos[i] = it->second;
-        } STAT_DEBUG("StatisticModule::UpdateTrackerInfo [OUT]");
+        } LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::UpdateTrackerInfo [OUT]");
     }
 
     void StatisticModule::UpdateMaxHttpDownloadSpeed()
@@ -725,7 +740,6 @@ namespace statistic
     void StatisticModule::SetLocalPeerInfo(const protocol::CandidatePeerInfo& local_peer_info)
     {
         statistic_info_.LocalPeerInfo = local_peer_info;
-        // STAT_DEBUG("StatisticModule::SetLocalPeerInfo [" << protocol::CandidatePeerInfo(local_peer_info) << "].");
     }
 
     protocol::CandidatePeerInfo StatisticModule::GetLocalPeerInfo()
@@ -737,7 +751,8 @@ namespace statistic
     {
         statistic_info_.LocalPeerInfo.IP = peer_addr.IP;
         statistic_info_.LocalPeerInfo.UdpPort = peer_addr.UdpPort;
-        STAT_DEBUG("StatisticModule::SetLocalPeerAddress [" << protocol::PeerAddr(peer_addr) << "].");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetLocalPeerAddress [" 
+            << protocol::PeerAddr(peer_addr) << "].");
     }
 
     void StatisticModule::SetLocalPeerIp(uint32_t ip)
@@ -769,7 +784,8 @@ namespace statistic
     {
         statistic_info_.LocalPeerInfo.DetectIP = socket_addr.IP;
         statistic_info_.LocalPeerInfo.DetectUdpPort = socket_addr.Port;
-        STAT_DEBUG("StatisticModule::SetLocalDetectSocketAddress [" << protocol::SocketAddr(socket_addr) << "].");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetLocalDetectSocketAddress [" 
+            << protocol::SocketAddr(socket_addr) << "].");
     }
 
     protocol::SocketAddr StatisticModule::GetLocalDetectSocketAddress()
@@ -781,7 +797,8 @@ namespace statistic
     {
         statistic_info_.LocalPeerInfo.StunIP = socket_addr.IP;
         statistic_info_.LocalPeerInfo.StunUdpPort = socket_addr.Port;
-        STAT_DEBUG("StatisticModule::SetLocalStunSocketAddress [" << protocol::SocketAddr(socket_addr) << "].");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetLocalStunSocketAddress [" 
+            << protocol::SocketAddr(socket_addr) << "].");
     }
     protocol::SocketAddr StatisticModule::GetLocalStunSocketAddress()
     {
@@ -815,23 +832,22 @@ namespace statistic
     {
         statistic_info_.LocalIpCount = (std::min)((uint32_t)MAX_IP_COUNT, (uint32_t)local_ips.size());
 
-        STAT_DEBUG("Local IP Count: " << local_ips.size() << ", Max allowed count: " << MAX_IP_COUNT);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Local IP Count: " << local_ips.size() 
+            << ", Max allowed count: " << MAX_IP_COUNT);
 
         for (uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
         {
             statistic_info_.LocalIPs[i] = local_ips[i];
-            // STAT_DEBUG("    Set IP: " << IpPortToUdpEndpoint(local_ips[i], 0).address());
         }
-        STAT_DEBUG("All " << (uint32_t)statistic_info_.LocalIpCount << " IPs are stored.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic,"All " << (uint32_t)statistic_info_.LocalIpCount << " IPs are stored.");
     }
 
     void StatisticModule::GetLocalIPs(std::vector<uint32_t>& local_ips)
     {
         local_ips.clear();
-        STAT_DEBUG("Local IP Count: " << (uint32_t)statistic_info_.LocalIpCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Local IP Count: " << (uint32_t)statistic_info_.LocalIpCount);
         for (uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
         {
-            // STAT_DEBUG("    Get IP: " << IpPortToUdpEndpoint(statistic_info_.LocalIPs[i], 0).address());
             local_ips.push_back(statistic_info_.LocalIPs[i]);
         }
     }
@@ -842,14 +858,14 @@ namespace statistic
     void StatisticModule::SetLocalPeerVersion(uint32_t local_peer_version)
     {
         statistic_info_.LocalPeerVersion = local_peer_version;
-        STAT_DEBUG("StatisticModule::SetLocalPeerVersion " << local_peer_version);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetLocalPeerVersion " << local_peer_version);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void StatisticModule::SetBsInfo(const boost::asio::ip::udp::endpoint bs_ep)
     {
         bootstrap_endpoint_ = bs_ep;
-        STAT_DEBUG("StatisticModule::SetBsInfo " << bootstrap_endpoint_);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetBsInfo " << bootstrap_endpoint_);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -857,7 +873,7 @@ namespace statistic
 
     void StatisticModule::SetStunInfo(const std::vector<protocol::STUN_SERVER_INFO> &stun_infos)
     {
-        STAT_DEBUG("    Statistic Set Stun Count: " << stun_infos.size());
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "    Statistic Set Stun Count: " << stun_infos.size());
         if (stun_infos.empty())
         {
             return;
@@ -877,43 +893,41 @@ namespace statistic
 
     void StatisticModule::SetTrackerInfo(uint32_t group_count, const std::vector<protocol::TRACKER_INFO>& tracker_infos)
     {
-        STAT_DEBUG("StatisticModule::SetTrackerInfo [IN]"); STAT_DEBUG("    Tracker Group Count: " << group_count << ", Trackers Number: " << tracker_infos.size());
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetTrackerInfo [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic,"    Tracker Group Count: " << group_count << 
+            ", Trackers Number: " << tracker_infos.size());
 
         statistic_info_.GroupCount = group_count;
         statistic_info_.TrackerCount = (std::min)((uint32_t)tracker_infos.size(), (uint32_t)UINT8_MAX_VALUE);
-        STAT_DEBUG("    Statistic Tracker Count: " << statistic_info_.TrackerCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "    Statistic Tracker Count: " << statistic_info_.TrackerCount);
 
         statistic_tracker_info_map_.clear();
         for (uint32_t i = 0; i < statistic_info_.TrackerCount; i++)
         {
             const protocol::TRACKER_INFO& tracker_info = tracker_infos[i];
-            // STAT_DEBUG("    Add Tracker Info: " << tracker_info);
             statistic_tracker_info_map_[tracker_info] = STATISTIC_TRACKER_INFO(tracker_info);
-        } STAT_DEBUG("StatisticModule::SetTrackerInfo [OUT]");
+        } 
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetTrackerInfo [OUT]");
     }
 
     void StatisticModule::SetIsSubmitTracker(const protocol::TRACKER_INFO& tracker_info, bool is_submit_tracker)
     {
         GetTracker(tracker_info).IsSubmitTracker = is_submit_tracker;
-        // STAT_DEBUG("Set IsSubmitTracker: " << is_submit_tracker << " to Tracker: " << tracker_info);
     }
 
     void StatisticModule::SubmitCommitRequest(const protocol::TRACKER_INFO& tracker_info)
     {
         GetTracker(tracker_info).CommitRequestCount++;
-        // STAT_DEBUG("Current CommitRequestCount: " << GetTracker(tracker_info).CommitRequestCount << " of Tracker: " << tracker_info);
     }
 
     void StatisticModule::SubmitCommitResponse(const protocol::TRACKER_INFO& tracker_info)
     {
         GetTracker(tracker_info).CommitResponseCount++;
-        // STAT_DEBUG("Current CommitResponseCount: " << GetTracker(tracker_info).CommitResponseCount << " of Tracker: " << tracker_info);
     }
 
     void StatisticModule::SubmitKeepAliveRequest(const protocol::TRACKER_INFO& tracker_info)
     {
         GetTracker(tracker_info).KeepAliveRequestCount++;
-        // STAT_DEBUG("Current KeepAliveRequestCount: " << GetTracker(tracker_info).KeepAliveRequestCount << " of Tracker: " << tracker_info);
     }
 
     void StatisticModule::SubmitKeepAliveResponse(const protocol::TRACKER_INFO& tracker_info, boost::uint16_t keep_alive_interval)
@@ -921,7 +935,6 @@ namespace statistic
         STATISTIC_TRACKER_INFO& tracker = GetTracker(tracker_info);
         tracker.KeepAliveResponseCount++;
         tracker.KeepAliveInterval = keep_alive_interval;
-        // STAT_DEBUG("Current KeepAliveResponseCount: " << GetTracker(tracker_info).KeepAliveResponseCount << ", KLPInterval: " << keep_alive_interval << " of Tracker: " << tracker_info);
     }
 
     void StatisticModule::SubmitListRequest(const protocol::TRACKER_INFO& tracker_info, const RID &rid)
@@ -947,7 +960,6 @@ namespace statistic
     void StatisticModule::SubmitErrorCode(const protocol::TRACKER_INFO& tracker_info, boost::uint8_t error_code)
     {
         GetTracker(tracker_info).ErrorCode = error_code;
-        // STAT_DEBUG("Current ErrorCode: " << error_code << " of Tracker: " << tracker_info);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -958,7 +970,6 @@ namespace statistic
         statistic_info_.StatisticIndexInfo.IP = ip;
         statistic_info_.StatisticIndexInfo.Port = port;
         statistic_info_.StatisticIndexInfo.Type = type;
-        // STAT_DEBUG("Set IndexServerInfo: " << IpPortToUdpEndpoint(ip, port) << ", type[0-U;1-T]: " << type);
     }
 
     void StatisticModule::SetIndexServerInfo(const protocol::SocketAddr& socket_addr, boost::uint8_t type)
@@ -966,55 +977,63 @@ namespace statistic
         statistic_info_.StatisticIndexInfo.IP = socket_addr.IP;
         statistic_info_.StatisticIndexInfo.Port = socket_addr.Port;
         statistic_info_.StatisticIndexInfo.Type = type;
-        STAT_DEBUG("Set IndexServerInfo: " << socket_addr << ", type[0-U;1-T]: " << type);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Set IndexServerInfo: " << socket_addr << ", type[0-U;1-T]: " << type);
     }
 
     void StatisticModule::SubmitQueryRIDByUrlRequest()
     {
         statistic_info_.StatisticIndexInfo.QueryRIDByUrlRequestCount++;
-        STAT_DEBUG("IndexServer, QueryRIDByUrlRequestCount: " << statistic_info_.StatisticIndexInfo.QueryRIDByUrlRequestCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryRIDByUrlRequestCount: " << 
+            statistic_info_.StatisticIndexInfo.QueryRIDByUrlRequestCount);
     }
 
     void StatisticModule::SubmitQueryRIDByUrlResponse()
     {
         statistic_info_.StatisticIndexInfo.QueryRIDByUrlResponseCount++;
-        STAT_DEBUG("IndexServer, QueryRIDByUrlResponseCount: " << statistic_info_.StatisticIndexInfo.QueryRIDByUrlResponseCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryRIDByUrlResponseCount: " << 
+            statistic_info_.StatisticIndexInfo.QueryRIDByUrlResponseCount);
     }
 
     void StatisticModule::SubmitQueryHttpServersByRIDRequest()
     {
         statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDRequestCount++;
-        STAT_DEBUG("IndexServer, QueryHttpServersByRIDRequestCount: " << statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDRequestCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryHttpServersByRIDRequestCount: " << 
+            statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDRequestCount);
     }
 
     void StatisticModule::SubmitQueryHttpServersByRIDResponse()
     {
         statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDResponseCount++;
-        STAT_DEBUG("IndexServer, QueryHttpServersByRIDResponseCount: " << statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDResponseCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryHttpServersByRIDResponseCount: " << 
+            statistic_info_.StatisticIndexInfo.QueryHttpServersByRIDResponseCount);
     }
 
     void StatisticModule::SubmitQueryTrackerListRequest()
     {
         statistic_info_.StatisticIndexInfo.QueryTrackerListRequestCount++;
-        STAT_DEBUG("IndexServer, QueryTrackerListRequestCount: " << statistic_info_.StatisticIndexInfo.QueryTrackerListRequestCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryTrackerListRequestCount: " << 
+            statistic_info_.StatisticIndexInfo.QueryTrackerListRequestCount);
     }
 
     void StatisticModule::SubmitQueryTrackerListResponse()
     {
         statistic_info_.StatisticIndexInfo.QureyTrackerListResponseCount++;
-        STAT_DEBUG("IndexServer, QureyTrackerListResponseCount: " << statistic_info_.StatisticIndexInfo.QureyTrackerListResponseCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QureyTrackerListResponseCount: " << 
+            statistic_info_.StatisticIndexInfo.QureyTrackerListResponseCount);
     }
 
     void StatisticModule::SubmitAddUrlRIDRequest()
     {
         statistic_info_.StatisticIndexInfo.AddUrlRIDRequestCount++;
-        STAT_DEBUG("IndexServer, AddUrlRIDRequestCount: " << statistic_info_.StatisticIndexInfo.AddUrlRIDRequestCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, AddUrlRIDRequestCount: " << 
+            statistic_info_.StatisticIndexInfo.AddUrlRIDRequestCount);
     }
 
     void StatisticModule::SubmitAddUrlRIDResponse()
     {
         statistic_info_.StatisticIndexInfo.AddUrlRIDResponseCount++;
-        STAT_DEBUG("IndexServer, AddUrlRIDResponseCount: " << statistic_info_.StatisticIndexInfo.AddUrlRIDResponseCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, AddUrlRIDResponseCount: " << 
+            statistic_info_.StatisticIndexInfo.AddUrlRIDResponseCount);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1077,15 +1096,17 @@ namespace statistic
 
     bool StatisticModule::AddDownloadDriverID(uint32_t id)
     {
-        STAT_DEBUG("AddDownloadDriverID id = " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddDownloadDriverID id = " << id);
         bool added = false;
         for (boost::int32_t i = 0; i<UINT8_MAX_VALUE; ++i)
         {
             if (statistic_info_.DownloadDriverIDs[i] == 0)
             {
-                STAT_DEBUG("AddDownloadDriverID return true DownloadDriverIDs[" << i << "] = " << id);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddDownloadDriverID return true DownloadDriverIDs[" << i 
+                    << "] = " << id);
                 statistic_info_.DownloadDriverCount++;
-                STAT_DEBUG("BINGO AddDownloadDriverID count = " << (boost::int32_t)statistic_info_.DownloadDriverCount);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "BINGO AddDownloadDriverID count = " 
+                    << (boost::int32_t)statistic_info_.DownloadDriverCount);
                 statistic_info_.DownloadDriverIDs[i] = id;
                 added = true;
                 break;
@@ -1097,15 +1118,17 @@ namespace statistic
 
     bool StatisticModule::AddLiveDownloadDriverID(uint32_t id)
     {
-        STAT_DEBUG("AddDownloadDriverID id = " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddDownloadDriverID id = " << id);
         bool added = false;
         for (boost::int32_t i=0; i<LIVEDOWNLOADER_MAX_COUNT; ++i)
         {
             if (statistic_info_.LiveDownloadDriverIDs[i] == 0)
             {
-                STAT_DEBUG("AddLiveDownloadDriverID return true LiveDownloadDriverIDs[" << i << "] = " << id);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddLiveDownloadDriverID return true LiveDownloadDriverIDs[" 
+                    << i << "] = " << id);
                 statistic_info_.LiveDownloadDriverCount++;
-                STAT_DEBUG("BINGO AddLiveDownloadDriverID count = " << (boost::int32_t)statistic_info_.LiveDownloadDriverCount);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "BINGO AddLiveDownloadDriverID count = " << 
+                    (boost::int32_t)statistic_info_.LiveDownloadDriverCount);
                 statistic_info_.LiveDownloadDriverIDs[i] = id;
                 added = true;
                 break;
@@ -1117,15 +1140,17 @@ namespace statistic
 
     bool StatisticModule::RemoveDownloadDriverID(uint32_t id)
     {
-        STAT_DEBUG("RemoveDownloadDriverID id = " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveDownloadDriverID id = " << id);
         bool removed = false;
         for (boost::int32_t i = 0; i<UINT8_MAX_VALUE; ++i)
         {
             if (statistic_info_.DownloadDriverIDs[i] == id)
             {
-                STAT_DEBUG("RemoveDownloadDriverID return true DownloadDriverIDs[" << i << "] = " << id);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveDownloadDriverID return true DownloadDriverIDs[" 
+                    << i << "] = " << id);
                 statistic_info_.DownloadDriverCount--;
-                STAT_DEBUG("BINGO RemoveDownloadDriverID count = " << (boost::int32_t)statistic_info_.DownloadDriverCount);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "BINGO RemoveDownloadDriverID count = " << 
+                    (boost::int32_t)statistic_info_.DownloadDriverCount);
                 statistic_info_.DownloadDriverIDs[i] = 0;
                 removed = true;
                 break;
@@ -1137,15 +1162,17 @@ namespace statistic
 
     bool StatisticModule::RemoveLiveDownloadDriverID(uint32_t id)
     {
-        STAT_DEBUG("RemoveLiveDownloadDriverID id = " << id);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveLiveDownloadDriverID id = " << id);
         bool removed = false;
         for (boost::int32_t i=0; i<LIVEDOWNLOADER_MAX_COUNT; ++i)
         {
             if (statistic_info_.LiveDownloadDriverIDs[i] == id)
             {
-                STAT_DEBUG("RemoveLiveDownloadDriverID return true LiveDownloadDriverIDs[" << i << "] = " << id);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveLiveDownloadDriverID return true LiveDownloadDriverIDs[" 
+                    << i << "] = " << id);
                 statistic_info_.LiveDownloadDriverCount--;
-                STAT_DEBUG("BINGO RemoveLiveDownloadDriverID count = " << (boost::int32_t)statistic_info_.LiveDownloadDriverCount);
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "BINGO RemoveLiveDownloadDriverID count = " << 
+                    (boost::int32_t)statistic_info_.LiveDownloadDriverCount);
                 statistic_info_.LiveDownloadDriverIDs[i] = 0;
                 removed = true;
                 break;
@@ -1160,13 +1187,15 @@ namespace statistic
     void StatisticModule::SubmitP2PDownloaderDownloadBytes(uint32_t p2p_downloader_download_bytes)
     {
         statistic_info_.TotalP2PDownloadBytes += p2p_downloader_download_bytes;
-        STAT_DEBUG("IndexServer, SubmitP2PDownloaderDownloadBytes: " << statistic_info_.TotalP2PDownloadBytes);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, SubmitP2PDownloaderDownloadBytes: " << 
+            statistic_info_.TotalP2PDownloadBytes);
     }
 
     void StatisticModule::SubmitOtherServerDownloadBytes(uint32_t other_server_download_bytes)
     {
         statistic_info_.TotalOtherServerDownloadBytes += other_server_download_bytes;
-        STAT_DEBUG("IndexServer, QueryRIDByUrlResponseCount: " << statistic_info_.TotalOtherServerDownloadBytes);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryRIDByUrlResponseCount: " << 
+            statistic_info_.TotalOtherServerDownloadBytes);
     }
 
     uint32_t StatisticModule::GetTotalDataBytes()
@@ -1274,7 +1303,8 @@ namespace statistic
                     ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("B", bandwith_load));
 
                     history_bandwith_ = bandwith_load;
-                    LOGX(__DEBUG, "upload", "bandwidth_load = " << bandwith_load << ", history_bandwith_ = " << history_bandwith_);
+                    LOG4CPLUS_DEBUG_LOG(logger_statistic, "bandwidth_load = " << bandwith_load << 
+                        ", history_bandwith_ = " << history_bandwith_);
                 }
                 else
                 {
@@ -1448,12 +1478,13 @@ namespace statistic
             }
             else
             {
-                STAT_DEBUG("QueryPeerInfoByRid Rid: " << rid << ", P2PDownloaderStatistic NULL");
+                LOG4CPLUS_DEBUG_LOG(logger_statistic, "QueryPeerInfoByRid Rid: " << rid << 
+                    ", P2PDownloaderStatistic NULL");
             }
         }
         else
         {
-            STAT_DEBUG("QueryPeerInfoByRid can't find rid: " << rid);
+            LOG4CPLUS_DEBUG_LOG(logger_statistic, "QueryPeerInfoByRid can't find rid: " << rid);
         }
 
         *iListCount = 0;

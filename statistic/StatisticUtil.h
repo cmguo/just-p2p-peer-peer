@@ -4,15 +4,6 @@
 
 #pragma once
 
-#define STATISTIC_TYPE "statistic"
-FRAMEWORK_LOGGER_DECLARE_MODULE("statistic")
-
-#define STAT_INFO(message) LOG(__INFO, STATISTIC_TYPE, message)
-#define STAT_EVENT(message) LOG(__EVENT, STATISTIC_TYPE, message)
-#define STAT_ERROR(message) LOG(__ERROR, STATISTIC_TYPE, message)
-#define STAT_WARN(message) LOG(__WARN, STATISTIC_TYPE, message)
-#define STAT_DEBUG(message) LOG(__DEBUG, STATISTIC_TYPE, message)
-
 namespace statistic
 {
   inline uint32_t GetCurrentProcessID()

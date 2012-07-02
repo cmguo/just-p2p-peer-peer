@@ -10,7 +10,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_switch = log4cplus::Logger::getInstance("[switch_download_control]");
+#endif
 
     //////////////////////////////////////////////////////////////////////////
     // Download
@@ -37,7 +39,7 @@ namespace p2sp
         state_.timer_ = State::TIMER_NONE;
         state_.timer_using_ = State::TIMER_USING_NONE;
 
-        SWITCH_DEBUG(string(20, '-'));
+        LOG4CPLUS_DEBUG_LOG(logger_switch, string(20, '-'));
 
         // Next(0);
         OnControlTimer(0);
@@ -105,7 +107,7 @@ namespace p2sp
         while (true)
         {
 
-            SWITCH_DEBUG((string)state_);
+            LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_);
 
             // 设置为快速模式，无冗余
             if (GetP2PControlTarget())

@@ -7,11 +7,11 @@
 #include "NullProxySender.h"
 #include "ProxyConnection.h"
 
-#define NL_DEBUG(msg) LOG(__DEBUG, "downloadcenter", __FUNCTION__ << ":" << __LINE__ << " " << msg);
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("downloadcenter");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_null_proxy_sender = log4cplus::Logger::getInstance("[null_proxy_sender]");
+#endif
 
     NullProxySender::NullProxySender(ProxyConnection__p proxy_connection)
         : proxy_connection_(proxy_connection)
@@ -36,7 +36,7 @@ namespace p2sp
         // !
         playing_position_ = 0;
         is_response_header_ = false;
-        NL_DEBUG("");
+        LOG4CPLUS_DEBUG_LOG(logger_null_proxy_sender, "");
     }
 
     void NullProxySender::Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection)
@@ -71,7 +71,7 @@ namespace p2sp
         }
         is_response_header_ = true;
         file_length_ = content_length;
-        NL_DEBUG("response file_length = " << content_length);
+        LOG4CPLUS_DEBUG_LOG(logger_null_proxy_sender, "response file_length = " << content_length);
     }
 
     // 失败
@@ -96,7 +96,8 @@ namespace p2sp
         if (false == is_running_) {
             return;
         }
-        LOG(__DEBUG, "proxy", ">> playing_position_ = " << playing_position_ << ", file_length_ = " << file_length_ << ", buffers.count = " << buffers.size());
+        LOG4CPLUS_DEBUG_LOG(logger_null_proxy_sender, ">> playing_position_ = " << playing_position_ << 
+            ", file_length_ = " << file_length_ << ", buffers.count = " << buffers.size());
 
         for (uint32_t i = 0; i < buffers.size(); ++i) {
             playing_position_ += buffers[i].Length();
@@ -104,7 +105,8 @@ namespace p2sp
 
         if (playing_position_ == file_length_)
         {
-            LOG(__WARN, "proxy", "CommonProxySender::OnRecvSubPiece playing_position_ == file_length_ send \\r\\n\\r\\n");
+            LOG4CPLUS_WARN_LOG(logger_null_proxy_sender, 
+                "CommonProxySender::OnRecvSubPiece playing_position_ == file_length_ send \\r\\n\\r\\n");
         }
     }
 }

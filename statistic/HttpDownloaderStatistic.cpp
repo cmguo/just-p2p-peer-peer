@@ -14,6 +14,9 @@
 
 namespace statistic
 {
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[http_downloader_statistic]");
+#endif
     HttpDownloaderStatistic::HttpDownloaderStatistic(const string& url, DownloadDriverStatistic::p download_driver_statistic)
         : download_driver_statistic_(download_driver_statistic)
         , is_running_(false)
@@ -28,10 +31,10 @@ namespace statistic
 
     void HttpDownloaderStatistic::Start()
     {
-        STAT_DEBUG("HttpDownloaderStatistic::Start [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::Start [IN]");
         if (is_running_ == true)
         {
-            STAT_DEBUG("HttpDownloaderStatistic is running. Return.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic is running. Return.");
             return;
         }
         is_running_ = true;
@@ -43,27 +46,27 @@ namespace statistic
         http_downloader_info_.IsPause = true;
 
         speed_info_.Start();
-        STAT_DEBUG("Started Speed Info.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Started Speed Info.");
 
-        STAT_DEBUG("HttpDownloaderStatistic::Start [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::Start [OUT]");
     }
 
     void HttpDownloaderStatistic::Stop()
     {
-        STAT_DEBUG("HttpDownloaderStatistic::Stop [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::Stop [IN]");
         if (is_running_ == false)
         {
-            STAT_DEBUG("HttpDownloaderStatistic is not running. Return.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic is not running. Return.");
             return;
         }
 
         speed_info_.Stop();
-        STAT_DEBUG("Stopped Speed Info.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Stopped Speed Info.");
 
         Clear();
 
         is_running_ = false;
-        STAT_DEBUG("HttpDownloaderStatistic::Stop [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::Stop [OUT]");
     }
 
     void HttpDownloaderStatistic::Clear()
@@ -104,9 +107,10 @@ namespace statistic
         }
         else
         {
-            STAT_WARN("Download Driver is NULL, HttpDownloaderStatisis: " << url_);
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Download Driver is NULL, HttpDownloaderStatisis: " << url_);
         }
-        STAT_DEBUG("HttpDownloaderStatistic::SubmitDownloadedBytes " << downloaded_bytes << " Bytes.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SubmitDownloadedBytes " << downloaded_bytes 
+            << " Bytes.");
     }
 
     void HttpDownloaderStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
@@ -118,9 +122,10 @@ namespace statistic
         }
         else
         {
-            STAT_WARN("Download Driver is NULL, HttpDownloaderStatisis: " << url_);
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Download Driver is NULL, HttpDownloaderStatisis: " << url_);
         }
-        STAT_DEBUG("HttpDownloaderStatistic::SubmitUploadedBytes " << uploaded_bytes << " Bytes.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SubmitUploadedBytes " << uploaded_bytes 
+            << " Bytes.");
     }
 
     void HttpDownloaderStatistic::UpdateSpeedInfo()
@@ -134,25 +139,29 @@ namespace statistic
     void HttpDownloaderStatistic::SubmitHttpConnected()
     {
         http_downloader_info_.LastConnectedTime = GetTickCountInMilliSecond();
-        STAT_DEBUG("HttpDownloaderStatistic::SubmitHttpConnected " << http_downloader_info_.LastConnectedTime);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SubmitHttpConnected " 
+            << http_downloader_info_.LastConnectedTime);
     }
 
     void HttpDownloaderStatistic::SubmitRequestPiece()
     {
         http_downloader_info_.LastRequestPieceTime = GetTickCountInMilliSecond();
-        STAT_DEBUG("HttpDownloaderStatistic::SubmitRequestPiece " << http_downloader_info_.LastRequestPieceTime);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SubmitRequestPiece " 
+            << http_downloader_info_.LastRequestPieceTime);
     }
 
     void HttpDownloaderStatistic::SubmitRetry()
     {
         http_downloader_info_.RetryCount++;
-        STAT_DEBUG("HttpDownloaderStatistic::SubmitRetry count: " << http_downloader_info_.RetryCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SubmitRetry count: " 
+            << http_downloader_info_.RetryCount);
     }
 
     void HttpDownloaderStatistic::ClearRetry()
     {
         http_downloader_info_.RetryCount = 0;
-        STAT_DEBUG("HttpDownloaderStatistic::ClearRetry count: " << http_downloader_info_.RetryCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::ClearRetry count: " 
+            << http_downloader_info_.RetryCount);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -161,13 +170,13 @@ namespace statistic
     void HttpDownloaderStatistic::SetSupportRange(bool is_support_range)
     {
         http_downloader_info_.IsSupportRange = is_support_range;
-        STAT_DEBUG("HttpDownloaderStatistic::SetSupportRange " << is_support_range);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetSupportRange " << is_support_range);
     }
 
     void HttpDownloaderStatistic::SetHttpStatusCode(uint32_t http_status_code)
     {
         http_downloader_info_.LastHttpStatusCode = http_status_code;
-        STAT_DEBUG("HttpDownloaderStatistic::SetHttpStatusCode " << http_status_code);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetHttpStatusCode " << http_status_code);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -212,13 +221,15 @@ namespace statistic
     void HttpDownloaderStatistic::SetDownloadingPieceInfo(const PIECE_INFO_EX & downloading_piece_info)
     {
         http_downloader_info_.DownloadingPieceEx = downloading_piece_info;
-        STAT_DEBUG("HttpDownloaderStatistic::SetDownloadingPieceInfo [" << downloading_piece_info << "].");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetDownloadingPieceInfo [" 
+            << downloading_piece_info << "].");
     }
 
     void HttpDownloaderStatistic::SetStartPieceInfo(const PIECE_INFO_EX & start_piece_info)
     {
         http_downloader_info_.StartPieceEx = start_piece_info;
-        STAT_DEBUG("HttpDownloaderStatistic::SetStartPieceInfo [" << start_piece_info << "].");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetStartPieceInfo [" 
+            << start_piece_info << "].");
     }
 
     void HttpDownloaderStatistic::SetDownloadingPieceInfo(

@@ -9,6 +9,9 @@
 
 namespace statistic
 {
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[peer_connection_statistic]");
+#endif
     PeerConnectionStatistic::PeerConnectionStatistic(const boost::asio::ip::udp::endpoint& end_point)
         : is_running_(false)
         , end_point_(end_point)
@@ -25,11 +28,11 @@ namespace statistic
 
     void PeerConnectionStatistic::Start()
     {
-        STAT_DEBUG("PeerConnectionStatistic::Start [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "PeerConnectionStatistic::Start [IN]");
 
         if (is_running_ == true)
         {
-            STAT_WARN("PeerConnectionStatistic is running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "PeerConnectionStatistic is running, return.");
             return;
         }
 
@@ -42,15 +45,15 @@ namespace statistic
 
         speed_info_.Start();
 
-        STAT_DEBUG("PeerConnectionStatistic::Start [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "PeerConnectionStatistic::Start [OUT]");
     }
 
     void PeerConnectionStatistic::Stop()
     {
-        STAT_DEBUG("PeerConnectionStatistic::Stop [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "PeerConnectionStatistic::Stop [IN]");
         if (is_running_ == false)
         {
-            STAT_WARN("PeerConnectionStatistic is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "PeerConnectionStatistic is not running, return.");
             return;
         }
 
@@ -59,7 +62,7 @@ namespace statistic
         Clear();
 
         is_running_ = false;
-        STAT_DEBUG("PeerConnectionStatistic::Stop [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "PeerConnectionStatistic::Stop [OUT]");
     }
 
     void PeerConnectionStatistic::Clear()

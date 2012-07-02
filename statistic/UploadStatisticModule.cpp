@@ -10,6 +10,9 @@
 namespace statistic
 {
     UploadStatisticModule::p UploadStatisticModule::inst_;
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_upload_statistic = log4cplus::Logger::getInstance("[upload_statistic]");
+#endif
 
     UploadStatisticModule::UploadStatisticModule()
         : is_running_(false)
@@ -117,7 +120,8 @@ namespace statistic
             upload_info_.peer_upload_info[i].upload_speed = iter->second.GetSpeedInfo().NowUploadSpeed;
             upload_info_.peer_upload_info[i].peer_info = upload_peer_info_[iter->first];
             i++;
-            LOG(__DEBUG, "ppbug", "IP = " << upload_info_.peer_upload_info[i].ip << " PORT = " << upload_info_.peer_upload_info[i].port);
+            LOG4CPLUS_DEBUG_LOG(logger_upload_statistic, "IP = " << upload_info_.peer_upload_info[i].ip << " PORT = " 
+                << upload_info_.peer_upload_info[i].port);
         }
 
         if (NULL != shared_memory_.GetView())

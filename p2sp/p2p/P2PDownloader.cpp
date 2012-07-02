@@ -23,15 +23,11 @@
 
 #include <framework/network/Endpoint.h>
 
-#define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
-#define P2P_INFO(s)    LOG(__INFO, "P2P", s)
-#define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
-#define P2P_WARN(s)    LOG(__WARN, "P2P", s)
-#define P2P_ERROR(s) LOG(__ERROR, "P2P", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_p2p_downloader = log4cplus::Logger::getInstance("[p2p_downloader]");
+#endif
 
     const boost::uint32_t VIP_URGENT_TIME_IN_SECOND = 15*1000;
 
@@ -69,7 +65,7 @@ namespace p2sp
             return;
         is_running_ = true;
 
-        P2P_EVENT("P2PDownloader Start" << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader Start" << shared_from_this());
 
         // init
         is_p2p_pausing_ = true;
@@ -87,7 +83,8 @@ namespace p2sp
         if (!instance_)
             return;
         block_size_ = instance_->GetBlockSize();
-        LOG(__DEBUG, "storage", "P2PDownloader::Start RID = " << rid_ << " instance = " << instance_);
+        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "P2PDownloader::Start RID = " << rid_ << 
+            " instance = " << instance_);
 
         statistic_ = statistic::StatisticModule::Inst()->AttachP2PDownloaderStatistic(this->GetRid());
         assert(statistic_);
@@ -125,7 +122,7 @@ namespace p2sp
             return;
         }
 
-        P2P_EVENT("P2PDownloader Stop" << shared_from_this());
+       LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader Stop" << shared_from_this());
         // LOG(__EVENT, "leak", __FUNCTION__ << " p2p_downloader: " << shared_from_this());
 
         // 首先停止所有的 Peer
@@ -240,13 +237,15 @@ namespace p2sp
         if (piece_info_ex_s.size() != 1)
         {
             assert(false);
-            LOG(__DEBUG, "P2P", "This is a bug in PutPieceTask");
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "This is a bug in PutPieceTask");
         }
 
         protocol::PieceInfoEx piece_info_ex = piece_info_ex_s.front();
 
-        P2P_EVENT("P2PDownloader::PutPieceTask " << shared_from_this() << " " << *(download_driver_s_.begin()) << " PieceInfoEx " << piece_info_ex);
-        LOG(__DEBUG, "bug", __FUNCTION__ << ":" << __LINE__ << " " << downloader_driver->GetDownloadDriverID() << " " << piece_info_ex);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::PutPieceTask " << shared_from_this() << " " << 
+            *(download_driver_s_.begin()) << " PieceInfoEx " << piece_info_ex);
+        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, __FUNCTION__ << ":" << __LINE__ << " " << 
+            downloader_driver->GetDownloadDriverID() << " " << piece_info_ex);
 
         // 如果 piece_tasks_ mutilmap 里面存在 (piece_info_ex, downloader_driver) 二元组
         //    ppassert() 并且不管 return
@@ -312,7 +311,8 @@ namespace p2sp
             }
         }
 
-        P2P_EVENT(__FUNCTION__ << shared_from_this() << " elapsed: " << elapsed << " peer.size() = " << peers_.size() << " return false");
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, __FUNCTION__ << shared_from_this() << " elapsed: " << elapsed << 
+            " peer.size() = " << peers_.size() << " return false");
         return can_connect_ = false;
     }
 
@@ -343,11 +343,11 @@ namespace p2sp
             // Block是传播单元
             if (peer->HasBlock(piece_info.block_index_))
             {
-                P2P_EVENT("P2PDownloader::CanDownloadPiece true" << peer);
+                LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::CanDownloadPiece true" << peer);
                 return true;
             }
         }
-        P2P_EVENT("P2PDownloader::CanDownloadPiece false");
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::CanDownloadPiece false");
         return false;
     }
 
@@ -360,8 +360,7 @@ namespace p2sp
         //
         // download_drivers_->insert(download_driver);
 
-        P2P_EVENT("P2PDownloader::AttachDownloadDriver " << download_driver);
-        // LOG(__EVENT, "leak", __FUNCTION__ << " downloader: " << shared_from_this() << " dd: " << download_driver);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::AttachDownloadDriver " << download_driver);
 
         // 查询SessionPeerCache
         std::vector<protocol::CandidatePeerInfo> peers;
@@ -370,7 +369,6 @@ namespace p2sp
             AddCandidatePeers(peers);
         }
 
-        // P2P_DEBUG("------------------------" << shared_from_this());
         // ippool_->OnP2PTimer(20);
         if (download_driver_s_.find(download_driver) == download_driver_s_.end())
         {
@@ -395,7 +393,7 @@ namespace p2sp
         piece_bitmaps_.clear();
         // 遍历DownloadDriver
 
-        P2P_EVENT("P2PDownloader::DettachDownloadDriver " << download_driver);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::DettachDownloadDriver " << download_driver);
 
         // 如果 本地的 download_drivers_ 里面已经 没有有这个 download_driver
         //      不管，直接返回
@@ -420,8 +418,6 @@ namespace p2sp
                 iter++;
         }
 /*
-        P2P_EVENT("P2PDownloader::DettachDownloadDriver " << download_driver << "piece_tasks_.size() " << piece_tasks_.size());
-
         iter = piece_tasks_.begin();
         std::map<protocol::PieceInfo, std::bitset<storage::subpiece_num_per_piece_g_> >::iterator miter = piece_bitmaps.begin();
         for (; miter != piece_bitmaps.end(), iter != piece_tasks_.end();)
@@ -489,12 +485,13 @@ namespace p2sp
 
         if (!connector_)
         {
-            P2P_ERROR("P2PDownloader::InitPeerConnection, connector_ = " << connector_);
+            LOG4CPLUS_ERROR_LOG(logger_p2p_downloader, "P2PDownloader::InitPeerConnection, connector_ = " 
+                << connector_);
             return;
         }
 
         if (true == assigner_->IsEndOfAssign() && peers_.size() >= 5) {
-            LOGX(__DEBUG, "kick", "End of assign, Do not connect peers");
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "End of assign, Do not connect peers");
             return;
         }
 
@@ -532,19 +529,22 @@ namespace p2sp
         if (peers_.size() < P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT)
             connect_count = P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT_PER_SEC;*/
 
-        P2P_EVENT("P2PDownloader::InitPeerConnection p2p_downloader = " << shared_from_this() << ", connect_count=" << connect_count << ", connecting=" << connector_->GetConnectingPeerCount() << ", peer_size=" << peers_.size());
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::InitPeerConnection p2p_downloader = " << 
+            shared_from_this() << ", connect_count=" << connect_count << ", connecting=" << 
+            connector_->GetConnectingPeerCount() << ", peer_size=" << peers_.size());
 
-        LOGX(__DEBUG, "connector", "P2PDownloader: " << shared_from_this() << ", ConnectCount: " << connect_count);
+        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "P2PDownloader: " << shared_from_this() << ", ConnectCount: " 
+            << connect_count);
         for (uint32_t i = 0; i < connect_count; ++i)
         {
             protocol::CandidatePeerInfo candidate_peer_info;
             if (false == ippool_->GetForConnect(candidate_peer_info))
             {
-                LOGX(__DEBUG, "connector", "P2PDownloader: " << shared_from_this() << ", GetForConnect Failed!");
+                LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "P2PDownloader: " << shared_from_this() << 
+                    ", GetForConnect Failed!");
                 break;
             }
 
-            // P2P_DEBUG("P2PDownloader: " << shared_from_this() << ", ConnectIP: " << candidate_peer_info);
             connector_->Connect(candidate_peer_info);
         }
     }
@@ -598,7 +598,7 @@ namespace p2sp
             }
         }
 
-        P2P_EVENT("P2PDownloader::KickPeerConnection kick_count" << kick_count);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::KickPeerConnection kick_count" << kick_count);
 
         // 往共享内存写入每秒踢掉的连接数
         statistic_->SubmitKickCount(std::min(kick_count, (int32_t)peer_kick_map.size()));
@@ -709,7 +709,8 @@ namespace p2sp
                 std::multimap<protocol::PieceInfoEx, DownloadDriver__p>::reverse_iterator last = piece_tasks_.rbegin();
 
                 non_consistent_size_ = last->first - first->first;
-                P2P_DEBUG("first piece: " << first->first << ", last piece: " << last->first << ", distance: " << non_consistent_size_);
+                LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "first piece: " << first->first << ", last piece: " << 
+                    last->first << ", distance: " << non_consistent_size_);
                 statistic_->SetNonConsistentSize(non_consistent_size_);
             }
             else
@@ -784,7 +785,7 @@ namespace p2sp
 
         if (is_p2p_pausing_)
         {
-            P2P_EVENT(__FUNCTION__ << " P2P is Paused..");
+            LOG4CPLUS_INFO_LOG(logger_p2p_downloader, __FUNCTION__ << " P2P is Paused..");
             if (times % 3*4 == 0)
             {
                 KeepConnectionAlive();
@@ -813,7 +814,8 @@ namespace p2sp
         {
             if (iter->second->LongTimeNoSee())
             {
-                P2P_EVENT("P2PDownloader::KickPeerBecourseLongTimeNoResponse " << iter->second);
+                LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::KickPeerBecourseLongTimeNoResponse " 
+                    << iter->second);
                 iter->second->Stop();
                 peers_.erase(iter++);
             }
@@ -889,7 +891,7 @@ namespace p2sp
 
                     if (iter_p == piece_tasks_.end())
                     {
-                        P2P_DEBUG(__FUNCTION__ << " RequestNextPiece Num = 1");
+                        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, __FUNCTION__ << " RequestNextPiece Num = 1");
                         if (true == (*iter)->RequestNextPiece(shared_from_this()))
                         {
                             // 只有当有一个dd分配任务成功 才表明连接上
@@ -1048,16 +1050,24 @@ namespace p2sp
                )
             {
                 if (error_packet.error_code_ == protocol::ErrorPacket::PPV_EXCHANGE_NO_RESOURCEID) {
-                    LOGX(__DEBUG, "conn", "ErrorPacket::PPV_EXCHANGE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << ", endpoint = " << packet.end_point);
+                    LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, 
+                        "ErrorPacket::PPV_EXCHANGE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << 
+                        ", endpoint = " << packet.end_point);
                 }
                 if (error_packet.error_code_ == protocol::ErrorPacket::PPV_CONNECT_NO_RESOURCEID) {
-                    LOGX(__DEBUG, "conn", "ErrorPacket::PPV_CONNECT_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << ", endpoint = " << packet.end_point);
+                    LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, 
+                        "ErrorPacket::PPV_CONNECT_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << 
+                        ", endpoint = " << packet.end_point);
                 }
                 if (error_packet.error_code_ == protocol::ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID) {
-                    LOGX(__DEBUG, "conn", "ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << ", endpoint = " << packet.end_point);
+                    LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, 
+                        "ErrorPacket::PPV_SUBPIECE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << 
+                        ", endpoint = " << packet.end_point);
                 }
                 if (error_packet.error_code_ == protocol::ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID) {
-                    LOGX(__DEBUG, "conn", "ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << ", endpoint = " << packet.end_point);
+                    LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, 
+                        "ErrorPacket::PPV_ANNOUCE_NO_RESOURCEID, p2p_downloader = " << shared_from_this() << 
+                        ", endpoint = " << packet.end_point);
                 }
 
                 if (peers_.find(error_packet.end_point) != peers_.end()) {
@@ -1119,7 +1129,7 @@ namespace p2sp
                     data_rate_ = filelen / duration;
             }
         }
-        P2P_EVENT(__FUNCTION__ << " DataRate = " << data_rate_);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, __FUNCTION__ << " DataRate = " << data_rate_);
         return data_rate_ == 0 ? 30 * 1024 : data_rate_;
     }
 
@@ -1132,11 +1142,10 @@ namespace p2sp
         for (it = peers_.begin(); it != peers_.end(); ++it)
         {
             ConnectionBase__p peer = it->second;
-            // P2P_DEBUG(__FUNCTION__ << " PeerNowDownloadSpeed=" << peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed);
             if (peer && peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed > 500)
                 ++active_peer_count_;
         }
-        P2P_DEBUG(__FUNCTION__ << " ActivePeerCount=" << active_peer_count_);
+        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, __FUNCTION__ << " ActivePeerCount=" << active_peer_count_);
         return active_peer_count_;
     }
 
@@ -1162,7 +1171,7 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
-        P2P_EVENT("SetDownloadMode " << mode);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "SetDownloadMode " << mode);
         dl_mode_ = mode;
     }
 
@@ -1255,7 +1264,7 @@ namespace p2sp
 
         if (piece_tasks_.empty())
         {
-            P2P_DEBUG("CanPreemptive piece_tasks_.empty()");
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "CanPreemptive piece_tasks_.empty()");
             return true;
         }
 
@@ -1272,7 +1281,7 @@ namespace p2sp
 
         if (!is_first_piece)
         {
-            P2P_DEBUG("CanPreemptive: !is_first_piece");
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "CanPreemptive: !is_first_piece");
             return false;
         }
         else
@@ -1298,7 +1307,7 @@ namespace p2sp
                     ++missing_subpiece_count;
             }
 
-            P2P_DEBUG("missing_subpiece_count:" << missing_subpiece_count);
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "missing_subpiece_count:" << missing_subpiece_count);
 
 
             if (missing_subpiece_count >= 10)
@@ -1324,7 +1333,8 @@ namespace p2sp
             if (iter->second == download_driver_)
             {
                 piece_tasks_.erase(iter++);
-                P2P_EVENT(shared_from_this() << " Stop Download Piece " << piece << ", download_driver_:" << download_driver_);
+                LOG4CPLUS_INFO_LOG(logger_p2p_downloader, shared_from_this() << " Stop Download Piece " << piece << 
+                    ", download_driver_:" << download_driver_);
             }
             else
             {
@@ -1381,7 +1391,7 @@ namespace p2sp
         {
             rate = GetStatistic()->GetUDPLostRate();
             rate = (1 - (float)GetStatistic()->GetUDPLostRate() / (float)100) + 0.001;
-            LOG(__DEBUG, "test", "RATE = " << rate);
+            LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "RATE = " << rate);
         }
 
         boost::int32_t speed_limit = 0;
@@ -1407,7 +1417,8 @@ namespace p2sp
 
         LIMIT_MIN_MAX(p2p_max_connect_count_, P2SPConfigs::P2P_DOWNLOAD_MIN_CONNECT_COUNT, P2SPConfigs::P2P_DOWNLOAD_MAX_CONNECT_COUNT);
 */
-        P2P_EVENT(shared_from_this() << " SetSpeedLimitInKBps: " << speed_limit_in_KBps << ", p2p_max_connect_count_ = " << p2p_max_connect_count_);
+        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, shared_from_this() << " SetSpeedLimitInKBps: " << 
+            speed_limit_in_KBps << ", p2p_max_connect_count_ = " << p2p_max_connect_count_);
     }
 
     statistic::SPEED_INFO P2PDownloader::GetSpeedInfo()
@@ -1529,7 +1540,8 @@ namespace p2sp
         for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter = peers_.begin(); iter != peers_.end();iter++)
         {
             ConnectionBase__p peer  = iter->second;
-            P2P_EVENT("Assigner::CaclPeerConnectionRecvTimeMap peer : " << peer << ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
+            LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "Assigner::CaclPeerConnectionRecvTimeMap peer : " << peer << 
+                ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
             peer->GetStatistic()->SetAssignedLeftSubPieceCount(peer->GetTaskQueueSize());
         }
     }
@@ -1603,7 +1615,7 @@ namespace p2sp
     {
         boost::uint32_t data_rate = GetDataRate();
 
-        LOGX(__DEBUG, "kick", "NeedConnectNewConnection = " << shared_from_this()
+        LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "NeedConnectNewConnection = " << shared_from_this()
             << "IsEndOfAssign" << assigner_->IsEndOfAssign()
             << ", NowDownloadSpeed " << GetCurrentDownloadSpeed() 
             << ", data_rate " << data_rate);

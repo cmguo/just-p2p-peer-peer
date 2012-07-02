@@ -12,7 +12,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("proxy");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_proxy = log4cplus::Logger::getInstance("[flv_drag_proxy_sender]");
+#endif
 
     void FlvDragProxySender::Start()
     {
@@ -28,7 +30,7 @@ namespace p2sp
     {
         if (is_running_ == true) return;
 
-        LOG(__EVENT, "proxy", "FlvDragProxySender::Start");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "FlvDragProxySender::Start");
 
         is_running_ = true;
 
@@ -42,7 +44,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        LOG(__EVENT, "proxy", "FlvDragProxySender::Stop");
+        LOG4CPLUS_INFO_LOG(logger_proxy, "FlvDragProxySender::Stop");
 
         if (http_server_socket_)
         {
@@ -102,10 +104,8 @@ namespace p2sp
         playing_position_ += buffer.Length();
 
 
-        // LOG(__INFO, "proxy", "ProxyConnection::OnAsyncGetSubPieceSucced GetSendPendingCount = " << http_server_socket_->GetSendPendingCount());
         // if (http_server_socket_->GetSendPendingCount() > 200)
         // {
-        //    LOG(__WARN, "proxy", "ProxyConnection::OnAsyncGetSubPieceSucced but GetSendPendingCount" << http_server_socket_->GetSendPendingCount() << " > 200 So Close It");
         //    WillStop();
         // }
     }
@@ -138,7 +138,7 @@ namespace p2sp
         if (true == is_response_header_)
             return;
 
-        LOG(__EVENT, "proxy", __FUNCTION__ << ": Notice 403 header");
+        LOG4CPLUS_INFO_LOG(logger_proxy, __FUNCTION__ << ": Notice 403 header");
 
         http_server_socket_->HttpSend403Header();
     }

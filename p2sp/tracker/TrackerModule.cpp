@@ -8,7 +8,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("tracker");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_tracker = log4cplus::Logger::getInstance("[tracker_module]");
+#endif
 
     TrackerModule::p TrackerModule::inst_;
     boost::mutex TrackerModule::mu_;
@@ -17,7 +19,7 @@ namespace p2sp
     {
         if (is_running_ == true)
         {
-            LOG(__WARN, "tracker", "TrackerModule is running...");
+            LOG4CPLUS_WARN_LOG(logger_tracker, "TrackerModule is running...");
             return;
         }
 
@@ -56,7 +58,7 @@ namespace p2sp
     {
         if (is_running_ == false)
         {
-            LOG(__WARN, "tracker", "Tracker Manager is not running. Return.");
+            LOG4CPLUS_WARN_LOG(logger_tracker, "Tracker Manager is not running. Return.");
             return;
         }
 

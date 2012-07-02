@@ -17,6 +17,9 @@
 
 namespace statistic
 {
+#ifdef LOG_ENABLE
+     static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[download_driver_statistic]");
+#endif
     DownloadDriverStatistic::DownloadDriverStatistic(uint32_t id, bool is_create_share_memory)
         : is_running_(false)
         , download_driver_id_(id)
@@ -32,10 +35,10 @@ namespace statistic
 
     void DownloadDriverStatistic::Start()
     {
-        STAT_DEBUG("DownloadDriverStatistic::Start [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::Start [IN]");
         if (is_running_ == true)
         {
-            STAT_WARN("DownloadDriverStatistic is running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic is running, return.");
             return;
         }
 
@@ -46,7 +49,7 @@ namespace statistic
         download_driver_statistic_info_.DownloadDriverID = download_driver_id_;
         SetOriginalUrl(original_url_);
         SetOriginalReferUrl(original_refer_url_);
-        STAT_DEBUG("    Download Driver ID: " << download_driver_id_);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "    Download Driver ID: " << download_driver_id_);
 
         download_driver_statistic_info_.IsHidden = false;
 
@@ -56,24 +59,24 @@ namespace statistic
         {
             if (CreateSharedMemory() == false)
             {
-                STAT_ERROR("Shared Memory Creation Failed: DownloadDriverStatistic");
+                LOG4CPLUS_ERROR_LOG(logger_statistic,"Shared Memory Creation Failed: DownloadDriverStatistic");
             }
         }
 
-        STAT_DEBUG("DownloadDriverStatistic::Start [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::Start [OUT]");
     }
 
     void DownloadDriverStatistic::Stop()
     {
-        STAT_DEBUG("DownloadDriverStatistic::Stop [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::Stop [IN]");
         if (is_running_ == false)
         {
-            STAT_WARN("DownloadDriverStatistic is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic is not running, return.");
             return;
         }
 
         speed_info_.Stop();
-        STAT_DEBUG("   Speed Info Stopped.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "   Speed Info Stopped.");
 
         Clear();
 
@@ -86,10 +89,10 @@ namespace statistic
         }
 
         shared_memory_.Close();
-        STAT_DEBUG("   Shared Memory Closed.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "   Shared Memory Closed.");
 
         is_running_ = false;
-        STAT_DEBUG("DownloadDriverStatistic::Stop [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::Stop [OUT]");
     }
 
     void DownloadDriverStatistic::Clear()
@@ -98,7 +101,7 @@ namespace statistic
         download_driver_statistic_info_.Clear();
         peer_info_.Clear();
         DetachAllHttpDownloaderStatistic();
-        STAT_DEBUG("DownloadDriverStatistic::Clear");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::Clear");
     }
 
     bool DownloadDriverStatistic::IsRunning() const
@@ -115,10 +118,10 @@ namespace statistic
 
     void DownloadDriverStatistic::OnShareMemoryTimer(uint32_t times)
     {
-        STAT_DEBUG("DownloadDriverStatistic::OnShareMemoryTimer [IN], times: " << times);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::OnShareMemoryTimer [IN], times: " << times);
         if (is_running_ == false)
         {
-            STAT_WARN("DownloadDriverStatistic is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic is not running, return.");
             return;
         }
 
@@ -134,9 +137,9 @@ namespace statistic
             assert(oa);
 
             // memcpy(shared_memory_.GetView(), &info, GetSharedMemorySize());
-            STAT_DEBUG("Write DOWNLOADDRIVER_STATISTIC_INFO into SharedMemory");
+            LOG4CPLUS_DEBUG_LOG(logger_statistic, "Write DOWNLOADDRIVER_STATISTIC_INFO into SharedMemory");
         }
-        STAT_DEBUG("DownloadDriverStatistic::OnShareMemoryTimer [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::OnShareMemoryTimer [OUT]");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -182,11 +185,12 @@ namespace statistic
 
     bool DownloadDriverStatistic::DetachHttpDownloaderStatistic(const string& url)
     {
-        STAT_DEBUG("DownloadDriverStatistic::DetachHttpDownloaderStatistic [IN], Url: " << url);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::DetachHttpDownloaderStatistic [IN], Url: " 
+            << url);
 
         if (is_running_ == false)
         {
-            STAT_WARN("DownloadDriverStatistic is not running. return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic is not running. return false.");
             return false;
         }
 
@@ -194,7 +198,7 @@ namespace statistic
         HttpDownloaderStatisticMap::iterator it = http_downloader_statistic_map_.find(url);
         if (it == http_downloader_statistic_map_.end())
         {
-            STAT_WARN("Return false. Can not find given url: " << url);
+            LOG4CPLUS_WARN_LOG(logger_statistic,"Return false. Can not find given url: " << url);
             return false;
         }
 
@@ -202,9 +206,9 @@ namespace statistic
 
         it->second->Stop();
         http_downloader_statistic_map_.erase(it);
-        STAT_DEBUG("Stopped HttpDownloader Statistic, and erased from std::map.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Stopped HttpDownloader Statistic, and erased from std::map.");
 
-        STAT_DEBUG("DownloadDriverStatistic::DetachHttpDownloaderStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::DetachHttpDownloaderStatistic [OUT]");
         return true;
     }
 
@@ -234,14 +238,16 @@ namespace statistic
     {
         original_url_ = original_url;
         framework::string::Url::truncate_to(original_url, download_driver_statistic_info_.OriginalUrl);
-        STAT_DEBUG("DownloadDriverStatistic::SetOriginalReferUrl, Original Url: " << original_url);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::SetOriginalReferUrl, Original Url: " 
+            << original_url);
     }
 
     void DownloadDriverStatistic::SetOriginalReferUrl(const string& original_refer_url)
     {
         original_refer_url_ = original_refer_url;
         framework::string::Url::truncate_to(original_refer_url, download_driver_statistic_info_.OriginalReferUrl);
-        STAT_DEBUG("DownloadDriverStatistic::SetOriginalReferUrl, Original Refer Url: " << original_refer_url);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::SetOriginalReferUrl, Original Refer Url: " 
+            << original_refer_url);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -348,10 +354,10 @@ namespace statistic
 
     void DownloadDriverStatistic::UpdateSpeedInfo()
     {
-        STAT_DEBUG("DownloadDriverStatistic::UpdateSpeedInfo");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::UpdateSpeedInfo");
         if (is_running_ == false)
         {
-            STAT_WARN("DownloadDriverStatistic Module is not running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic Module is not running, return.");
             return;
         }
 
@@ -360,15 +366,15 @@ namespace statistic
 
     void DownloadDriverStatistic::UpdateHttpDownloaderInfo()
     {
-        STAT_DEBUG("DownloadDriverStatistic::UpdateHttpDownloaderInfo [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::UpdateHttpDownloaderInfo [IN]");
         if (is_running_ == false)
         {
-            STAT_WARN("DownloadDriverStatistic module is running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "DownloadDriverStatistic module is running, return.");
             return;
         }
 
         download_driver_statistic_info_.HttpDownloaderCount = http_downloader_statistic_map_.size();
-        STAT_DEBUG("Http Downloader Count: " << http_downloader_statistic_map_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Http Downloader Count: " << http_downloader_statistic_map_.size());
 
         assert(download_driver_statistic_info_.HttpDownloaderCount <= GetMaxHttpDownloaderCount());
 
@@ -378,7 +384,7 @@ namespace statistic
             assert(it->second);
             download_driver_statistic_info_.HttpDownloaders[i] = it->second->GetHttpDownloaderInfo();
         }
-        STAT_DEBUG("DownloadDriverStatistic::UpdateHttpDownloaderInfo [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::UpdateHttpDownloaderInfo [OUT]");
     }
 
     //////////////////////////////////////////////////////////////////////////

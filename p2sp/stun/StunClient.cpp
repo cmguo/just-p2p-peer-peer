@@ -38,8 +38,9 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #endif
 
-#define STUN_INFO(s) LOG(__INFO, "stun", s)
-FRAMEWORK_LOGGER_DECLARE_MODULE("stun");
+#ifdef LOG_ENABLE
+static log4cplus::Logger logger_stun = log4cplus::Logger::getInstance("[stun_client]");
+#endif
 
 namespace p2sp
 {
@@ -120,29 +121,29 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
         NatType stype = stunNatType(stunServerAddr, verbose, &presPort, &hairpin, srcPort, &sAddr[nic], &m_Socket1,
             &m_Socket2);
 
-        STUN_INFO("getNatType server:" << string(pcServer, 5));
+        LOG4CPLUS_INFO_LOG(logger_stun, "getNatType server:" << string(pcServer, 5));
         DebugLog("getNatType type:%d", (int)stype);
         switch (stype)
         {
         case StunTypeFailure:
             snt_type = protocol::TYPE_ERROR;
-            STUN_INFO("type=StunTypeFailure");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeFailure");
             break;
         case StunTypeUnknown:
             snt_type = protocol::TYPE_ERROR;
-            STUN_INFO("type=StunTypeUnknown");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeUnknown");
             break;
         case StunTypeOpen:
             snt_type = protocol::TYPE_PUBLIC;
-            STUN_INFO("type=StunTypeOpen");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeOpen");
             break;
         case StunTypeFirewall:
             snt_type = protocol::TYPE_ERROR;
-            STUN_INFO("type=StunTypeFirewall");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeFirewall");
             break;
         case StunTypeBlocked:
             snt_type = protocol::TYPE_ERROR;
-            STUN_INFO("type=StunTypeBlocked");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeBlocked");
             break;
 
         case StunTypeConeNat:
@@ -150,7 +151,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_FULLCONENAT"), m_strConfig.c_str());
 #endif
             snt_type = protocol::TYPE_FULLCONENAT;
-            STUN_INFO("type=StunTypeConeNat");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeConeNat");
             break;
 
         case StunTypeRestrictedNat:
@@ -158,7 +159,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_IP_RESTRICTEDNAT"), m_strConfig.c_str());
 #endif
             snt_type = protocol::TYPE_IP_RESTRICTEDNAT;
-            STUN_INFO("type=StunTypeRestrictedNat");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeRestrictedNat");
             break;
 
         case StunTypePortRestrictedNat:
@@ -166,7 +167,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_IP_PORT_RESTRICTEDNAT"), m_strConfig.c_str());
 #endif
             snt_type = protocol::TYPE_IP_PORT_RESTRICTEDNAT;
-            STUN_INFO("type=StunTypePortRestrictedNat");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypePortRestrictedNat");
             break;
 
         case StunTypeSymNat:
@@ -174,7 +175,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("protocol::TYPE_SYMNAT"), m_strConfig.c_str());
 #endif
             snt_type = protocol::TYPE_SYMNAT;
-            STUN_INFO("type=StunTypeSymNat");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=StunTypeSymNat");
             break;
 
         default:
@@ -182,7 +183,7 @@ protocol::MY_STUN_NAT_TYPE CStunClient::getNatType(char *pcServer)
             WritePrivateProfileStringA(("PPVA"), ("NATTYPE"), ("Unkown NAT type"), m_strConfig.c_str());
 #endif
             snt_type = protocol::TYPE_ERROR;
-            STUN_INFO("type=TYPE_ERROR");
+            LOG4CPLUS_INFO_LOG(logger_stun, "type=TYPE_ERROR");
             break;
         }
 

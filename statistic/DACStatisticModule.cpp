@@ -19,7 +19,9 @@ using namespace p2sp;
 
 namespace statistic
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("dacstatistic");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_dac_statistic = log4cplus::Logger::getInstance("[dac_statistic]");
+#endif
 
     DACStatisticModule::p DACStatisticModule::inst_;
 
@@ -56,7 +58,7 @@ namespace statistic
     void DACStatisticModule::SetIntervalTime(boost::uint8_t interval_time)
     {
         m_IntervalTime = interval_time;
-        LOG(__DEBUG, "statistic", "interval_time = " << (int)m_IntervalTime);
+        LOG4CPLUS_DEBUG_LOG(logger_dac_statistic, "interval_time = " << (int)m_IntervalTime);
     }
 
     boost::uint8_t DACStatisticModule::GetIntervalTime()
@@ -165,8 +167,8 @@ namespace statistic
 
         string log = log_stream.str();
 
-        LOGX(__DEBUG, "msg", "UM_PERIOD_DAC_STATISTIC");
-        LOGX(__DEBUG, "msg", "  log = " << log);
+        LOG4CPLUS_DEBUG_LOG(logger_dac_statistic, "UM_PERIOD_DAC_STATISTIC");
+        LOG4CPLUS_DEBUG_LOG(logger_dac_statistic, "  log = " << log);
 
         // herain:2010-12-31:创建并填充实际发送给客户端的消息结构
         LPPERIOD_DAC_STATISTIC_INFO upload_data =

@@ -13,19 +13,15 @@
 
 #include <protocol/StunServerPacket.h>
 
-#define P2P_DEBUG(s) LOG(__DEBUG, "P2P", s)
-#define P2P_INFO(s)    LOG(__INFO, "P2P", s)
-#define P2P_EVENT(s) LOG(__EVENT, "P2P", s)
-#define P2P_WARN(s)    LOG(__WARN, "P2P", s)
-#define P2P_ERROR(s) LOG(__ERROR, "P2P", s)
-
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("p2p");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_peer_connector = log4cplus::Logger::getInstance("[peer_connector]");
+#endif
     void PeerConnector::Start(boost::shared_ptr<IConnectTimeoutHandler> connect_timeout_handler)
     {
         if (is_running_ == true) return;
-        P2P_INFO("PeerConnector::Start");
+        LOG4CPLUS_INFO_LOG(logger_peer_connector, "PeerConnector::Start");
 
         is_running_ = true;
 
@@ -36,7 +32,7 @@ namespace p2sp
 
     void PeerConnector::Stop()
     {
-        P2P_INFO("PeerConnector::STOP");
+        LOG4CPLUS_INFO_LOG(logger_peer_connector, "PeerConnector::STOP");
         if (is_running_ == false) return;
 
         // 清空 connecting_peers_
@@ -64,7 +60,8 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        P2P_INFO("PeerConnector::Connect: UP = " << (boost::uint32_t)candidate_peer_info.UploadPriority << ", " << candidate_peer_info);
+        LOG4CPLUS_INFO_LOG(logger_peer_connector, "PeerConnector::Connect: UP = " << 
+            (boost::uint32_t)candidate_peer_info.UploadPriority << ", " << candidate_peer_info);
         // 从 candidate_peer_info 中获得 EndPoint
         // b oost::asio::ip::udp::endpoint ep = candidate_peer_info.GetWanEndPoint();
         // 看 connecting_peers_ 里面是否已经存在这个Endpoint 了
@@ -110,7 +107,8 @@ namespace p2sp
             AppModule::Inst()->DoSendPacket(packet, candidate_peer_info.PeerVersion);
             AppModule::Inst()->DoSendPacket(packet, candidate_peer_info.PeerVersion);
 
-            LOGX(__DEBUG, "conn", "P2PDownloader: " << p2p_downloader_ << ", Endpoint: " << end_point << ", PeerInfo: " << candidate_peer_info);
+            LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "P2PDownloader: " << p2p_downloader_ << ", Endpoint: " << 
+                end_point << ", PeerInfo: " << candidate_peer_info);
             ConnectingPeer::p connecting_peer = ConnectingPeer::create(candidate_peer_info);
             connecting_peers_.insert(std::make_pair(end_point, connecting_peer));
 
@@ -126,7 +124,7 @@ namespace p2sp
                 {
                     connect_type = protocol::CONNECT_VOD;
                 }
-                LOGX(__DEBUG, "conn", "StunInvoke");
+                LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "StunInvoke");
                 protocol::StunInvokePacket stun_invoke_packet(
                     protocol::Packet::NewTransactionID(), 
                     p2p_downloader_->GetRid(), 
@@ -146,7 +144,8 @@ namespace p2sp
         }
         else
         {
-            P2P_INFO("FindConnectingPeerEndPoint(end_point) exist " << connecting_peers_.size());
+            LOG4CPLUS_INFO_LOG(logger_peer_connector, "FindConnectingPeerEndPoint(end_point) exist " << 
+                connecting_peers_.size());
         }
     }
 
@@ -166,7 +165,8 @@ namespace p2sp
             ConnectingPeer::p peer = iter->second;
             if (peer->IsTimeOut())
             {
-                LOGX(__DEBUG, "conn", "Connect Timeout, P2PDownloader: " << shared_from_this() << ", Endpoint: " << iter->first);
+                LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "Connect Timeout, P2PDownloader: " << shared_from_this() 
+                    << ", Endpoint: " << iter->first);
                 ippool_->OnConnectTimeout(iter->first);
                 if (connect_timeout_handler_)
                 {
@@ -185,7 +185,8 @@ namespace p2sp
     void PeerConnector::OnReConectPacket(protocol::ConnectPacket const & packet)
     {
         if (is_running_ == false) return;
-        LOGX(__DEBUG, "conn", "Endpoint = " << packet.end_point << ", AvgUpload: " << packet.peer_download_info_.AvgUpload << ", NowUpload:" << packet.peer_download_info_.NowUpload);
+        LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "Endpoint = " << packet.end_point << ", AvgUpload: " 
+            << packet.peer_download_info_.AvgUpload << ", NowUpload:" << packet.peer_download_info_.NowUpload);
 
         // 连接成功报文
         // assert(连接失败报文);
@@ -198,7 +199,8 @@ namespace p2sp
 
         if (p2p_downloader_->GetConnectedPeersCount() > p2p_downloader_->GetMaxConnectCount())
         {
-            LOGX(__DEBUG, "conn", "Endpoint = " << packet.end_point << ", ConnectedCount = " << p2p_downloader_->GetConnectedPeersCount() << " > " << p2p_downloader_->GetMaxConnectCount());
+            LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "Endpoint = " << packet.end_point << ", ConnectedCount = " 
+                << p2p_downloader_->GetConnectedPeersCount() << " > " << p2p_downloader_->GetMaxConnectCount());
             return;
         }
 
@@ -209,10 +211,11 @@ namespace p2sp
             {
                 // 点播
                 // ! 屏蔽旧版Peer
-                LOGX(__DEBUG, "conn", " PeerEndpoint: " << packet.end_point << " Version: " << packet.peer_guid_);
+                LOG4CPLUS_DEBUG_LOG(logger_peer_connector, " PeerEndpoint: " << packet.end_point << " Version: " 
+                    << packet.peer_guid_);
                 if (packet.peer_version_ <= 0x00000006)
                 {
-                    LOGX(__DEBUG, "conn", "PeerVersion tooooooold: " << packet.peer_guid_);
+                    LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "PeerVersion tooooooold: " << packet.peer_guid_);
                     return;
                 }
 
@@ -271,7 +274,8 @@ namespace p2sp
             ippool_->OnConnectSucced(packet.end_point);
             EraseConnectingPeer(packet.end_point);
 
-            LOGX(__DEBUG, "conn", "Peer Connected. P2PDownloader = " << p2p_downloader_ << ", Endpoint = " << packet.end_point << ", PeerGuid = " << packet.peer_guid_);
+            LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "Peer Connected. P2PDownloader = " << p2p_downloader_ << 
+                ", Endpoint = " << packet.end_point << ", PeerGuid = " << packet.peer_guid_);
         }
     }
 
@@ -314,7 +318,7 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        P2P_INFO("PeerConnector::OnErrorPacket " << packet.end_point);
+        LOG4CPLUS_INFO_LOG(logger_peer_connector, "PeerConnector::OnErrorPacket " << packet.end_point);
         // 连接失败报文
         // assert(连接失败报文);
         //
@@ -325,18 +329,21 @@ namespace p2sp
         // 将来还会把信息反馈给 IpPool
         if (false == FindConnectingPeerEndPoint(packet.end_point))
         {
-            LOGX(__DEBUG, "upload", "PeerNotInConnectingSet, P2PDownloader = " << p2p_downloader_ << ", EndPoint = " << packet.end_point);
+            LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "PeerNotInConnectingSet, P2PDownloader = " << p2p_downloader_ 
+                << ", EndPoint = " << packet.end_point);
         }
         else
         {
             if (packet.error_code_ == protocol::ErrorPacket::PPV_CONNECT_NO_RESOURCEID)
             {
-                LOGX(__DEBUG, "upload", "ippool_->OnConnectFailed(), P2PDownloader = " << p2p_downloader_ << ", EndPoint = " << packet.end_point);
+                LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "ippool_->OnConnectFailed(), P2PDownloader = " 
+                    << p2p_downloader_ << ", EndPoint = " << packet.end_point);
                 ippool_->OnConnectFailed(packet.end_point);
             }
             else
             {
-                LOGX(__DEBUG, "upload", "ippool_->OnConnectTimeout(), P2PDownloader = " << p2p_downloader_ << ", EndPoint = " << packet.end_point);
+                LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "ippool_->OnConnectTimeout(), P2PDownloader = " 
+                    << p2p_downloader_ << ", EndPoint = " << packet.end_point);
                 ippool_->OnConnectTimeout(packet.end_point);
             }
             EraseConnectingPeer(packet.end_point);

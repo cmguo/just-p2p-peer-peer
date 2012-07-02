@@ -21,9 +21,6 @@
 #include <TlHelp32.h>
 #endif
 
-#define PUSH_DEBUG(msg) LOG(__DEBUG, "push", __FUNCTION__ << " " << msg)
-#define PUSH_WARN(msg) LOG(__WARN, "push", __FUNCTION__ << " " << msg)
-
 static const std::string PUSH_SERVER = "ppvaps.pplive.com";
 static const boost::uint16_t PUSH_SERVER_PORT = 6900;
 static const std::string PLAY_HISTORY_FILE = "playhistory.dat"; 
@@ -32,7 +29,9 @@ static const boost::uint16_t PUSH_SERVER_PROCESS_NUM = 4;
 namespace p2sp
 {
 #ifdef DISK_MODE
-    FRAMEWORK_LOGGER_DECLARE_MODULE("push");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_push = log4cplus::Logger::getInstance("[push_module]");
+#endif
     //////////////////////////////////////////////////////////////////////////
     // States
     namespace push
@@ -104,7 +103,7 @@ namespace p2sp
             return;
         }
 
-        PUSH_DEBUG("Start");
+        LOG4CPLUS_DEBUG_LOG(logger_push, "Start");
 
         is_running_ = true;
 
@@ -159,7 +158,7 @@ namespace p2sp
         framework::network::Endpoint ep(ip, port);
         push_server_endpoint_ = ep;
 
-        PUSH_DEBUG("ServerEndpoint = " << push_server_endpoint_);
+        LOG4CPLUS_DEBUG_LOG(logger_push, "ServerEndpoint = " << push_server_endpoint_);
 
         DoQueryPushTask();
     }
@@ -170,7 +169,7 @@ namespace p2sp
             return;
         }
 
-        PUSH_DEBUG("resolve dns failed");
+        LOG4CPLUS_DEBUG_LOG(logger_push, "resolve dns failed");
         state_.domain_ = push::DOMAIN_NONE;
     }
 
@@ -252,16 +251,16 @@ namespace p2sp
 
         state_.task_ = push::TASK_QUERY;
         if (push::DOMAIN_HAVE == state_.domain_) {
-            PUSH_DEBUG("DOMAIN_HAVE, QueryTask; Server = " << push_server_endpoint_);
+            LOG4CPLUS_DEBUG_LOG(logger_push, "DOMAIN_HAVE, QueryTask; Server = " << push_server_endpoint_);
             SendQueryPushTaskPacket();
         }
         else if (push::DOMAIN_NONE == state_.domain_) {
             // resolve
-            PUSH_DEBUG("DOMAIN_NONE, ResolveDomain");
+            LOG4CPLUS_DEBUG_LOG(logger_push, "DOMAIN_NONE, ResolveDomain");
             DoResolvePushServer();
         }
         else if (push::DOMAIN_RESOLVE == state_.domain_) {
-            PUSH_DEBUG("Push::DOMAIN_RESOLVE");
+            LOG4CPLUS_DEBUG_LOG(logger_push, "Push::DOMAIN_RESOLVE");
         }
         else {
             BOOST_ASSERT(!"Invalid Domain State");
@@ -298,7 +297,7 @@ namespace p2sp
             return;
         }
 
-        PUSH_DEBUG("PushServer = " << push_server_domain_ << ":" << push_server_port_);
+        LOG4CPLUS_DEBUG_LOG(logger_push, "PushServer = " << push_server_domain_ << ":" << push_server_port_);
         state_.domain_ = push::DOMAIN_RESOLVE;
         network::Resolver::p resolver =
             network::Resolver::create(global_io_svc(), push_server_domain_, push_server_port_, shared_from_this());
@@ -325,7 +324,8 @@ namespace p2sp
             }
         }
         else {
-            PUSH_DEBUG("InvalidTransID From " << response.end_point << ", TransID " << response.transaction_id_);
+            LOG4CPLUS_DEBUG_LOG(logger_push, "InvalidTransID From " << response.end_point << ", TransID " << 
+                response.transaction_id_);
         }
     }
 
@@ -368,7 +368,8 @@ namespace p2sp
         BOOST_ASSERT(push::USER_NONE == state_.user_);
         speed_limit = 1.0 * bandwidth * task_param_.BandwidthRatioWhenNormal / (255 * 1024);
         LimitMinMax(speed_limit, task_param_.MinDownloadSpeedInKBps, task_param_.MaxDownloadSpeedInKBpsWhenNormal);
-        PUSH_DEBUG(" USER_NONE, SpeedLimit = " << speed_limit << ", BandWidth = " << statistic::StatisticModule::Inst()->GetBandWidth());
+        LOG4CPLUS_DEBUG_LOG(logger_push, " USER_NONE, SpeedLimit = " << speed_limit << ", BandWidth = " << 
+            statistic::StatisticModule::Inst()->GetBandWidth());
        
         if (global_speed_limit_in_kbps_ >= 0) {
             LIMIT_MAX(speed_limit, global_speed_limit_in_kbps_);

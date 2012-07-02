@@ -17,7 +17,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("tinydrag");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_http_tiny_drag = log4cplus::Logger::getInstance("[http_drag_downloader]");
+#endif
     static const int max_error_num_per_domain = 2;
 
     HttpDragDownloader::p HttpDragDownloader::Create(boost::asio::io_service & io_svc, DownloadDriver__p download_driver,
@@ -87,7 +89,7 @@ namespace p2sp
 
             proxy_client_->Connect();
             DebugLog("Udp Proxy Connect %s", request_url.c_str());
-            LOG(__DEBUG, "", "Udp Proxy Connect " << request_url);
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "Udp Proxy Connect " << request_url);
         }
         else
         {
@@ -102,7 +104,7 @@ namespace p2sp
             client_->SetRecvTimeout(5 * 1000);
             client_->Connect();
             DebugLog("Connect %s", request_url.c_str());
-            LOG(__DEBUG, "", "Connect " << request_url);
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "Connect " << request_url);
         }
     }
 
@@ -123,7 +125,7 @@ namespace p2sp
     void HttpDragDownloader::OnConnectSucced()
     {
         DebugLog("HttpDragDownloader::OnConnectSucced");
-        LOG(__DEBUG, "", "HttpDragDownloader::OnConnectSucced");
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectSucced");
         if (using_udp_proxy_)
         {
             proxy_client_->HttpGet();
@@ -137,14 +139,15 @@ namespace p2sp
     void HttpDragDownloader::OnConnectFailed(uint32_t error_code)
     {
         DebugLog("HttpDragDownloader::OnConnectFailed error_code:%d, error_times:%d", (int)error_code, error_times_);
-        LOG(__DEBUG, "", "HttpDragDownloader::OnConnectFailed error_code:" << error_code << ", error_times:" << error_times_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectFailed error_code:" << error_code 
+            << ", error_times:" << error_times_);
         DealError(error_code == 2 || error_code ==3);
     }
 
     void HttpDragDownloader::OnConnectTimeout()
     {
         DebugLog("HttpDragDownloader::OnConnectTimeout error_times:%d", error_times_);
-        LOG(__DEBUG, "", "HttpDragDownloader::OnConnectTimeout error_times:" << error_times_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectTimeout error_times:" << error_times_);
         DealError();
     }
 
@@ -156,7 +159,8 @@ namespace p2sp
         {
         case 200:
             DebugLog("HttpDragDownloader::OnRecvHttpHeaderSucced drag_length:%d", http_response->GetContentLength());
-            LOG(__DEBUG, "", "HttpDragDownloader::OnRecvHttpHeaderSucced drag_length:" << http_response->GetContentLength());
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpHeaderSucced drag_length:" 
+                << http_response->GetContentLength());
 
             drag_length_ = http_response->GetContentLength();
             drag_string_.clear();
@@ -172,8 +176,8 @@ namespace p2sp
     {
         DebugLog("HttpDragDownloader::OnRecvHttpHeaderFailed error_code:%d, error_times:%d", 
             (int)error_code, error_times_);
-        LOG(__DEBUG, "", "HttpDragDownloader::OnRecvHttpHeaderFailed error_code:" << error_code
-            << ", error_times:" << error_times_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpHeaderFailed error_code:" 
+            << error_code << ", error_times:" << error_times_);
         DealError();
     }
 
@@ -188,7 +192,7 @@ namespace p2sp
     {
         DebugLog("HttpDragDownloader::OnRecvHttpDataFailed error_code:%d, error_times:%d", 
             (int)error_code, error_times_);
-        LOG(__DEBUG, "", "HttpDragDownloader::OnRecvHttpDataFailed error_code:" << error_code
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpDataFailed error_code:" << error_code
             << ", error_times:" << error_times_);
         DealError();
     }
@@ -196,7 +200,7 @@ namespace p2sp
     void HttpDragDownloader::OnRecvTimeout()
     {
         DebugLog("OnRecvTimeout error_times:%d", error_times_);
-        LOG(__DEBUG, "", "OnRecvTimeout error_times:" << error_times_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "OnRecvTimeout error_times:" << error_times_);
         DealError();
     }
 
@@ -214,7 +218,7 @@ namespace p2sp
         if (error_times_ < max_error_num)
         {
             DebugLog("HttpDragDownloader::DealError error_times:%d", error_times_);
-            LOG(__DEBUG, "", "HttpDragDownloader::DealError error_times:" << error_times_);
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::DealError error_times:" << error_times_);
             // TODO(herain):2011-3-28:是否考虑延时重试？
             if (using_udp_proxy_)
             {
@@ -226,7 +230,7 @@ namespace p2sp
         else
         {
             DebugLog("HttpDragDownloader::DealError error_times:%d, using_udp_proxy:%d", error_times_, using_udp_proxy_);
-            LOG(__DEBUG, "", "HttpDragDownloader::DealError error_times:" << error_times_
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::DealError error_times:" << error_times_
                 << ", using_udp_proxy:" << using_udp_proxy_);
             if (using_udp_proxy_)
             {
@@ -280,7 +284,8 @@ namespace p2sp
         protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
         DebugLog("HttpDragDownloader::OnRecvHttpDataSucced fetch_time:%d", fetch_timer_.elapsed());
-        LOG(__DEBUG, "", "HttpDragDownloader::OnRecvHttpDataSucced fetch_time:" << fetch_timer_.elapsed());
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpDataSucced fetch_time:" 
+            << fetch_timer_.elapsed());
         
         assert(content_offset == drag_string_.size());
         uint32_t old_drag_string_size = drag_string_.size();
@@ -337,8 +342,8 @@ namespace p2sp
     {
         namespace po = boost::program_options;
         
-        LOG(__DEBUG, "", "HttpDragDownloader::ParseTinyDrag");
-        LOG(__DEBUG, "", drag_string_);
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::ParseTinyDrag");
+        LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, drag_string_);
 
         std::istringstream drag_stream(drag_string_);
 
@@ -376,13 +381,13 @@ namespace p2sp
                 return false;
             }
 
-            LOG(__DEBUG, "", "RID: " << ridinfo.GetRID().to_string());
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "RID: " << ridinfo.GetRID().to_string());
             DebugLog("RID:%s", ridinfo.rid_.to_string().c_str());
 
             ridinfo.file_length_ = vm["tinydrag.f"].as<int>();
             ridinfo.block_size_ = vm["tinydrag.s"].as<int>();
-            LOG(__DEBUG, "", "file_length: " << ridinfo.GetFileLength());
-            LOG(__DEBUG, "", "block_size: " << ridinfo.GetBlockSize());
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "file_length: " << ridinfo.GetFileLength());
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "block_size: " << ridinfo.GetBlockSize());
             DebugLog("file_length:%d", ridinfo.GetFileLength());
             DebugLog("block_size:%d", ridinfo.GetBlockSize());
 
@@ -405,12 +410,12 @@ namespace p2sp
                 }
 
                 DebugLog("block_md5s[%d]:%s", i, md5_vec[i].c_str());
-                LOG(__DEBUG, "", "block_md5s[" << i << "]: " << md5_vec[i]);
+                LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "block_md5s[" << i << "]: " << md5_vec[i]);
 
                 ridinfo.block_md5_s_.push_back(md5);
             }
 
-            LOG(__DEBUG, "", "SetRidInfo");
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "SetRidInfo");
             download_driver_->SetRidInfo(ridinfo);
             return true;
         }
@@ -418,7 +423,7 @@ namespace p2sp
         {
             // TODO(herain):2011-3-29:统计Drag出错的数量
             DebugLog("Exception catched: ", e.what());
-            LOG(__DEBUG, "", "Exception catched: " << e.what());
+            LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "Exception catched: " << e.what());
             return false;
         }
     }

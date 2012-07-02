@@ -11,6 +11,9 @@
 
 namespace statistic
 {
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[p2p_downloader_statistic]");
+#endif
     P2PDownloaderStatistic::P2PDownloaderStatistic(const RID& rid) :
         is_running_(false), resource_id_(rid), total_list_request_count_(0), total_list_response_count_(0)
     {
@@ -23,10 +26,10 @@ namespace statistic
 
     void P2PDownloaderStatistic::Start()
     {
-        STAT_DEBUG("P2PDownloaderStatistic::Start [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::Start [IN]");
         if (is_running_ == true)
         {
-            STAT_WARN("P2PDownloaderStatistic is running, return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "P2PDownloaderStatistic is running, return.");
             return;
         }
 
@@ -42,18 +45,18 @@ namespace statistic
 
         if (false == CreateSharedMemory())
         {
-            STAT_ERROR("Create P2PDownloaderStatistic Shared Memory Failed.");
+            LOG4CPLUS_ERROR_LOG(logger_statistic, "Create P2PDownloaderStatistic Shared Memory Failed.");
         }
 
-        STAT_DEBUG("P2PDownloaderStatistic::Start [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::Start [OUT]");
     }
 
     void P2PDownloaderStatistic::Stop()
     {
-        STAT_DEBUG("P2PDownloaderStatistic::Stop [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::Stop [IN]");
         if (is_running_ == false)
         {
-            STAT_DEBUG("P2PDownloaderStatistic is not running. Return.");
+            LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic is not running. Return.");
             return;
         }
 
@@ -65,7 +68,7 @@ namespace statistic
         shared_memory_.Close();
 
         is_running_ = false;
-        STAT_DEBUG("P2PDownloaderStatistic::Stop [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::Stop [OUT]");
     }
 
     void P2PDownloaderStatistic::Clear()
@@ -92,11 +95,11 @@ namespace statistic
 
     void P2PDownloaderStatistic::OnShareMemoryTimer(uint32_t times)
     {
-        STAT_DEBUG("P2PDownloaderStatistic::OnShareMemoryTimer [IN], times: " << times);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::OnShareMemoryTimer [IN], times: " << times);
 
         if (is_running_ == false)
         {
-            STAT_WARN("P2PDownloaderStatistic is not running. Return.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "P2PDownloaderStatistic is not running. Return.");
             return;
         }
 
@@ -113,7 +116,9 @@ namespace statistic
             assert(oa);
             // memcpy(shared_memory_.GetView(), &info, GetSharedMemorySize());
         }
-        STAT_DEBUG("Copied P2PDOWNLOADER_STATISTIC_INFO into Shared Memory: " << GetSharedMemoryName());STAT_DEBUG("P2PDownloaderStatistic::OnShareMemoryTimer [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Copied P2PDOWNLOADER_STATISTIC_INFO into Shared Memory: " 
+            << GetSharedMemoryName());
+        LOG4CPLUS_DEBUG_LOG(logger_statistic,"P2PDownloaderStatistic::OnShareMemoryTimer [OUT]");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -126,14 +131,15 @@ namespace statistic
 
         if (is_running_ == false)
         {
-            STAT_WARN("PeerConnectionStatistic is not running. Return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "PeerConnectionStatistic is not running. Return null.");
             return peer_connection_info_;
         }
 
         // 判断个数
         if (peer_connection_statistic_map_.size() == GetMaxP2PConnectionCount())
         {
-            STAT_WARN("Peer Connection Map is Full, size: " << GetMaxP2PConnectionCount() << ". Return null.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Peer Connection Map is Full, size: " << 
+                GetMaxP2PConnectionCount() << ". Return null.");
             return peer_connection_info_;
         }
 
@@ -149,10 +155,11 @@ namespace statistic
 
         // start
         peer_connection_info_->Start();
-        STAT_DEBUG("Peer Connection Statistic " << peer_id << " is created and started.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Peer Connection Statistic " << peer_connection_info_ << 
+            " is created and started.");
 
 
-        STAT_DEBUG("P2PDownloaderStatistic::AttachPeerConnectionStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::AttachPeerConnectionStatistic [OUT]");
         return peer_connection_info_;
     }
 
@@ -160,7 +167,7 @@ namespace statistic
     {
         if (is_running_ == false)
         {
-            STAT_WARN("P2PDownloaderStatistic is not running. Return false.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "P2PDownloaderStatistic is not running. Return false.");
             return false;
         }
 
@@ -169,14 +176,13 @@ namespace statistic
         // 不存在, 返回
         if (it == peer_connection_statistic_map_.end())
         {
-            STAT_WARN("Peer " << peer_id << " does not exist. Return false.");
             return false;
         }
 
         it->second->Stop();
         peer_connection_statistic_map_.erase(it);
 
-        STAT_DEBUG("P2PDownloaderStatistic::DetachPeerConnectionStatistic [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::DetachPeerConnectionStatistic [OUT]");
         return true;
     }
 
@@ -294,16 +300,17 @@ namespace statistic
 
     void P2PDownloaderStatistic::UpdatePeerConnectionInfo()
     {
-        STAT_DEBUG("P2PDownloaderStatistic::UpdatePeerConnectionInfo [IN]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::UpdatePeerConnectionInfo [IN]");
 
         p2p_downloader_statistic_info_.PeerCount = peer_connection_statistic_map_.size();
 
-        STAT_DEBUG("Peer Count: " << p2p_downloader_statistic_info_.PeerCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Peer Count: " << p2p_downloader_statistic_info_.PeerCount);
 
         // assert(p2p_downloader_statistic_info_.PeerCount <= GetMaxP2PConnectionCount());
         if (p2p_downloader_statistic_info_.PeerCount > GetMaxP2PConnectionCount())
         {
-            STAT_WARN("Peer Count exceeds max allowed count: " << GetMaxP2PConnectionCount() << ", Reset PeerCount to that value.");
+            LOG4CPLUS_WARN_LOG(logger_statistic, "Peer Count exceeds max allowed count: " << 
+                GetMaxP2PConnectionCount() << ", Reset PeerCount to that value.");
             p2p_downloader_statistic_info_.PeerCount = GetMaxP2PConnectionCount();
         }
 
@@ -313,7 +320,7 @@ namespace statistic
             p2p_downloader_statistic_info_.P2PConnections[i] = it->second->GetPeerConnectionInfo();
         }
 
-        STAT_DEBUG("P2PDownloaderStatistic::UpdatePeerConnectionInfo [OUT]");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::UpdatePeerConnectionInfo [OUT]");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -436,7 +443,8 @@ namespace statistic
     // Shared Memory
     bool P2PDownloaderStatistic::CreateSharedMemory()
     {
-        STAT_DEBUG("Creating SharedMemory: [" << GetSharedMemoryName() << "] size: " << GetSharedMemorySize() << " Bytes.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Creating SharedMemory: [" << GetSharedMemoryName() << "] size: " 
+            << GetSharedMemorySize() << " Bytes.");
         shared_memory_.Create(GetSharedMemoryName(), GetSharedMemorySize());
         return shared_memory_.IsValid();
     }

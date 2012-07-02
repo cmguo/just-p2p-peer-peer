@@ -13,7 +13,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_switch = log4cplus::Logger::getInstance("[switch_video_control]");
+#endif
 
     //////////////////////////////////////////////////////////////////////////
     // OpenServiceControlMode
@@ -49,7 +51,7 @@ namespace p2sp
         is_timer_h_reset = false;
 
         // parameters
-        SWITCH_DEBUG(string(20, '-'));
+        LOG4CPLUS_DEBUG_LOG(logger_switch, string(20, '-'));
 
         // 只有一个downloader，则立即开始下载
         if (!GetHTTPControlTarget())
@@ -208,7 +210,7 @@ namespace p2sp
             data_rate_v = 1.8;
         }
 
-        SWITCH_DEBUG(" time_counter_2300.GetElapsed() = " << time_counter_2300.elapsed()
+        LOG4CPLUS_DEBUG_LOG(logger_switch, " time_counter_2300.GetElapsed() = " << time_counter_2300.elapsed()
             << " peer_count = " << peer_count
             << " data_rate_inkbps = " << data_rate_inkbps
             << " data_rate_v = " << data_rate_v
@@ -409,10 +411,10 @@ namespace p2sp
         FILE *fp = fopen("switch.ini", "r");
         if (fp != NULL)
         {
-            LOG(__DEBUG, "switch", "BINGO 1");
+            LOG4CPLUS_DEBUG_LOG(logger_switch, "BINGO 1");
             int switch_type = 0;
             fscanf(fp, "%d", &switch_type);
-            LOG(__DEBUG, "switch", "BINGO type = " << switch_type);
+            LOG4CPLUS_DEBUG_LOG(logger_switch, "BINGO type = " << switch_type);
             fclose(fp);
 
             switch (switch_type)
@@ -444,7 +446,7 @@ namespace p2sp
 
         while (true)
         {
-            SWITCH_DEBUG((string)state_ << " " << times);
+            LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << " " << times);
 
             // <3000>
             if (
@@ -547,7 +549,7 @@ namespace p2sp
                 //   3. ikan拖动，start > 0, 转2311
                 //   4. 其余情况转3200
 
-                SWITCH_DEBUG((string)state_ << "3300" << times);
+                LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << "3300" << times);
 
                 if (NeedHttpStart())
                 {
@@ -703,7 +705,8 @@ namespace p2sp
                 uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
                 uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
 
-                SWITCH_DEBUG((string)state_ << " 2300 " << times << " time_counter_2300.GetElapsed() = " << time_counter_2300.elapsed()
+                LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << " 2300 " << times << 
+                    " time_counter_2300.GetElapsed() = " << time_counter_2300.elapsed()
                     << " p2p->GetConnectedPeersCount() = " << p2p->GetConnectedPeersCount());
 
                 if (p2p->GetConnectedPeersCount() == 0)
@@ -851,7 +854,7 @@ namespace p2sp
                 }
             else
             {
-                SWITCH_DEBUG("No Such State: " << (string)state_);
+                LOG4CPLUS_DEBUG_LOG(logger_switch, "No Such State: " << (string)state_);
                 // assert(!"SwitchController::OpenServiceVideoControlMode::OnControlTimer: No Such State");
                 // assert(0);
                 break;
@@ -903,7 +906,7 @@ namespace p2sp
             GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE ||       // BWType = 1, HTTP启动
             !PrefersSavingServerBandwidth())                                // BWType = 2,3 HTTP启动
         {
-            SWITCH_DEBUG("HTTP FIRST!");
+            LOG4CPLUS_DEBUG_LOG(logger_switch, "HTTP FIRST!");
             return true;
         }
 

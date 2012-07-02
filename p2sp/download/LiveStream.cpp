@@ -8,6 +8,9 @@
 
 namespace p2sp
 {
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_stream = log4cplus::Logger::getInstance("[live_stream]");
+#endif
     LiveStream::LiveStream(LiveDownloadDriver__p live_download_driver,
         const string & url,
         const RID & rid,
@@ -111,7 +114,7 @@ namespace p2sp
             {
                 // Block不在请求
                 // 可以下载，加入
-                LOG(__DEBUG, "live_download", "Not Requesting, Add id = " << live_block.GetBlockId());
+                LOG4CPLUS_DEBUG_LOG(logger_live_stream, "Not Requesting, Add id = " << live_block.GetBlockId());
                 live_block_request_manager_.AddBlockTask(live_block, downloader);
                 return true;
             }
@@ -121,7 +124,8 @@ namespace p2sp
                 if (live_block_request_manager_.IsTimeout(live_block.GetBlockId(), downloader))
                 {
                     // 超时了
-                    LOG(__DEBUG, "live_download", "Requesting & timeout Add id = " << live_block.GetBlockId());
+                    LOG4CPLUS_DEBUG_LOG(logger_live_stream, "Requesting & timeout Add id = " << 
+                        live_block.GetBlockId());
 
                     // 再删除任务记录, 同时删除相应的downloader的block_task_
                     live_block_request_manager_.RemoveBlockTask(live_block.GetBlockId());

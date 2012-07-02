@@ -17,7 +17,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_download");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_download = log4cplus::Logger::getInstance("[live_download_driver]");
+#endif
 
     boost::uint32_t LiveDownloadDriver::s_id_ = 0;
 
@@ -82,11 +84,11 @@ namespace p2sp
         {
             if (!GetInstance())
             {
-                LOG(__DEBUG, "live_download", __FUNCTION__ << " live_instance_ is NULL.");
+                LOG4CPLUS_DEBUG_LOG(logger_live_download, __FUNCTION__ << " live_instance_ is NULL.");
             }
             else
             {
-                LOG(__DEBUG, "live_download", __FUNCTION__ << " live_instance_ does not have a valid RID.");
+                LOG4CPLUS_DEBUG_LOG(logger_live_download, __FUNCTION__ << " live_instance_ does not have a valid RID.");
             }
         }
     }
@@ -248,7 +250,7 @@ namespace p2sp
     bool LiveDownloadDriver::OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
         uint8_t progress_percentage)
     {
-        LOG(__DEBUG, "live_download", "Recv piece_id " << block_id);
+        LOG4CPLUS_DEBUG_LOG(logger_live_download, "Recv piece_id " << block_id);
 
         rest_time_tracker_.UpdateCurrentProgress(block_id, progress_percentage);
 

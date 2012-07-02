@@ -15,7 +15,9 @@ using namespace p2sp;
 
 namespace storage
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_storage");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_instance = log4cplus::Logger::getInstance("[live_instance]");
+#endif
 
     LiveInstance::LiveInstance(const RID& rid_info, boost::uint16_t live_interval)
         : cache_manager_(live_interval, rid_info)
@@ -45,21 +47,22 @@ namespace storage
     void LiveInstance::GetNextIncompleteBlock(
         uint32_t start_piece_id, protocol::LiveSubPieceInfo & next_incomplete_block) const
     {
-        STORAGE_DEBUG_LOG("start_piece_id:" << start_piece_id);
+        LOG4CPLUS_DEBUG_LOG(logger_live_instance, "start_piece_id:" << start_piece_id);
         cache_manager_.GetNextMissingSubPiece(start_piece_id, next_incomplete_block);
 
-        STORAGE_DEBUG_LOG("need piece " << next_incomplete_block);
+        LOG4CPLUS_DEBUG_LOG(logger_live_instance, "need piece " << next_incomplete_block);
     }
 
     void LiveInstance::AddSubPiece(const protocol::LiveSubPieceInfo & subpiece, const protocol::LiveSubPieceBuffer & buff)
     {
         if (!cache_manager_.AddSubPiece(subpiece, buff))
         {
-            STORAGE_DEBUG_LOG("Add failed. subpiece " << subpiece << " is exist.");
+            LOG4CPLUS_DEBUG_LOG(logger_live_instance, "Add failed. subpiece " << subpiece << " is exist.");
             return;
         }
 
-        STORAGE_DEBUG_LOG("a new subpiece is added for block " << subpiece.GetBlockId() << ", will PushDataToDownloaderDriver.");
+        LOG4CPLUS_DEBUG_LOG(logger_live_instance, "a new subpiece is added for block " << subpiece.GetBlockId() << 
+            ", will PushDataToDownloaderDriver.");
 
         PushDataToDownloaderDrivers();
     }
@@ -199,7 +202,7 @@ namespace storage
 
     void LiveInstance::AttachStream(p2sp::ILiveStreamPointer live_stream)
     {
-        STORAGE_DEBUG_LOG("AttachDownloadDriver " << live_stream);
+        LOG4CPLUS_DEBUG_LOG(logger_live_instance, "AttachDownloadDriver " << live_stream);
 
         live_streams_.insert(live_stream);
 
@@ -208,7 +211,7 @@ namespace storage
 
     void LiveInstance::DetachStream(p2sp::ILiveStreamPointer live_stream)
     {
-        STORAGE_DEBUG_LOG("DeAttachDownloadDirver " << live_stream);
+        LOG4CPLUS_DEBUG_LOG(logger_live_instance, "DeAttachDownloadDirver " << live_stream);
 
         std::set<p2sp::ILiveStreamPointer>::iterator iter = live_streams_.find(live_stream);
         if (iter == live_streams_.end())

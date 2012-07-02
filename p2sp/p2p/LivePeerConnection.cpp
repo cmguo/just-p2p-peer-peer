@@ -7,7 +7,9 @@
 
 namespace p2sp
 {
-    FRAMEWORK_LOGGER_DECLARE_MODULE("live_p2p");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_live_peer_connection = log4cplus::Logger::getInstance("[live_peer_connection]");
+#endif
 
     void LivePeerConnection::Start(protocol::ConnectPacket const & reconnect_packet, 
         const boost::asio::ip::udp::endpoint &end_point,
@@ -243,7 +245,8 @@ namespace p2sp
 
         recv_subpiece_time_counter_.reset();
 
-        LOG(__DEBUG, "live_p2p", "rtt_max= " << rtt_max_ << " rtt_avg= " << rtt_avg_ << " delta= " << avg_delta_time_);
+        LOG4CPLUS_DEBUG_LOG(logger_live_peer_connection, "rtt_max= " << rtt_max_ << " rtt_avg= " << rtt_avg_ << 
+            " delta= " << avg_delta_time_);
 
         speed_info_.SubmitDownloadedBytes(buffer_length);
         ++peer_connection_info_.Received_Count;
@@ -346,7 +349,7 @@ namespace p2sp
 
         for (uint32_t i = 0; i < subpieces.size(); ++i)
         {
-            LOG(__DEBUG, "live_p2p", "request subpiece " << subpieces[i]);
+            LOG4CPLUS_DEBUG_LOG(logger_live_peer_connection, "request subpiece " << subpieces[i]);
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], rtt_avg_ + GetTimeoutAdjustment(),
                 shared_from_this(), packet.transaction_id_);
         }
@@ -476,7 +479,7 @@ namespace p2sp
             UpdateBlockBitmapEmptyTickCount();
         }
 
-        LOG(__DEBUG, "live_p2p", "block_bitmap_.size() = " << block_bitmap_.size());
+        LOG4CPLUS_DEBUG_LOG(logger_live_peer_connection, "block_bitmap_.size() = " << block_bitmap_.size());
     }
 
     boost::uint32_t LivePeerConnection::GetAvgDeltaTime() const

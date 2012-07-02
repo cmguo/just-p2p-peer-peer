@@ -17,7 +17,9 @@ namespace storage
     using protocol::SubPieceBuffer;
     using protocol::SubPieceContent;
     using base::util::memcpy2;
-    FRAMEWORK_LOGGER_DECLARE_MODULE("node");
+#ifdef LOG_ENABLE
+    static log4cplus::Logger logger_node = log4cplus::Logger::getInstance("[block_node]");
+#endif
 
     BlockNode::BlockNode(uint32_t index, uint32_t subpiece_num, bool is_full_disk)
         : index_(index), need_write_(false)
@@ -251,8 +253,10 @@ namespace storage
         {
             ++curr_subpiece_count_;
             access_counter_.reset();
-            STORAGE_DEBUG_LOG("AddSubPiece [" << index_ << "|" << piece_index << "|" << subpiece_index << "]");
-            STORAGE_DEBUG_LOG("curr_subpiece_count_=" << curr_subpiece_count_ << ", need_write=" << need_write_);
+            LOG4CPLUS_DEBUG_LOG(logger_node, "AddSubPiece [" << index_ << "|" << piece_index << "|" 
+                << subpiece_index << "]");
+            LOG4CPLUS_DEBUG_LOG(logger_node, "curr_subpiece_count_=" << curr_subpiece_count_ << ", need_write="
+                << need_write_);
             return true;
         }
         else
@@ -313,7 +317,7 @@ namespace storage
 
         if (!piece_nodes_[piece_index])
         {
-            STORAGE_DEBUG_LOG("PieceNode[" << piece_index << "] not exist");
+            LOG4CPLUS_DEBUG_LOG(logger_node, "PieceNode[" << piece_index << "] not exist");
             return false;
         }
         return piece_nodes_[piece_index]->HasSubPieceInMem(index % subpiece_num_per_piece_g_);
@@ -416,12 +420,12 @@ namespace storage
     {
         if (!need_write_)
         {
-            STORAGE_DEBUG_LOG("need_write_ be false!");
+            LOG4CPLUS_DEBUG_LOG(logger_node, "need_write_ be false!");
             return;
         }
 
         need_write_ = false;
-        STORAGE_DEBUG_LOG("set need_write_ false!");
+        LOG4CPLUS_DEBUG_LOG(logger_node, "set need_write_ false!");
         if (!IsFull())
         {
             for (uint32_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
@@ -432,7 +436,7 @@ namespace storage
                 piece_nodes_[pidx]->WriteToResource(resource_p);
             }
             StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
-            STORAGE_DEBUG_LOG("will post to SecSaveResourceFileInfo");
+            LOG4CPLUS_DEBUG_LOG(logger_node, "will post to SecSaveResourceFileInfo");
         }
         else
         {
@@ -446,7 +450,7 @@ namespace storage
         access_counter_.reset();
         uint32_t play_piece = play_subpiece_index / subpiece_num_per_piece_g_;
         uint16_t play_subpiece = play_subpiece_index % subpiece_num_per_piece_g_;
-        STORAGE_DEBUG_LOG("ClearBlockMemCache play_subpiece_index:" << play_subpiece_index);
+        LOG4CPLUS_DEBUG_LOG(logger_node, "ClearBlockMemCache play_subpiece_index:" << play_subpiece_index);
 
         for (uint32_t pidx = 0; pidx <= play_piece && pidx < piece_nodes_.size(); ++pidx)
         {
@@ -496,12 +500,12 @@ namespace storage
     {
         if (!need_write_)
         {
-            STORAGE_DEBUG_LOG("need_write_ false! return.");
+            LOG4CPLUS_DEBUG_LOG(logger_node, "need_write_ false! return.");
             return;
         }
 
         need_write_ = false;
-        STORAGE_DEBUG_LOG("set need_write_ false.");
+        LOG4CPLUS_DEBUG_LOG(logger_node, "set need_write_ false.");
         for (uint32_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
         {
             if (!piece_nodes_[pidx])
