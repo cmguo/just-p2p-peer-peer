@@ -223,27 +223,6 @@ namespace p2sp
         return false;
     }
 
-    bool PlayInfo::ParseHeadLength(const network::Uri& uri, uint32_t& head_length)
-    {
-        string head_length_str = uri.getparameter("headlength");
-        if (head_length_str.length() > 0) {
-            // double head_length_db = boost::lexical_cast<double>(head_length_str);
-            double head_length_db;
-            boost::system::error_code ec = framework::string::parse2(head_length_str, head_length_db);
-            if (!ec)
-            {
-                head_length = (uint32_t)((head_length_db <= 0 || head_length_db >= (1ULL << 32)) ? 0 : (head_length_db + 0.5));
-                return true;
-            }
-            else
-            {
-                head_length = 0;
-                return false;
-            }
-        }
-        return false;
-    }
-
     bool PlayInfo::ParseSourceType(const network::Uri& uri, PlayInfo::SourceType& source_type)
     {
         string source_str = uri.getparameter("source");
@@ -255,38 +234,6 @@ namespace p2sp
             {
                 source_type = static_cast<PlayInfo::SourceType>(type);
                 return true;
-            }
-        }
-        return false;
-    }
-
-    bool PlayInfo::ParseAutoClose(const network::Uri& uri, bool& auto_close)
-    {
-        string auto_close_str = uri.getparameter("autoclose");
-        if (auto_close_str.length() > 0)
-        {
-            // uint32_t type = boost::lexical_cast<uint32_t>(auto_close_str);
-//             uint32_t type;
-//             boost::system::error_code ec = framework::string::parse2(auto_close_str, type);
-//             // auto_close_str is number @herain
-//             if (!ec)
-//             {
-//                 auto_close = (type > 0);
-//                 return true;
-//             }
-//             else
-            {
-                if (boost::algorithm::iequals(auto_close_str, "true") || boost::algorithm::iequals(auto_close_str, "yes"))
-                {
-                    auto_close = true;
-                    return true;
-                }
-                if (boost::algorithm::iequals(auto_close_str, "false") || boost::algorithm::iequals(auto_close_str, "no"))
-                {
-                    auto_close = false;
-                    return true;
-                }
-                return false;
             }
         }
         return false;
@@ -321,77 +268,6 @@ namespace p2sp
         return false;
     }
 
-    bool PlayInfo::ParseRestTime(const network::Uri& uri, uint32_t& rest_time)
-    {
-        string resttime_str = uri.getparameter("resttime");
-        if (resttime_str.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(resttime_str, rest_time);
-            if (!ec)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        return false;
-    }
-
-    bool PlayInfo::ParseHeadOnly(const network::Uri& uri, bool& head_only)
-    {
-        string head_only_str = uri.getparameter("headonly");
-        if (head_only_str.length() > 0)
-        {
-            // int type = boost::lexical_cast<int>(head_only_str);
-            int type;
-            boost::system::error_code ec = framework::string::parse2(head_only_str, type);
-            if (!ec)
-            {
-                head_only = (type > 0);
-                return true;
-            }
-            else
-            {
-                if (boost::algorithm::iequals(head_only_str, "true") || boost::algorithm::iequals(head_only_str, "yes"))                 {
-                    head_only = true;
-                    return true;
-                }
-                if (boost::algorithm::iequals(head_only_str, "false") || boost::algorithm::iequals(head_only_str, "no"))                 {
-                    head_only = false;
-                    return true;
-                }
-                return false;
-            }
-        }
-        return false;
-    }
-
-    bool PlayInfo::ParseBWType(const network::Uri& uri, boost::uint32_t & bwtype)
-    {
-        string bwtype_str = uri.getparameter("BWType");
-        if (bwtype_str.length() == 0)
-        {
-            bwtype_str = uri.getparameter("bwtype");
-        }
-
-        if (bwtype_str.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(bwtype_str, bwtype);
-            if (!ec)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
     bool PlayInfo::ParseBakHosts(const network::Uri& uri, std::vector<std::string>& bak_hosts)
     {
         string bak_hosts_str = uri.getparameter("bakhost");
@@ -405,64 +281,8 @@ namespace p2sp
         return false;
     }
 
-    bool PlayInfo::ParseVip(const network::Uri & uri, boost::uint32_t & is_vip)
-    {
-        is_vip = 0;
-
-        string vip_str = uri.getparameter("vip");
-
-        if (vip_str.length() == 0)
-        {
-            
-            return false;
-        }
-
-        if (vip_str.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(vip_str, is_vip);
-            if (!ec)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
-    bool PlayInfo::ParseIsPreroll(const network::Uri& uri, bool& is_preroll)
-    {
-        string is_preroll_str = uri.getparameter("preroll");
-        if (is_preroll_str.length() > 0)
-        {
-            int type;
-            boost::system::error_code ec = framework::string::parse2(is_preroll_str, type);
-            if (!ec)
-            {
-                is_preroll = (type > 0);
-                return true;
-            }
-            else
-            {
-                if (boost::algorithm::iequals(is_preroll_str, "true") || boost::algorithm::iequals(is_preroll_str, "yes")) {
-                    is_preroll = true;
-                    return true;
-                }
-                if (boost::algorithm::iequals(is_preroll_str, "false") || boost::algorithm::iequals(is_preroll_str, "no")) {
-                    is_preroll = false;
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     bool PlayInfo::ParseUint32Value(const network::Uri& uri, uint32_t& value, string key)
     {
-        value = 0;
         string value_str = uri.getparameter(key);
 
         if (value_str.length() > 0)
@@ -471,6 +291,34 @@ namespace p2sp
             if (!ec)
             {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool PlayInfo::ParseBoolValue(const network::Uri& uri, bool& value, string key)
+    {
+        string value_str = uri.getparameter(key);
+        if (value_str.length() > 0)
+        {
+            int type;
+            boost::system::error_code ec = framework::string::parse2(value_str, type);
+            if (!ec)
+            {
+                value = (type > 0);
+                return true;
+            }
+            else
+            {
+                if (boost::algorithm::iequals(value_str, "true") || boost::algorithm::iequals(value_str, "yes")) {
+                    value = true;
+                    return true;
+                }
+                if (boost::algorithm::iequals(value_str, "false") || boost::algorithm::iequals(value_str, "no")) {
+                    value = false;
+                    return true;
+                }
             }
         }
 
@@ -552,7 +400,7 @@ namespace p2sp
             play_info->has_player_id_ = (play_info->player_id_.empty()) ? false : true;
 
             // head length
-            if (false == ParseHeadLength(uri, play_info->head_length_)) {
+            if (false == ParseUint32Value(uri, play_info->head_length_, "headlength")) {
                 play_info->head_length_ = 0;
             }
             LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse HeadLength = " << play_info->head_length_);
@@ -570,12 +418,12 @@ namespace p2sp
             LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse IsDrag = " << play_info->is_drag_);
 
             // head only
-            if (false == ParseHeadOnly(uri, play_info->head_only_)) {
+            if (false == ParseBoolValue(uri, play_info->head_only_, "headonly")) {
                 play_info->head_only_ = 0;
             }
 
             // rest time
-            if (!ParseRestTime(uri, play_info->rest_time_in_millisecond_))
+            if (!ParseUint32Value(uri, play_info->rest_time_in_millisecond_, "resttime"))
             {
                 if (play_info->is_drag_ == 1)
                 {
@@ -593,19 +441,25 @@ namespace p2sp
             }
 
             LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse HeadOnly = " << play_info->head_only_);
-            if (false == ParseBWType(uri, play_info->bwtype_)) {
+            if (false == ParseUint32Value(uri, play_info->bwtype_, "BWType") &&
+                false == ParseUint32Value(uri, play_info->bwtype_, "bwtype"))
+            {
                 play_info->bwtype_ = 0;
             }
 
             // 解析客户端请求中的vip字段
-            ParseVip(uri, play_info->vip_);
+            if (false == ParseUint32Value(uri, play_info->vip_, "vip"))
+            {
+                play_info->vip_ = 0;
+            }
 
             if (false == ParseUint32Value(uri, play_info->is_vip_channel_, "vipchannel"))
             {
                 play_info->is_vip_channel_ = 0;
             }
 
-            if (false == ParseIsPreroll(uri, play_info->is_preroll_)) {
+            if (false == ParseBoolValue(uri, play_info->is_preroll_, "preroll"))
+            {
                 play_info->is_preroll_ = 0;
             }
             
@@ -675,11 +529,20 @@ namespace p2sp
             }
 
             // 起始播放点
-            ParseLiveStart(uri, play_info->live_start_);
+            if (false == ParseUint32Value(uri, play_info->live_start_, "start"))
+            {
+                assert(false);
+            }
             // 直播文件产生的间隔
-            ParseLiveInterval(uri, play_info->live_interval_);
+            if (false == ParseUint32Value(uri, play_info->live_interval_, "interval"))
+            {
+                assert(false);
+            }
             // 直播是否回拖
-            ParseLiveReplay(uri, play_info->live_replay_);
+            if (false == ParseBoolValue(uri, play_info->live_replay_, "replay"))
+            {
+                assert(false);
+            }
             if (!ParseSpeedLimit(uri, play_info->speed_limit_))
             {
                 play_info->speed_limit_ = -1;
@@ -687,7 +550,8 @@ namespace p2sp
             // 备用CDN
             ParseBakHosts(uri, play_info->bak_hosts_);
             // BWType
-            if (false == ParseBWType(uri, play_info->bwtype_))
+            if (false == ParseUint32Value(uri, play_info->bwtype_, "BWType") &&
+                false == ParseUint32Value(uri, play_info->bwtype_, "bwtype"))
             {
                 play_info->bwtype_ = 0;
             }
@@ -696,9 +560,13 @@ namespace p2sp
             // SourceType
             ParseSourceType(uri, play_info->source_type_);
             // UniqueID
-            ParseUniqueID(uri, play_info->unique_id_);
+            if (false == ParseUint32Value(uri, play_info->unique_id_, "uniqueid"))
+            {
+                play_info->unique_id_ = 0;
+                assert(false);
+            }
             // resttime
-            if (!ParseRestTime(uri, play_info->rest_time_in_millisecond_))
+            if (!ParseUint32Value(uri, play_info->rest_time_in_millisecond_, "resttime"))
             {
                 play_info->rest_time_in_millisecond_ = 0;
             }
@@ -708,8 +576,16 @@ namespace p2sp
         else if (boost::algorithm::istarts_with(uri.getpath(), LIVE_SET_FLAG))
         {
             ParseChannelID(uri, play_info->channel_id_);
-            ParseLivePause(uri, play_info->live_pause_);
-            ParseUniqueID(uri, play_info->unique_id_);
+            if (false == ParseBoolValue(uri, play_info->live_pause_, "pause"))
+            {
+                assert(false);
+            }
+
+            if (false == ParseUint32Value(uri, play_info->unique_id_, "uniqueid"))
+            {
+                play_info->unique_id_ = 0;
+                assert(false);
+            }
 
             return play_info;
         }
@@ -856,70 +732,6 @@ namespace p2sp
         data_rate_s.push_back(data_rate);
     }
 
-    // 起始播放点
-    void PlayInfo::ParseLiveStart(const network::Uri & uri, boost::uint32_t & live_start)
-    {
-        string str_start = uri.getparameter("start");
-        if (str_start.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(str_start, live_start);
-            if (!ec)
-            {
-                return;
-            }
-        }
-        assert(false);
-    }
-
-    // 直播文件产生的间隔
-    void PlayInfo::ParseLiveInterval(const network::Uri & uri, boost::uint32_t & live_interval)
-    {
-        string str_interval = uri.getparameter("interval");
-        if (str_interval.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(str_interval, live_interval);
-            if (!ec)
-            {
-                return;
-            }
-        }
-        assert(false);
-    }
-
-    // 直播是否回拖
-    void PlayInfo::ParseLiveReplay(const network::Uri& uri, bool & live_replay)
-    {
-        string str_replay = uri.getparameter("replay");
-        int replay = 0;
-        if (str_replay.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(str_replay, replay);
-            if (!ec)
-            {
-                live_replay = (replay != 0);
-                return;
-            }
-        }
-        assert(false);
-    }
-
-    // 直播是否暂停
-    void PlayInfo::ParseLivePause(const network::Uri& uri, bool & live_pause)
-    {
-        string str_pause = uri.getparameter("pause");
-        int pause = 0;
-        if (str_pause.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(str_pause, pause);
-            if (!ec)
-            {
-                live_pause = (pause != 0);
-                return;
-            }
-        }
-        assert(false);
-    }
-
     // 直播Channel ID
     void PlayInfo::ParseChannelID(const network::Uri& uri, RID & channel_id)
     {
@@ -932,23 +744,6 @@ namespace p2sp
         {
             return;
         }
-        assert(false);
-    }
-
-    // 直播的播放器id
-    void PlayInfo::ParseUniqueID(const network::Uri & uri, boost::uint32_t & unique_id)
-    {
-        string str_unique_id = uri.getparameter("uniqueid");
-        if (str_unique_id.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(str_unique_id, unique_id);
-            if (!ec)
-            {
-                return;
-            }
-            unique_id = 0;
-        }
-        unique_id = 0;
         assert(false);
     }
 

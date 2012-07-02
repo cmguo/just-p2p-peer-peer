@@ -157,48 +157,26 @@ namespace p2sp
 
         static bool ParseSpeedLimit(const network::Uri& uri, boost::int32_t& speed_limit);
 
-        static bool ParseHeadLength(const network::Uri& uri, uint32_t& head_length);
-
         static bool ParseSourceType(const network::Uri& uri, SourceType& source_type);
 
-        static bool ParseAutoClose(const network::Uri& uri, bool& auto_close);
-
         static bool ParseIsDrag(const network::Uri& uri, boost::int32_t& is_drag);
-
-        static bool ParseHeadOnly(const network::Uri& uri, bool& head_only);
-
-        static bool ParseRestTime(const network::Uri& uri, uint32_t& rest_time);
-
-        static bool ParseBWType(const network::Uri& uri, boost::uint32_t& bwtype);
 
         static bool ParseSendSpeedLimit(const network::Uri& uri, boost::int32_t& send_speed_limit);
 
         static bool ParseBakHosts(const network::Uri& uri, std::vector<std::string>& bak_hosts);
 
-        static bool ParseVip(const network::Uri & uri, boost::uint32_t & is_vip);
-
-        static bool ParseIsPreroll(const network::Uri& uri, bool& is_preroll);
-
         static bool ParseUint32Value(const network::Uri& uri, uint32_t &value, string key);
 
         static bool ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level);
+
+        static bool ParseBoolValue(const network::Uri& uri, bool& value, string key);
 
         // 解析一个频道所有的rid
         static void ParseLiveRids(const network::Uri& uri, vector<RID> & rid_s);
         // 解析所有rid对应的码流
         static void ParseLiveDataRates(const network::Uri& uri, vector<boost::uint32_t> & data_rate_s);
-        // 起始播放点
-        static void ParseLiveStart(const network::Uri& uri, boost::uint32_t & live_start);
-        // 直播文件产生的间隔
-        static void ParseLiveInterval(const network::Uri& uri, boost::uint32_t & live_interval);
-        // 直播是否回拖
-        static void ParseLiveReplay(const network::Uri& uri, bool & live_replay);
         // Channel ID
         static void ParseChannelID(const network::Uri& uri, RID & channel_id);
-        // 直播是否暂停
-        static void ParseLivePause(const network::Uri & uri, bool & live_replay);
-        // 直播的播放器ID
-        static void ParseUniqueID(const network::Uri & uri, boost::uint32_t & unique_id);
         // flash p2p的range
         static boost::shared_ptr<RangeInfo> ParseRangeInfo(const network::Uri & uri);
 
