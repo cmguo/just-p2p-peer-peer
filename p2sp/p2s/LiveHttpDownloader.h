@@ -100,6 +100,7 @@ namespace p2sp
         string pms_url_domain_;
         uint16_t pms_url_port_;
         string pms_url_path_;
+        string pms_url_parameters_;
 
         std::deque<protocol::LiveSubPieceInfo> block_tasks_;
         StatusEnum status_;

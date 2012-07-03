@@ -30,6 +30,7 @@ namespace p2sp
         network::Uri uri(url);
         pms_url_domain_ = uri.getdomain();
         pms_url_path_ = uri.getpath();
+        pms_url_parameters_ = uri.getparameter();
         boost::system::error_code ec = framework::string::parse2(uri.getport(), pms_url_port_);
         if (ec)
         {
@@ -170,7 +171,7 @@ namespace p2sp
     {
         // 拼接请求PMS的HTTP串
         using framework::string::format;
-        return pms_url_path_ + rid_ + "/" + format(start_block_id) + ".block";
+        return pms_url_path_ + rid_ + "/" + format(start_block_id) + ".block" + "?" + pms_url_parameters_;
     }
 
     void LiveHttpDownloader::OnConnectSucced()
