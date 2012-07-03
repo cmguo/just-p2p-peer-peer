@@ -179,21 +179,16 @@ namespace storage
         //Note: 在node不完整时不能reset node，因为我们还需要其内部所维护的subpiece bitmap。
 
 #ifdef DISK_MODE
-        if (node->NeedWrite())
+        if (node->NeedWrite() && node->IsFull())
         {
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block " << block_index << " WriteBlockToResource.");
             WriteBlockToResource(resource_p, block_index);
-            return;
         }
         
         if (node->IsFull())
         {
             assert(block_bit_map_->HasBlock(block_index));
             node.reset();
-        }
-        else
-        {
-            node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
         }
 #else
         node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
@@ -371,6 +366,13 @@ namespace storage
         for (uint32_t bidx = 0; bidx < blocks_.size(); ++bidx)
         {
             RemoveBlockDataFromMemCache(resource_p, bidx);
+
+            BlockNode::p& node = blocks_[bidx];
+
+            if (node && !node->IsFull())
+            {
+                node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
+            }
         }
     }
 
