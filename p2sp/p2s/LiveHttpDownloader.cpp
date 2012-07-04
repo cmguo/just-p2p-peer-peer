@@ -171,6 +171,12 @@ namespace p2sp
     {
         // 拼接请求PMS的HTTP串
         using framework::string::format;
+
+        if (pms_url_parameters_.empty())
+        {
+            return pms_url_path_ + rid_ + "/" + format(start_block_id) + ".block";
+        }
+
         return pms_url_path_ + rid_ + "/" + format(start_block_id) + ".block" + "?" + pms_url_parameters_;
     }
 
