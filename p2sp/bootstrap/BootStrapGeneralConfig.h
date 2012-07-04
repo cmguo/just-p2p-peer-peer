@@ -508,6 +508,11 @@ namespace p2sp
             return sn_port_on_cdn_;
         }
 
+        boost::uint32_t GetWaitTimeForTinydragInDownloadMode() const
+        {
+            return seconds_wait_for_tinydrag_in_download_mode_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -835,6 +840,9 @@ namespace p2sp
 
         // CDN上配置的SN端口
         boost::uint32_t sn_port_on_cdn_;
+
+        // 下载状态机中用于等待获取tinydrag的时间
+        boost::uint32_t seconds_wait_for_tinydrag_in_download_mode_;
     };
 }
 #endif

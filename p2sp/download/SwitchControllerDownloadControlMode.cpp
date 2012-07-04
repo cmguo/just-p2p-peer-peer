@@ -138,6 +138,14 @@ namespace p2sp
             else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_PAUSING
                 && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
             {
+                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
+                {
+                    assert(GetHTTPControlTarget());
+                    GetHTTPControlTarget()->Resume();
+                    state_.http_ = State::HTTP_DOWNLOADING;
+
+                    continue;
+                }
                 // asserts
                 assert(GetGlobalDataProvider()->HasRID());
                 assert(GetP2PControlTarget());
@@ -160,6 +168,7 @@ namespace p2sp
                 // asserts
                 assert(state_.timer_using_ == State::TIMER_USING_NONE);
 
+                // 在BWTYPE=HTTP_PREFERED的情况下，不会转向p2p下载
                 if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY && 
                     GetGlobalDataProvider()->GetBWType() != JBW_HTTP_PREFERRED)
                 {
@@ -199,7 +208,7 @@ namespace p2sp
                     // Next(times);
                     continue;
                 }
-                else if (time_counter_h_.elapsed() > 10 * 1000)
+                else if (time_counter_h_.elapsed() > BootStrapGeneralConfig::Inst()->GetWaitTimeForTinydragInDownloadMode()  * 1000)
                 {
                     // 超时
                     GetHTTPControlTarget()->Resume();
@@ -269,6 +278,29 @@ namespace p2sp
                 && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
             {
                 assert(state_.timer_ == State::TIMER_NONE);
+                if (GetP2PControlTarget())
+                {
+                    if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
+                    {
+                        state_.p2p_ = State::P2P_PAUSING;
+                        state_.rid_ = State::RID_GOT;
+
+                        GetP2PControlTarget()->Pause();
+                    }
+
+                    if (GetGlobalDataProvider()->GetBWType() == JBW_NORMAL ||
+                        GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
+                    {
+                        state_.http_ = State::HTTP_PAUSING;
+                        state_.p2p_ = State::P2P_DOWNLOADING;
+
+                        //action
+                        GetHTTPControlTarget()->Pause();
+                        GetP2PControlTarget()->Resume();
+                    }
+
+                    continue;
+                }
                 break;
             }
             // <2300*1>
@@ -277,7 +309,8 @@ namespace p2sp
             {
                 assert(state_.timer_ == State::TIMER_NONE);
                 // check Peer Number
-                if (GetP2PControlTarget()->GetConnectedPeersCount() >= 5) {
+                if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_PREFERRED &&
+                    GetP2PControlTarget()->GetConnectedPeersCount() >= 5) {
                     // resume
                     GetP2PControlTarget()->Resume();
                     // state

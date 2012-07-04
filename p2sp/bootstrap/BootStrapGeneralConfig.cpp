@@ -145,6 +145,7 @@ namespace p2sp
         , load_sn_on_cdn_(false)
         , time_wait_for_tinydrag_(1)
         , sn_port_on_cdn_(19001)
+        , seconds_wait_for_tinydrag_in_download_mode_(2)
     {
     }
 
@@ -325,6 +326,7 @@ namespace p2sp
                 ("config.twtd", po::value<uint32_t>()->default_value(time_wait_for_tinydrag_))
                 ("config.lsc", po::value<bool>()->default_value(load_sn_on_cdn_))
                 ("config.spc", po::value<uint32_t>()->default_value(sn_port_on_cdn_))
+                ("config.swtdm", po::value<uint32_t>()->default_value(seconds_wait_for_tinydrag_in_download_mode_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -461,6 +463,7 @@ namespace p2sp
             load_sn_on_cdn_ = vm["config.lsc"].as<bool>();
             time_wait_for_tinydrag_ = vm["config.twtd"].as<uint32_t>();
             sn_port_on_cdn_ = vm["config.spc"].as<uint32_t>();
+            seconds_wait_for_tinydrag_in_download_mode_ = vm["config.swtdm"].as<uint32_t>();
 
             if (save_to_disk)
             {
