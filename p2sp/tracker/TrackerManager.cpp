@@ -40,7 +40,7 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_tracker, "Tracker Manager has started successfully.");
 
-        load_tracker_list_timer_.start();
+        LoadTrackerList();
 
         is_running_ = true;
     }
@@ -163,9 +163,6 @@ namespace p2sp
         bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
         TrackerType tracker_type)
     {
-        // 去掉这个aassert, 连续2次收到BS回的查询Tracker列表的报文就会触发这个assert.
-        // assert(!is_got_tracker_list_from_bs_);
-
         if (is_got_tracker_list_from_bs)
         {
             is_got_tracker_list_from_bs_ = is_got_tracker_list_from_bs;
@@ -374,14 +371,6 @@ namespace p2sp
             iter != report_mod_indexer_.end(); ++iter)
         {
             iter->second->DoLeave();
-        }
-    }
-
-    void TrackerManager::OnLoadTrackerTimer(framework::timer::Timer::pointer timer)
-    {
-        if (!is_got_tracker_list_from_bs_)
-        {
-            LoadTrackerList();
         }
     }
 

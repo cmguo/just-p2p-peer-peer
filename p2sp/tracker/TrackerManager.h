@@ -27,8 +27,6 @@ namespace p2sp
             : is_running_(false)
             , is_vod_(is_vod)
             , is_got_tracker_list_from_bs_(false)
-            , load_tracker_list_timer_(global_second_timer(), 60*1000, 
-            boost::bind(&TrackerManager::OnLoadTrackerTimer, this, &load_tracker_list_timer_))
         {}
 
         void Start(const string& config_path);
@@ -60,8 +58,6 @@ namespace p2sp
 
         void ClearAllGroups();
 
-        void OnLoadTrackerTimer(framework::timer::Timer::pointer timer);
-
         void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
             bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
             TrackerType tracker_type);
@@ -90,7 +86,5 @@ namespace p2sp
         bool is_vod_;
 
         bool is_got_tracker_list_from_bs_;
-
-        framework::timer::OnceTimer load_tracker_list_timer_;
     };
 }
