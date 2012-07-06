@@ -37,6 +37,7 @@ namespace p2sp
         : io_svc_(io_svc), download_driver_(download_driver)
         , filename_(filename), segno_(segno), using_udp_proxy_(false)
         , udp_proxy_port_(80), error_times_(0), tried_times_(0), using_backup_domain_(false)
+        , is_running_(false)
     {
         string hou_list = BootStrapGeneralConfig::Inst()->GetHouServerList();
         boost::algorithm::split(udp_proxy_domain_vec_, hou_list,
@@ -45,11 +46,25 @@ namespace p2sp
 
     void HttpDragDownloader::Start()
     {
+        if (is_running_)
+        {
+            return;
+        }
+
+        is_running_ = true;
+
         Connect();
     }
 
     void HttpDragDownloader::Stop()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
+        is_running_ = false;
+
         if (client_)
         {
             client_->Close();
@@ -67,6 +82,11 @@ namespace p2sp
 
     void HttpDragDownloader::Connect()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         string request_url = ConstructUrl();
         ++tried_times_;
 
@@ -124,6 +144,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnConnectSucced()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnConnectSucced");
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectSucced");
         if (using_udp_proxy_)
@@ -138,6 +163,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnConnectFailed(uint32_t error_code)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnConnectFailed error_code:%d, error_times:%d", (int)error_code, error_times_);
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectFailed error_code:" << error_code 
             << ", error_times:" << error_times_);
@@ -146,6 +176,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnConnectTimeout()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnConnectTimeout error_times:%d", error_times_);
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnConnectTimeout error_times:" << error_times_);
         DealError();
@@ -153,6 +188,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnRecvHttpHeaderSucced(network::HttpResponse::p http_response)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         download_driver_->ReportDragHttpStatus(http_response->GetStatusCode());
 
         switch (http_response->GetStatusCode())
@@ -174,6 +214,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnRecvHttpHeaderFailed(uint32_t error_code)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnRecvHttpHeaderFailed error_code:%d, error_times:%d", 
             (int)error_code, error_times_);
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpHeaderFailed error_code:" 
@@ -184,12 +229,22 @@ namespace p2sp
     void HttpDragDownloader::OnRecvHttpDataPartial(
         protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         assert(false);
         DealError();
     }
 
     void HttpDragDownloader::OnRecvHttpDataFailed(uint32_t error_code)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnRecvHttpDataFailed error_code:%d, error_times:%d", 
             (int)error_code, error_times_);
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpDataFailed error_code:" << error_code
@@ -199,6 +254,11 @@ namespace p2sp
 
     void HttpDragDownloader::OnRecvTimeout()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("OnRecvTimeout error_times:%d", error_times_);
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "OnRecvTimeout error_times:" << error_times_);
         DealError();
@@ -211,6 +271,11 @@ namespace p2sp
 
     void HttpDragDownloader::DealError(bool dns_error)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         error_times_++;
         int max_error_num = using_udp_proxy_ ? 
             max_error_num_per_domain * udp_proxy_domain_vec_.size() : max_error_num_per_domain;
@@ -269,6 +334,11 @@ namespace p2sp
 
     void HttpDragDownloader::Recv(uint32_t recv_length)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         uint32_t real_recv_length = std::min(network::HttpClient<protocol::SubPieceContent>::MaxRecvLength, recv_length);
         if (using_udp_proxy_)
         {
@@ -283,6 +353,11 @@ namespace p2sp
     void HttpDragDownloader::OnRecvHttpDataSucced(
         protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         DebugLog("HttpDragDownloader::OnRecvHttpDataSucced fetch_time:%d", fetch_timer_.elapsed());
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::OnRecvHttpDataSucced fetch_time:" 
             << fetch_timer_.elapsed());
@@ -340,6 +415,11 @@ namespace p2sp
 
     bool HttpDragDownloader::ParseTinyDrag()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         namespace po = boost::program_options;
         
         LOG4CPLUS_DEBUG_LOG(logger_http_tiny_drag, "HttpDragDownloader::ParseTinyDrag");

@@ -57,6 +57,8 @@ namespace p2sp
         virtual void OnComplete();
 
     private:
+        bool is_running_;
+
         boost::asio::io_service & io_svc_;
         DownloadDriver__p download_driver_;
         string filename_;

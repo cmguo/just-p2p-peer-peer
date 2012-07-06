@@ -548,6 +548,11 @@ namespace p2sp
 
         IStorage::p p_storage = Storage::Inst();
 
+        if (!p_storage)
+        {
+            return 0;
+        }
+
         boost::int64_t max_store_size = 2*1024*1024;
         max_store_size = max_store_size * 1024;
 
