@@ -415,36 +415,6 @@ namespace storage
         return true;
     }
 
-#ifdef DISK_MODE
-    void BlockNode::WriteToResource(Resource::p resource_p)
-    {
-        if (!need_write_)
-        {
-            LOG4CPLUS_DEBUG_LOG(logger_node, "need_write_ be false!");
-            return;
-        }
-
-        need_write_ = false;
-        LOG4CPLUS_DEBUG_LOG(logger_node, "set need_write_ false!");
-        if (!IsFull())
-        {
-            for (uint32_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
-            {
-                if (!piece_nodes_[pidx])
-                    continue;
-
-                piece_nodes_[pidx]->WriteToResource(resource_p);
-            }
-            StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
-            LOG4CPLUS_DEBUG_LOG(logger_node, "will post to SecSaveResourceFileInfo");
-        }
-        else
-        {
-            assert(false);
-        }
-    }
-#endif
-
     void BlockNode::ClearBlockMemCache(uint32_t play_subpiece_index)
     {
         access_counter_.reset();
@@ -482,18 +452,6 @@ namespace storage
 
             piece_nodes_[pidx]->OnWriteFinish();
         }
-    }
-
-    void BlockNode::OnWriteSubPieceFinish(uint32_t index_)
-    {
-        uint32_t piece_index = index_ / subpiece_num_per_piece_g_;
-        uint32_t subpiece_index = index_ % subpiece_num_per_piece_g_;
-        if (piece_nodes_[piece_index])
-        {
-            piece_nodes_[piece_index]->OnWriteSubPieceFinish(subpiece_index);
-            return;
-        }
-        assert(false);
     }
 
     void BlockNode::GetBufferForSave(std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set)

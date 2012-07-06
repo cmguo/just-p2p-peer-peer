@@ -69,12 +69,9 @@ namespace storage
         bool IsSaving() const;
         bool NeedWrite() const {return need_write_;}
         bool IsAccessTimeout() const {return access_counter_.elapsed() > BLOCK_ACCESS_TIMEOUT*1000;}
-#ifdef DISK_MODE
-        void WriteToResource(boost::shared_ptr<Resource> resource_p_);
-#endif
+
         void ClearBlockMemCache(uint32_t play_subpiece_index);
         void OnWriteFinish();
-        void OnWriteSubPieceFinish(uint32_t subpiece_info);
         void GetBufferForSave (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set);
 
     private:

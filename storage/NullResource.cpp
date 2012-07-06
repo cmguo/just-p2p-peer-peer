@@ -83,12 +83,6 @@ namespace storage
     {
         return false;
     }
-
-    bool NullResource::WriteBuffer(const uint32_t startpos, const protocol::SubPieceBuffer* buffer)
-    {
-        return false;
-    }
-
     bool NullResource::WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer)
     {
         return false;

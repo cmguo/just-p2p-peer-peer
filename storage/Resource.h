@@ -112,12 +112,6 @@ namespace storage
             const protocol::SubPieceInfo& subpiece_info,
             protocol::SubPieceContent* buffer);
 
-        // 将一个subpiece写入文件，然后交由Instance从poolout_pending_subpiece_info中删除该subpiece
-        virtual void ThreadSecWriteSubPiece(protocol::SubPieceInfo subpiece_info, protocol::SubPieceBuffer* buf, bool del_buf);
-
-        void ThreadSecWriteSubPieceHelper(protocol::SubPieceInfo subpiece_info, uint32_t startpos, uint32_t length,
-            protocol::SubPieceBuffer* buf, bool del_buf);
-
         void CheckFileDownComplete(uint32_t start_pos, uint32_t length);
 
         void ThreadTryRenameToNormalFile();
@@ -149,7 +143,6 @@ namespace storage
         virtual base::AppBuffer ReadBuffer(const uint32_t startpos, const uint32_t length) = 0;
         virtual std::vector<base::AppBuffer> ReadBufferArray(const uint32_t startpos, const uint32_t length) = 0;
         virtual bool ReadBufferArray(const uint32_t startpos, const uint32_t length, std::vector<protocol::SubPieceContent*> buffs) = 0;
-        virtual bool WriteBuffer(const uint32_t startpos, const protocol::SubPieceBuffer* buffer) = 0;
         virtual bool WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer) = 0;
         virtual void Erase(const uint32_t startpos, const uint32_t length) = 0;
         virtual bool TryRenameToNormalFile() = 0;
@@ -165,7 +158,6 @@ namespace storage
                 delete *iter;
             }
         }
-        static void ReleaseSubPieceBuffer(protocol::SubPieceBuffer * buf) {delete buf;}
 
     protected:
         boost::asio::io_service & io_svc_;

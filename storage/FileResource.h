@@ -72,7 +72,6 @@ class FileResource: public Resource
     virtual base::AppBuffer ReadBuffer(const uint32_t startpos, const uint32_t length);
     virtual std::vector<base::AppBuffer> ReadBufferArray(const uint32_t startpos, const uint32_t length);
     virtual bool ReadBufferArray(const uint32_t startpos, const uint32_t length, std::vector<protocol::SubPieceContent*> buffs);
-    virtual bool WriteBuffer(const uint32_t startpos, const protocol::SubPieceBuffer* buffer);
     virtual bool WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer);
     virtual void Erase(const uint32_t startpos, const uint32_t length);
     virtual bool TryRenameToNormalFile();

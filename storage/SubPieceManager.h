@@ -58,7 +58,6 @@ namespace storage
         }
         void RemoveBlockInfo(uint32_t block_index);
         void OnWriteBlockFinish(uint32_t block_index);
-        void OnWriteSubPieceFinish(protocol::SubPieceInfo &subpiece_info);
 
         bool GetNextNullSubPiece(const protocol::SubPieceInfo& subpiece_info, protocol::SubPieceInfo& subpiece_for_download) const;
 #ifdef DISK_MODE

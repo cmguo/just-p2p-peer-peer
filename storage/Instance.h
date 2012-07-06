@@ -215,7 +215,6 @@ namespace storage
         // 通知DownloadDriver makeblock成功或失败
         void OnNotifyHashBlock(uint32_t block_index, bool b_success);
 
-        void OnWriteSubPieceFinish(protocol::SubPieceInfo subpiece_info);
         void OnWriteBlockFinish(uint32_t block_index);
 
         // 通知Storage做相应操作，通知appmodule发AddRidUrlRequestPacket包，通知download_driver下载完毕

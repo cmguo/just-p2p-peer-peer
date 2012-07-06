@@ -316,47 +316,30 @@ namespace storage
         // assert(false);
     }
 
-    void SubPieceManager::OnWriteSubPieceFinish(protocol::SubPieceInfo &subpiece_info) {
-        BlockNode::p & node = blocks_[subpiece_info.block_index_];
-        if (node) {
-            node->OnWriteSubPieceFinish(subpiece_info.subpiece_index_);
-            return;
-        }
-        assert(false);
-    }
-
 #ifdef DISK_MODE
     void SubPieceManager::WriteBlockToResource(Resource::p resource_p, uint32_t block_index)
     {
         LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "block " << block_index);
         BlockNode::p & node = blocks_[block_index];
-        if (node && node->NeedWrite())
+        if (node)
         {
-            if (node->IsFull())
+            assert(node->NeedWrite());
+            assert(node->IsFull());
+            assert(block_bit_map_->HasBlock(block_index));
+            // block is full, include data in memory and disk @herain
+            std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, SubPieceBuffer>();
+            node->GetBufferForSave(*buffer_set_p);
+            if (buffer_set_p->empty())
             {
-                assert(block_bit_map_->HasBlock(block_index));
-                // block is full, include data in memory and disk @herain
-                std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, SubPieceBuffer>();
-                node->GetBufferForSave(*buffer_set_p);
-                if (buffer_set_p->empty())
-                {
-                    delete buffer_set_p;
-                    return;
-                }
-                StorageThread::Post(
-                    boost::bind(&Resource::ThreadPendingHashBlock, resource_p, block_index, buffer_set_p));
-                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to ThreadPendingHashBlock:" << block_index << 
-                    " buffer count:" << buffer_set_p->size());
-                StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
-                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to SecSaveResourceFileInfo");
+                delete buffer_set_p;
+                return;
             }
-            else
-            {
-                if (!p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenFull())
-                {
-                    node->WriteToResource(resource_p);
-                }
-            }
+            StorageThread::Post(
+                boost::bind(&Resource::ThreadPendingHashBlock, resource_p, block_index, buffer_set_p));
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to ThreadPendingHashBlock:" << block_index << 
+                " buffer count:" << buffer_set_p->size());
+            StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
+            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to SecSaveResourceFileInfo");
         }
     }
 #endif

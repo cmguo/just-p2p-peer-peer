@@ -315,29 +315,6 @@ namespace storage
         return false;
     }
 
-#ifdef DISK_MODE
-    void PieceNode::WriteToResource(Resource::p resource_p_)
-    {
-
-        for (boost::uint16_t sidx = 0; sidx < subpiece_set_.size(); ++sidx)
-        {
-            if (!subpiece_set_.test(sidx))
-            {
-                continue;
-            }
-            assert(subpieces_[sidx]);
-            if (subpieces_[sidx] && subpieces_[sidx]->state_ == NDST_MEM)
-            {
-                protocol::SubPieceInfo subpiece(info_.block_index_, info_.piece_index_*subpiece_num_per_piece_g_ + sidx);
-                StorageThread::Post(boost::bind(&Resource::ThreadSecWriteSubPiece, resource_p_,
-                    subpiece, new protocol::SubPieceBuffer(subpieces_[sidx]->subpiece_), true));
-                LOG4CPLUS_DEBUG_LOG(logger_node, "will post to ThreadSecWriteSubPiece: subpiece:" << subpiece);
-                subpieces_[sidx]->state_ = NDST_SAVING;
-            }
-        }
-    }
-#endif
-
     void PieceNode::ClearBlockMemCache(uint16_t play_subpiece_index)
     {
         uint16_t max_subpiece_index = std::min(play_subpiece_index, (uint16_t)subpieces_.size());
@@ -383,17 +360,6 @@ namespace storage
                 subpieces_[sidx]->state_ = NDST_DISK;
             }
         }
-    }
-
-    void PieceNode::OnWriteSubPieceFinish(uint32_t subpiece_index)
-    {
-        if (subpieces_[subpiece_index] && subpieces_[subpiece_index]->state_ == NDST_SAVING)
-        {
-            subpieces_[subpiece_index]->subpiece_ = protocol::SubPieceBuffer();
-            subpieces_[subpiece_index]->state_ = NDST_DISK;
-            return;
-        }
-        assert(false);
     }
 
     void PieceNode::GetBufferForSave(std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set) const

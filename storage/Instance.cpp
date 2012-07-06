@@ -644,19 +644,6 @@ namespace storage
         }
     }
 
-    void Instance::OnWriteSubPieceFinish(protocol::SubPieceInfo subpiece_info)
-    {
-        if (false == is_running_)
-            return;
-
-        assert(subpiece_manager_);
-        if (subpiece_manager_)
-        {
-            LOG4CPLUS_DEBUG_LOG(logger_instance, "OnWriteSubPieceFinish subpiece:" << subpiece_info);
-            subpiece_manager_->OnWriteSubPieceFinish(subpiece_info);
-        }
-    }
-
     void Instance::OnWriteBlockFinish(uint32_t block_index)
     {
         if (false == is_running_)

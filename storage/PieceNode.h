@@ -83,12 +83,9 @@ namespace storage
         NodeState SubPieceState(uint16_t idx) const {
             return subpieces_[idx]->state_;
         }
-#ifdef DISK_MODE
-        void WriteToResource(boost::shared_ptr<Resource> resource_p_);
-#endif
+
         void ClearBlockMemCache(uint16_t play_subpiece_index);
         void OnWriteFinish();
-        void OnWriteSubPieceFinish(uint32_t subpiece_index);
         void GetBufferForSave(std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set) const;
 
     private:

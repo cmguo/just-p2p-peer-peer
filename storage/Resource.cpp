@@ -210,56 +210,20 @@ namespace storage
 
             md5.final();
 
-            if (p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenVerified())
-            {
-                MD5 actual_hash;
-                actual_hash.from_bytes(md5.to_bytes());
+            ThreadPendingWriteBlock(block_index, buffer_set_p);
+            
+            MD5 hash_val;
+            hash_val.from_bytes(md5.to_bytes());
 
-                if (actual_hash == subpiece_manager_->GetRidInfo().block_md5_s_[block_index])
-                {
-                    ThreadPendingWriteBlock(block_index, buffer_set_p);
-                }
-            }
-            else
-            {
-                ThreadPendingWriteBlock(block_index, buffer_set_p);
-            }
+            LOG4CPLUS_DEBUG_LOG(logger_resource, "Block:" << block_index << " Hash:" << hash_val);
+
+            assert(instance_p_);
+            io_svc_.post(boost::bind(&Resource::ThreadPendingHashBlockHelper, buffer_set_p, instance_p_, block_index, hash_val));
         }
         else
         {
-            if (!p2sp::BootStrapGeneralConfig::Inst()->WriteBlockWhenFull())
-            {
-                // 只有满2M才会写磁盘，所以这里代码应该不会走进来
-                assert(false);
-                std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::iterator it = buffer_set.begin();
-                for (; it != buffer_set.end(); ++it)
-                {
-                    ThreadSecWriteSubPiece(it->first, &(it->second), false);
-                }
-
-                if (subpiece_manager_->HasFullBlock(block_index))
-                {
-                    uint32_t offset, length;
-                    subpiece_manager_->GetBlockPosition(block_index, offset, length);
-
-                    std::vector<AppBuffer> buffs = ReadBufferArray(offset, length);
-                    for (boost::uint32_t i = 0; i < buffs.size(); ++i)
-                    {
-                        assert(buffs[i].Data() && (buffs[i].Length() <= bytes_num_per_subpiece_g_ && buffs[i].Length()>0));
-                        md5.update(buffs[i].Data(), buffs[i].Length());
-                    }
-                    md5.final();
-                }
-            }
+            assert(false);
         }
-
-        MD5 hash_val;
-        hash_val.from_bytes(md5.to_bytes());
-
-        LOG4CPLUS_DEBUG_LOG(logger_resource, "Block:" << block_index << " Hash:" << hash_val);
-
-        assert(instance_p_);
-        io_svc_.post(boost::bind(&Resource::ThreadPendingHashBlockHelper, buffer_set_p, instance_p_, block_index, hash_val));
     }
 
     void Resource::ThreadPendingHashBlockHelper(
@@ -490,52 +454,6 @@ namespace storage
         }
         
         return;
-    }
-
-    void Resource::ThreadSecWriteSubPiece(protocol::SubPieceInfo subpiece_info, protocol::SubPieceBuffer* buf, bool del_buf)
-    {
-        if (is_running_ == false)
-        {
-            if (del_buf) io_svc_.post(boost::bind(&Resource::ReleaseSubPieceBuffer, buf));
-            return;
-        }
-        if (false == IsFileOpen() && false == ReOpenFile())
-        {
-            if (del_buf) io_svc_.post(boost::bind(&Resource::ReleaseSubPieceBuffer, buf));
-            return;
-        }
-
-        LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!" << subpiece_info);
-        assert(subpiece_manager_->HasSubPieceInMem(subpiece_info));
-
-        uint32_t startoffset, length;
-        subpiece_manager_->GetSubPiecePosition(subpiece_info, startoffset, length);
-
-        if (!WriteBuffer(startoffset, buf))
-        {
-            if (del_buf) io_svc_.post(boost::bind(&Resource::ReleaseSubPieceBuffer, buf));
-            return;
-        }
-
-        assert(instance_p_);
-        io_svc_.post(boost::bind(&Resource::ThreadSecWriteSubPieceHelper, shared_from_this(),
-            subpiece_info, startoffset, length, buf, del_buf));
-    }
-
-    void Resource::ThreadSecWriteSubPieceHelper(
-        protocol::SubPieceInfo subpiece_info,
-        uint32_t startpos,
-        uint32_t length,
-        protocol::SubPieceBuffer* buf,
-        bool del_buf)
-    {
-        if (del_buf) delete buf;
-        // 如果这里的instance_p_为空，是因为在存磁盘的过程中Instance被磁盘淘汰了。
-        if (instance_p_)
-        {
-            instance_p_->OnWriteSubPieceFinish(subpiece_info);
-            CheckFileDownComplete(startpos, length);
-        }
     }
 
     void Resource::CheckFileDownComplete(uint32_t start_pos, uint32_t length)

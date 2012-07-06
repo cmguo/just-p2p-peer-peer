@@ -380,56 +380,6 @@ namespace storage
         return true;
     }
 
-    bool FileResource::WriteBuffer(const uint32_t startpos, const protocol::SubPieceBuffer* buffer)
-    {
-        if (NULL == file_handle_)
-        {
-            if (false == ReOpenFile())
-            {
-                return false;
-            }
-        }
-        assert(file_handle_ != NULL);
-        assert(startpos + buffer->Length() <= subpiece_manager_->GetFileLength());
-
-        if (startpos + buffer->Length() > actual_size_)
-        {
-            /* extend file */
-            uint32_t block_size = 2 * 1024 * 1024;
-            uint32_t delta_size = ((startpos + buffer->Length() - actual_size_ + block_size - 1) / block_size) * block_size;
-            uint32_t new_size = std::min((uint32_t)(actual_size_ + delta_size), subpiece_manager_->GetFileLength());
-
-            if (new_size > actual_size_)
-            {
-                fseek(file_handle_, new_size - 1, SEEK_SET);
-                if (0 == fwrite("", 1, 1, file_handle_)) {
-                    return false;
-                }
-                Storage::Inst_Storage()->GetSpaceManager()->OnAllocDiskSpace(new_size - actual_size_, instance_p_->GetResDownMode());
-                actual_size_ = new_size;
-            }
-            else
-            {
-                assert(false);
-                return false;
-            }
-        }
-
-        fseek(file_handle_, startpos, SEEK_SET);
-        uint32_t write_len = fwrite(buffer->Data(), 1, buffer->Length(), file_handle_);
-
-        if (write_len != buffer->Length())
-        {
-            LOG4CPLUS_ERROR_LOG(logger_file_resource, __FUNCTION__ << ":" << __LINE__ << 
-                " WriteFile Failed!! WriteLength = " << write_len << " BufferLength = " << buffer->Length());
-            LOG4CPLUS_ERROR_LOG(logger_file_resource, "WriteFile Error: " << errno);
-            return false;
-        }
-        assert(write_len == buffer->Length());
-        need_saveinfo_to_disk_ = true;
-        return true;
-    }
-
     void FileResource::Erase(const uint32_t startpos, const uint32_t length)
     {
         need_saveinfo_to_disk_ = true;
