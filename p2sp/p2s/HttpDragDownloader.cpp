@@ -417,7 +417,7 @@ namespace p2sp
     {
         if (!is_running_)
         {
-            return;
+            return false;
         }
 
         namespace po = boost::program_options;
