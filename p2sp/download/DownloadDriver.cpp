@@ -1241,6 +1241,12 @@ namespace p2sp
         //I2: 获取时间(ms)(仅仅在获取成功时设置)
         info.fetch_tinydrag_time = fetch_tinydrag_time_;
 
+        //J2: channel name
+        if (proxy_connection_ && proxy_connection_->GetPlayInfo())
+        {
+            info.channel_name = proxy_connection_->GetPlayInfo()->GetChannelName();
+        }
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1308,6 +1314,7 @@ namespace p2sp
         log_stream << "&G2=" << (uint32_t)info.is_parse_tinydrag_success;
         log_stream << "&H2=" << (uint32_t)info.fetch_tinydrag_count;
         log_stream << "&I2=" << (uint32_t)info.fetch_tinydrag_time;
+        log_stream << "&J2=" << info.channel_name;
 
         string log = log_stream.str();
 
