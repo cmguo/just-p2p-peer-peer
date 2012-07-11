@@ -39,6 +39,8 @@ namespace statistic
         , timer_(global_second_timer(), 1000, boost::bind(&DACStatisticModule::OnTimerElapsed, this, &timer_))
         , rid_upload_count_total_(0)
         , rid_upload_count_in_ten_minutes_(0)
+        , total_report_request_count_(0)
+        , total_report_response_count_(0)
     {
     }
 
@@ -139,6 +141,12 @@ namespace statistic
         // T: 最大上传速度，单位kb/s
         info.uUploadMaxSpeed = max_peer_upload_kbps_;
 
+        //U: 发给Tracker用于查询Report包的总数
+        info.total_report_request_packet_count = total_report_request_count_;
+
+        //V: Tracker返回的Report包总数
+        info.total_report_response_packet_count = total_report_response_count_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
@@ -164,6 +172,8 @@ namespace statistic
         log_stream << "&R=" << (boost::uint32_t)info.uUploadAvgSpeedInBytes;
         log_stream << "&S=" << info.PeerGuid.to_string();
         log_stream << "&T=" << (boost::uint32_t)info.uUploadMaxSpeed;
+        log_stream << "&U=" << (uint32_t)info.total_report_request_packet_count;
+        log_stream << "&V=" << (uint32_t)info.total_report_response_packet_count;
 
         string log = log_stream.str();
 

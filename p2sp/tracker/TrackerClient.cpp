@@ -14,6 +14,7 @@
 #include "statistic/StatisticModule.h"
 #include <framework/network/Endpoint.h>
 #include <limits>
+#include "statistic/DACStatisticModule.h"
 
 namespace p2sp
 {
@@ -118,6 +119,7 @@ namespace p2sp
                     assert(0);
                 }
             }
+            statistic::DACStatisticModule::Inst()->SubmitReportResponse();
         }
         else
         {
@@ -328,6 +330,7 @@ namespace p2sp
         // post
         p2sp::AppModule::Inst()->DoSendPacket(report_request);
 
+        statistic::DACStatisticModule::Inst()->SubmitReportRequest();
         last_updates_ = update_resource_set;
 
         return last_transaction_id_;

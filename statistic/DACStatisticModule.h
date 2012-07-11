@@ -29,6 +29,8 @@ namespace statistic
         boost::uint32_t       uUploadAvgSpeedInBytes;               // R: 上传平均速度，单位byte/s
         Guid                  PeerGuid;                             // S: Peer Guid
         boost::uint32_t       uUploadMaxSpeed;                      // T: 最大上传速度，单位kb/s
+        boost::uint32_t       total_report_request_packet_count;    // U: 发给Tracker用于查询Report包的总数
+        boost::uint32_t       total_report_response_packet_count;   // V: Tracker返回的Report包总数 
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -46,6 +48,8 @@ namespace statistic
         void SubmitP2PUploadSpeedInKBps(uint32_t p2p_upload_KBps);
         void SubmitP2PUploadSpeedLimitInKBps(boost::uint32_t p2p_upload_limit_KBps);
         void SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes);
+        void SubmitReportRequest();
+        void SubmitReportResponse();
         void SubmitRidUploadCount()
         {
             rid_upload_count_total_++;
@@ -101,6 +105,9 @@ namespace statistic
 
         boost::uint32_t rid_upload_count_total_;
         boost::uint32_t rid_upload_count_in_ten_minutes_;
+
+        boost::uint32_t total_report_request_count_;
+        boost::uint32_t total_report_response_count_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
@@ -143,6 +150,16 @@ namespace statistic
     inline void DACStatisticModule::SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes)
     {
         upload_discard_byte_ += p2p_upload_discard_bytes;
+    }
+
+    inline void DACStatisticModule::SubmitReportRequest()
+    {
+        total_report_request_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitReportResponse()
+    {
+        total_report_response_count_++;
     }
 }
 
