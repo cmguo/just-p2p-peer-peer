@@ -1247,6 +1247,12 @@ namespace p2sp
             info.channel_name = proxy_connection_->GetPlayInfo()->GetChannelName();
         }
 
+        //K2: 分别统计向每组station tracker发送的list包数和响应数
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.tracker_respons_info = p2p_downloader_->GetStatistic()->GetTrackerListRequestAndResponseString();
+        }
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1315,6 +1321,7 @@ namespace p2sp
         log_stream << "&H2=" << (uint32_t)info.fetch_tinydrag_count;
         log_stream << "&I2=" << (uint32_t)info.fetch_tinydrag_time;
         log_stream << "&J2=" << info.channel_name;
+        log_stream << "&K2=" << info.tracker_respons_info;
 
         string log = log_stream.str();
 

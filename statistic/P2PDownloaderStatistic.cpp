@@ -438,6 +438,32 @@ namespace statistic
             static_cast<boost::uint16_t>(100.0 * (p2p_downloader_statistic_info_.TotalRequestSubPieceCount - total_requestint_count - p2p_downloader_statistic_info_.TotalUnusedSubPieceCount) / (p2p_downloader_statistic_info_.TotalRequestSubPieceCount - total_requestint_count + 0.000001) + 0.5);
     }
 
+    string P2PDownloaderStatistic::GetTrackerListRequestAndResponseString()
+    {
+        std::ostringstream tracker_string;
+        std::map<boost::uint32_t, int>::iterator iter = tracker_list_request_count_.begin();
+        for (iter; iter != tracker_list_request_count_.end();)
+        {
+            tracker_string << (uint32_t)iter->first << ":";
+            tracker_string << (int)iter->second << ":";
+
+            if (tracker_list_response_count_.find(iter->first) != tracker_list_response_count_.end())
+            {
+                tracker_string << (int)tracker_list_response_count_[iter->first];
+            }
+            else
+            {
+                tracker_string << 0;
+            }
+
+            if (++iter != tracker_list_request_count_.end())
+            {
+                tracker_string << ",";
+            }
+        }
+
+        return tracker_string.str();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     // Shared Memory

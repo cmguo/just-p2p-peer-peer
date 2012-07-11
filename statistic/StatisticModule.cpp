@@ -942,7 +942,7 @@ namespace statistic
         GetTracker(tracker_info).ListRequestCount++;
         if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
         {
-            p2p_downloader_statistic_map_[rid]->SubmitDoListRequestCount();
+            p2p_downloader_statistic_map_[rid]->SubmitDoListRequestCount(tracker_info.StationNo);
         }
     }
 
@@ -953,7 +953,11 @@ namespace statistic
         tracker.LastListReturnPeerCount = peer_count;
         if (p2p_downloader_statistic_map_.find(rid) != p2p_downloader_statistic_map_.end())
         {
-            p2p_downloader_statistic_map_[rid]->SubmitDoListReponseCount();
+            p2p_downloader_statistic_map_[rid]->SubmitDoListReponseCount(tracker_info.StationNo);
+        }
+        else
+        {
+            assert(false);
         }
     }
 

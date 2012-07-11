@@ -66,8 +66,8 @@ namespace statistic
         void SubmitSnDownloadedBytes(uint32_t downloaded_bytes);
         void SubmitSnUploadedBytes(uint32_t uploaded_bytes);
 
-        void SubmitDoListRequestCount();
-        void SubmitDoListReponseCount();
+        void SubmitDoListRequestCount(boost::uint32_t station_no);
+        void SubmitDoListReponseCount(boost::uint32_t station_no);
 
         SPEED_INFO GetSpeedInfo();
 
@@ -136,6 +136,8 @@ namespace statistic
         boost::uint32_t GetTotalListRequestCount() const { return total_list_request_count_;}
 
         boost::uint32_t GetTotalListResponseCount() const { return total_list_response_count_;}
+
+        string GetTrackerListRequestAndResponseString();
 
         //////////////////////////////////////////////////////////////////////////
         // Misc
@@ -213,6 +215,8 @@ namespace statistic
 
         boost::uint32_t total_list_request_count_;
         boost::uint32_t total_list_response_count_;
+        std::map<uint32_t, int> tracker_list_request_count_;
+        std::map<uint32_t, int> tracker_list_response_count_;
 
         RID resource_id_;
 
@@ -334,14 +338,32 @@ namespace statistic
         sn_speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitDoListRequestCount()
+    inline void P2PDownloaderStatistic::SubmitDoListRequestCount(boost::uint32_t station_no)
     {
         total_list_request_count_++;
+
+        if (tracker_list_request_count_.find(station_no) != tracker_list_request_count_.end())
+        {
+            tracker_list_request_count_[station_no]++;
+        }
+        else
+        {
+            tracker_list_request_count_[station_no] = 1;
+        }
     }
 
-    inline void P2PDownloaderStatistic::SubmitDoListReponseCount()
+    inline void P2PDownloaderStatistic::SubmitDoListReponseCount(boost::uint32_t station_no)
     {
         total_list_response_count_++;
+
+        if (tracker_list_response_count_.find(station_no) != tracker_list_response_count_.end())
+        {
+            tracker_list_response_count_[station_no]++;
+        }
+        else
+        {
+            tracker_list_response_count_[station_no] = 1;
+        }
     }
 }
 

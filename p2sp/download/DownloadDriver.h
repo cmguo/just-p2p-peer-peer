@@ -89,6 +89,7 @@ namespace p2sp
         boost::uint32_t       fetch_tinydrag_count;                 // H2: 获取次数(无论是否获取成功都有)
         boost::uint32_t       fetch_tinydrag_time;                  // I2: 获取时间(ms)(仅仅在获取成功时设置)
         string                channel_name;                         // J2: channel name
+        string                tracker_respons_info;                 // K2: 分别统计向每组station tracker发送的list包数和响应数
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;
