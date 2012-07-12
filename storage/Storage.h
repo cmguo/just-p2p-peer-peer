@@ -245,7 +245,6 @@ namespace storage
         framework::timer::PeriodicTimer memory_consumption_monitor_timer_; //5s
 
 #ifdef DISK_MODE
-        bool need_save_info_to_disk;
         string resourceinfo_file_;  // "ResourceInfo.dat"
         string resourceinfo_bak_file_;  // "ResourceInfo.dat.bak"
         string resource_data_path_;

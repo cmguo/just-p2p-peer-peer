@@ -132,7 +132,7 @@ namespace p2sp
         {
             return p(new ProxyConnection(io_svc));
         }
-        ~ProxyConnection();
+
     public:
         void Start();
         void Stop();
@@ -258,11 +258,6 @@ namespace p2sp
         volatile bool is_running_;
 
         protocol::UrlInfo url_info_;
-
-        uint32_t send_subpieces_per_interval_;
-        uint32_t request_subpiece_per_interval_;
-        uint32_t expected_subpieces_per_interval_;
-        uint32_t time_interval_in_ms_;
 
         uint32_t file_length_;
         uint32_t openservice_head_length_;

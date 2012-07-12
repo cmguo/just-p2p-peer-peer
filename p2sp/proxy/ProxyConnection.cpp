@@ -99,10 +99,6 @@ namespace p2sp
     {
     }
 
-    ProxyConnection::~ProxyConnection()
-    {
-    }
-
     void ProxyConnection::initialize()
     {
         if (false == is_running_) {
@@ -120,12 +116,6 @@ namespace p2sp
         silent_time_counter_.reset();
         will_stop_ = false;
         will_stop_download_ = false;
-
-        time_interval_in_ms_ = 250;
-        send_subpieces_per_interval_ = 0;
-        expected_subpieces_per_interval_ = 512 * time_interval_in_ms_ / 1000;
-        // play_timer_ = framework::timer::PeriodicTimer::create(time_interval_in_ms_, shared_from_this());
-        // play_timer_->Start();
     }
 
     void ProxyConnection::clear()
@@ -588,15 +578,6 @@ namespace p2sp
                     download_driver_->SetSourceType(PlayInfo::SOURCE_PROXY);
                 }
                 download_driver_->Start(http_request, url_info_local, false);
-            }
-
-            // limit send speed
-            if (boost::algorithm::icontains(uri.gethost(), "qianqian.com") ||
-                boost::algorithm::icontains(uri.getfile(), ".wma") ||
-                boost::algorithm::icontains(uri.getfile(), ".mp3"))
-            {
-                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "QianQian: " << url_info.url_);
-                expected_subpieces_per_interval_ = 128 * time_interval_in_ms_ / 1000;
             }
         }
     }
@@ -1232,45 +1213,7 @@ namespace p2sp
             live_download_driver_.reset();
         }
     }
-/*
-    void ProxyConnection::OnTimerElapsed(framework::timer::Timer * pointer, uint32_t times)
-    {
 
-        assert(0);
-
-        if (is_running_ == false) return;
-        if (pointer == subpiece_fail_timer_)
-        {
-            OnPlayTimer(times);
-        }
-        else if (pointer == play_timer_)
-        {
-            rest_time -= 250;
-
-            if (rest_time < 0)
-            {
-                rest_time = 0;
-            }
-
-            if (download_driver_ && download_driver_->GetSessionID() != "")
-            {
-                download_driver_->SetRestPlayTime(rest_time);
-
-            }
-            if (send_subpieces_per_interval_ >= expected_subpieces_per_interval_) {
-                send_subpieces_per_interval_ = 0;
-                OnPlayTimer(times);
-            }
-            else {
-                send_subpieces_per_interval_ = 0;
-            }
-        }
-        else
-        {
-            // assert(0);
-        }
-    }
-*/
     void ProxyConnection::OnProxyTimer(uint32_t times)
     {
         if (is_running_ == false)
@@ -1445,12 +1388,7 @@ namespace p2sp
         proxy_sender_->Start(http_request_demo_, shared_from_this());
         proxy_sender_->SendHttpRequest();
     }
-/*
-    void ProxyConnection::OnAsyncGetBufferSucced(uint32_t start_position, protocol::SubPieceBuffer buffer)
-    {
-        OnAsyncGetSubPieceSucced(start_position, buffer);
-    }
-*/
+
     void ProxyConnection::CheckDeath()
     {
         if (false == is_running_)
@@ -1863,6 +1801,4 @@ namespace p2sp
     {
         return live_download_driver_ ? live_download_driver_->GetTotalRecievedSubPieceCount() : 0;
     }
-
-    
 }

@@ -56,7 +56,6 @@ namespace storage
 #endif
     {
 #ifdef DISK_MODE
-        need_save_info_to_disk = (false);
         storage_mode_ = STORAGE_MODE_NORMAL;
 #endif  // #ifdef DISK_MODE
     }

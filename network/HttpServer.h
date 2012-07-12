@@ -52,7 +52,6 @@ namespace network
         HttpServer(
             boost::asio::io_service & io_svc);
     public:
-        ~HttpServer();
         void HttpRecv();
         void HttpRecvTillClose();
         void HttpSendHeader(uint32_t content_length, string content_type = "html/text");

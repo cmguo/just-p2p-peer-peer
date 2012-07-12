@@ -129,7 +129,7 @@ namespace p2sp
         {
             return p(new DownloadDriver(io_svc, proxy_connetction));
         }
-        ~DownloadDriver();
+
     public:
         void Start(const network::HttpRequest::p http_request_demo, const protocol::UrlInfo& origanel_url_info, bool is_support_start, boost::int32_t control_mode=-1);
         void Start(const network::HttpRequest::p http_request_demo, const protocol::RidInfo& rid_for_play, boost::int32_t control_mode=-1);
@@ -388,7 +388,6 @@ namespace p2sp
 
         protocol::UrlInfo original_url_info_;
         uint32_t block_check_faild_times_;
-        bool is_complete_;
         boost::int32_t id_;
         static boost::int32_t s_id_;
         bool is_support_start_;

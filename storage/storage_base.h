@@ -35,17 +35,6 @@ namespace storage
         INSTANCE_STOP,
         INSTANCE_CLOSING
     };
-    enum
-    {
-        NO_VERIFIED,
-        HAS_BEEN_VERIFIED,
-        BEING_VERIFIED
-    };
-    enum ResDownMode
-    {
-        DM_BY_ACCELERATE = 0,    // 资源以“加速”的方式下载
-        DM_BY_BHOSAVE     = 1    // 资源以“BHO保存”的方式下载
-    };
 
     enum StorageMode
     {

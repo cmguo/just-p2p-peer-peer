@@ -20,13 +20,6 @@ namespace network
     static log4cplus::Logger logger_httpserver = log4cplus::Logger::getInstance("[http_server]");
 #endif
 
-    class ObjectStates
-    {
-    public:
-        static const uint8_t Alive = 0xBD;
-        static const uint8_t Destroyed = 0xAC;
-    };
-
     HttpServer::HttpServer(
         boost::asio::io_service & io_svc)
         : socket_(io_svc)
@@ -36,21 +29,7 @@ namespace network
         , recv_timeout_(60 * 1000)
         , is_open_(false)
         , will_close_(false)
-        , object_state_(ObjectStates::Alive)
-
     {
-    }
-
-    HttpServer::~HttpServer()
-    {
-        //TODO, ericzheng, remove the dtor & object_state_ member once the crash issue is understood
-        if (object_state_ != ObjectStates::Alive)
-        {
-            //purposely crash the app
-            *(reinterpret_cast<uint8_t*>(NULL)) = object_state_;
-        }
-
-        object_state_ = ObjectStates::Destroyed;
     }
 
     void HttpServer::HttpRecv()

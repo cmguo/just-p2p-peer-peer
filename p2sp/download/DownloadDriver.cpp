@@ -94,7 +94,6 @@ namespace p2sp
         : io_svc_(io_svc)
         , is_running_(false)
         , block_check_faild_times_(0)
-        , is_complete_(false)
         , proxy_connection_(proxy_connetction)
         , id_(s_id_++)
         , is_open_service_(false)
@@ -146,10 +145,6 @@ namespace p2sp
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
-    }
-
-    DownloadDriver::~DownloadDriver()
-    {
     }
 
     // URL
@@ -1680,7 +1675,6 @@ namespace p2sp
     {
         if (is_running_ == false)
             return;
-        is_complete_ = true;
 
         if (p2p_downloader_)
         {
