@@ -411,7 +411,7 @@ namespace p2sp
         {
             LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " AttachRidByUrl inst = " 
                 << instance_ << ", url = " << original_url_info_.url_ << ", rid = " << rid_info_);
-            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, protocol::RID_BY_PLAY_URL);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_);
             if (instance_->GetRID().is_empty())
             {
                 // RID 错误, 使用普通模式
@@ -590,7 +590,7 @@ namespace p2sp
 
         instance_->AttachDownloadDriver(shared_from_this());
 
-        Storage::Inst()->AttachRidByUrl(rid_for_play.GetRID().to_string(), rid_for_play, protocol::RID_BY_PLAY_URL);
+        Storage::Inst()->AttachRidByUrl(rid_for_play.GetRID().to_string(), rid_for_play);
 
         // 检查本地是否有已下资源，向proxy_connection_发送content length
         if (instance_->HasRID())
@@ -694,99 +694,6 @@ namespace p2sp
 
         instance_->GetRidInfo(ridInfo);
 
-        Rid_From rid_from = (Rid_From) (instance_->GetRidOriginFlag());
-        if (rid_from != protocol::RID_BY_PLAY_URL)  // 通过播放串获得的RID不通知
-        {
-            protocol::UrlInfo orig = original_url_info_;
-            string urlExt = AppModule::MakeUrlByRidInfo(ridInfo);
-            uint32_t nSize = sizeof(RESOURCEID_DATA) + urlExt.length() + 1;
-            const MetaData& meta = instance_->GetMetaData();
-
-            RESOURCEID_DATA * lpResourceData = (RESOURCEID_DATA*) MessageBufferManager::Inst()->NewBuffer(nSize);
-            memset(lpResourceData, 0, nSize);
-
-            lpResourceData->uSize = nSize;
-            lpResourceData->guidRID = instance_->GetRID();
-
-            strncpy(lpResourceData->szFileType, meta.FileFormat.c_str(), sizeof(lpResourceData->szFileType)-1);
-
-            string orig_url = orig.GetIdentifiableUrl();
-
-            strncpy(lpResourceData->szOriginalUrl, orig_url.c_str(), sizeof(lpResourceData->szOriginalUrl)-1);
-            strncpy(lpResourceData->szOriginalReferUrl, orig.refer_url_.c_str(), sizeof(lpResourceData->szOriginalReferUrl)-1);
-
-            lpResourceData->uDuration = meta.Duration;
-            lpResourceData->uFileLength = instance_->GetFileLength();
-            lpResourceData->bUploadPic = 0;
-            lpResourceData->usVAParamLength = urlExt.length();
-
-            assert(nSize - sizeof(RESOURCEID_DATA) >= urlExt.length());
-
-            strncpy(lpResourceData->szVAParam, urlExt.c_str(), nSize - sizeof(RESOURCEID_DATA)-1);
-
-            LOG4CPLUS_DEBUG_LOG(logger_download_driver, "lpResourceData: Duration=" << meta.Duration << " FileLength=" << lpResourceData->uFileLength << " vaParam=" << urlExt);
-
-    #ifdef NEED_TO_POST_MESSAGE
-            WindowsMessage::Inst().PostWindowsMessage(UM_GOT_RESOURCEID, (WPARAM)id_, (LPARAM)lpResourceData);
-    #endif
-        }
-
-        // 计算需要发出的消息的参数
-        DOWNLOADDRIVERSTOPDATA* lpDownloadDriverStopData =
-            MessageBufferManager::Inst()->NewStruct<DOWNLOADDRIVERSTOPDATA> ();
-        memset(lpDownloadDriverStopData, 0, sizeof(DOWNLOADDRIVERSTOPDATA));
-        lpDownloadDriverStopData->uSize = sizeof(DOWNLOADDRIVERSTOPDATA);
-
-        strncpy(lpDownloadDriverStopData->szOriginalUrl, original_url_info_.url_.c_str(),
-            sizeof(lpDownloadDriverStopData->szOriginalUrl)-1);
-        strncpy(lpDownloadDriverStopData->szOriginalReferUrl, original_url_info_.refer_url_.c_str(),
-            sizeof(lpDownloadDriverStopData->szOriginalReferUrl)-1);
-
-        lpDownloadDriverStopData->bHasRID = !statistic_->GetResourceID().is_empty();
-        lpDownloadDriverStopData->guidRID = statistic_->GetResourceID();
-        lpDownloadDriverStopData->ulResourceSize = statistic_->GetFileLength();
-
-        SPEED_INFO speed_info = statistic_->GetSpeedInfo();
-        if (false == lpDownloadDriverStopData->bHasRID)
-        {
-            lpDownloadDriverStopData->ulP2pDownloadBytes = 0;
-            lpDownloadDriverStopData->ulOtherServerDownloadBytes = 0;
-            lpDownloadDriverStopData->ulDownloadBytes = speed_info.TotalDownloadBytes;
-        }
-        else
-        {
-            if (p2p_downloader_ && p2p_downloader_->GetStatistic())
-            {
-                lpDownloadDriverStopData->ulP2pDownloadBytes
-                    = p2p_downloader_->GetStatistic()->GetSpeedInfo().TotalDownloadBytes;
-            }
-            else
-            {
-                lpDownloadDriverStopData->ulP2pDownloadBytes = 0;
-            }
-
-            lpDownloadDriverStopData->ulDownloadBytes = speed_info.TotalDownloadBytes
-                + lpDownloadDriverStopData->ulP2pDownloadBytes;
-
-            std::list<UrlHttpDownloaderPair>::iterator iter = std::find_if(url_indexer_.begin(), url_indexer_.end(), UrlHttpDownloaderEqual(original_url_info_.url_));
-            if (iter != url_indexer_.end())
-            {
-                HttpDownloader::p org_http_downloader_ = iter->http_downloader_;
-                lpDownloadDriverStopData->ulOtherServerDownloadBytes = speed_info.TotalDownloadBytes
-                    - org_http_downloader_->GetStatistics()->GetSpeedInfo().TotalDownloadBytes;
-            }
-            else
-            {
-                lpDownloadDriverStopData->ulOtherServerDownloadBytes = 0;
-            }
-        }
-        StatisticModule::Inst()->SubmitP2PDownloaderDownloadBytes(lpDownloadDriverStopData->ulP2pDownloadBytes);
-        StatisticModule::Inst()->SubmitOtherServerDownloadBytes(lpDownloadDriverStopData->ulOtherServerDownloadBytes);
-
-        // lpDownloadDriverStopData->ulOtherServerDownloadBytes;
-        lpDownloadDriverStopData->uPlayTime = 0;
-        lpDownloadDriverStopData->uDataRate = 0;
-
         // 停止所有 Downloader
         for (std::list<UrlHttpDownloaderPair>::iterator iter = url_indexer_.begin(); iter != url_indexer_.end(); iter++)
         {
@@ -798,31 +705,7 @@ namespace p2sp
         url_indexer_.clear();
         // 取消 Statistic 模块 关联
 
-        double rate = 0.0;
-        if (lpDownloadDriverStopData->ulDownloadBytes > 0)
-        {
-            rate = (lpDownloadDriverStopData->ulP2pDownloadBytes * 100.0 / lpDownloadDriverStopData->ulDownloadBytes);
-        }
-
-        LOG4CPLUS_DEBUG_LOG(logger_download_driver, "p2p = " << lpDownloadDriverStopData->ulP2pDownloadBytes <<
-            ", download = " << lpDownloadDriverStopData->ulDownloadBytes <<
-            ", size = " << lpDownloadDriverStopData->ulResourceSize <<
-            ", p2p/download = " << rate << "%");
-
         assert(instance_);
-        // 包含.exe则不发送消息
-        if (false == IsFileUrl(original_url_info_.url_))
-        {
-    #ifdef NEED_TO_POST_MESSAGE
-            // 先往客户端界面发送 UM_DOWNLOADDRIVER_STOP 消息
-            WindowsMessage::Inst().PostWindowsMessage(UM_DOWNLOADDRIVER_STOP, (WPARAM)id_, (LPARAM)lpDownloadDriverStopData);
-    #endif
-        }
-        else
-        {
-            // 不发送消息则自己释放
-            MessageBufferManager::Inst()->DeleteBuffer((boost::uint8_t*) lpDownloadDriverStopData);
-        }
 
         if (bufferring_monitor_)
         {
@@ -1841,12 +1724,11 @@ namespace p2sp
             downloaders_.erase(p2p_downloader_);
             p2p_downloader_ = P2PDownloader__p();
         }
-        boost::int32_t flag = instance_->GetRidOriginFlag();
+
         instance_->DettachDownloadDriver(shared_from_this());
         instance_ = boost::static_pointer_cast<storage::Instance>(Storage::Inst()->CreateInstance(original_url_info_, true));
         instance_->SetIsOpenService(is_open_service_);
         instance_->AttachDownloadDriver(shared_from_this());
-        instance_->SetRidOriginFlag(flag);
 
         url_indexer_.clear();
 
@@ -2824,7 +2706,7 @@ namespace p2sp
 
         if (instance_)
         {
-            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_, protocol::RID_BY_PLAY_URL);
+            Storage::Inst()->AttachRidByUrl(original_url_info_.url_, rid_info_);
         }
 
         bufferring_monitor_.reset();

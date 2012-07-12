@@ -1522,7 +1522,7 @@ namespace storage
     }
 
     // Url如果在url_map中已存在并且与RID信息不一致，则调用MergeInstance删除并重新建立新Instance
-    void Storage::AttachRidByUrl(const string& url, const protocol::RidInfo& rid, int flag)
+    void Storage::AttachRidByUrl(const string& url, const protocol::RidInfo& rid)
     {
         if (is_running_ == false)
             return;
@@ -1552,7 +1552,7 @@ namespace storage
             return;
         }
         Instance::p inst1 = it->second;
-        inst1->SetRidOriginFlag(flag);
+
         // 是纯下模式
         if (inst1->IsPureDownloadMode())
         {

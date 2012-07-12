@@ -125,16 +125,6 @@ namespace storage
         // 如果资源描述为空(正常情况)，则根据rid_info创建资源描述符，进而创建文件资源
         bool SetRidInfo(const protocol::RidInfo& rid_info);
 
-        int GetRidOriginFlag() const
-        {
-            return flag_rid_origin_;
-        }
-
-        void SetRidOriginFlag(int flag)
-        {
-            flag_rid_origin_ = flag;
-        }
-
     public:
         // -----------------------------------------------------------------
         //  一系列获取属性信息的函数

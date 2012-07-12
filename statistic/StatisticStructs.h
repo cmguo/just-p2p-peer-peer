@@ -293,9 +293,8 @@ namespace statistic
         boost::uint8_t  DownloadDriverCount;               // 正在下载的视频
         boost::uint32_t DownloadDriverIDs[UINT8_MAX_VALUE];  // 正在下载的视频 驱动器ID; 如果为 0 表示不存在; (不连续)
 
-        // 停止时数据上传相关
-        uint32_t TotalP2PDownloadBytes;
-        uint32_t TotalOtherServerDownloadBytes;
+        uint32_t Resersed2;
+        uint32_t Resersed3;
 
         // 下载中 数据下载 实时相关信息
         boost::uint32_t  TotalHttpNotOriginalDataBytes;        // 实时 下载的纯数据 字节数
@@ -356,8 +355,8 @@ namespace statistic
             ar & DownloadDriverCount;
             ar & framework::container::make_array(DownloadDriverIDs, sizeof(DownloadDriverIDs) / sizeof(DownloadDriverIDs[0]));
 
-            ar & TotalP2PDownloadBytes;
-            ar & TotalOtherServerDownloadBytes;
+            ar & Resersed2;
+            ar & Resersed3;
 
             ar &  TotalHttpNotOriginalDataBytes;        //
             ar &  TotalP2PDataBytes;                    //

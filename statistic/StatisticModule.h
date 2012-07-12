@@ -209,13 +209,6 @@ namespace statistic
         void SubmitAddUrlRIDResponse();
 
         //////////////////////////////////////////////////////////////////////////
-        // 停止时数据上传相关
-
-        void SubmitP2PDownloaderDownloadBytes(uint32_t p2p_downloader_download_bytes);
-
-        void SubmitOtherServerDownloadBytes(uint32_t other_server_download_bytes);
-
-        //////////////////////////////////////////////////////////////////////////
         // 下载中 数据下载 实时相关信息
 
         void SubmitTotalHttpNotOriginalDataBytes(boost::uint32_t bytes);  // 实时 下载的纯数据 字节数

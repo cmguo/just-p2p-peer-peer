@@ -47,7 +47,6 @@ namespace storage
         , instance_state_(INSTANCE_NEED_RESOURCE)
         , local_complete_(false)
         , disk_file_size_(0)
-        , flag_rid_origin_(protocol::RID_BY_URL)
         , is_have_rename_(false)
         , send_speed_limit_(storage_send_speed_limit)
         , send_count_(0)

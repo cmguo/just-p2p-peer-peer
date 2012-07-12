@@ -1186,22 +1186,6 @@ namespace statistic
         return removed;
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    // 停止时数据上传相关
-    void StatisticModule::SubmitP2PDownloaderDownloadBytes(uint32_t p2p_downloader_download_bytes)
-    {
-        statistic_info_.TotalP2PDownloadBytes += p2p_downloader_download_bytes;
-        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, SubmitP2PDownloaderDownloadBytes: " << 
-            statistic_info_.TotalP2PDownloadBytes);
-    }
-
-    void StatisticModule::SubmitOtherServerDownloadBytes(uint32_t other_server_download_bytes)
-    {
-        statistic_info_.TotalOtherServerDownloadBytes += other_server_download_bytes;
-        LOG4CPLUS_DEBUG_LOG(logger_statistic, "IndexServer, QueryRIDByUrlResponseCount: " << 
-            statistic_info_.TotalOtherServerDownloadBytes);
-    }
-
     uint32_t StatisticModule::GetTotalDataBytes()
     {
         return statistic_info_.TotalP2PDataBytes + statistic_info_.TotalHttpOriginalDataBytes;

@@ -79,7 +79,7 @@ namespace storage
         virtual IInstance::p GetInstanceByFileName(const string & filename, bool is_check);
 
         // Url如果在url_map中已存在并且与RID信息不一致，则调用MergeInstance删除并重新建立新Instance
-        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid, int flag);
+        virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid);
 
         // 根据mod_number和group_count获取rid_inst_map中的rid
         virtual void GetVodResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count);

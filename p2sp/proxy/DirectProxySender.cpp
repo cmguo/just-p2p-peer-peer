@@ -55,24 +55,11 @@ namespace p2sp
             httpdownloader_statistic_->SetReferUrl(http_request->GetRefererUrl());
             assert(httpdownloader_statistic_);
             httpdownloader_statistic_->SetIsDeath(false);
-
-            // 气泡提示
-            DOWNLOADDRIVERSTARTDATA* lpDownloadDriverStartData = MessageBufferManager::Inst()->NewStruct<DOWNLOADDRIVERSTARTDATA>();
-            memset(lpDownloadDriverStartData, 0, sizeof(DOWNLOADDRIVERSTARTDATA));
-            lpDownloadDriverStartData->uSize = sizeof(DOWNLOADDRIVERSTARTDATA);
-
-            strncpy(lpDownloadDriverStartData->szOriginalUrl, http_request->GetUrl().c_str(), sizeof(lpDownloadDriverStartData->szOriginalUrl)-1);
-            strncpy(lpDownloadDriverStartData->szOriginalReferUrl, http_request->GetRefererUrl().c_str(), sizeof(lpDownloadDriverStartData->szOriginalReferUrl)-1);
-
-#ifdef NEED_TO_POST_MESSAGE
-            WindowsMessage::Inst().PostWindowsMessage(UM_DONWLOADDRIVER_START, (WPARAM)s_id_, (LPARAM)lpDownloadDriverStartData);
-#endif
         }
         else 
         {
             downloaddriver_statistic_->SetHidden(true);
         }
-
     }
 
     void DirectProxySender::Start(uint32_t start_possition)

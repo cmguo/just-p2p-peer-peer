@@ -360,39 +360,10 @@ namespace p2sp
 
             if (start_pos >= HEADER_LENGTH)
             {
-                // 解析码流率
-                // IInstance::p inst = download_driver_->GetInstance();
-                if (download_driver_->GetInstance())
-                {
-                    if (download_driver_->GetInstance()->ParseMetaData(header_buffer_))
-                    {
-#ifdef NEED_TO_POST_MESSAGE
-                        LPRESOURCE_DATA_RATE_INFO data_rate_info =
-                            MessageBufferManager::Inst()->NewStruct<RESOURCE_DATA_RATE_INFO>();
-                        if (data_rate_info != NULL)
-                        {
-                            memset(data_rate_info, 0, sizeof(RESOURCE_DATA_RATE_INFO));
-                            data_rate_info->uSize = sizeof(RESOURCE_DATA_RATE_INFO);
-                            data_rate_info->fDataRate = static_cast<float>(download_driver_->GetInstance()->GetMetaData().VideoDataRate);
-                            string orig_url = source_url_;
-                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "source_url dest_length = " << _countof(data_rate_info->szOriginalUrl) <<
-                                ", length = " << orig_url.length() << ", url = " << orig_url);
-                            strncpy(data_rate_info->szOriginalUrl, orig_url.c_str(), sizeof(data_rate_info->szOriginalUrl)-1);
-                            // log
-                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Post UM_GOT_RESOURCE_DATARATE:" <<
-                                "  uSize = " << data_rate_info->uSize <<
-                                ", fDataRate = " << data_rate_info->fDataRate <<
-                                ", szOriginalUrl = " << data_rate_info->szOriginalUrl);
-                            // post message
-                            WindowsMessage::Inst().PostWindowsMessage(UM_GOT_RESOURCE_DATARATE, (WPARAM)download_driver_->GetDownloadDriverID(), (LPARAM)data_rate_info);
-                        }
-#endif
-                    }
-                }
+                download_driver_->GetInstance()->ParseMetaData(header_buffer_);
                 metadata_parsed_ = true;
             }
         }
-
 
         //DebugLog("proxy_sender_->GetPlayingPosition() = %d file length = %d", proxy_sender_->GetPlayingPosition(), file_length_);
         LOG4CPLUS_WARN_LOG(logger_proxy_connection, "proxy_sender_->GetPlayingPosition() = " << 

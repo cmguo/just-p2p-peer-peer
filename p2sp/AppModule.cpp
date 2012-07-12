@@ -330,8 +330,8 @@ namespace p2sp
         lpCoreStopData->usNATKeeplivePeriods = 10*1000;
         lpCoreStopData->ulTotalDownloadBytes = StatisticModule::Inst()->GetSpeedInfo().TotalDownloadBytes;
         lpCoreStopData->ulTotalUploadBytes = StatisticModule::Inst()->GetSpeedInfo().TotalUploadBytes;
-        lpCoreStopData->ulTotalP2pDownloadBytes = StatisticModule::Inst()->GetStatisticInfo().TotalP2PDownloadBytes;
-        lpCoreStopData->ulTotalOtherServerDownloadBytes = StatisticModule::Inst()->GetStatisticInfo().TotalOtherServerDownloadBytes;
+        lpCoreStopData->ulTotalP2pDownloadBytes = 0;
+        lpCoreStopData->ulTotalOtherServerDownloadBytes = 0;
         // 停止本地Udp服务器
         // 停止IndexServer模块
 
@@ -521,22 +521,6 @@ namespace p2sp
             return protocol::PEER_DOWNLOAD_INFO();
         }
         return StatisticModule::Inst()->GetLocalPeerDownloadInfo();
-    }
-
-    string AppModule::MakeUrlByRidInfo(const protocol::RidInfo& rid_info, uint32_t version)
-    {
-        if (true == rid_info.GetRID().is_empty())
-            return "";
-
-        std::stringstream oss;
-        oss << "version=" << version;
-        oss << "&filelength=" << rid_info.GetFileLength();
-        oss << "&blocknum=" << rid_info.GetBlockCount();
-        oss << "&blocksize=" << rid_info.GetBlockSize();
-        oss << "&blockmd5=";
-        for (uint32_t i = 0; i < rid_info.block_md5_s_.size(); ++i)
-            oss << (i == 0?"":"@") << rid_info.block_md5_s_[i].to_string();
-        return oss.str();
     }
 
     boost::uint8_t AppModule::GenUploadPriority()

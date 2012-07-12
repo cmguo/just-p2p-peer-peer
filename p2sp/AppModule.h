@@ -201,9 +201,6 @@ public:
 
     boost::uint16_t GetUpnpPortForTcpUpload();
 
-    // 上传统计信息
-    void SubmitToDataCollectionServer();
-
     bool IsRunning() const
     {
         return is_running_;
@@ -214,9 +211,6 @@ public:
     void RegisterTcpPackets();
 
     static protocol::VERSION_INFO GetKernelVersionInfo();
-
-    // make
-    static string MakeUrlByRidInfo(const protocol::RidInfo& rid_info, uint32_t version = 1);
 
     boost::shared_ptr<statistic::BufferringMonitor> CreateBufferringMonitor(const RID& rid);
 
