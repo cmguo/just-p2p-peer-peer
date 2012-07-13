@@ -6,6 +6,8 @@
 #include "statistic/UploadStatisticModule.h"
 #include "statistic/StatisticUtil.h"
 #include "DACStatisticModule.h"
+#include <util/archive/LittleEndianBinaryOArchive.h>
+#include <util/archive/ArchiveBuffer.h>
 
 namespace statistic
 {
@@ -108,6 +110,11 @@ namespace statistic
 
     void UploadStatisticModule::OnShareMemoryTimer(uint32_t times)
     {
+        if (false == is_running_)
+        {
+            return;
+        }
+
         upload_info_.upload_speed = upload_speed_info_.GetSpeedInfo().NowUploadSpeed;
 
         int i = 0;
@@ -123,10 +130,11 @@ namespace statistic
             LOG4CPLUS_DEBUG_LOG(logger_upload_statistic, "IP = " << upload_info_.peer_upload_info[i].ip << " PORT = " 
                 << upload_info_.peer_upload_info[i].port);
         }
-
         if (NULL != shared_memory_.GetView())
         {
-            base::util::memcpy2(shared_memory_.GetView(), GetSharedMemorySize(), &upload_info_, sizeof(upload_info_));
+            util::archive::ArchiveBuffer<> buf((char*)shared_memory_.GetView(), sizeof(UPLOAD_INFO));
+            util::archive::LittleEndianBinaryOArchive<> oa(buf);
+            oa << upload_info_;
         }
     }
 

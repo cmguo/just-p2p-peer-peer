@@ -929,11 +929,21 @@ namespace statistic
         boost::uint16_t port;
         boost::uint32_t upload_speed;
         PEER_INFO peer_info;
-        boost::uint8_t resersed[126 - sizeof(PEER_INFO)];
+        boost::uint8_t resersed[110];
 
         void Clear()
         {
             memset(this, 0, sizeof(PEER_UPLOAD_INFO));
+        }
+
+        template <typename Archive>
+        void serialize(Archive & ar)
+        {
+            ar & ip;
+            ar & port;
+            ar & upload_speed;
+            ar & peer_info;
+            ar & framework::container::make_array(resersed, sizeof(resersed) / sizeof(resersed[0]));
         }
     };
 
@@ -955,6 +965,19 @@ namespace statistic
         void Clear()
         {
             memset(this, 0, sizeof(UPLOAD_INFO));
+        }
+
+        template <typename Archive>
+        void serialize(Archive & ar)
+        {
+            ar & peer_upload_count;
+            ar & reserve;
+            ar & upload_speed;
+            ar & actual_speed_limit;
+            ar & upload_subpiece_count;
+            ar & framework::container::make_array(resersed, sizeof(resersed) / sizeof(resersed[0]));
+            ar & framework::container::make_array(peer_upload_info,sizeof(peer_upload_info) / 
+                sizeof(peer_upload_info[0]));
         }
     };
 

@@ -123,7 +123,6 @@ namespace p2sp
         }
 
        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader Stop" << shared_from_this());
-        // LOG(__EVENT, "leak", __FUNCTION__ << " p2p_downloader: " << shared_from_this());
 
         // 首先停止所有的 Peer
         std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;

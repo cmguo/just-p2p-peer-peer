@@ -7,14 +7,6 @@
 #include "p2sp/AppModule.h"
 #include <protocol/TrackerPacket.h>
 
-#define TRACK_TYPE "tracker"
-
-#define TRACK_INFO(message) LOG(__INFO, TRACK_TYPE, message)
-#define TRACK_EVENT(message) LOG(__EVENT, TRACK_TYPE, message)
-#define TRACK_DEBUG(message) LOG(__DEBUG, TRACK_TYPE, message)
-#define TRACK_WARN(message) LOG(__WARN, TRACK_TYPE, message)
-#define TRACK_ERROR(message) LOG(__ERROR, TRACK_TYPE, message)
-
 namespace p2sp
 {
     class TrackerClient
