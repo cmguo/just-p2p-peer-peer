@@ -236,7 +236,6 @@ namespace p2sp
         void OnLivePause(const RID & rid, bool pause, boost::uint32_t unique_id);
         void OnUrlInfoRequest(const protocol::UrlInfo& url_info, const protocol::RidInfo& rid_info, network::HttpRequest::p http_request);
         void OnOpenServiceRequest(PlayInfo::p play_info);
-        void OnPlayByRidRequest(PlayInfo::p play_info);
         void OnDownloadByUrlRequest(PlayInfo::p play_info);
 
     private:

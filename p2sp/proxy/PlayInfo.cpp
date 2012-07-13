@@ -110,12 +110,8 @@ namespace p2sp
 
     bool PlayInfo::IsGreenWayUri(const network::Uri& uri)
     {
-//         if (!IsLocalHost(uri.getdomain(), 0))
-//             return false;
         string request_path = uri.getpath();
         return (
-            boost::algorithm::iequals(request_path, "/ppvaplaybyrid") ||
-            boost::algorithm::iequals(request_path, "/ppvaplaybyurl") ||
             boost::algorithm::iequals(request_path, "/ppvaplaybyopen") ||
             boost::algorithm::istarts_with(request_path, "/ppvadownloadbyurl") ||
             boost::algorithm::istarts_with(request_path, LIVE_REQUEST_FLAG) || 
@@ -127,20 +123,12 @@ namespace p2sp
     {
         network::Uri uri(url);
         string request_path = uri.getpath();
-        if (boost::algorithm::iequals(request_path, "/ppvaplaybyrid") ||
-            boost::algorithm::iequals(request_path, "/ppvaplaybyurl") ||
-            boost::algorithm::iequals(request_path, "/ppvaplaybyopen"))
-            return true;
-        else
+        if (boost::algorithm::iequals(request_path, "/ppvaplaybyopen"))
         {
-            string file = uri.getfile();
-            if (boost::algorithm::iends_with(file, ".mp4") ||
-                boost::algorithm::iends_with(file, ".flv") ||
-                boost::algorithm::iends_with(file, ".hlv") ||
-                boost::algorithm::iends_with(file, ".f4v"))
-                return true;
-            return false;
+            return true;
         }
+
+        return false;
     }
 
     bool PlayInfo::ParseRidInfo(const network::Uri& uri, protocol::RidInfo& rid_info)
@@ -349,35 +337,9 @@ namespace p2sp
 
         PlayInfo::p play_info = PlayInfo::p(new PlayInfo());
         play_info->source_type_ = PlayInfo::SOURCE_DEFAULT;
-        // Play By URL
-        if (uri.getpath() == "/ppvaplaybyurl")
-        {
-            string param_url = uri.getparameter("url");
-            string param_refer = uri.getparameter("refer");
-
-            if (param_url.length() != 0)
-                play_info->has_url_info_ = true;
-
-            play_info->url_info_.url_ = UrlCodec::Decode(param_url);
-            play_info->url_info_.refer_url_ = UrlCodec::Decode(param_refer);
-
-            // parse optional rid_info
-            play_info->has_rid_info_ = ParseRidInfo(uri, play_info->rid_info_);
-
-            // play type
-            play_info->play_type_ = PlayInfo::PLAY_BY_URL;
-        }
-        // Play By RID
-        else if (uri.getpath() == "/ppvaplaybyrid")
-        {
-            play_info->has_url_info_ = false;
-            play_info->has_rid_info_ = ParseRidInfo(uri, play_info->rid_info_);
-
-            // play type
-            play_info->play_type_ = PlayInfo::PLAY_BY_RID;
-        }
+        
         // Play By OpenService
-        else if (uri.getpath() == "/ppvaplaybyopen")
+        if (uri.getpath() == "/ppvaplaybyopen")
         {
             string param_url = uri.getparameter("url");
             string param_refer = uri.getparameter("refer");

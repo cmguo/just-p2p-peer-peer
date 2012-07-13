@@ -816,38 +816,6 @@ namespace p2sp
         }
     }
 
-    void ProxyConnection::OnPlayByRidRequest(PlayInfo::p play_info)
-    {
-        if (false == is_running_) {
-            return;
-        }
-        if (!play_info) {
-            return;
-        }
-        if (play_info->GetPlayType() != PlayInfo::PLAY_BY_RID) {
-            return;
-        }
-
-        uint32_t start_position = play_info->GetStartPosition();
-
-        if (start_position > 3500)
-        {
-            proxy_sender_ = Mp4DragProxySender::create(io_svc_, http_server_socket_, shared_from_this());
-            proxy_sender_->Start(start_position);
-        }
-        else
-        {
-            proxy_sender_ = CommonProxySender::create(io_svc_, http_server_socket_);
-            proxy_sender_->Start();
-        }
-
-        download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-        download_driver_->SetSourceType(static_cast<uint32_t>(play_info->GetSourceType()));
-
-        // start
-        download_driver_->Start(network::HttpRequest::p(), play_info->GetRidInfo());  // no request demo
-    }
-
     void ProxyConnection::OnHttpRecvSucced(network::HttpRequest::p http_request)
     {
         if (is_running_ == false) {
@@ -1087,12 +1055,6 @@ namespace p2sp
                             LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
                                 " OnUrlInfoRequest");
                             OnUrlInfoRequest(play_info->GetUrlInfo(), play_info->GetRidInfo(), network::HttpRequest::p());
-                        }
-                        else if (play_info->HasRidInfo())
-                        {
-                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << 
-                                " RID_PLAY");
-                            OnPlayByRidRequest(play_info);
                         }
                     }
                     else
