@@ -589,7 +589,7 @@ namespace p2sp
         register_bootstrap_packet(*udp_server_);
         register_notify_packet(*udp_server_);
         register_live_peer_packet(*udp_server_);
-        register_push_packetv2(*udp_server_);
+        register_push_packetv3(*udp_server_);
     }
 
     boost::shared_ptr<statistic::BufferringMonitor> AppModule::CreateBufferringMonitor(const RID& rid)

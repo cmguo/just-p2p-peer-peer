@@ -36,7 +36,7 @@ namespace p2sp
         boost::shared_ptr<PlayHistoryManager> GetPlayHistoryManager() { return play_history_mgr_; }
 
         void OnUdpRecv(const protocol::ServerPacket & packet);
-        void OnPushTaskResponse(protocol::QueryPushTaskPacketV2 const & packet);
+        void OnPushTaskResponse(protocol::QueryPushTaskPacketV3 const & packet);
         void OnTimerElapsed(framework::timer::Timer * timer_ptr);
 
         virtual void OnResolverSucced(uint32_t ip, boost::uint16_t port);

@@ -14,6 +14,7 @@
 #include "storage/Storage.h"
 #include "storage/Performance.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
+#include "p2sp/stun/StunModule.h"
 
 #include <cmath>
 
@@ -271,11 +272,14 @@ namespace p2sp
     {
         last_transaction_id_ = protocol::Packet::NewTransactionID();
 
-        protocol::QueryPushTaskPacketV2 query_push_task_request(last_transaction_id_, AppModule::Inst()->GetUniqueGuid(), 
+        protocol::QueryPushTaskPacketV3 query_push_task_request(last_transaction_id_, AppModule::Inst()->GetUniqueGuid(), 
             push_server_endpoint_, 
             storage::Storage::Inst()->GetUsedDiskSpace(), 
             P2PModule::Inst()->GetUploadBandWidthInKBytes(), 
-            statistic::StatisticModule::Inst()->GetRecentMinuteUploadDataSpeedInKBps());
+            statistic::StatisticModule::Inst()->GetRecentMinuteUploadDataSpeedInKBps(), 
+            storage::Storage::Inst()->GetStoreSize(), 
+            0, //没有具体计算数值
+            p2sp::StunModule::Inst()->GetPeerNatType());
         
         //get local play history and convert it to the one server can handle
         const std::deque<LocalPlayHistoryItem>& play_history_vec = play_history_mgr_->GetPlayHistory();
@@ -304,7 +308,7 @@ namespace p2sp
         resolver->DoResolver();
     }
 
-    void PushModule::OnPushTaskResponse(protocol::QueryPushTaskPacketV2 const & response)
+    void PushModule::OnPushTaskResponse(protocol::QueryPushTaskPacketV3 const & response)
     {
         if (false == is_running_) {
             return;
@@ -382,8 +386,8 @@ namespace p2sp
     void PushModule::OnUdpRecv(const protocol::ServerPacket & packet)
     {
         switch(packet.PacketAction) {
-        case protocol::QueryPushTaskPacketV2::Action:
-            OnPushTaskResponse((protocol::QueryPushTaskPacketV2 const &)packet);
+        case protocol::QueryPushTaskPacketV3::Action:
+            OnPushTaskResponse((protocol::QueryPushTaskPacketV3 const &)packet);
             break;
         default:
             break;
