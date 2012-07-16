@@ -25,9 +25,6 @@ namespace p2sp
     class LiveP2PDownloader;
     typedef boost::shared_ptr<LiveP2PDownloader> LiveP2PDownloader__p;
 
-    class SessionPeerCache;
-    typedef boost::shared_ptr<SessionPeerCache> SessionPeerCache__p;
-
     class P2PModule
         : public boost::noncopyable
         , public boost::enable_shared_from_this<P2PModule>
@@ -69,7 +66,6 @@ namespace p2sp
 
         // PeerCountInfo
         P2PDownloader__p GetP2PDownloader(const RID& rid);
-        SessionPeerCache__p GetSessionPeerCache() const {return session_cache_;}
 
         // 设置上传开关，用于控制是否启用上传
         void SetUploadSwitch(bool is_disable_upload);
@@ -95,7 +91,6 @@ namespace p2sp
         typedef std::map<RID, P2PDownloader__p> RIDIndexerMap;
         RIDIndexerMap rid_indexer_;
         boost::shared_ptr<UploadModule> upload_module_;
-        SessionPeerCache__p session_cache_;
         framework::timer::PeriodicTimer p2p_timer_;
         // 状态
         volatile bool is_running_;

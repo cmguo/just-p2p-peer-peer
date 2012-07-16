@@ -83,23 +83,6 @@ namespace p2sp
         avg_delt_time_init_ = 0;
 
         curr_delta_size_ = P2SPConfigs::PEERCONNECTION_MIN_DELTA_SIZE;
-        // window_size_ = 6 * 1000 / avg_delt_time_;
-        // LIMIT_MIN_MAX(window_size_, P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, max(P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE/2));
-
-        std::set<DownloadDriver__p>::iterator i;
-        std::set<DownloadDriver__p> ddset = p2p_downloader_->GetDownloadDrivers();
-        for (i = ddset.begin(); i != ddset.end(); i++)
-        {
-            if (P2PModule::Inst()->GetSessionPeerCache()->IsHit((*i)->GetSessionID(), end_point))
-            {
-                //
-                longest_rtt_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_rtt;
-                // window_size_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_window_size;
-                window_size_init_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_window_size;
-                avg_delta_time_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_avg_delt_time;
-                avg_delt_time_init_ = P2PModule::Inst()->GetSessionPeerCache()->GetSessionPeerInfo((*i)->GetSessionID(), end_point).m_avg_delt_time;
-            }
-        }
 
         last_live_response_time_.reset();
         last_request_time_.reset();

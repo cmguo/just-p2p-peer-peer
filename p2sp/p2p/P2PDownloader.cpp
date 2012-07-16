@@ -361,14 +361,6 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::AttachDownloadDriver " << download_driver);
 
-        // 查询SessionPeerCache
-        std::vector<protocol::CandidatePeerInfo> peers;
-        if (P2PModule::Inst()->GetSessionPeerCache()->QuerySessionPeers(download_driver->GetSessionID(), peers))
-        {
-            AddCandidatePeers(peers);
-        }
-
-        // ippool_->OnP2PTimer(20);
         if (download_driver_s_.find(download_driver) == download_driver_s_.end())
         {
             download_driver_s_.insert(download_driver);
@@ -714,33 +706,6 @@ namespace p2sp
             }
             else
                 statistic_->SetNonConsistentSize(0);
-        }
-
-        // 30秒执行一次
-        if (times % 120 == 0)
-        {
-            // 保存SessionCachePeer
-            // 遍历DownloadDriver
-            std::set<DownloadDriver__p>::iterator i;
-            for (i = download_driver_s_.begin(); i != download_driver_s_.end(); i++)
-            {
-                std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
-                for (iter = peers_.begin(); iter != peers_.end(); iter++)
-                {
-                    SESSION_PEER_INFO session_peer_info;
-
-                    session_peer_info.m_candidate_peer_info = iter->second->GetCandidatePeerInfo();
-                    session_peer_info.m_window_size = iter->second->GetWindowSize();
-                    session_peer_info.m_rtt = iter->second->GetLongestRtt();
-                    session_peer_info.m_avg_delt_time = iter->second->GetAvgDeltaTime();
-
-                    boost::asio::ip::udp::endpoint end_point =
-                        framework::network::Endpoint(iter->second->GetCandidatePeerInfo().IP, iter->second->GetCandidatePeerInfo().UdpPort);
-
-                    // 加入SessionPeerCache
-                    P2PModule::Inst()->GetSessionPeerCache()->AddSessionPeer((*i)->GetSessionID(), end_point, session_peer_info);
-                }
-            }
         }
 
         if (times % 4 == 0)

@@ -8,7 +8,6 @@
 #include "p2sp/AppModule.h"
 #include "p2sp/p2p/P2PDownloader.h"
 #include "p2sp/p2p/P2SPConfigs.h"
-#include "p2sp/p2p/SessionPeerCache.h"
 
 #ifdef NOTIFY_ON
 #include "p2sp/notify/NotifyModule.h"
@@ -56,8 +55,6 @@ namespace p2sp
         UploadModule::Inst()->Start(config_path);
 
         p2p_timer_.start();
-
-        session_cache_ = SessionPeerCache::create();
 
         BootStrapGeneralConfig::Inst()->AddUpdateListener(shared_from_this());
     }
@@ -303,13 +300,6 @@ namespace p2sp
         {
             statistic::StatisticModule::Inst()->SetGlobalRequestSendCount(global_request_send_count_);
             global_request_send_count_ = 0;
-        }
-
-        // 1分钟检查一次
-        if (times % (4 * 60 * 1) == 0)
-        {
-            // SessionPeerCache过期淘汰
-            session_cache_->ExpireCache();
         }
 
         // 按每秒计算
