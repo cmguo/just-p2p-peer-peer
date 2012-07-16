@@ -31,6 +31,14 @@ namespace statistic
         boost::uint32_t       uUploadMaxSpeed;                      // T: 最大上传速度，单位kb/s
         boost::uint32_t       total_report_request_packet_count;    // U: 发给Tracker用于查询Report包的总数
         boost::uint32_t       total_report_response_packet_count;   // V: Tracker返回的Report包总数 
+        boost::uint32_t       query_vod_tracker_for_list_request_count;    // W: 查询vod_tracker_for_list_request包的总数
+        boost::uint32_t       query_vod_tracker_for_list_response_count;   // X: 查询vod_tracker_for_list_response包的总数
+        boost::uint32_t       query_vod_tracker_for_report_request_count;  // Y: 查询vod_tracker_for_report_request包的总数
+        boost::uint32_t       query_vod_tracker_for_report_response_count; // Z: 查询vod_tracker_for_report_response包的总数
+        boost::uint32_t       query_live_tracker_for_list_request_count;   // A1: 查询live_tracker_for_list_request包的总数
+        boost::uint32_t       query_live_tracker_for_list_response_count;  // B1: 查询live_tracker_for_list_response包的总数
+        boost::uint32_t       query_live_tracker_for_report_request_count; // C1: 查询live_tracker_for_report_request包的总数
+        boost::uint32_t       query_live_tracker_for_report_response_count;// D1: 查询live_tracker_for_report_response包的总数
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -50,6 +58,14 @@ namespace statistic
         void SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes);
         void SubmitReportRequest();
         void SubmitReportResponse();
+        void SubmitVodTrackerForListRequest();
+        void SubmitVodTrackerForListResponse();
+        void SubmitVodTrackerForReportRequest();
+        void SubmitVodTrackerForReportResponse();
+        void SubmitLiveTrackerForListRequest();
+        void SubmitLiveTrackerForListResponse();
+        void SubmitLiveTrackerForReportRequest();
+        void SubmitLiveTrackerForReportResponse();
         void SubmitRidUploadCount()
         {
             rid_upload_count_total_++;
@@ -108,6 +124,14 @@ namespace statistic
 
         boost::uint32_t total_report_request_count_;
         boost::uint32_t total_report_response_count_;
+        boost::uint32_t query_vod_tracker_for_list_request_count_;
+        boost::uint32_t query_vod_tracker_for_list_response_count_;
+        boost::uint32_t query_vod_tracker_for_report_request_count_;
+        boost::uint32_t query_vod_tracker_for_report_response_count_;
+        boost::uint32_t query_live_tracker_for_list_request_count_;
+        boost::uint32_t query_live_tracker_for_list_response_count_;
+        boost::uint32_t query_live_tracker_for_report_request_count_;
+        boost::uint32_t query_live_tracker_for_report_response_count_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
@@ -160,6 +184,46 @@ namespace statistic
     inline void DACStatisticModule::SubmitReportResponse()
     {
         total_report_response_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitVodTrackerForListRequest()
+    {
+        query_vod_tracker_for_list_request_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitVodTrackerForListResponse()
+    {
+        query_vod_tracker_for_list_response_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitVodTrackerForReportRequest()
+    {
+        query_vod_tracker_for_report_request_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitVodTrackerForReportResponse()
+    {
+        query_vod_tracker_for_report_response_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitLiveTrackerForListRequest()
+    {
+        query_live_tracker_for_list_request_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitLiveTrackerForListResponse()
+    {
+        query_live_tracker_for_list_response_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitLiveTrackerForReportRequest()
+    {
+        query_live_tracker_for_report_request_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitLiveTrackerForReportResponse()
+    {
+        query_live_tracker_for_report_response_count_++;
     }
 }
 

@@ -41,6 +41,14 @@ namespace statistic
         , rid_upload_count_in_ten_minutes_(0)
         , total_report_request_count_(0)
         , total_report_response_count_(0)
+        , query_vod_tracker_for_list_request_count_(0)
+        , query_vod_tracker_for_list_response_count_(0)
+        , query_vod_tracker_for_report_request_count_(0)
+        , query_vod_tracker_for_report_response_count_(0)
+        , query_live_tracker_for_list_request_count_(0)
+        , query_live_tracker_for_list_response_count_(0)
+        , query_live_tracker_for_report_request_count_(0)
+        , query_live_tracker_for_report_response_count_(0)
     {
     }
 
@@ -147,6 +155,30 @@ namespace statistic
         //V: Tracker返回的Report包总数
         info.total_report_response_packet_count = total_report_response_count_;
 
+        //W: 查询vod_tracker_for_list_request包的总数
+        info.query_vod_tracker_for_list_request_count = query_vod_tracker_for_list_request_count_;
+
+        //X: 查询vod_tracker_for_list_response包的总数
+        info.query_vod_tracker_for_list_response_count = query_vod_tracker_for_list_response_count_;
+
+        // Y: 查询vod_tracker_for_report_request包的总数
+        info.query_vod_tracker_for_report_request_count = query_vod_tracker_for_report_request_count_;
+
+        // Z: 查询vod_tracker_for_report_response包的总数
+        info.query_vod_tracker_for_report_response_count = query_vod_tracker_for_report_response_count_;
+
+        // A1: 查询live_tracker_for_list_request包的总数
+        info.query_live_tracker_for_list_request_count = query_live_tracker_for_list_request_count_;
+
+        // B1: 查询live_tracker_for_list_response包的总数
+        info.query_live_tracker_for_list_response_count = query_live_tracker_for_list_response_count_;
+
+        // C1: 查询live_tracker_for_report_request包的总数
+        info.query_live_tracker_for_report_request_count = query_live_tracker_for_report_request_count_;
+
+        // D1: 查询live_tracker_for_report_response包的总数
+        info.query_live_tracker_for_report_response_count = query_live_tracker_for_report_response_count_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
@@ -174,6 +206,14 @@ namespace statistic
         log_stream << "&T=" << (boost::uint32_t)info.uUploadMaxSpeed;
         log_stream << "&U=" << (uint32_t)info.total_report_request_packet_count;
         log_stream << "&V=" << (uint32_t)info.total_report_response_packet_count;
+        log_stream << "&W=" << info.query_vod_tracker_for_list_request_count;
+        log_stream << "&X=" << info.query_vod_tracker_for_list_response_count;
+        log_stream << "&Y=" << info.query_vod_tracker_for_report_request_count;
+        log_stream << "&Z=" << info.query_vod_tracker_for_report_response_count;
+        log_stream << "&A1=" << info.query_live_tracker_for_list_request_count;
+        log_stream << "&B1=" << info.query_live_tracker_for_list_response_count;
+        log_stream << "&C1=" << info.query_live_tracker_for_report_request_count;
+        log_stream << "&D1=" << info.query_live_tracker_for_report_response_count;
 
         string log = log_stream.str();
 

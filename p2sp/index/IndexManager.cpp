@@ -265,6 +265,7 @@ namespace p2sp
             server_list_endpoint_);
 
         AppModule::Inst()->DoSendPacket(packet);
+        statistic::DACStatisticModule::Inst()->SubmitVodTrackerForListRequest();
     }
 
     void IndexManager::DoQueryLiveListTrackerList()
@@ -283,6 +284,7 @@ namespace p2sp
             server_list_endpoint_);
 
         AppModule::Inst()->DoSendPacket(packet);
+        statistic::DACStatisticModule::Inst()->SubmitLiveTrackerForListRequest();
     }
 
     void IndexManager::DoQueryVodReportTrackerList()
@@ -307,7 +309,7 @@ namespace p2sp
         AppModule::Inst()->DoSendPacket(query_tracker_list_request_packet);
 
         statistic::StatisticModule::Inst()->SubmitQueryTrackerListRequest();
-
+        statistic::DACStatisticModule::Inst()->SubmitVodTrackerForReportRequest();
     }
 
     void IndexManager::DoQueryStunServerList()
@@ -414,6 +416,7 @@ namespace p2sp
                     packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
             }
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true,  p2sp::REPORT);
+            statistic::DACStatisticModule::Inst()->SubmitVodTrackerForReportResponse();
         }
         else
         {
@@ -452,6 +455,7 @@ namespace p2sp
             }
 
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::REPORT);
+            statistic::DACStatisticModule::Inst()->SubmitLiveTrackerForReportResponse();
         }
         else
         {
@@ -807,6 +811,7 @@ namespace p2sp
         protocol::QueryLiveTrackerListPacket query_live_tracker_list_request_packet(transaction_id,
             protocol::PEER_VERSION, AppModule::Inst()->GetUniqueGuid(), server_list_endpoint_);
         AppModule::Inst()->DoSendPacket(query_live_tracker_list_request_packet);
+        statistic::DACStatisticModule::Inst()->SubmitLiveTrackerForReportRequest();
     }
 
     void IndexManager::DoQueryBootStrapConfig()
@@ -972,6 +977,7 @@ namespace p2sp
             last_query_vod_list_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, true,  p2sp::LIST);
+            statistic::DACStatisticModule::Inst()->SubmitVodTrackerForListResponse();
         }
     }
 
@@ -992,6 +998,7 @@ namespace p2sp
             last_query_live_list_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::LIST);
+            statistic::DACStatisticModule::Inst()->SubmitLiveTrackerForListResponse();
         }
     }
 }
