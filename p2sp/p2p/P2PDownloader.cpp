@@ -10,7 +10,6 @@
 #include "p2sp/p2p/PeerConnector.h"
 #include "p2sp/download/DownloadDriver.h"
 #include "p2sp/p2p/P2PModule.h"
-#include "p2sp/p2p/SessionPeerCache.h"
 
 #include "MainThread.h"
 #include "storage/Storage.h"

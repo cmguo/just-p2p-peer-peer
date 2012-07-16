@@ -13,7 +13,6 @@
 #include "p2sp/p2p/Exchanger.h"
 #include "p2sp/p2p/P2PModule.h"
 #include "p2sp/download/DownloadDriver.h"
-#include "p2sp/p2p/SessionPeerCache.h"
 
 #include "statistic/P2PDownloaderStatistic.h"
 #include "storage/Instance.h"
