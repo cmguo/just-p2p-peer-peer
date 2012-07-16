@@ -94,8 +94,6 @@ namespace p2sp
         bool CanRequest() const;
 
     private:
-        uint32_t window_size_init_;
-        
         uint32_t curr_delta_size_;
 
         // Peer对方的相关变量

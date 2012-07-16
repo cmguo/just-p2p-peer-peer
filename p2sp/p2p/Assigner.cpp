@@ -17,10 +17,6 @@
 
 #include "storage/Instance.h"
 
-#ifdef COUNT_CPU_TIME
-#include "count_cpu_time.h"
-#endif
-
 using namespace storage;
 namespace p2sp
 {
@@ -119,7 +115,7 @@ namespace p2sp
             peer->ClearTaskQueue();
             if (peer->HasRidInfo() && peer->IsRidInfoValid())
             {
-                peer_connection_recvtime_list_.push_back(PEER_RECVTIME(peer->GetSortedValueForAssigner(), peer));
+                peer_connection_recvtime_list_.push_back(PEER_RECVTIME(peer->GetAvgDeltaTime(), peer));
             }
         }
         peer_connection_recvtime_list_.sort();
@@ -562,11 +558,11 @@ namespace p2sp
                         peer->AddAssignedSubPiece(*iter_subpiece);
 
                         if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER + 30)
-                            iter_peer->recv_time =  rcvtime + 6 * peer->GetUsedTime();
+                            iter_peer->recv_time =  rcvtime + 6 * peer->GetAvgDeltaTime();
                         else if (peer->GetTaskQueueSize() >= P2SPConfigs::ASSIGN_SUBPIECE_MAX_COUNT_PER_PEER)
-                            iter_peer->recv_time =  rcvtime + 3 * peer->GetUsedTime();
+                            iter_peer->recv_time =  rcvtime + 3 * peer->GetAvgDeltaTime();
                         else
-                            iter_peer->recv_time =  rcvtime + peer->GetUsedTime();
+                            iter_peer->recv_time =  rcvtime + peer->GetAvgDeltaTime();
 
                         // 从小到大排序peer_connection_recvtime_list_
                         std::list<PEER_RECVTIME>::iterator curr_peer = iter_peer++;
@@ -593,8 +589,8 @@ namespace p2sp
         {
             ConnectionBase__p peer;
             peer = iter->second;
-            peer->GetStatistic()->SetAverageDeltaTime(peer->GetUsedTime());
-            peer->GetStatistic()->SetSortedValue(peer->GetSortedValueForAssigner());
+            peer->GetStatistic()->SetAverageDeltaTime(peer->GetAvgDeltaTime());
+            peer->GetStatistic()->SetSortedValue(peer->GetAvgDeltaTime());
             peer->GetStatistic()->SetAssignedSubPieceCount(peer->GetTaskQueueSize());
             peer->RequestTillFullWindow(false);
         }

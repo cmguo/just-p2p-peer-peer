@@ -12,12 +12,6 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#ifdef COUNT_CPU_TIME
-#include "count_cpu_time.h"
-#endif
-
-// #define COUT(msg)  // std::cout << msg
-
 namespace network
 {
 #ifdef LOG_ENABLE

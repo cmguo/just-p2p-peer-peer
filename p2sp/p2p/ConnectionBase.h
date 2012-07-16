@@ -83,14 +83,11 @@ namespace p2sp
         uint32_t GetAvgDeltaTime() const;
 
         const protocol::CandidatePeerInfo & GetCandidatePeerInfo() const;
-        boost::uint32_t GetUsedTime();
-        boost::uint32_t GetSortedValueForAssigner();
 
         void RequestSubPieces(uint32_t subpiece_count, uint32_t copy_count, bool need_check);
         void RecordStatisticInfo();
 
     private:
-        uint32_t GetUsedTimeForAssigner();
         void RequestNextSubpiece();
 
     protected:
@@ -126,8 +123,6 @@ namespace p2sp
         boost::uint32_t longest_rtt_;
 
         protocol::CandidatePeerInfo candidate_peer_info_;
-
-        boost::uint32_t avg_delt_time_init_;
 
         boost::uint32_t curr_time_out_;
     };

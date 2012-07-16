@@ -78,8 +78,6 @@ namespace p2sp
         avg_delta_time_ = rtt_ + 1;
 
         window_size_ = P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE;  // connect_rtt_ >= 400 ?  P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE : ((P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE - P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE) * (400 - (float)connect_rtt_) / 400 + P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE);
-        window_size_init_ = 0;
-        avg_delt_time_init_ = 0;
 
         curr_delta_size_ = P2SPConfigs::PEERCONNECTION_MIN_DELTA_SIZE;
 
@@ -368,21 +366,15 @@ namespace p2sp
         // 修正windows_size
         if (times % 4 == 0)
         {
-            // window_size_ = statistic_->GetSpeedInfo().NowDownloadSpeed / 1024 * longest_rtt_ * (sent_count_ - requesting_count_ + 2) / (1000*(received_count_ + 1)) * 4 / 3;
-            uint32_t curr_win = (uint32_t)(statistic_->GetSpeedInfo().NowDownloadSpeed / 1000.0 + 0.5);
-            window_size_ = (uint32_t)(curr_win < window_size_ ? (curr_win * 0.1 + window_size_ * 0.9 + 0.5) : curr_win);
-            // window_size_ = (statistic_->GetAverageRTT() / avg_delt_time_ + 1.5);
+            uint32_t current_window_size = statistic_->GetSpeedInfo().NowDownloadSpeed / 1000;
 
-            if (window_size_ > 0 && window_size_ < window_size_init_)
+            if (current_window_size < window_size_)
             {
-                if (window_size_init_ > 6)
-                {
-                    window_size_ = (boost::uint32_t)(window_size_ * 0.3 + window_size_init_ * 0.7 + 0.5);
-                }
-                else
-                {
-                    window_size_ = window_size_init_;
-                }
+                window_size_ = (current_window_size + 9 * window_size_) / 10;
+            }
+            else
+            {
+                window_size_ = current_window_size;
             }
 
             LIMIT_MIN_MAX(window_size_, P2SPConfigs::PEERCONNECTION_MIN_WINDOW_SIZE, P2SPConfigs::PEERCONNECTION_MAX_WINDOW_SIZE);

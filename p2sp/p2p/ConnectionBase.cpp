@@ -151,54 +151,6 @@ namespace p2sp
         return candidate_peer_info_;
     }
 
-
-    boost::uint32_t ConnectionBase::GetSortedValueForAssigner()
-    {
-        if (is_running_ == false)
-        {
-            return 0;
-        }
-
-        return framework::timer::TickCounter::tick_count() + GetUsedTimeForAssigner();
-    }
-
-    boost::uint32_t ConnectionBase::GetUsedTimeForAssigner()
-    {
-        if (is_running_ == false)
-        {
-            return 0;
-        }
-
-        uint32_t t = 0;
-        if (window_size_ < requesting_count_)
-        {
-            t = GetUsedTime();
-            if (t > last_receive_time_.elapsed())
-            {
-                t -= last_receive_time_.elapsed();
-            }
-        }
-        if (statistic_->GetTotalRTTCount() < 3)
-        {
-            t = 10 + statistic_->GetTotalRTTCount() * 30;
-        }
-        return t;
-    }
-
-    boost::uint32_t ConnectionBase::GetUsedTime()
-    {
-        if (is_running_ == false)
-            return 0;
-
-        uint32_t v = avg_delta_time_;
-        if (avg_delt_time_init_ > 0 && v > avg_delt_time_init_)
-        {
-            v = (boost::uint32_t)((avg_delt_time_init_ * 7 + avg_delta_time_ * 3 + 5) / 10);
-        }
-        LIMIT_MIN(v, 10);
-        return v;
-    }
-
     void ConnectionBase::RequestSubPieces(uint32_t subpiece_count, uint32_t copy_count, bool need_check)
     {
         if (false == is_running_)
@@ -250,14 +202,6 @@ namespace p2sp
         SendPacket(subpieces, copy_count);
 
         last_request_time_.reset();
-
-        // 打印日志，这是PPLogMonitor请求包的来源
-        if (p2p_downloader_->GetDownloadDrivers().size() != 0)
-        {
-            for (uint32_t i = 0; i < subpieces.size(); ++i)
-            {
-            }
-        }
 
         requesting_count_ += subpieces.size();
         sent_count_ += subpieces.size();

@@ -29,7 +29,6 @@ namespace p2sp
         is_running_ = true;
         peer_version_ =  protocol::PEER_VERSION;
         window_size_ = 60;
-        avg_delt_time_init_ = 50;
         connected_time_.reset();
         //在不初始化candidate_peer_info_的情况下，会造成候选节点列表里SN节点的endpoint为空
         //观看ikan时，下载下一段会copy之前的候选节点，里面空的candidate_peer_info会导致assert无法通过
