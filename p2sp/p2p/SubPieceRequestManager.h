@@ -17,18 +17,20 @@ namespace p2sp
 {
     class SubPieceRequestTask
         : public boost::noncopyable
-        , public boost::enable_shared_from_this<SubPieceRequestTask>
 #ifdef DUMP_OBJECT
         , public count_object_allocate<SubPieceRequestTask>
 #endif
     {
     public:
-        typedef boost::shared_ptr<SubPieceRequestTask> p;
-        static p create(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
+        SubPieceRequestTask(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
+            : request_time_elapse_(0)
+            , timeout_(timeout)
+            , dead_(false)
+            , peer_connection_(peer_connection)
         {
-            return p(new SubPieceRequestTask(timeout, peer_connection));
+
         }
-    public:
+
         bool IsTimeOut() {return request_time_elapse_ > timeout_;}
         framework::timer::TickCounter::count_value_type GetTimeElapsed() const { return request_time_elapse_; }
 
@@ -38,14 +40,7 @@ namespace p2sp
         bool dead_;
         boost::shared_ptr<ConnectionBase> peer_connection_;
     private:
-        SubPieceRequestTask(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
-            : request_time_elapse_(0)
-            , timeout_(timeout)
-            , dead_(false)
-            , peer_connection_(peer_connection)
-            {
-
-            }
+        
     };
 
     class P2PDownloader;
@@ -79,7 +74,7 @@ namespace p2sp
         // 模块
         P2PDownloader__p p2p_downloader_;
         // 变量
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p> request_tasks_;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *> request_tasks_;
         // 状态
         volatile bool is_running_;
 
@@ -91,12 +86,12 @@ namespace p2sp
         if (is_running_ == false) return false;
 
         // 找到返回true, 找不到返回flase
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::const_iterator iter;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::const_iterator iter;
         iter = request_tasks_.find(subpiece_info);
         while (iter != request_tasks_.end() && iter->first == subpiece_info)
         {
-            SubPieceRequestTask::p task = iter->second;
-            if (false == task->dead_) {
+            if (iter->second->dead_ == false)
+            {
                 return true;
             }
             ++iter;
@@ -110,15 +105,13 @@ namespace p2sp
         if (false == is_running_) return false;
 
         // 所有task超时才算超时
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::const_iterator it;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::const_iterator it;
         for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)
         {
-            SubPieceRequestTask::p task = it->second;
+            SubPieceRequestTask * task = it->second;
             boost::shared_ptr<ConnectionBase> peer_conn = task->peer_connection_;
             if (peer_conn->GetConnectedTime() >= 3 * 1000 && peer_conn->GetSentCount() >= 5 && peer_conn->GetReceivedCount() == 0)
             {
-//                 LOG(__DEBUG, "timeout", "WeakPeer! P2PDownloader = " << p2p_downloader_
-//                     << ", Endpoint = " << peer_conn->GetCandidatePeerInfo());
                 continue;
             }
 
@@ -126,13 +119,17 @@ namespace p2sp
             {
                 boost::uint32_t elapsed = task->GetTimeElapsed();
                 if (elapsed < task->timeout_ * percent / 10 && elapsed < time_elapsed)
+                {
                     return false;
+                }
             }
             else
             {
                 boost::uint32_t elapsed = task->GetTimeElapsed();
                 if (elapsed < task->timeout_ * percent / 10 * 8 / 10 && elapsed < time_elapsed)
+                {
                     return false;
+                }
             }
         }
         return true;

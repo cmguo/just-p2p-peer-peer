@@ -41,6 +41,13 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_sub_piece_request_manager, "SubPieceRequestManager::Stop " << p2p_downloader_);
 
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::const_iterator iter;
+
+        for (iter = request_tasks_.begin(); iter != request_tasks_.end(); ++iter)
+        {
+            delete iter->second;
+        }
+
         request_tasks_.clear();
 
         p2p_downloader_.reset();
@@ -109,10 +116,10 @@ namespace p2sp
                  << 1 << " " << " " << sub_piece);
         }
 
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::iterator iter;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::iterator iter;
         for (iter = request_tasks_.find(sub_piece); iter != request_tasks_.end() && iter->first == sub_piece;)
         {
-            SubPieceRequestTask::p sub_piece_request_task = iter->second;
+            SubPieceRequestTask * sub_piece_request_task = iter->second;
             boost::shared_ptr<ConnectionBase> peer_connection = sub_piece_request_task->peer_connection_;
             if (peer_connection->GetEndpoint() == packet.end_point)
             {
@@ -133,6 +140,7 @@ namespace p2sp
                     peer_connection->OnSubPiece(response_time, packet.sub_piece_length_);
                 }
 
+                delete iter->second;
                 request_tasks_.erase(iter++);
             }
             else
@@ -166,20 +174,21 @@ namespace p2sp
         //     PeerConnection->OnTimeOut();
         //     Remove();
 
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::iterator iter;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::iterator iter;
         for (iter = request_tasks_.begin(); iter != request_tasks_.end();)
         {
-            SubPieceRequestTask::p subpiece_request_task = iter->second;
+            SubPieceRequestTask * subpiece_request_task = iter->second;
 
             subpiece_request_task->request_time_elapse_ += 250;
 
             if (true == subpiece_request_task->dead_ && subpiece_request_task->request_time_elapse_ >= 10 * 1000)
             {
+                delete iter->second;
                 request_tasks_.erase(iter++);
             }
             else if (false == subpiece_request_task->dead_ && subpiece_request_task->IsTimeOut())
             {
-                subpiece_request_task->peer_connection_->OnTimeOut(subpiece_request_task);
+                subpiece_request_task->peer_connection_->OnTimeOut();
                 subpiece_request_task->dead_ = true;
                 ++iter;
             }
@@ -196,15 +205,17 @@ namespace p2sp
 
         uint32_t count = 0;
 
-        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask::p>::const_iterator it;
+        std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::const_iterator it;
         for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)
         {
-            SubPieceRequestTask::p task = it->second;
+            SubPieceRequestTask * task = it->second;
             if (!task->dead_ && true == task->peer_connection_->IsRunning())
             {
                 boost::uint32_t elapsed = task->GetTimeElapsed();
                 if (elapsed < time_elapsed)
+                {
                     ++count;
+                }
             }
         }
         return count;
@@ -224,7 +235,7 @@ namespace p2sp
         // if (request_tasks_.find(subpiece_info) != request_tasks_.end())
         //    assert(0);
 
-        SubPieceRequestTask::p subpiece_request_task = SubPieceRequestTask::create(timeout, peer_connection);
+        SubPieceRequestTask * subpiece_request_task = new SubPieceRequestTask(timeout, peer_connection);
 
         request_tasks_.insert(std::make_pair(subpiece_info, subpiece_request_task));
 

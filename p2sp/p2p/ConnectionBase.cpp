@@ -108,7 +108,7 @@ namespace p2sp
         RequestTillFullWindow(true);
     }
 
-    void ConnectionBase::OnTimeOut(SubPieceRequestTask__p subpiece_request_task)
+    void ConnectionBase::OnTimeOut()
     {
         if (is_running_ == false)
         {

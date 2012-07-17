@@ -12,9 +12,6 @@ namespace p2sp
     class P2PDownloader;
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
 
-    class SubPieceRequestTask;
-    typedef boost::shared_ptr<SubPieceRequestTask> SubPieceRequestTask__p;
-
     class ConnectionBase
     {
     public:
@@ -72,7 +69,7 @@ namespace p2sp
         void ClearTaskQueue();
 
         void OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length);
-        void OnTimeOut(SubPieceRequestTask__p subpiece_request_task);
+        void OnTimeOut();
 
         uint32_t GetConnectedTime() const;
         boost::uint32_t GetSentCount() const;
