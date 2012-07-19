@@ -278,7 +278,7 @@ namespace p2sp
             P2PModule::Inst()->GetUploadBandWidthInKBytes(), 
             statistic::StatisticModule::Inst()->GetRecentMinuteUploadDataSpeedInKBps(), 
             storage::Storage::Inst()->GetStoreSize(), 
-            0, //没有具体计算数值
+            statistic::StatisticModule::Inst()->GetOnlinePercent(), 
             p2sp::StunModule::Inst()->GetPeerNatType());
         
         //get local play history and convert it to the one server can handle

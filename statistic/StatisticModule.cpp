@@ -31,6 +31,8 @@ namespace statistic
             1000,
             boost::bind(&StatisticModule::OnTimerElapsed, this, &share_memory_timer_))
         , is_running_(false)
+        , duration_online_time_in_second_(0)
+        , time_push_stamp_(time(NULL))
     {
     }
 
@@ -399,6 +401,7 @@ namespace statistic
         if (pointer == &share_memory_timer_)
         {
             OnShareMemoryTimer(pointer->times());
+            SubmitDurationOnline();
         }
         else
         {
@@ -1304,6 +1307,10 @@ namespace statistic
                 {
                     history_bandwith_ = 65535;
                 }
+                framework::configure::ConfigModule & ppva_push_conf = 
+                    conf.register_module("PPVA_PUSH");
+                ppva_push_conf(CONFIG_PARAM_NAME_RDONLY("T_STAMP",time_push_stamp_));
+                ppva_push_conf(CONFIG_PARAM_NAME_RDONLY("T_ONLINE",duration_online_time_in_second_));
             }
             catch(...)
             {
@@ -1353,8 +1360,15 @@ namespace statistic
                     history_bandwith_ = 65535;
                 }
 
-                // store
-                conf.sync();
+                 framework::configure::ConfigModule & ppva_push_conf = 
+                     conf.register_module("PPVA_PUSH");
+                 boost::uint32_t duration_online_time_in_second;
+                 ppva_push_conf(CONFIG_PARAM_NAME_RDONLY("T_STAMP",time_push_stamp_));
+                 ppva_push_conf(CONFIG_PARAM_NAME_RDONLY("T_ONLINE",duration_online_time_in_second));
+                 duration_online_time_in_second = duration_online_time_in_second_;
+
+             // store
+             conf.sync();
             }
             catch(...)
             {
@@ -1479,5 +1493,16 @@ namespace statistic
         *iConnectCount = 0;
         *iAverSpeed = 0;
         result_handler();
+    }
+
+    void StatisticModule::SubmitDurationOnline()
+    {
+        duration_online_time_in_second_ ++;
+    }
+
+    uint32_t StatisticModule::GetOnlinePercent() const
+    { 
+        time_t time_push_current = time(NULL);
+        return duration_online_time_in_second_ * 100 / (uint32_t)(time_push_current - time_push_stamp_);
     }
 }

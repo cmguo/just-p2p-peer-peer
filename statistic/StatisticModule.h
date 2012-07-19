@@ -93,6 +93,8 @@ namespace statistic
         uint32_t GetRecentMinuteUploadDataSpeedInKBps();
         uint32_t GetMinuteUploadDataSpeed();
         uint32_t GetUploadDataBytes() const;
+        uint32_t GetOnlinePercent() const;
+        void SubmitDurationOnline();
 
         //////////////////////////////////////////////////////////////////////////
         // Local Download Info
@@ -377,6 +379,9 @@ namespace statistic
         string ppva_config_path_;
 
         boost::uint16_t tcp_port_;
+
+        uint32_t duration_online_time_in_second_;
+        time_t time_push_stamp_;
 
     private:
 
