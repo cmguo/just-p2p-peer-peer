@@ -117,6 +117,13 @@ namespace p2sp
         {
             download_driver_.reset();
         }
+
+        for (std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.begin();
+            iter != requesting_map_.end(); ++iter)
+        {
+            delete iter->second;
+        }
+
         requesting_map_.clear();
 
         is_running_ = false;
@@ -141,7 +148,7 @@ namespace p2sp
             return false;
         }
         // 根据 piece_info, downloader, 当前时间 生成一个 PieceTask 然后添加到 requesting_map_ 里面
-        PieceTask::p piece_task = PieceTask::Create(download_driver_, downloader, P2SPConfigs::PIECE_TIME_OUT_IN_MILLISEC);
+        PieceTask * piece_task = new PieceTask(download_driver_, downloader, P2SPConfigs::PIECE_TIME_OUT_IN_MILLISEC);
         requesting_map_[piece_info] = piece_task;
 
         return true;
@@ -151,6 +158,13 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
+
+        for (std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.begin();
+            iter != requesting_map_.end(); ++iter)
+        {
+            delete iter->second;
+        }
+
         requesting_map_.clear();
     }
 
@@ -167,10 +181,15 @@ namespace p2sp
         // 如果 该 PieceTask->downloader_ 不是当前的 downloader
         //      则 返回 false
         //
-        if ((*requesting_map_.find(piece_info)).second->downloader_ != downloader)
+        std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.find(piece_info);
+
+        if (iter->second->downloader_ != downloader)
             return false;
         else
-            requesting_map_.erase(piece_info);
+        {
+            delete iter->second;
+            requesting_map_.erase(iter);
+        }
         // 在 requesting_map_ 中 删除 该 piece_info
         // 返回true
         return true;
@@ -205,7 +224,7 @@ namespace p2sp
                 return false;
             }
 
-            std::map<protocol::PieceInfo, PieceTask::p>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
+            std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
             if (iter == requesting_map_.end())
             {
                 // check here
@@ -249,7 +268,7 @@ namespace p2sp
             }
             else
             {
-                PieceTask::p piece_task = iter->second;
+                PieceTask * piece_task = iter->second;
                 LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload check timeout: " 
                     << iter->first);
                 if (piece_task->IsTimeout(downloader, piece_info_ex) || piece_task->downloader_->IsPausing())
@@ -303,7 +322,7 @@ namespace p2sp
                 return false;
             }
 
-            std::map<protocol::PieceInfo, PieceTask::p>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
+            std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
             if (iter == requesting_map_.end())
             {
                 // check here
@@ -385,13 +404,14 @@ namespace p2sp
             }
             else
             {
-                PieceTask::p piece_task = iter->second;
+                PieceTask * piece_task = iter->second;
                 LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload check timeout: " 
                     << iter->first);
                 if (piece_task->IsTimeout(downloader, piece_info_ex) || piece_task->downloader_->IsPausing())
                 {
                     if (!downloader->IsPausing())
                         download_driver_->SetDownloaderToDeath(iter->second->downloader_);
+                    delete iter->second;
                     requesting_map_.erase(iter);
                     if (piece_task->downloader_)
                         piece_task->downloader_->OnPieceTimeout(download_driver_, piece_info_ex);
@@ -420,10 +440,10 @@ namespace p2sp
         if (false == is_running_)
             return;
 
-        std::map<protocol::PieceInfo, PieceTask::p>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
+        std::map<protocol::PieceInfo, PieceTask *>::iterator iter = requesting_map_.find(piece_info_ex.GetPieceInfo());
         if (iter != requesting_map_.end())
         {
-            PieceTask::p piece_task = iter->second;
+            PieceTask * piece_task = iter->second;
             if (piece_task->downloader_ == downloader)
             {
                 // 起始时间设置成0, 就会Timeout了
