@@ -180,8 +180,6 @@ namespace p2sp
 
         virtual string GetSourceUrl() const;
         virtual protocol::UrlInfo GetOriginalUrlInfo() const;
-        virtual string GetHttpRequestString() const { return http_request_string_; }
-        virtual void SetHttpRequestString(const string& request_string) { http_request_string_ = request_string; }
 
         void StopDownloadDriver();
 
@@ -277,7 +275,6 @@ namespace p2sp
 
         string source_url_;
         string qualified_file_name_;
-        string http_request_string_;
 
         ProxyType proxy_type_;
         PlayInfo::p play_info_;
@@ -308,7 +305,6 @@ namespace p2sp
     private:
         static const uint32_t DEFAULT_SILENT_TIME_LIMIT = 300*1000;
         static const uint32_t HEADER_LENGTH = 2048;
-        static const uint32_t CONTENT_LENGTH = 10 * 1024;
     };
 }
 
