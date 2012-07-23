@@ -958,10 +958,6 @@ namespace statistic
         {
             p2p_downloader_statistic_map_[rid]->SubmitDoListReponseCount(tracker_info.StationNo);
         }
-        else
-        {
-            assert(false);
-        }
     }
 
     void StatisticModule::SubmitErrorCode(const protocol::TRACKER_INFO& tracker_info, boost::uint8_t error_code)

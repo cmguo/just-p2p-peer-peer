@@ -1125,10 +1125,13 @@ namespace p2sp
             info.channel_name = proxy_connection_->GetPlayInfo()->GetChannelName();
         }
 
-        //K2: 分别统计向每组station tracker发送的list包数和响应数
         if (p2p_downloader_ && p2p_downloader_->GetStatistic())
         {
+            //K2: 分别统计向每组station tracker发送的list包数和响应数
             info.tracker_respons_info = p2p_downloader_->GetStatistic()->GetTrackerListRequestAndResponseString();
+
+            //L2: 每种NAT类型下peer连接请求数以及连接成功数
+            info.peer_connect_request_sucess_count = p2p_downloader_->GetStatistic()->GetPeerConnectString();
         }
 
         // herain:2010-12-31:创建提交DAC的日志字符串
@@ -1200,6 +1203,7 @@ namespace p2sp
         log_stream << "&I2=" << (uint32_t)info.fetch_tinydrag_time;
         log_stream << "&J2=" << info.channel_name;
         log_stream << "&K2=" << info.tracker_respons_info;
+        log_stream << "&L2=" << info.peer_connect_request_sucess_count;
 
         string log = log_stream.str();
 

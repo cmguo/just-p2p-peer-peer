@@ -169,6 +169,10 @@ namespace statistic
 
         void SetEmptySubpieceDistance(uint32_t empty_subpiece_distance);
 
+        void SubmitPeerConnectRequestCount(boost::uint8_t nat_type);
+        void SubmitPeerConnectSuccessCount(boost::uint8_t nat_type);
+        string GetPeerConnectString() const;
+
         boost::uint32_t GetConnectionStatisticSize() const
         {
             return peer_connection_statistic_map_.size();
@@ -217,6 +221,8 @@ namespace statistic
         boost::uint32_t total_list_response_count_;
         std::map<uint32_t, int> tracker_list_request_count_;
         std::map<uint32_t, int> tracker_list_response_count_;
+
+        std::map<uint16_t, std::pair<uint32_t, uint32_t> > nat_type_connection_statistic_;
 
         RID resource_id_;
 

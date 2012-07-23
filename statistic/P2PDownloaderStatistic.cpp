@@ -14,8 +14,11 @@ namespace statistic
 #ifdef LOG_ENABLE
     static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[p2p_downloader_statistic]");
 #endif
-    P2PDownloaderStatistic::P2PDownloaderStatistic(const RID& rid) :
-        is_running_(false), resource_id_(rid), total_list_request_count_(0), total_list_response_count_(0)
+    P2PDownloaderStatistic::P2PDownloaderStatistic(const RID& rid)
+        : is_running_(false)
+        , resource_id_(rid)
+        , total_list_request_count_(0)
+        , total_list_response_count_(0)
     {
     }
 
@@ -323,6 +326,24 @@ namespace statistic
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::UpdatePeerConnectionInfo [OUT]");
     }
 
+    void P2PDownloaderStatistic::SubmitPeerConnectRequestCount(boost::uint8_t nat_type)
+    {
+        if (nat_type_connection_statistic_.find (nat_type) != nat_type_connection_statistic_.end())
+        {
+            nat_type_connection_statistic_[nat_type].first++;
+        }
+        else
+        {
+            nat_type_connection_statistic_[nat_type] = std::make_pair(1, 0);
+        }
+    }
+
+    void P2PDownloaderStatistic::SubmitPeerConnectSuccessCount(boost::uint8_t nat_type)
+    {
+        assert(nat_type_connection_statistic_.find(nat_type) != nat_type_connection_statistic_.end());
+        nat_type_connection_statistic_[nat_type].second++;
+    }
+
     //////////////////////////////////////////////////////////////////////////
     // Resource Info
 
@@ -488,5 +509,23 @@ namespace statistic
     void P2PDownloaderStatistic::SetEmptySubpieceDistance(uint32_t empty_subpiece_distance)
     {
         p2p_downloader_statistic_info_.empty_subpiece_distance = empty_subpiece_distance;
+    }
+
+    string P2PDownloaderStatistic::GetPeerConnectString() const
+    {
+        std::ostringstream os;
+        std::map<uint16_t, std::pair<uint32_t, uint32_t> >::const_iterator iter = nat_type_connection_statistic_.begin();
+        for (iter; iter != nat_type_connection_statistic_.end(); )
+        {
+            os << (uint16_t)(iter->first) << ":"
+                << (uint32_t)iter->second.first << ":"
+                << (uint32_t)iter->second.second;
+
+            if (++iter != nat_type_connection_statistic_.end())
+            {
+                os << ",";
+            }
+        }
+        return os.str();
     }
 }

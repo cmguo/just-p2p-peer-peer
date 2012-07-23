@@ -141,6 +141,16 @@ namespace p2sp
             }
 
             ippool_->OnConnect(end_point);
+
+            //点播中对连接成功率进行统计
+            if (!p2p_downloader_->IsLive())
+            {
+                 P2PDownloader__p p2p_downloader = boost::static_pointer_cast<P2PDownloader>(p2p_downloader_);
+                 if (p2p_downloader && p2p_downloader->GetStatistic())
+                 {
+                     p2p_downloader->GetStatistic()->SubmitPeerConnectRequestCount(candidate_peer_info.PeerNatType);
+                 }
+            }
         }
         else
         {
@@ -245,6 +255,11 @@ namespace p2sp
 
                 connect_peer->Start(packet, packet.end_point, info);
                 p2p_downloader->AddPeer(connect_peer);
+
+                if (p2p_downloader->GetStatistic())
+                {
+                    p2p_downloader->GetStatistic()->SubmitPeerConnectSuccessCount(info.PeerNatType);
+                }
             }
             else
             {
