@@ -412,12 +412,13 @@ namespace p2sp
                     if (!downloader->IsPausing())
                         download_driver_->SetDownloaderToDeath(iter->second->downloader_);
 
+                    requesting_map_.erase(iter);
+
                     if (piece_task->downloader_)
                         piece_task->downloader_->OnPieceTimeout(download_driver_, piece_info_ex);
-					
-					delete iter->second;
-                    requesting_map_.erase(iter);
-					
+
+                    delete piece_task;
+
                     return true;
                 }
                 else if (block_size == 0) {
