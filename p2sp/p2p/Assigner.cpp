@@ -104,10 +104,10 @@ namespace p2sp
         // 清空 peer_connection_recvtime_list_ 以便于重新计算 预测收报时间
         peer_connection_recvtime_list_.clear();
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter;
         for (iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end(); ++iter)
         {
-            ConnectionBase__p peer = iter->second;
+            ConnectionBasePointer peer = iter->second;
             
             LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclPeerConnectionRecvTimeMap p2p_downloader:" << 
                 p2p_downloader_ << " peer:" << peer << ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
@@ -541,8 +541,8 @@ namespace p2sp
         std::deque<protocol::SubPieceInfo>::iterator iter_subpiece;
         std::list<PEER_RECVTIME>::iterator iter_peer;
         uint32_t rcvtime;
-        ConnectionBase__p peer;
-        std::map<ConnectionBase__p, boost::uint32_t> assigned_peers;
+        ConnectionBasePointer peer;
+        std::map<ConnectionBasePointer, boost::uint32_t> assigned_peers;
         LOG4CPLUS_DEBUG_LOG(logger_assigner, "Assigner: subpiece_assign_map size = " << subpiece_assign_map_.size());
         for (iter_subpiece = subpiece_assign_map_.begin(); iter_subpiece != subpiece_assign_map_.end(); ++iter_subpiece)
         {
@@ -585,10 +585,9 @@ namespace p2sp
         }
 
         // request all remaining
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end();iter++)
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter = p2p_downloader_->peers_.begin(); iter != p2p_downloader_->peers_.end();iter++)
         {
-            ConnectionBase__p peer;
-            peer = iter->second;
+            ConnectionBasePointer peer = iter->second;
             peer->GetStatistic()->SetAverageDeltaTime(peer->GetAvgDeltaTime());
             peer->GetStatistic()->SetSortedValue(peer->GetAvgDeltaTime());
             peer->GetStatistic()->SetAssignedSubPieceCount(peer->GetTaskQueueSize());

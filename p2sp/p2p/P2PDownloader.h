@@ -39,12 +39,8 @@ namespace p2sp
     typedef boost::shared_ptr<PeerConnector> PeerConnector__p;
     class Assigner;
     typedef boost::shared_ptr<Assigner> Assigner__p;
-    
-    class PeerConnection;
-    typedef boost::shared_ptr<PeerConnection> PeerConnection__p;
     class ConnectionBase;
-    typedef boost::shared_ptr<ConnectionBase> ConnectionBase__p;
-
+    typedef boost::intrusive_ptr<ConnectionBase> ConnectionBasePointer;
     class DownloadDriver;
     typedef boost::shared_ptr<DownloadDriver> DownloadDriver__p;
 
@@ -78,8 +74,8 @@ namespace p2sp
         void InitPeerConnection();
         void KickPeerConnection();
 
-        void AddPeer(ConnectionBase__p peer_connection);
-        void DelPeer(ConnectionBase__p peer_connection);
+        void AddPeer(ConnectionBasePointer peer_connection);
+        void DelPeer(ConnectionBasePointer peer_connection);
 
         template <typename PacketType>
         void DoSendPacket(PacketType const & packet,
@@ -96,7 +92,7 @@ namespace p2sp
         statistic::P2PDownloaderStatistic::p GetStatistic() const { return statistic_; }
 
         bool HasPeer(const boost::asio::ip::udp::endpoint & ep) {return peers_.find(ep) != peers_.end();}
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> GetPeers() {return peers_;}
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> GetPeers() {return peers_;}
         IpPool__p GetIpPool() {return ippool_;}
         Exchanger__p GetExchanger() {return exchanger_;}
 
@@ -115,7 +111,7 @@ namespace p2sp
         virtual boost::int32_t  GetPieceTaskNum() {return 0;}
 
         void AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
-            boost::uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection);
+            boost::uint32_t timeout, ConnectionBasePointer peer_connection);
 
     public:
 
@@ -184,9 +180,6 @@ namespace p2sp
         void KeepConnectionAlive();
         void UpdateConnectTime();
 
-        void AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
-            boost::uint32_t timeout, PeerConnection__p peer_connection);
-
         boost::uint32_t GetAvgConnectRTT() const;
 
         const string & GetOpenServiceFileName();
@@ -209,10 +202,10 @@ namespace p2sp
         boost::shared_ptr<storage::Instance> instance_;
         boost::uint32_t block_size_;
         // 连接上的peers
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> peers_;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> peers_;
 
         // 可以使用的SN
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> sn_;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> sn_;
 
         IpPool__p ippool_;
         Exchanger__p exchanger_;
@@ -303,7 +296,7 @@ namespace p2sp
         }
     }
 
-    inline void P2PDownloader::AddPeer(ConnectionBase__p peer_connection)
+    inline void P2PDownloader::AddPeer(ConnectionBasePointer peer_connection)
     {
         if (is_running_ == false) return;
         if (peers_.find(peer_connection->GetEndpoint()) == peers_.end())
@@ -312,7 +305,7 @@ namespace p2sp
         }
     }
 
-    inline void P2PDownloader::DelPeer(ConnectionBase__p peer_connection)
+    inline void P2PDownloader::DelPeer(ConnectionBasePointer peer_connection)
     {
         if (is_running_ == false || !peer_connection) return;
         if (peers_.find(peer_connection->GetEndpoint()) != peers_.end())

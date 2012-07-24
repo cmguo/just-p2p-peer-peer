@@ -15,20 +15,18 @@ namespace p2sp
     class SubPieceRequestManager;
     typedef boost::shared_ptr<SubPieceRequestManager> SubPieceRequestManager__p;
 
-    class SubPieceRequestTask;
-    typedef boost::shared_ptr<SubPieceRequestTask> SubPieceRequestTask__p;
-
     class SNConnection
-        : public boost::enable_shared_from_this<SNConnection>
+        : public boost::noncopyable
         , public ConnectionBase
     {
     public:
-        static boost::shared_ptr<SNConnection> create(P2PDownloader__p p2p_downloader,
+        SNConnection(P2PDownloader__p p2p_downloader,
             const boost::asio::ip::udp::endpoint & end_point)
+            : ConnectionBase(p2p_downloader, end_point)
+            , is_subpiece_requested_(false)
         {
-            return boost::shared_ptr<SNConnection>(new SNConnection(p2p_downloader, end_point));
         }
-
+        
         void Start();
 
         virtual void Stop();
@@ -56,14 +54,7 @@ namespace p2sp
         void RequestTillFullWindow(bool need_check = false);
 
         virtual boost::uint32_t GetConnectRTT() const;
-        
-    private:
-        SNConnection(P2PDownloader__p p2p_downloader,
-            const boost::asio::ip::udp::endpoint & end_point)
-            : ConnectionBase(p2p_downloader, end_point)
-            , is_subpiece_requested_(false)
-        {
-        }
+
     private:
         bool is_subpiece_requested_;
     };

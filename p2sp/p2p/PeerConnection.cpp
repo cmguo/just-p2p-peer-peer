@@ -59,8 +59,7 @@ namespace p2sp
         // rtt_ += P2SPConfigs::PEERCONNECTION_RTT_MODIFICATION_TIME_IN_MILLISEC;
         //
         rtt_ = (uint32_t)(sqrt(rtt_ + 0.0) * 10 + 0.5) + P2SPConfigs::PEERCONNECTION_RTT_MODIFICATION_TIME_IN_MILLISEC;
-        LOG4CPLUS_INFO_LOG(logger_peer_connection, __FUNCTION__ << " " << p2p_downloader_ << " " << 
-            shared_from_this() << " EndPoint = " << end_point << " RTT = " << rtt_);
+        LOG4CPLUS_INFO_LOG(logger_peer_connection, __FUNCTION__ << " " << p2p_downloader_ << " " << " EndPoint = " << end_point << " RTT = " << rtt_);
         longest_rtt_ = rtt_ + 500;
 
         peer_version_ = reconnect_packet.peer_version_;
@@ -242,16 +241,16 @@ namespace p2sp
         {
             LOG4CPLUS_INFO_LOG(logger_peer_connection, "PeerConnection::RequestSubPiece " << 
                 (*(p2p_downloader_->GetDownloadDrivers().begin()))->GetDownloadDriverID() << " " << 0 << " " 
-                << 1 << " " << shared_from_this() << " " << subpiece_info);
+                << 1 << " " << " " << subpiece_info);
             LOG4CPLUS_INFO_LOG(logger_peer_connection, "PeerConnection::SubpieceTimeOut: " << 
-                *(p2p_downloader_->GetDownloadDrivers().begin()) << " " << shared_from_this() << " " << subpiece_info 
+                *(p2p_downloader_->GetDownloadDrivers().begin()) << " " << " " << subpiece_info 
                 << " " << curr_time_out_);
         }
 
         ++requesting_count_;
         ++sent_count_;
 
-        p2p_downloader_->AddRequestingSubpiece(subpiece_info, curr_time_out_, shared_from_this());
+        p2p_downloader_->AddRequestingSubpiece(subpiece_info, curr_time_out_, this);
 
         curr_time_out_ += avg_delta_time_;
 
@@ -305,7 +304,7 @@ namespace p2sp
         if (false == is_running_)
             return;
 
-        LOG4CPLUS_INFO_LOG(logger_peer_connection, "PeerConnection::DoReportDownloadSpeed " << shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_peer_connection, "PeerConnection::DoReportDownloadSpeed ");
 
         protocol::ReportSpeedPacket packet(protocol::Packet::NewTransactionID(),
             p2p_downloader_->GetRid(), peer_guid_,
@@ -325,8 +324,7 @@ namespace p2sp
         // 每250ms集中发出请求
         if (accumulative_subpiece_num != 0)
         {
-            LOG4CPLUS_DEBUG_LOG(logger_peer_connection, "OnP2PTimer:" << shared_from_this() << 
-                ", accumulative_subpiece_num:" << accumulative_subpiece_num << ", RequestTillFullWindow");
+            LOG4CPLUS_DEBUG_LOG(logger_peer_connection, "OnP2PTimer" << " accumulative_subpiece_num:" << accumulative_subpiece_num << ", RequestTillFullWindow");
             accumulative_subpiece_num = 0;
             RequestTillFullWindow(true);
         }
@@ -512,7 +510,7 @@ namespace p2sp
 
         for (uint32_t i = 0; i < subpieces.size(); ++i)
         {
-            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, shared_from_this());
+            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 
             curr_time_out_ += avg_delta_time_;
             P2PModule::Inst()->AddRequestCount();

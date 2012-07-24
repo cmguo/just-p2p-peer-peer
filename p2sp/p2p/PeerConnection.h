@@ -19,24 +19,20 @@ namespace p2sp
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
     class SubPieceRequestManager;
     typedef boost::shared_ptr<SubPieceRequestManager> SubPieceRequestManager__p;
-    class SubPieceRequestTask;
-    typedef boost::shared_ptr<SubPieceRequestTask> SubPieceRequestTask__p;
 
     class PeerConnection
         : public boost::noncopyable
-        , public boost::enable_shared_from_this<PeerConnection>
         , public ConnectionBase
 #ifdef DUMP_OBJECT
         , public count_object_allocate<PeerConnection>
 #endif
     {
     public:
-        typedef boost::shared_ptr<PeerConnection> p;
-
-        static p create(P2PDownloader__p p2p_downloader,
+        PeerConnection(P2PDownloader__p p2p_downloader,
             const boost::asio::ip::udp::endpoint & end_point)
+            : ConnectionBase(p2p_downloader, end_point)
+            , is_rid_info_valid_(false)
         {
-            return p(new PeerConnection(p2p_downloader, end_point));
         }
 
     public:
@@ -106,16 +102,6 @@ namespace p2sp
         Guid peer_guid_;
         protocol::RidInfo rid_info_;
         bool is_rid_info_valid_;
-
-    private:
-        // 构造
-        PeerConnection(P2PDownloader__p p2p_downloader,
-            const boost::asio::ip::udp::endpoint & end_point)
-            : ConnectionBase(p2p_downloader, end_point)
-            , is_rid_info_valid_(false)
-        {
-        }
-
     };
 
     inline bool PeerConnection::CanRequest() const

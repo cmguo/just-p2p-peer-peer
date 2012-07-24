@@ -22,7 +22,7 @@ namespace p2sp
 #endif
     {
     public:
-        SubPieceRequestTask(uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
+        SubPieceRequestTask(uint32_t timeout, boost::intrusive_ptr<ConnectionBase> peer_connection)
             : request_time_elapse_(0)
             , timeout_(timeout)
             , dead_(false)
@@ -38,9 +38,7 @@ namespace p2sp
         uint32_t request_time_elapse_;
         uint32_t timeout_;
         bool dead_;
-        boost::shared_ptr<ConnectionBase> peer_connection_;
-    private:
-        
+        boost::intrusive_ptr<ConnectionBase> peer_connection_;
     };
 
     class P2PDownloader;
@@ -60,7 +58,7 @@ namespace p2sp
         void Stop();
         // 操作
         void Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout,
-            boost::shared_ptr<ConnectionBase> peer_connection);
+            boost::intrusive_ptr<ConnectionBase> peer_connection);
         void CheckExternalTimeout();
         // 消息
         void OnSubPiece(protocol::SubPiecePacket const & packet);
@@ -108,7 +106,7 @@ namespace p2sp
         for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)
         {
             SubPieceRequestTask * task = it->second;
-            boost::shared_ptr<ConnectionBase> peer_conn = task->peer_connection_;
+            boost::intrusive_ptr<ConnectionBase> peer_conn = task->peer_connection_;
             if (peer_conn->GetConnectedTime() >= 3 * 1000 && peer_conn->GetSentCount() >= 5 && peer_conn->GetReceivedCount() == 0)
             {
                 continue;

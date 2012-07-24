@@ -244,7 +244,7 @@ namespace p2sp
 
                 // 创建PeerConnection
 
-                PeerConnection::p connect_peer = PeerConnection::create(p2p_downloader, packet.end_point);
+                boost::intrusive_ptr<PeerConnection> connect_peer = new PeerConnection(p2p_downloader, packet.end_point);
 
                 ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;

@@ -32,7 +32,6 @@ namespace p2sp
         block_size_ = p2p_downloader_->GetInstance()->GetBlockSize();
 
         assert(request_tasks_.size() == 0);
-
     }
 
     void SubPieceRequestManager::Stop()
@@ -120,7 +119,7 @@ namespace p2sp
         for (iter = request_tasks_.find(sub_piece); iter != request_tasks_.end() && iter->first == sub_piece;)
         {
             SubPieceRequestTask * sub_piece_request_task = iter->second;
-            boost::shared_ptr<ConnectionBase> peer_connection = sub_piece_request_task->peer_connection_;
+            boost::intrusive_ptr<ConnectionBase> peer_connection = sub_piece_request_task->peer_connection_;
             if (peer_connection->GetEndpoint() == packet.end_point)
             {
                 uint32_t response_time = sub_piece_request_task->request_time_elapse_;
@@ -206,7 +205,7 @@ namespace p2sp
     }
 
     void SubPieceRequestManager::Add(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t timeout,
-        boost::shared_ptr<ConnectionBase> peer_connection)
+        boost::intrusive_ptr<ConnectionBase> peer_connection)
     {
         if (is_running_ == false) return;
 

@@ -124,7 +124,7 @@ namespace p2sp
        LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader Stop" << shared_from_this());
 
         // 首先停止所有的 Peer
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
 
         for (iter = peers_.begin(); iter != peers_.end(); iter++)
         {
@@ -332,12 +332,11 @@ namespace p2sp
         //    如果有一个存在，则返回true
         // 否则 都没有 返回false
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter = peers_.begin();
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter = peers_.begin();
 
         for (; iter != peers_.end(); ++iter)
         {
-            ConnectionBase__p peer;
-            peer = iter->second;
+            ConnectionBasePointer peer = iter->second;
             // Block是传播单元
             if (peer->HasBlock(piece_info.block_index_))
             {
@@ -543,8 +542,8 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> peer_connections;
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> peer_connections;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end(); iter++)
         {
             if (!sn_pool_object_.IsSn(iter->first))
@@ -554,12 +553,12 @@ namespace p2sp
         }
 
         boost::int32_t kick_count = 0;
-        std::multimap<uint32_t, ConnectionBase__p> peer_kick_map;
+        std::multimap<uint32_t, ConnectionBasePointer> peer_kick_map;
 
         if (peer_connections.size() > p2p_max_connect_count_)
         {
             kick_count = peer_connections.size() - p2p_max_connect_count_;
-            std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+            std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
             for (iter = peer_connections.begin(); iter != peer_connections.end(); iter++)
             {
                 boost::uint32_t peer_now_speed = iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
@@ -576,10 +575,10 @@ namespace p2sp
             
             if (kick_count != 0)
             {
-                std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+                std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
                 for (iter = peer_connections.begin(); iter != peer_connections.end(); iter++)
                 {
-                    ConnectionBase__p peer = iter->second;
+                    ConnectionBasePointer peer = iter->second;
                     if (peer->CanKick() && peer->GetStatistic())
                     {
                         peer_kick_map.insert(std::make_pair(peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed, peer));
@@ -593,7 +592,7 @@ namespace p2sp
         // 往共享内存写入每秒踢掉的连接数
         statistic_->SubmitKickCount(std::min(kick_count, (int32_t)peer_kick_map.size()));
 
-        std::multimap<uint32_t, ConnectionBase__p>::iterator iter_kick = peer_kick_map.begin();
+        std::multimap<uint32_t, ConnectionBasePointer>::iterator iter_kick = peer_kick_map.begin();
         for (boost::int32_t i = 0; i < kick_count && iter_kick != peer_kick_map.end(); ++i, ++iter_kick)
         {
             DelPeer(iter_kick->second);
@@ -606,7 +605,7 @@ namespace p2sp
             return 0;
 
         connected_full_block_peer_count_ = 0;
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter = peers_.begin(); iter != peers_.end(); ++iter)
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             if (iter->second->IsBlockFull())
             {
@@ -625,7 +624,7 @@ namespace p2sp
         if (piece_tasks_.size() == 0)
             return 0;
         uint32_t block_index = (piece_tasks_.begin()->first).block_index_;
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter = peers_.begin(); iter != peers_.end(); ++iter)
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             if (iter->second->HasBlock(block_index))
             {
@@ -772,7 +771,7 @@ namespace p2sp
         }
 
         // 所有的PeerConnection
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end();)
         {
             if (iter->second->LongTimeNoSee())
@@ -901,7 +900,7 @@ namespace p2sp
         //     peers_ 中删除 该peer_connection
         assert(statistic_);
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter =
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter =
             peers_.find(packet.end_point);
 
         if (iter != peers_.end())
@@ -953,9 +952,9 @@ namespace p2sp
             {
                 assert(peers_[packet.end_point]);
 #ifdef BOOST_WINDOWS_API
-                PeerConnection::p peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+                boost::intrusive_ptr<PeerConnection> peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
 #else
-                PeerConnection::p peer_connection = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+                boost::intrusive_ptr<PeerConnection> = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
 #endif
                 assert(peer_connection);
                 if (peer_connection)
@@ -969,10 +968,10 @@ namespace p2sp
         //   下发给对应的PeerGuid，否则放弃
         else if (packet.PacketAction == protocol::RIDInfoResponsePacket::Action)
         {
-            std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator peer = peers_.find(packet.end_point);
+            std::map<boost::asio::ip::udp::endpoint, boost::intrusive_ptr<ConnectionBase> >::iterator peer = peers_.find(packet.end_point);
             if (peer != peers_.end())
             {
-                PeerConnection::p peer_connection = boost::static_pointer_cast<PeerConnection>(peer->second);
+                boost::intrusive_ptr<PeerConnection> peer_connection = boost::static_pointer_cast<PeerConnection>(peer->second);
                 peer_connection->OnRIDInfoResponse((protocol::RIDInfoResponsePacket const &)packet);
             }
             return;
@@ -1064,7 +1063,7 @@ namespace p2sp
         assert(candidate_peers.size() == 0);
         uint32_t peer_left = peers_.size();
         uint32_t cand_left = P2SPConfigs::P2P_MAX_EXCHANGE_PEER_COUNT;
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end();iter++)
         {
             Random random;
@@ -1101,10 +1100,10 @@ namespace p2sp
         if (false == is_running_)
             return 0;
         active_peer_count_ = 0;
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator it;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator it;
         for (it = peers_.begin(); it != peers_.end(); ++it)
         {
-            ConnectionBase__p peer = it->second;
+            ConnectionBasePointer peer = it->second;
             if (peer && peer->GetStatistic()->GetSpeedInfo().NowDownloadSpeed > 500)
                 ++active_peer_count_;
         }
@@ -1500,9 +1499,9 @@ namespace p2sp
     // 设置共享内存中的每个连接经过上轮剩余的分配到的Subpiece个数
     void P2PDownloader::SetAssignedLeftSubPieceCount()
     {
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p> ::iterator iter = peers_.begin(); iter != peers_.end();iter++)
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter = peers_.begin(); iter != peers_.end();iter++)
         {
-            ConnectionBase__p peer  = iter->second;
+            ConnectionBasePointer peer  = iter->second;
             LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "Assigner::CaclPeerConnectionRecvTimeMap peer : " << peer << 
                 ", TaskQueueRemaining:" << peer->GetTaskQueueSize());
             peer->GetStatistic()->SetAssignedLeftSubPieceCount(peer->GetTaskQueueSize());
@@ -1543,7 +1542,7 @@ namespace p2sp
 
     void P2PDownloader::KeepConnectionAlive()
     {
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             iter->second->KeepAlive();
@@ -1590,24 +1589,18 @@ namespace p2sp
 
     void P2PDownloader::UpdateConnectTime()
     {
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             iter->second->UpdateConnectTime();
         }
     }
 
-    void P2PDownloader::AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
-        boost::uint32_t timeout, PeerConnection__p peer_connection)
-    {
-        subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection);
-    }
-
     boost::uint32_t P2PDownloader::GetAvgConnectRTT() const
     {
         boost::uint32_t sum_rtt = 0;
 
-        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::const_iterator
+        for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::const_iterator
             iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             sum_rtt += iter->second->GetConnectRTT();
@@ -1624,7 +1617,7 @@ namespace p2sp
     }
 
     void P2PDownloader::AddRequestingSubpiece(const protocol::SubPieceInfo & subpiece_info,
-        boost::uint32_t timeout, boost::shared_ptr<ConnectionBase> peer_connection)
+        boost::uint32_t timeout, ConnectionBasePointer peer_connection)
     {
         subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection);
     }
@@ -1651,10 +1644,10 @@ namespace p2sp
             return;
         }
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter;
+        std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter;
 
         boost::uint32_t min_speed = 32767*1024;
-        ConnectionBase__p kick_sn_connection;
+        ConnectionBasePointer kick_sn_connection;
 
         for (iter = peers_.begin(); iter != peers_.end(); iter++)
         {
@@ -1673,8 +1666,7 @@ namespace p2sp
         {
             DelPeer(kick_sn_connection);
             
-            boost::shared_ptr<SNConnection> sn_connection = 
-                SNConnection::create(shared_from_this(), sn_pool_object_.GetReserveSn());
+            boost::intrusive_ptr<SNConnection> sn_connection = new SNConnection(shared_from_this(), sn_pool_object_.GetReserveSn());
 
             sn_connection->Start();
 
@@ -1686,10 +1678,10 @@ namespace p2sp
     {
         if (enable)
         {
-            for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator iter = sn_.begin();
+            for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter = sn_.begin();
                 iter != sn_.end(); ++iter)
             {
-                boost::shared_ptr<SNConnection> sn = boost::static_pointer_cast<SNConnection>(iter->second);
+                boost::intrusive_ptr<SNConnection> sn = boost::static_pointer_cast<SNConnection>(iter->second);
                 sn->Start();
                 AddPeer(iter->second);
             }
@@ -1698,7 +1690,7 @@ namespace p2sp
         }
         else
         {
-            for (std::map<boost::asio::ip::udp::endpoint, ConnectionBase__p>::iterator
+            for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator
                 iter = peers_.begin(); iter != peers_.end(); )
             {
                 if (sn_pool_object_.IsSn(iter->first))
@@ -1728,8 +1720,7 @@ namespace p2sp
 
         while (sn_.size() < max_sn_list_sz && sn_pool_object_.IsHaveReserveSn())
         {
-            boost::shared_ptr<SNConnection> sn_connection = 
-                SNConnection::create(shared_from_this(), sn_pool_object_.GetReserveSn());
+            boost::intrusive_ptr<SNConnection> sn_connection = new SNConnection(shared_from_this(), sn_pool_object_.GetReserveSn());
 
             sn_connection->Start();
 

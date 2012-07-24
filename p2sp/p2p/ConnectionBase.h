@@ -6,6 +6,7 @@
 #define CONNECTION_BASE_H
 
 #include "statistic/PeerConnectionStatistic.h"
+#include "base/intrusive_ptr.h"
 
 namespace p2sp
 {
@@ -13,6 +14,7 @@ namespace p2sp
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
 
     class ConnectionBase
+        : public base::intrusive_ptr_base<ConnectionBase>
     {
     public:
         ConnectionBase(P2PDownloader__p p2p_downloader,

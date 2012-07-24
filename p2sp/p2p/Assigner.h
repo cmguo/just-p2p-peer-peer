@@ -15,7 +15,7 @@ namespace p2sp
     typedef boost::shared_ptr<P2PDownloader> P2PDownloader__p;
 
     class ConnectionBase;
-    typedef boost::shared_ptr<ConnectionBase> ConnectionBase__p;
+    typedef boost::intrusive_ptr<ConnectionBase> ConnectionBasePointer;
 
     class Assigner
         : public boost::noncopyable
@@ -59,12 +59,12 @@ namespace p2sp
     private:
         struct PEER_RECVTIME
         {
-            PEER_RECVTIME(uint32_t recv_time_, ConnectionBase__p peer_)
+            PEER_RECVTIME(uint32_t recv_time_, ConnectionBasePointer peer_)
                 : recv_time(recv_time_), peer(peer_) {}
             PEER_RECVTIME(const PEER_RECVTIME & p1)
                 : recv_time(p1.recv_time), peer(p1.peer){}
             uint32_t recv_time;
-            ConnectionBase__p peer;
+            ConnectionBasePointer peer;
         };
         friend inline bool operator < (PEER_RECVTIME & p1, PEER_RECVTIME & p2);
         // 模块

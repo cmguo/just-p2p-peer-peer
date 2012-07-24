@@ -100,7 +100,7 @@ namespace p2sp
 
         for (uint32_t i = 0; i < subpieces.size(); ++i)
         {
-            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, shared_from_this());
+            p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 
             curr_time_out_ += avg_delta_time_;
             P2PModule::Inst()->AddRequestCount();
