@@ -64,7 +64,6 @@ namespace p2sp
         void CheckExternalTimeout();
         // 消息
         void OnSubPiece(protocol::SubPiecePacket const & packet);
-        void OnError(protocol::ErrorPacket const & packet);
         void OnP2PTimer(uint32_t times);
         // 属性
         inline bool IsRequesting(const protocol::SubPieceInfo& subpiece_info) const;

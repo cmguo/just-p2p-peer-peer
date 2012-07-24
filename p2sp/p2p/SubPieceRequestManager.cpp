@@ -150,22 +150,6 @@ namespace p2sp
         }
     }
 
-    void SubPieceRequestManager::OnError(protocol::ErrorPacket const & packet)
-    {
-        if (is_running_ == false) return;
-
-        // 首先在requesting_map中找到相应的SubPieceInfo
-        //     如果没有找到 直接 return
-        //
-        //     ERROR：
-        //        GuidNotFound: assert(0);
-        //        SubPieceNotFound: PeerConnection::p->OnSubPieceNotFound();
-        //
-        //        Remove(protocol::SubPieceInfo)
-
-        // 不知道subpiece没有办法  = 超时
-    }
-
     void SubPieceRequestManager::CheckExternalTimeout()
     {
         if (is_running_ == false) return;
