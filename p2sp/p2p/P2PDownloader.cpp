@@ -954,7 +954,7 @@ namespace p2sp
 #ifdef BOOST_WINDOWS_API
                 boost::intrusive_ptr<PeerConnection> peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
 #else
-                boost::intrusive_ptr<PeerConnection> = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
+                boost::intrusive_ptr<PeerConnection> peer_connection = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
 #endif
                 assert(peer_connection);
                 if (peer_connection)
