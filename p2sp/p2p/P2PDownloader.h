@@ -83,7 +83,6 @@ namespace p2sp
 
         void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers);
 
-        void NoticeSubPiece(const protocol::SubPieceInfo& sub_piece);
         bool HasSubPiece(const protocol::SubPieceInfo& sub_piece);
 
         bool IsDownloadInitialization() {return start_time_counter_.elapsed() <= p2sp::P2SPConfigs::P2P_DOWNLOAD_INIT_TIMEOUT;}
@@ -217,8 +216,6 @@ namespace p2sp
         RID rid_;
         std::set<DownloadDriver__p> download_driver_s_;                         // 注册的DownloadDriver
         std::multimap<protocol::PieceInfoEx, DownloadDriver__p> piece_tasks_;    // 收到的Piece请求任务
-        // 记录第block_index * 16 + piece_index片piece的第subpiece_index片subpiece是否已经存在
-        std::map<protocol::PieceInfo, std::bitset<storage::subpiece_num_per_piece_g_> > piece_bitmaps_;
         framework::timer::OnceTimer once_timer_;
         //
         bool is_connected_;                                        // 记录是否已经连接

@@ -90,7 +90,6 @@ namespace p2sp
         {
             //assert(false == p2p_downloader_->GetInstance()->HasSubPiece(sub_piece));
             LOG4CPLUS_DEBUG_LOG(logger_sub_piece_request_manager, "Recv Subpiece = " << sub_piece);
-            p2p_downloader_->NoticeSubPiece(sub_piece);
 
             if (p2p_downloader_->IsOpenService())
             {

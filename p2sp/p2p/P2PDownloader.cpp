@@ -177,7 +177,6 @@ namespace p2sp
         // 清除piece_tasks
         piece_tasks_.clear();
 
-        piece_bitmaps_.clear();
         once_timer_.stop();
 
         // 限速模块停止
@@ -269,17 +268,6 @@ namespace p2sp
         // 否则 piece_tasks_ mutilmap 里面添加 (piece_info_ex, downloader_driver) 二元组
 
         piece_tasks_.insert(std::make_pair(piece_info_ex, downloader_driver));
-        
-        // 向piece_bitmaps中增加新的piece的信息
-        protocol::PieceInfo piece = piece_info_ex.GetPieceInfo();
-        if (piece_bitmaps_.find(piece) == piece_bitmaps_.end())
-        {
-            for (int i = 0; i < (int)storage::subpiece_num_per_piece_g_; ++i)
-            {
-                protocol::SubPieceInfo subpiece(piece.block_index_, piece.piece_index_*storage::subpiece_num_per_piece_g_+i);
-                piece_bitmaps_[piece].set(i, instance_->HasSubPiece(subpiece));
-            }
-        }
     }
 
     bool P2PDownloader::IsConnected()
@@ -379,7 +367,6 @@ namespace p2sp
     {
         if (is_running_ == false) return;
 
-        piece_bitmaps_.clear();
         // 遍历DownloadDriver
 
         LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::DettachDownloadDriver " << download_driver);
@@ -830,7 +817,6 @@ namespace p2sp
                 }
 
                 piece_tasks_.clear();
-                piece_bitmaps_.clear();
                 is_connected_ = false;
             }
             else
@@ -1288,7 +1274,6 @@ namespace p2sp
         if (piece_tasks_.empty())
             return;
 
-        bool have_piece = false;
         std::multimap<protocol::PieceInfoEx, DownloadDriver__p>::iterator iter = piece_tasks_.find(piece);
         for (; iter != piece_tasks_.end() && iter->first == piece;)
         {
@@ -1300,14 +1285,8 @@ namespace p2sp
             }
             else
             {
-                have_piece = true;
                 ++iter;
             }
-        }
-
-        if (!have_piece)
-        {
-            piece_bitmaps_.erase(piece.GetPieceInfo());
         }
     }
 
@@ -1521,23 +1500,7 @@ namespace p2sp
         // herain:2011-3-8:已经不在下载队列中的subpiece到达，可能有数据，也可能没有数据
         // 如果Piece是正常下载完成，那么这片subpiece是晚到达的冗余报文，如果是Piece超时后
         // 到达的正常报文，那么这片subpiece是本地没有的。
-        if (piece_bitmaps_.find(sub_piece.GetPieceInfo()) == piece_bitmaps_.end())
-        {
-            return instance_->HasSubPiece(sub_piece);
-        }
-
-        return piece_bitmaps_[sub_piece.GetPieceInfo()].test(sub_piece.GetSubPieceIndexInPiece());
-    }
-
-    void P2PDownloader::NoticeSubPiece(const protocol::SubPieceInfo& sub_piece)
-    {
-        if (false == is_running_)
-            return;
-
-        if (piece_bitmaps_.find(sub_piece.GetPieceInfo()) != piece_bitmaps_.end())
-        {
-            piece_bitmaps_[sub_piece.GetPieceInfo()].set(sub_piece.GetSubPieceIndexInPiece());
-        }
+        return instance_->HasSubPiece(sub_piece);
     }
 
     void P2PDownloader::KeepConnectionAlive()
