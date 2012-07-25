@@ -252,12 +252,7 @@ namespace statistic
         boost::uint16_t GetDownloadDurationInSec();
 
         //////////////////////////////////////////////////////////////////////////
-        // 设置全局window_size
-        void SetGlobalWindowSize(uint32_t global_window_size);
 
-        void SetGlobalRequestSendCount(uint32_t global_request_send_count);
-
-        // 设置全局window_size
         void SetMemoryPoolLeftSize(uint32_t memory_pool_left_size);
 
         void QueryBasicPeerInfo(boost::function<void()> result_handler, BASICPEERINFO *para_bpi);

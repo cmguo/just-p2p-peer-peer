@@ -58,12 +58,6 @@ namespace p2sp
 
         void OnP2PDownloaderWillStop(P2PDownloader__p p2p_downloader);
 
-        // Window Size
-        bool CanRequest() const { return request_count_ < window_size_; }
-        void AddRequestCount() { ++request_count_; ++sent_count_; global_request_send_count_++;}
-        void RemoveRequestCount() { if (request_count_ > 0) -- request_count_; }
-        void RemoveRequestCount(uint32_t delta_request_count) { if (delta_request_count <= request_count_) request_count_ -= delta_request_count; else request_count_ = 0; }
-
         // PeerCountInfo
         P2PDownloader__p GetP2PDownloader(const RID& rid);
 
@@ -94,13 +88,8 @@ namespace p2sp
         framework::timer::PeriodicTimer p2p_timer_;
         // 状态
         volatile bool is_running_;
-        // 全局窗口
-        uint32_t window_size_;
-        uint32_t request_count_;
-        uint32_t sent_count_;
-        uint32_t max_download_speed_;
 
-        boost::uint16_t  global_request_send_count_;
+        uint32_t max_download_speed_;
 
         // 直播索引，直播的LiveP2PDownloader集合
         std::multimap<RID, LiveP2PDownloader__p> live_rid_index_;

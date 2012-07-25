@@ -89,7 +89,7 @@ namespace p2sp
         {
             requesting_count_--;
         }
-        P2PModule::Inst()->RemoveRequestCount();
+
         received_count_++;
 
         statistic_->SubmitRTT(subpiece_rtt);
@@ -119,8 +119,6 @@ namespace p2sp
         {
             requesting_count_--;
         }
-
-        P2PModule::Inst()->RemoveRequestCount();
 
         RequestNextSubpiece();
     }

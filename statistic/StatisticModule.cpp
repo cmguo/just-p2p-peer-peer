@@ -1378,19 +1378,6 @@ namespace statistic
 
     //////////////////////////////////////////////////////////////////////////
 
-    // 设置全局window_size
-    void StatisticModule::SetGlobalWindowSize(uint32_t global_window_size)
-    {
-        statistic_info_.GlobalWindowSize = global_window_size;
-    }
-
-    // 设置全局window_size
-    void StatisticModule::SetGlobalRequestSendCount(uint32_t global_request_send_count)
-    {
-        statistic_info_.GlobalRequestSendCount = global_request_send_count;
-    }
-
-    // 设置全局window_size
     void StatisticModule::SetMemoryPoolLeftSize(uint32_t memory_pool_left_size)
     {
         statistic_info_.MemoryPoolLeftSize = memory_pool_left_size;

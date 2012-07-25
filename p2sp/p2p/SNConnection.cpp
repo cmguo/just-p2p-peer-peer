@@ -45,8 +45,6 @@ namespace p2sp
         p2p_downloader_->GetStatistic()->DetachPeerConnectionStatistic(statistic_);
         statistic_.reset();
 
-        P2PModule::Inst()->RemoveRequestCount(requesting_count_);
-
         if (is_subpiece_requested_)
         {
             protocol::CloseSessionPacket packet(protocol::Packet::NewTransactionID(), 
@@ -103,7 +101,6 @@ namespace p2sp
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 
             curr_time_out_ += avg_delta_time_;
-            P2PModule::Inst()->AddRequestCount();
         }
     }
 

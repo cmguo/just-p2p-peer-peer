@@ -106,7 +106,7 @@ namespace p2sp
 
     inline bool PeerConnection::CanRequest() const
     {
-        return P2PModule::Inst()->CanRequest() && requesting_count_ < window_size_;
+        return requesting_count_ < window_size_;
     }
 
     inline bool PeerConnection::CheckRidInfo(const protocol::RidInfo& rid_info)

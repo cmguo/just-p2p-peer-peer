@@ -311,9 +311,9 @@ namespace statistic
         boost::uint16_t  DownloadDurationInSec;              // 下载总共持续时长(秒)
         boost::uint32_t  BandWidth;                          // 预测的带宽
 
-        boost::uint32_t  GlobalWindowSize;
+        boost::uint32_t  Resersed4;
 
-        boost::uint16_t  GlobalRequestSendCount;             // 每秒发出的请求数
+        boost::uint16_t  Resersed5;             // 每秒发出的请求数
 
         boost::uint16_t  MemoryPoolLeftSize;                     // 内存池剩余大小
 
@@ -372,9 +372,9 @@ namespace statistic
             ar &  DownloadDurationInSec;              //
             ar &  BandWidth;                          //
 
-            ar &  GlobalWindowSize;
+            ar &  Resersed4;
 
-            ar & GlobalRequestSendCount;
+            ar & Resersed5;
             ar & MemoryPoolLeftSize;
 
             ar & LiveDownloadDriverCount;

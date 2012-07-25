@@ -109,9 +109,6 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_peer_connection, "PeerConnection::Stop" << end_point_);
 
-        // task_queue.clear();
-        P2PModule::Inst()->RemoveRequestCount(requesting_count_);
-
         task_queue_.clear();
 
         //
@@ -188,7 +185,6 @@ namespace p2sp
             uint32_t v = delta;  // min(delta, curr_request_count_);
             window_size_ -= v;
             requesting_count_ -= v;
-            P2PModule::Inst()->RemoveRequestCount(v);
         }
     }
 
@@ -253,8 +249,6 @@ namespace p2sp
         p2p_downloader_->AddRequestingSubpiece(subpiece_info, curr_time_out_, this);
 
         curr_time_out_ += avg_delta_time_;
-
-        P2PModule::Inst()->AddRequestCount();
     }
 
     void PeerConnection::DoAnnounce()
@@ -513,7 +507,6 @@ namespace p2sp
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 
             curr_time_out_ += avg_delta_time_;
-            P2PModule::Inst()->AddRequestCount();
         }
     }
 
