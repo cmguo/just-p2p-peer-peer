@@ -208,6 +208,8 @@ namespace p2sp
         size_t announce_responses_;
         size_t accumulative_subpieces_requested_;
         size_t max_download_speed_;
+
+        framework::timer::TickCounter connect_tick_counter_;
     };
 }
 

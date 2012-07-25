@@ -27,12 +27,15 @@ namespace p2sp
         {
             candidate_peer_info_ = peer_info;
         }
+
+        connect_tick_counter_.start();
     }
 
     void LivePeerConnection::Stop()
     {
         speed_info_.Stop();
         receive_announce_tick_counter_.stop();
+        connect_tick_counter_.stop();
         is_running_ = false;
     }
 
@@ -585,7 +588,7 @@ namespace p2sp
 
     uint32_t LivePeerConnection::GetConnectedTimeInMillseconds()
     {
-        return statistic::GetTickCountInMilliSecond() - this->GetSpeedInfo().StartTime;
+        return connect_tick_counter_.elapsed();
     }
 
     bool LivePeerConnection::IsUdpServer() const
