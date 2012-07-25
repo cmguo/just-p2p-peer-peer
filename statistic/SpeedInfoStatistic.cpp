@@ -75,19 +75,19 @@ namespace statistic
         if (is_running_ == false)
             return speed_info_;
 
-        speed_info_.StartTime = start_time_;
+        boost::uint64_t tick_count = framework::timer::TickCounter::tick_count();
 
-        speed_info_.AvgDownloadSpeed = download_speed_meter_.AverageByteSpeed();
-        speed_info_.AvgUploadSpeed = upload_speed_meter_.AverageByteSpeed();
+        speed_info_.AvgDownloadSpeed = download_speed_meter_.AverageByteSpeed(tick_count);
+        speed_info_.AvgUploadSpeed = upload_speed_meter_.AverageByteSpeed(tick_count);
 
         speed_info_.TotalDownloadBytes = download_speed_meter_.TotalBytes();
         speed_info_.TotalUploadBytes = upload_speed_meter_.TotalBytes();
 
-        speed_info_.NowDownloadSpeed = download_speed_meter_.CurrentByteSpeed();
-        speed_info_.NowUploadSpeed = upload_speed_meter_.CurrentByteSpeed();
+        speed_info_.NowDownloadSpeed = download_speed_meter_.CurrentByteSpeed(tick_count);
+        speed_info_.NowUploadSpeed = upload_speed_meter_.CurrentByteSpeed(tick_count);
 
-        speed_info_.MinuteDownloadSpeed = download_speed_meter_.RecentMinuteByteSpeed();
-        speed_info_.MinuteUploadSpeed = upload_speed_meter_.RecentMinuteByteSpeed();
+        speed_info_.MinuteDownloadSpeed = download_speed_meter_.RecentMinuteByteSpeed(tick_count);
+        speed_info_.MinuteUploadSpeed = upload_speed_meter_.RecentMinuteByteSpeed(tick_count);
 
         return speed_info_;
     }
@@ -97,25 +97,24 @@ namespace statistic
         if (is_running_ == false)
             return speed_info_ex_;
 
-        speed_info_ex_.StartTime = start_time_;
-
-        speed_info_ex_.AvgDownloadSpeed = download_speed_meter_.AverageByteSpeed();
-        speed_info_ex_.AvgUploadSpeed = upload_speed_meter_.AverageByteSpeed();
+        boost::uint64_t tick_count = framework::timer::TickCounter::tick_count();
+        speed_info_ex_.AvgDownloadSpeed = download_speed_meter_.AverageByteSpeed(tick_count);
+        speed_info_ex_.AvgUploadSpeed = upload_speed_meter_.AverageByteSpeed(tick_count);
 
         speed_info_ex_.TotalDownloadBytes = download_speed_meter_.TotalBytes();
         speed_info_ex_.TotalUploadBytes = upload_speed_meter_.TotalBytes();
 
-        speed_info_ex_.NowDownloadSpeed = download_speed_meter_.CurrentByteSpeed();
-        speed_info_ex_.NowUploadSpeed = upload_speed_meter_.CurrentByteSpeed();
+        speed_info_ex_.NowDownloadSpeed = download_speed_meter_.CurrentByteSpeed(tick_count);
+        speed_info_ex_.NowUploadSpeed = upload_speed_meter_.CurrentByteSpeed(tick_count);
 
-        speed_info_ex_.MinuteDownloadSpeed = download_speed_meter_.RecentMinuteByteSpeed();
-        speed_info_ex_.MinuteUploadSpeed = upload_speed_meter_.RecentMinuteByteSpeed();
+        speed_info_ex_.MinuteDownloadSpeed = download_speed_meter_.RecentMinuteByteSpeed(tick_count);
+        speed_info_ex_.MinuteUploadSpeed = upload_speed_meter_.RecentMinuteByteSpeed(tick_count);
 
-        speed_info_ex_.RecentDownloadSpeed = download_speed_meter_.RecentByteSpeed();
-        speed_info_ex_.RecentUploadSpeed = upload_speed_meter_.RecentByteSpeed();
+        speed_info_ex_.RecentDownloadSpeed = download_speed_meter_.RecentByteSpeed(tick_count);
+        speed_info_ex_.RecentUploadSpeed = upload_speed_meter_.RecentByteSpeed(tick_count);
 
-        speed_info_ex_.SecondDownloadSpeed = download_speed_meter_.SecondByteSpeed();
-        speed_info_ex_.SecondUploadSpeed = upload_speed_meter_.SecondByteSpeed();
+        speed_info_ex_.SecondDownloadSpeed = download_speed_meter_.SecondByteSpeed(tick_count);
+        speed_info_ex_.SecondUploadSpeed = upload_speed_meter_.SecondByteSpeed(tick_count);
 
         return speed_info_ex_;
     }
@@ -125,6 +124,6 @@ namespace statistic
 
     uint32_t SpeedInfoStatistic::GetElapsedTimeInMilliSeconds() const
     {
-        return download_speed_meter_.GetElapsedTimeInMilliSeconds();
+        return download_speed_meter_.GetElapsedTimeInMilliSeconds(framework::timer::TickCounter::tick_count());
     }
 }

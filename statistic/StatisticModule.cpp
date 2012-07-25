@@ -1399,7 +1399,7 @@ namespace statistic
         if (false == is_running_)
             return 0;
 
-        return upload_speed_meter_.CurrentByteSpeed();
+        return upload_speed_meter_.CurrentByteSpeed(framework::timer::TickCounter::tick_count());
     }
 
     uint32_t StatisticModule::GetMinuteUploadDataSpeed()
@@ -1407,7 +1407,7 @@ namespace statistic
         if (false == is_running_)
             return 0;
 
-        return upload_speed_meter_.RecentMinuteByteSpeed();
+        return upload_speed_meter_.RecentMinuteByteSpeed(framework::timer::TickCounter::tick_count());
     }
 
     uint32_t StatisticModule::GetUploadDataSpeedInKBps()
@@ -1417,7 +1417,7 @@ namespace statistic
 
     uint32_t StatisticModule::GetRecentMinuteUploadDataSpeedInKBps()
     {
-        return upload_speed_meter_.RecentMinuteByteSpeed() / 1024;
+        return upload_speed_meter_.RecentMinuteByteSpeed(framework::timer::TickCounter::tick_count()) / 1024;
     }
 
     uint32_t StatisticModule::GetUploadDataBytes() const

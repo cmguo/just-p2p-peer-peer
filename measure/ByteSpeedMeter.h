@@ -32,17 +32,17 @@ namespace measure
 
         void SubmitBytes(uint32_t bytes);
 
-        uint32_t AverageByteSpeed() const;  // bytes per second
+        uint32_t AverageByteSpeed(boost::uint64_t tick_count) const;  // bytes per second
 
-        uint32_t SecondByteSpeed();  // 1 second
+        uint32_t SecondByteSpeed(boost::uint64_t tick_count);  // 1 second
 
-        uint32_t CurrentByteSpeed();  // 5 seconds
+        uint32_t CurrentByteSpeed(boost::uint64_t tick_count);  // 5 seconds
 
-        uint32_t RecentByteSpeed();  // 20 seconds
+        uint32_t RecentByteSpeed(boost::uint64_t tick_count);  // 20 seconds
 
-        uint32_t RecentMinuteByteSpeed();  // 1 minute
+        uint32_t RecentMinuteByteSpeed(boost::uint64_t tick_count);  // 1 minute
 
-        uint32_t GetElapsedTimeInMilliSeconds() const;
+        inline uint32_t GetElapsedTimeInMilliSeconds(boost::uint64_t tick_count) const;
 
         uint32_t TotalBytes() const;
 
@@ -50,11 +50,11 @@ namespace measure
 
         static uint32_t GetPositionFromSeconds(uint32_t seconds);
 
-        void CheckTickCount();
+        inline void CheckTickCount(boost::uint64_t tick_count);
 
-        void UpdateTickCount(uint32_t & curr_sec);
+        inline void UpdateTickCount(uint32_t curr_sec);
 
-        uint32_t CalcSpeedInDuration(uint32_t duration);
+        inline uint32_t CalcSpeedInDuration(uint32_t duration, boost::uint64_t tick_count);
 
     private:
 
@@ -70,7 +70,7 @@ namespace measure
 
     private:
 
-        uint32_t start_time_;
+        boost::uint64_t start_time_;
 
         uint32_t total_bytes_;
 
@@ -83,14 +83,14 @@ namespace measure
 
     inline void ByteSpeedMeter::SubmitBytes(uint32_t bytes)
     {
-        CheckTickCount();
+        CheckTickCount(framework::timer::TickCounter::tick_count());
         total_bytes_ += bytes;
         history_bytes_[GetPositionFromSeconds(current_sec_)] += bytes;
     }
 
-    inline void ByteSpeedMeter::CheckTickCount()
+    inline void ByteSpeedMeter::CheckTickCount(boost::uint64_t tick_count)
     {
-        uint32_t curr_sec = framework::timer::TickCounter::tick_count() / 1000;
+        uint32_t curr_sec = tick_count / 1000;
         if (curr_sec == current_sec_)
             return;
         UpdateTickCount(curr_sec);
