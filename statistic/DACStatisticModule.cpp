@@ -244,5 +244,15 @@ namespace statistic
         upload_limit_counter_.reset();
         upload_discard_byte_ = 0;
         rid_upload_count_in_ten_minutes_ = 0;
+        total_report_request_count_=0;
+        total_report_response_count_=0;
+        query_vod_tracker_for_list_request_count_=0;
+        query_vod_tracker_for_list_response_count_=0;
+        query_vod_tracker_for_report_request_count_=0;
+        query_vod_tracker_for_report_response_count_=0;
+        query_live_tracker_for_list_request_count_=0;
+        query_live_tracker_for_list_response_count_=0;
+        query_live_tracker_for_report_request_count_=0;
+        query_live_tracker_for_report_response_count_=0;       
     }
 }
