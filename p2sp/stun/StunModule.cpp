@@ -125,9 +125,6 @@ namespace p2sp
 
         if (pointer == &stun_timer_)
         {
-            //             CANDIDATE_PEER_INFO peer_info = AppModule::Inst()->GetCandidatePeerInfo();
-            //             if (peer_info.DetectIP != 0)
-            //                 if (peer_info.DetectIP != peer_info.IP)
             if (is_needed_stun_)
             {
                 if (stun_server_info_.size() == 0)

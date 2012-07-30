@@ -854,9 +854,6 @@ namespace p2sp
     void P2PDownloader::AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers)
     {
         if (is_running_ == false) return;
-        // ippool_->AddCadidatePeers(peers);
-
-        // P2P_EVENT("P2PDownloader::AddCadidatePeers");
 
         if (ippool_->GetPeerCount() == 0)
         {
@@ -872,18 +869,7 @@ namespace p2sp
     void P2PDownloader::OnUdpRecv(protocol::VodPeerPacket const & packet)
     {
         if (is_running_ == false) return;
-        // 检查 peer_connection的 PeerGuid 是否在 peers_ 中已经存在
-        // 如果存在
-        //     返回
-        // 如果不存在
-        //     peers_ 中添加该 peer_connection
-        // P2P_EVENT("P2PDownloader::AddPeer" << peer_connection);
 
-        // 检查 peer_connection的 PeerGuid 是否在 peers_ 中已经存在
-        // 如果不存在
-        //     返回
-        // 如果存在
-        //     peers_ 中删除 该peer_connection
         assert(statistic_);
 
         std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter =

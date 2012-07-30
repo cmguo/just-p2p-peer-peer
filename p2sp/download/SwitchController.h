@@ -10,9 +10,6 @@
 #include "p2sp/download/SwitchControllerInterface.h"
 #include "p2sp/download/HttpTargetsManager.h"
 
-#define SWITCH_LOG_TYPE "switch"
-#define SWITCH_DEBUG(msg) LOG(__DEBUG, SWITCH_LOG_TYPE, __FUNCTION__ << ":" << __LINE__ << " " << msg)
-
 namespace p2sp
 {
     //////////////////////////////////////////////////////////////////////////

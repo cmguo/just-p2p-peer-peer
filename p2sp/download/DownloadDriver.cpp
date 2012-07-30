@@ -159,13 +159,6 @@ namespace p2sp
 
         is_running_ = true;
 
-        // check push module
-        // if (!IsPush() && original_url_info_.url_ == PushModule::Inst()->GetCurrentTaskUrl())
-        // {
-        //    LOG(__DEBUG, "push", "Url Same as push task: " << original_url_info_.url_);
-        //    PushModule::Inst()->StopCurrentTask();
-        // }
-
         switch_controller_ = SwitchController::Create(shared_from_this());
 
         download_time_counter_.reset();
@@ -296,21 +289,6 @@ namespace p2sp
 
         // 智能限速定时器
         second_timer_.start();
-
-        // if (!IsPush())
-        // {
-        //    // check push module
-        //    if (url_info.url_ == PushModule::Inst()->GetCurrentTaskUrl())
-        //    {
-        //        LOG(__DEBUG, "push", "Url Same as push task: " << url_info.url_);
-        //        PushModule::Inst()->StopCurrentTask();
-        //    }
-        //    else if (false == rid_info.GetRID().is_empty() && rid_info == PushModule::Inst()->GetCurrentTaskRidInfo())
-        //    {
-        //        LOG(__DEBUG, "push", "protocol::RidInfo Same as push task: " << rid_info);
-        //        PushModule::Inst()->StopCurrentTask();
-        //    }
-        // }
 
         switch_controller_ = SwitchController::Create(shared_from_this());
 
@@ -523,16 +501,6 @@ namespace p2sp
         // 智能限速定时器
         second_timer_.start();
 
-        // if (!IsPush())
-        // {
-        //    // check push module
-        //    if (false == rid_for_play.GetRID().is_empty() && rid_for_play == PushModule::Inst()->GetCurrentTaskRidInfo())
-        //    {
-        //        LOG(__DEBUG, "push", "protocol::RidInfo Same as push task: " << rid_for_play);
-        //        PushModule::Inst()->StopCurrentTask();
-        //    }
-        // }
-
         // no need switch controller
         switch_controller_ = SwitchController::Create(shared_from_this());
 
@@ -667,7 +635,6 @@ namespace p2sp
 #endif
 
         LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Stop" << shared_from_this());
-        // LOG(__EVENT, "leak", __FUNCTION__ << " p2p_downloader: " << p2p_downloader_);
 
         assert(statistic_);
 
@@ -1622,18 +1589,6 @@ namespace p2sp
         //
         RID rid_;
         rid_ = instance_->GetRID();
-        // assert(false == rid_.IsEmpty());
-        // if (!IsPush())
-        // {
-        //    // check push module
-        //    protocol::RidInfo rid_info;
-        //    instance_->GetRidInfo(rid_info);
-        //    if (false == rid_info.GetRID().is_empty() && rid_info == PushModule::Inst()->GetCurrentTaskRidInfo())
-        //    {
-        //        LOG(__DEBUG, "push", "GetRid, Same as push task.");
-        //        PushModule::Inst()->StopCurrentTask();
-        //    }
-        // }
 
         assert(statistic_);
         statistic_->SetResourceID(rid_);
@@ -1657,21 +1612,6 @@ namespace p2sp
         assert(content_length > 0);
 
         proxy_connection_->OnNoticeGetContentLength(content_length, network::HttpResponse::p());
-
-        // 判断，如果HTTP是403，才使用本地资源，否则，使用全透明
-//         if (true == is_http_403_header_ && content_length > 0)
-//         {
-//             proxy_connection_->OnNoticeGetContentLength(content_length, network::HttpResponse::p());
-//         }
-//         // 或者是音乐文件
-//         else if (IsFileExtension(original_url_info_.url_, ".mp3") || IsFileExtension(original_url_info_.url_, ".wma"))
-//         {
-//             if (false == instance_->GetRID().is_empty() || true == instance_->IsComplete())
-//             {
-//                 DD_DEBUG("instance is music file; rid available or file complete!");
-//                 proxy_connection_->OnNoticeGetContentLength(content_length, network::HttpResponse::p());
-//             }
-//         }
 
     }
 
@@ -2031,7 +1971,6 @@ namespace p2sp
         if (false == is_running_)
             return 0;
         uint32_t total_download_speed = StatisticModule::Inst()->GetBandWidth();
-        // SWITCH_DEBUG("band_width=" << total_download_speed);
         return total_download_speed;
     }
 

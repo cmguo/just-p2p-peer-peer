@@ -81,8 +81,6 @@ namespace p2sp
 
         protocol::SocketAddr key = peer->GetKey();
 
-        // LOG4CPLUS_INFO_LOG(logger_ippool, "UUP = " << *peer);
-
         if (black_list_.find(peer->GetKey()) !=  black_list_.end())
         {
             return;

@@ -396,8 +396,6 @@ namespace p2sp
             return;
         }
         LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Add Candidate Peers: ");
-        // LOG(__DEBUG, "tracker", "RID: " << rid << " Peers: " << peers);
-
         // 1.在 map<RID, Instance::p> rid_indexer 找到 rid 对应的 Instance
         //     如果找不到ppassert(0);
         //     如果找到
