@@ -44,6 +44,8 @@ namespace p2sp
 
         void DoReport();
 
+        void DeleteRidRecord(const RID & rid);
+
     private:
 
         void OnListResponsePacket(protocol::ListPacket const & packet);

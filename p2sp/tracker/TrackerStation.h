@@ -51,6 +51,8 @@ namespace p2sp
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
+        void DeleteRidRecord(const RID & rid);
+
     private:
         static const uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 60;
 
@@ -79,6 +81,8 @@ namespace p2sp
         framework::timer::PeriodicTimer report_timer_;
 
         boost::uint32_t report_failed_times_;
+
+        std::set<RID> list_get_response_;
     };
 }
 

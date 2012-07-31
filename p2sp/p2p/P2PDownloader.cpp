@@ -56,6 +56,7 @@ namespace p2sp
 
     P2PDownloader::~P2PDownloader()
     {
+        TrackerModule::Inst()->DeleteRidRecord(GetRid());
     }
 
     void P2PDownloader::Start()

@@ -156,6 +156,10 @@ namespace p2sp
 
     void TrackerStation::DoList(const RID& rid, bool list_for_live_udpserver)
     {
+        if (is_vod_ && list_get_response_.count(rid))
+        {
+            return;
+        }
         boost::uint32_t x = Random::GetGlobal().Next(tracker_client_map_.size());
 
         assert(x<=tracker_client_map_.size());
@@ -261,6 +265,10 @@ namespace p2sp
         if (iter != tracker_client_map_.end())
         {
             iter->second->OnListResponsePacket(packet);
+            if (is_vod_)
+            {
+                list_get_response_.insert(packet.response.resource_id_);
+            }
         }
     }
 
@@ -318,5 +326,10 @@ namespace p2sp
         }
 
         DoReport();
+    }
+
+    void TrackerStation::DeleteRidRecord(const RID & rid)
+    {
+        list_get_response_.erase(rid);
     }
 }

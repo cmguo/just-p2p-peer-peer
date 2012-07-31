@@ -182,4 +182,13 @@ namespace p2sp
             iter->second->OnReportResponsePacket(packet);
         }
     }
+
+    void TrackerGroup::DeleteRidRecord(const RID & rid)
+    {
+        for (std::map<boost::uint32_t, boost::shared_ptr<TrackerStation> >::iterator 
+            iter = mod_station_map_.begin(); iter != mod_station_map_.end(); ++iter)
+        {
+            iter->second->DeleteRidRecord(rid);
+        }
+    }
 }

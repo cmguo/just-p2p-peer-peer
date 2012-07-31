@@ -46,6 +46,8 @@ namespace p2sp
 
         void OnReportResponsePacket(protocol::ReportPacket const & packet);
 
+        void DeleteRidRecord(const RID & rid);
+
     private:
         bool is_running_;
 

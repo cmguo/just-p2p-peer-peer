@@ -109,4 +109,9 @@ namespace p2sp
             live_tracker_manager_.DoReport();
         }
     }
+
+    void TrackerModule::DeleteRidRecord(const RID & rid)
+    {
+        vod_tracker_manager_.DeleteRidRecord(rid);
+    }
 }

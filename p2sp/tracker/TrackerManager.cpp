@@ -382,4 +382,16 @@ namespace p2sp
             it->second->DoReport();
         }
     }
+
+    void TrackerManager::DeleteRidRecord(const RID & rid)
+    {
+        uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
+
+        boost::shared_ptr<TrackerGroup> tracker_group = list_mod_indexer_[group_key];
+
+        if (tracker_group)
+        {
+            tracker_group->DeleteRidRecord(rid);
+        }
+    }
 }

@@ -39,6 +39,8 @@ namespace p2sp
 
         void DoReport(bool is_vod);
 
+        void DeleteRidRecord(const RID & rid);
+
     private:
         bool is_running_;
 
