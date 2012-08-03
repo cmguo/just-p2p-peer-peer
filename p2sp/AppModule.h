@@ -268,7 +268,8 @@ void AppModule::DoSendPacket(type const & packet,
     if (type::Action == protocol::SubPiecePacket::Action)
     {
         protocol::SubPiecePacket const & sub_piece_pack = (protocol::SubPiecePacket const &)packet;
-        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), packet.length());
+        statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), 
+            sub_piece_pack.sub_piece_length_);
         statistic::StatisticModule::Inst()->SubmitUploadDataBytes(sub_piece_pack.sub_piece_length_);
         statistic::UploadStatisticModule::Inst()->SubmitUploadOneSubPiece();
     }

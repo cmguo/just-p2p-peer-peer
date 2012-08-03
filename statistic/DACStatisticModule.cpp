@@ -142,11 +142,11 @@ namespace statistic
         info.uNatType = StunModule::Inst()->GetPeerNatType();
         // Q: 十分钟内上传的RID数
         info.uRidUploadCountInTenMinutes = rid_upload_count_in_ten_minutes_;
-        // R: 上传平均速度，单位byte/s
-        info.uUploadAvgSpeedInBytes = UploadStatisticModule::Inst()->GetUploadAvgSpeed();
+        // R: 上传数据平均速度，单位byte/s
+        info.uUploadDataAvgSpeedInBytes = UploadStatisticModule::Inst()->GetUploadAvgSpeed();
         // S: peer guid
         info.PeerGuid = AppModule::Inst()->GetPeerGuid();
-        // T: 最大上传速度，单位kb/s
+        // T: 最大上传数据速度，单位kb/s
         info.uUploadMaxSpeed = max_peer_upload_kbps_;
 
         //U: 发给Tracker用于查询Report包的总数
@@ -201,7 +201,7 @@ namespace statistic
         log_stream << "&O=" << (boost::uint32_t)info.uRidUploadCountTotal;
         log_stream << "&P=" << (boost::uint16_t)info.uNatType;
         log_stream << "&Q=" << (boost::uint32_t)info.uRidUploadCountInTenMinutes;
-        log_stream << "&R=" << (boost::uint32_t)info.uUploadAvgSpeedInBytes;
+        log_stream << "&R=" << (boost::uint32_t)info.uUploadDataAvgSpeedInBytes;
         log_stream << "&S=" << info.PeerGuid.to_string();
         log_stream << "&T=" << (boost::uint32_t)info.uUploadMaxSpeed;
         log_stream << "&U=" << (uint32_t)info.total_report_request_packet_count;

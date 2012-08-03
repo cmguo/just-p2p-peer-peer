@@ -26,9 +26,9 @@ namespace statistic
         boost::uint32_t       uRidUploadCountTotal;                 // O: 上传过的RID数
         boost::uint16_t       uNatType;                             // P: NAT节点类型
         boost::uint32_t       uRidUploadCountInTenMinutes;          // Q: 十分钟内上传的RID数
-        boost::uint32_t       uUploadAvgSpeedInBytes;               // R: 上传平均速度，单位byte/s
+        boost::uint32_t       uUploadDataAvgSpeedInBytes;           // R: 上传数据平均速度，单位byte/s
         Guid                  PeerGuid;                             // S: Peer Guid
-        boost::uint32_t       uUploadMaxSpeed;                      // T: 最大上传速度，单位kb/s
+        boost::uint32_t       uUploadMaxSpeed;                      // T: 最大上传数据速度，单位kb/s
         boost::uint32_t       total_report_request_packet_count;    // U: 发给Tracker用于查询Report包的总数
         boost::uint32_t       total_report_response_packet_count;   // V: Tracker返回的Report包总数 
         boost::uint32_t       query_vod_tracker_for_list_request_count;    // W: 查询vod_tracker_for_list_request包的总数
