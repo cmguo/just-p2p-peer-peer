@@ -5,7 +5,7 @@
 #ifndef _STATISTIC_STATISTICS_CONFIGURATIONS_PARSER_H_
 #define _STATISTIC_STATISTICS_CONFIGURATIONS_PARSER_H_
 
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 
 namespace statistic
 {

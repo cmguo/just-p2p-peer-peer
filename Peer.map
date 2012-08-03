@@ -1,0 +1,7 @@
+{
+        global:
+                TS_XXXX;
+
+        local: *;
+};
+

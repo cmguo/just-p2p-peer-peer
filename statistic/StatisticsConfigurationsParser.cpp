@@ -7,7 +7,7 @@
 #include "statistic/StatisticsConfiguration.h"
 #include "statistic/StatisticsReportingConfiguration.h"
 #include "statistic/StatisticsCollectorSettings.h"
-#include "tinyxml.h"
+
 #include <boost/algorithm/string.hpp>
 
 namespace statistic

@@ -2,7 +2,7 @@
 
 PROJECT_TYPE			:= lib
 
-## 生成目标名称（完整文件名称要根据类型PROJECT_TYPE、配置PROJECT_CONFIG、版本PROJECT_VERSION增加前缀、后缀）
+## 生成目标名称（完整文件名称要根据类型PROJECT_TYPE、配置LOCAL_CONFIG、版本PROJECT_VERSION增加前缀、后缀）
 
 PROJECT_TARGET			:= peer
 
@@ -10,13 +10,13 @@ PROJECT_TARGET			:= peer
 
 PROJECT_VERSION			:=
 
+## 该项目默认的配置类型
+
+LOCAL_CONFIG			:= dynamic debug multi --enable-publish
+
 ## 项目版本定义文件
 
 #PROJECT_VERSION_HEADER		:= live/live/Define.h
-
-## 该项目默认的配置类型
-
-PROJECT_CONFIG			:= dynamic debug multi --enable-publish
 
 ## 指定源文件目录（该项目源文件的总目录，相对于源文件根目录ROOT_SOURCE_DIRECTORY，默认为LOCAL_NAME）
 
@@ -59,6 +59,8 @@ PROJECT_DEPENDS			:= \
 				/base/boost/filesystem \
 				/base/boost/date_time \
 				/base/boost/regex \
+				/base/boost/program_options \
+				/tinyxml \
 				/protocol/zlib \
 				/protocol/udpserver_mod \
 
@@ -66,4 +68,4 @@ PROJECT_DEPENDS			:= \
 
 PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) pthread
 
-#PROJECT_VERSION_SCRIPT		:= P
+PROJECT_VERSION_SCRIPT		:= Peer.map

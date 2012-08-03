@@ -1,5 +1,5 @@
 #include "Common.h"
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 #include "CrossDomainConfig.h"
 #include "p2sp/AppModule.h"
 
