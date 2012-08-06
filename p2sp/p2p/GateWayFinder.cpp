@@ -1,4 +1,4 @@
-// GateWayFinder.cpp
+﻿// GateWayFinder.cpp
 
 #include "Common.h"
 #include "GateWayFinder.h"
@@ -118,9 +118,18 @@ namespace p2sp
             DebugLog("GateWayFinder::HandleTimeOut\n");
             assert(!error);
 
-            ++time_out_num_;
+            if (ttl_ < 10)
+            {
+                ttl_++;
+            }
+            else
+            {
+                ++time_out_num_;
+            }
+
             ping_client_->Cancel(sequence_number_);
-            if (time_out_num_ < 5)
+            //这里最多会有15次重试机会
+            if (ttl_ < 10 || time_out_num_ < 5)
             {
                 StartSend();
             }
