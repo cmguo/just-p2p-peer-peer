@@ -38,13 +38,15 @@ PROJECT_HEADER_DIRECTORY	:=
 
 PROJECT_COMMON_HEADERS  	:=
 
+PROJECT_INTERNAL_INCLUDES	:= protocol protocol/include
+
 ## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
 
 PROJECT_EXTERNAL_INCLUDES	:=
 
 ## 该项目特点的编译选项
 
-PROJECT_COMPILE_FLAGS		:= $(PROJECT_COMPILE_FLAGS)  -I./../../../src/protocol -I./../../../src/protocol/include
+PROJECT_COMPILE_FLAGS		:= $(PROJECT_COMPILE_FLAGS)
 
 ## 该项目特点的链接选项
 
