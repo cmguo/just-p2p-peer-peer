@@ -59,7 +59,7 @@ namespace measure
         return seconds % HISTORY_INTERVAL_IN_SEC;
     }
 
-    inline uint32_t ByteSpeedMeter::GetElapsedTimeInMilliSeconds(boost::uint64_t tick_count) const
+    uint32_t ByteSpeedMeter::GetElapsedTimeInMilliSeconds(boost::uint64_t tick_count) const
     {
         uint32_t ms = tick_count - start_time_;
         return ms <= 0 ? 1 : ms;
@@ -93,7 +93,7 @@ namespace measure
         return CalcSpeedInDuration(HISTORY_INTERVAL_IN_SEC, tick_count);
     }
 
-    inline void ByteSpeedMeter::UpdateTickCount(uint32_t curr_sec)
+    void ByteSpeedMeter::UpdateTickCount(uint32_t curr_sec)
     {
         if (curr_sec - current_sec_ >= HISTORY_INTERVAL_IN_SEC)
         {

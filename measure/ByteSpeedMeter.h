@@ -42,7 +42,7 @@ namespace measure
 
         uint32_t RecentMinuteByteSpeed(boost::uint64_t tick_count);  // 1 minute
 
-        inline uint32_t GetElapsedTimeInMilliSeconds(boost::uint64_t tick_count) const;
+        uint32_t GetElapsedTimeInMilliSeconds(boost::uint64_t tick_count) const;
 
         uint32_t TotalBytes() const;
 
@@ -50,11 +50,11 @@ namespace measure
 
         static uint32_t GetPositionFromSeconds(uint32_t seconds);
 
-        inline void CheckTickCount(boost::uint64_t tick_count);
+        void CheckTickCount(boost::uint64_t tick_count);
 
-        inline void UpdateTickCount(uint32_t curr_sec);
+        void UpdateTickCount(uint32_t curr_sec);
 
-        inline uint32_t CalcSpeedInDuration(uint32_t duration, boost::uint64_t tick_count);
+        uint32_t CalcSpeedInDuration(uint32_t duration, boost::uint64_t tick_count);
 
     private:
 
