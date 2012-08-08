@@ -1104,73 +1104,73 @@ namespace p2sp
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
-        log_stream << "C=" << info.gResourceID.to_string();
-        log_stream << "&D=" << (uint32_t)info.aPeerVersion[0] << "." << 
+        log_stream << "_C=" << info.gResourceID.to_string();
+        log_stream << "&_D=" << (uint32_t)info.aPeerVersion[0] << "." << 
             (uint32_t)info.aPeerVersion[1] << "." << 
             (uint32_t)info.aPeerVersion[2] << "." << 
             (uint32_t)info.aPeerVersion[3];
-        log_stream << "&E=" << info.szVideoName;
-        log_stream << "&F=" << info.szOriginalUrl;
-        log_stream << "&G=" << info.szOriginalReferUrl;
-        log_stream << "&H=" << (uint32_t)info.uDiskBytes;
-        log_stream << "&I=" << (uint32_t)info.uVideoBytes;
-        log_stream << "&J=" << (uint32_t)info.peer_downloadbytes_without_redundance;
-        log_stream << "&K=" << (uint32_t)info.http_downloadbytes_without_redundance;
-        log_stream << "&L=" << (uint32_t)info.uAvgDownloadSpeed;
-        log_stream << "&M=" << (uint32_t)info.bIsSaveMode;
-        log_stream << "&N=" << (uint32_t)info.MaxHistoryDownloadSpeed;
-        log_stream << "&O=" << (uint32_t)info.uAvgP2PDownloadSpeed;
-        log_stream << "&P=" << (uint32_t)info.uMaxHttpDownloadSpeed;
-        log_stream << "&Q=" << (uint32_t)info.uConnectedPeerCount;
-        log_stream << "&R=" << (uint32_t)info.uFullPeerCount;
-        log_stream << "&S=" << (uint32_t)info.uBakHostStatus;
-        log_stream << "&T=" << (uint32_t)info.uQueriedPeerCount;
-        log_stream << "&U=" << (uint32_t)info.uSourceType;
-        log_stream << "&V=" << (uint32_t)info.uDataRate;
-        log_stream << "&W=" << (uint32_t)info.avg_http_download_speed_in2300;
-        log_stream << "&X=" << (uint32_t)info.avg_download_speed_before_limit;
-        log_stream << "&Y=" <<  (uint32_t)info.http_downloadbytes_with_redundance;
-        log_stream << "&Z=" << (uint32_t)info.peer_downloadbytes_with_redundance;
-        log_stream << "&A1=" << (uint32_t)info.download_time;
-        log_stream << "&B1=" << (uint32_t)info.tiny_drag_result;
-        log_stream << "&C1=" << (uint32_t)info.is_got_rid;
-        log_stream << "&D1=" << (uint32_t)info.sn_downloadbytes_with_redundance;
-        log_stream << "&E1=" << (uint32_t)info.bwtype;
-        log_stream << "&F1=" << (uint32_t)info.http_avg_speed_in_KBps;
-        log_stream << "&G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
-        log_stream << "&J1=" << (uint32_t)info.connect_full_time_in_seconds;
-        log_stream << "&K1=" << (uint32_t)info.is_head_only;
-        log_stream << "&L1=" << (uint32_t)info.avg_connect_rtt;
-        log_stream << "&M1=" << (uint32_t)info.avg_lost_rate;
-        log_stream << "&N1=" << (uint32_t)info.avg_http_download_byte;
-        log_stream << "&O1=" << (uint32_t)info.retry_rate;
-        log_stream << "&P1=" << (uint32_t)info.tiny_drag_http_status;
+        log_stream << "&_E=" << info.szVideoName;
+        log_stream << "&_F=" << info.szOriginalUrl;
+        log_stream << "&_G=" << info.szOriginalReferUrl;
+        log_stream << "&_H=" << (uint32_t)info.uDiskBytes;
+        log_stream << "&_I=" << (uint32_t)info.uVideoBytes;
+        log_stream << "&_J=" << (uint32_t)info.peer_downloadbytes_without_redundance;
+        log_stream << "&_K=" << (uint32_t)info.http_downloadbytes_without_redundance;
+        log_stream << "&_L=" << (uint32_t)info.uAvgDownloadSpeed;
+        log_stream << "&_M=" << (uint32_t)info.bIsSaveMode;
+        log_stream << "&_N=" << (uint32_t)info.MaxHistoryDownloadSpeed;
+        log_stream << "&_O=" << (uint32_t)info.uAvgP2PDownloadSpeed;
+        log_stream << "&_P=" << (uint32_t)info.uMaxHttpDownloadSpeed;
+        log_stream << "&_Q=" << (uint32_t)info.uConnectedPeerCount;
+        log_stream << "&_R=" << (uint32_t)info.uFullPeerCount;
+        log_stream << "&_S=" << (uint32_t)info.uBakHostStatus;
+        log_stream << "&_T=" << (uint32_t)info.uQueriedPeerCount;
+        log_stream << "&_U=" << (uint32_t)info.uSourceType;
+        log_stream << "&_V=" << (uint32_t)info.uDataRate;
+        log_stream << "&_W=" << (uint32_t)info.avg_http_download_speed_in2300;
+        log_stream << "&_X=" << (uint32_t)info.avg_download_speed_before_limit;
+        log_stream << "&_Y=" <<  (uint32_t)info.http_downloadbytes_with_redundance;
+        log_stream << "&_Z=" << (uint32_t)info.peer_downloadbytes_with_redundance;
+        log_stream << "&_A1=" << (uint32_t)info.download_time;
+        log_stream << "&_B1=" << (uint32_t)info.tiny_drag_result;
+        log_stream << "&_C1=" << (uint32_t)info.is_got_rid;
+        log_stream << "&_D1=" << (uint32_t)info.sn_downloadbytes_with_redundance;
+        log_stream << "&_E1=" << (uint32_t)info.bwtype;
+        log_stream << "&_F1=" << (uint32_t)info.http_avg_speed_in_KBps;
+        log_stream << "&_G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
+        log_stream << "&_J1=" << (uint32_t)info.connect_full_time_in_seconds;
+        log_stream << "&_K1=" << (uint32_t)info.is_head_only;
+        log_stream << "&_L1=" << (uint32_t)info.avg_connect_rtt;
+        log_stream << "&_M1=" << (uint32_t)info.avg_lost_rate;
+        log_stream << "&_N1=" << (uint32_t)info.avg_http_download_byte;
+        log_stream << "&_O1=" << (uint32_t)info.retry_rate;
+        log_stream << "&_P1=" << (uint32_t)info.tiny_drag_http_status;
 
-        log_stream << "&Q1=" << (uint32_t)info.sn_downloadbytes_without_redundance;
-        log_stream << "&R1=" << (uint32_t)info.is_push;
-        log_stream << "&S1=" << (uint32_t)info.instance_is_push;
-        log_stream << "&T1=" << (uint32_t)info.vip;
+        log_stream << "&_Q1=" << (uint32_t)info.sn_downloadbytes_without_redundance;
+        log_stream << "&_R1=" << (uint32_t)info.is_push;
+        log_stream << "&_S1=" << (uint32_t)info.instance_is_push;
+        log_stream << "&_T1=" << (uint32_t)info.vip;
 
-        log_stream << "&U1=" << (uint32_t)info.total_http_start_download_bytes;
-        log_stream << "&V1=" << (uint32_t)info.http_start_download_reason;
-        log_stream << "&W1=" << (uint32_t)info.preroll;
+        log_stream << "&_U1=" << (uint32_t)info.total_http_start_download_bytes;
+        log_stream << "&_V1=" << (uint32_t)info.http_start_download_reason;
+        log_stream << "&_W1=" << (uint32_t)info.preroll;
 
-        log_stream << "&X1=" << (uint32_t)info.p2p_download_max_connect_count;
-        log_stream << "&Y1=" << (uint32_t)info.p2p_download_min_connect_count;
+        log_stream << "&_X1=" << (uint32_t)info.p2p_download_max_connect_count;
+        log_stream << "&_Y1=" << (uint32_t)info.p2p_download_min_connect_count;
 
-        log_stream << "&Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
-        log_stream << "&A2=" << (uint32_t)info.uTotalDiskSizeInMB;
-        log_stream << "&B2=" << (uint16_t)info.http_port;
-        log_stream << "&C2=" << (uint32_t)info.total_list_request_packet_count;
-        log_stream << "&D2=" << (uint32_t)info.total_list_response_packet_count;
-        log_stream << "&E2=" << (uint32_t)info.is_fetch_tinydrag_success;
-        log_stream << "&F2=" << (uint32_t)info.is_fetch_tinydrag_from_udp;
-        log_stream << "&G2=" << (uint32_t)info.is_parse_tinydrag_success;
-        log_stream << "&H2=" << (uint32_t)info.fetch_tinydrag_count;
-        log_stream << "&I2=" << (uint32_t)info.fetch_tinydrag_time;
-        log_stream << "&J2=" << info.channel_name;
-        log_stream << "&K2=" << info.tracker_respons_info;
-        log_stream << "&L2=" << info.peer_connect_request_sucess_count;
+        log_stream << "&_Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
+        log_stream << "&_A2=" << (uint32_t)info.uTotalDiskSizeInMB;
+        log_stream << "&_B2=" << (uint16_t)info.http_port;
+        log_stream << "&_C2=" << (uint32_t)info.total_list_request_packet_count;
+        log_stream << "&_D2=" << (uint32_t)info.total_list_response_packet_count;
+        log_stream << "&_E2=" << (uint32_t)info.is_fetch_tinydrag_success;
+        log_stream << "&_F2=" << (uint32_t)info.is_fetch_tinydrag_from_udp;
+        log_stream << "&_G2=" << (uint32_t)info.is_parse_tinydrag_success;
+        log_stream << "&_H2=" << (uint32_t)info.fetch_tinydrag_count;
+        log_stream << "&_I2=" << (uint32_t)info.fetch_tinydrag_time;
+        log_stream << "&_J2=" << info.channel_name;
+        log_stream << "&_K2=" << info.tracker_respons_info;
+        log_stream << "&_L2=" << info.peer_connect_request_sucess_count;
 
         string log = log_stream.str();
 

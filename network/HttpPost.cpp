@@ -45,17 +45,17 @@ namespace network
             return;
         }
 
-        HttpRequestHead head;
-        head.method = util::protocol::HttpRequestHead::post;
-        head["Accept"] = "{*/*}";
-        head.host = server_;
-        head.path = path_;
-        head.connection = util::protocol::http_filed::Connection::close;
+        HttpRequest request;
+        request.head().method = util::protocol::HttpRequestHead::post;
+        request.head()["Accept"] = "{*/*}";
+        request.head().host = server_;
+        request.head().path = path_;
+        request.head().connection = util::protocol::http_field::Connection::close;
 
-        std::ostream os(&(http_client->get_request().data())); 
+        std::ostream os(&(request.data())); 
 
         os << data_to_post.rdbuf();
 
-        http_client->async_fetch(head, boost::bind(&HttpPost::OnPostResult, shared_from_this(), http_client, _1));
+        http_client->async_fetch(request, boost::bind(&HttpPost::OnPostResult, shared_from_this(), http_client, _1));
     }
 }

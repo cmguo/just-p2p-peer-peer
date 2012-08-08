@@ -6,8 +6,12 @@
 #define PEER_H
 
 #ifdef BOOST_WINDOWS_API
-#include <Windows.h>
-#define PEER_API WINAPI
+#  include <windows.h>
+#  ifndef __MINGW32__
+#    define PEER_API WINAPI
+#  else
+#    define PEER_API
+#  endif
 #else
 #define PEER_API
 #endif  // BOOST_WINDOWS_API
@@ -30,7 +34,7 @@
 #endif
 
 // 以下定义是为了让SOP编译通过
-#ifdef BOOST_WINDOWS_API
+#ifndef BOOST_CSTDINT_HPP
 namespace boost
 {
     typedef signed char         int8_t;

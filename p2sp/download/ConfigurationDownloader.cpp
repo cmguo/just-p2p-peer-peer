@@ -50,7 +50,7 @@ namespace p2sp
         head.path = path_;
         head["Accept"] = "{*/*}";
         head.host = server_;
-        head.connection = util::protocol::http_filed::Connection::close;
+        head.connection = util::protocol::http_field::Connection::close;
 
         http_client->async_fetch(head, boost::bind(&ConfigurationDownloader::HandleFetchResult, shared_from_this(), http_client, _1));
     }
@@ -65,7 +65,7 @@ namespace p2sp
         }
         else
         {
-            boost::asio::streambuf& response = http_client->get_response().data();
+            boost::asio::streambuf& response = http_client->response().data();
             std::string response_content((std::istreambuf_iterator<char>(&response)), std::istreambuf_iterator<char>() );
             download_listener_->OnDownloadSucceeded(response_content);
         }

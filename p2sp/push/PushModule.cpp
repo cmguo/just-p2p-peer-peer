@@ -19,7 +19,7 @@
 #include <cmath>
 
 #ifdef BOOST_WINDOWS_API
-#include <TlHelp32.h>
+#include <tlhelp32.h>
 #endif
 
 static const std::string PUSH_SERVER = "ppvaps.pplive.com";

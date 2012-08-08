@@ -224,7 +224,11 @@ namespace storage
 
         if (live_streams_.size() == 0)
         {
+#ifdef PEER_PC_CLIENT
             stop_timer_.start();
+#else
+            Stop();
+#endif
         }
     }
 

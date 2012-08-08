@@ -182,7 +182,7 @@ namespace network
 #ifdef BOOST_WINDOWS_API
         int opt_len = sizeof(int);
 #else
-        uint32_t opt_len = sizeof(int);
+        socklen_t opt_len = sizeof(int);
 #endif
         return (getsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, &opt_len) == 0);
     }

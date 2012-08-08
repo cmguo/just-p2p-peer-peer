@@ -172,7 +172,7 @@ namespace network
     template <typename ContentType>
     void HttpClient<ContentType>::Close()
     {
-        LOG4CPLUS_INFO_LOG(logger_httpclient, shared_from_this());
+        LOG4CPLUS_INFO_LOG(logger_httpclient, "HttpClient::Close");
         is_connecting_ = false;
         is_connected_ = false;
         is_requesting_ = false;
@@ -391,7 +391,7 @@ namespace network
 
         if (!err)
         {
-            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << err.message() << ", " << shared_from_this());
+            LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << err.message());
             if (handler_)
             {
                 handler_->OnConnectSucced();
@@ -694,7 +694,7 @@ namespace network
                 uint32_t range_begin = http_response_->GetRangeBegin();
                 file_offset_ = range_begin;
                 LOG4CPLUS_INFO_LOG(logger_httpclient, "http_response_->GetRangeBegin(): " << range_begin << 
-                    " file_offset=" << file_offset_ << " client=" << shared_from_this());
+                    " file_offset=" << file_offset_);
             }
 
             if (handler_)
@@ -854,8 +854,7 @@ namespace network
         if (!err)
         {
             LOG4CPLUS_INFO_LOG(logger_httpclient, "Succed " << buffer_length << " file_offset=" << file_offset << 
-                " content_offset=" << content_offset << " range_begin=" << request_info_.range_begin_ << " client=" 
-                << shared_from_this());
+                " content_offset=" << content_offset << " range_begin=" << request_info_.range_begin_);
             assert(buffer_length>0);
             // assert(response_.size() >= buffer_length);
             // protocol::SubPieceBuffer buffer(buffer_length);

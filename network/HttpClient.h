@@ -105,7 +105,7 @@ namespace network
         void HttpRecvSubPiece();
         void HttpRecv(uint32_t length);
 
-        static const uint32_t MaxRecvLength = ContentType::sub_piece_size;
+        static const uint32_t MaxRecvLength;// = ContentType::sub_piece_size;
         
         bool IsRequesting() const
         {
@@ -179,6 +179,9 @@ namespace network
         bool is_accept_gzip_;
         bool is_response_gzip_;
     };
+
+    template <typename ContentType>
+    const uint32_t HttpClient<ContentType>::MaxRecvLength = ContentType::sub_piece_size;
 }
 
 #include "HttpClient.hpp"
