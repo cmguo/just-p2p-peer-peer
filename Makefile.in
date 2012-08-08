@@ -10,6 +10,10 @@ PROJECT_TARGET			:= peer
 
 PROJECT_VERSION			:=
 
+## 项目版本定义文件
+
+PROJECT_VERSION_HEADER		:= peer/Define.h
+
 ## 该项目默认的配置类型
 
 LOCAL_CONFIG			:= dynamic debug multi --enable-publish
