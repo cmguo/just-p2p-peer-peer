@@ -62,12 +62,12 @@ PROJECT_DEPENDS			:= \
 				/base/boost/date_time \
 				/base/boost/regex \
 				/base/boost/program_options \
-				/tinyxml \
-				/protocol/zlib \
-				/protocol/udpserver_mod \
+				/base/zlib \
+				../tinyxml \
+				../protocol/udpserver_mod \
 
 ## 该项目特定的引用库
 
-PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS) pthread
+PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS)
 
 PROJECT_VERSION_SCRIPT		:= Peer.map
