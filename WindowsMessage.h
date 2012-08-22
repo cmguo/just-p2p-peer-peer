@@ -6,7 +6,7 @@
 #pragma once
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
-#include <Windows.h>
+#include <windows.h>
 #include <string>
 using namespace std;
 

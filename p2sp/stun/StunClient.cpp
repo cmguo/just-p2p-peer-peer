@@ -29,12 +29,14 @@
 #ifdef BOOST_WINDOWS_API
 #include   <shlwapi.h>
 #pragma   comment(lib, "shlwapi.lib")
-#include <ShlObj.h>
+#include <shlobj.h>
+#ifndef __MINGW32__
 #include <atlbase.h>
+#endif
 
 // #include <shlwapi.h>
 // #pragma comment(lib. "shlwapi.lib")
-#include <Iphlpapi.h>
+#include <iphlpapi.h>
 #pragma comment(lib, "Iphlpapi.lib")
 #endif
 
@@ -303,7 +305,7 @@ uint32_t CStunClient::GetLocalFirstIP(void)
     // 使用 ip helper函数
     boost::uint32_t nip = 0;
     PMIB_IPADDRTABLE pIPAddrTable;
-    uint32_t dwSize = 0 , dwRetVal;
+    DWORD dwSize = 0 , dwRetVal;
 
     pIPAddrTable = (MIB_IPADDRTABLE*) malloc(sizeof(MIB_IPADDRTABLE));
 

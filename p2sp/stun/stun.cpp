@@ -652,7 +652,7 @@ namespace p2sp
 
           boost::uint64_t tick;
 
-    #if defined(WIN32)
+    #if defined(WIN32) && !defined __MINGW32__
           volatile unsigned int lowtick = 0, hightick = 0;
           __asm
              {

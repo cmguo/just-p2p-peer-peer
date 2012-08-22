@@ -1,4 +1,4 @@
-﻿// GateWayFinder.cpp
+// GateWayFinder.cpp
 
 #include "Common.h"
 #include "GateWayFinder.h"

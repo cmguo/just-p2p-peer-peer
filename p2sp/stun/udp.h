@@ -5,10 +5,6 @@
 #ifndef udp_h
 #define udp_h
 
-#ifdef __MACH__
-typedef int socklen_t;
-#endif
-
 #include <errno.h>
 
 namespace p2sp

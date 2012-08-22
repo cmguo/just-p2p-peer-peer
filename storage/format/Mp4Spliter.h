@@ -8,7 +8,7 @@
 #define _P2SP_FORMAT_MP4_SPLITTER_H_
 
 #ifdef WIN32
-#include <Windows.h>
+#include <windows.h>
 typedef boost::uint64_t SNC_UI64;
 typedef boost::int64_t SNC_I64;
 #define UINT64_MAX 0xffffffffffffffffULL

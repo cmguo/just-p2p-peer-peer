@@ -18,7 +18,7 @@ namespace network
         {
             // 目前已经的问题是在win 7系统，由于权限不够，创建raw socket会异常
             DebugLog("upload create ping client failed ec:%d, %s\n", e.code().value(), e.what());
-#ifdef BOOST_WINDOWS_API && !(defined __MINGW32__)
+#if (defined BOOST_WINDOWS_API) && !(defined __MINGW32__)
             return PingClientWithAPI::Create();
 #else
             return PingClient::p();

@@ -1,6 +1,6 @@
 #include "Common.h"
 
-#ifdef BOOST_WINDOWS_API
+#if (defined BOOST_WINDOWS_API) && !(defined __MINGW32__)
 
 #include "PingClientWithAPI.h"
 #include "p2sp/AppModule.h"
