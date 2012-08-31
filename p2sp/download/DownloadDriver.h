@@ -91,6 +91,8 @@ namespace p2sp
         string                channel_name;                         // J2: channel name
         string                tracker_respons_info;                 // K2: 分别统计向每组station tracker发送的list包数和响应数
         string                peer_connect_request_sucess_count;    // L2: 每种nat类型连接请求数以及成功数
+        boost::uint32_t       nat_type;                             // M2: 获取NAT类型
+        int                   nat_check_state;                      // N2: 当前nat检测状态
     } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
 
     class VodDownloader;

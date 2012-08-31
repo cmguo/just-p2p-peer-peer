@@ -123,8 +123,6 @@ namespace p2sp
         bool IsOpenService() const { return is_openservice_; }
         void SetIsOpenService(bool openservie) { is_openservice_ = openservie; }
 
-        void SetVipLevel(VIP_LEVEL vip_level) {vip_level_ = vip_level;}
-
         P2PDwonloadMode GetDownloadMode() const { return dl_mode_;}
         boost::uint32_t GetRTTPlus();
 

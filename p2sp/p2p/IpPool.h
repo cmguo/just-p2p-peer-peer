@@ -43,8 +43,10 @@ namespace p2sp
         void Start();
         void Stop();
         // 操作
-        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly);
-        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly, const PeersScoreCalculator& score_calculator);
+        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly,
+            bool is_udpserver_from_cdn);
+        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly,
+            const PeersScoreCalculator& score_calculator, bool is_udpserver_from_cdn);
 
         bool GetForConnect(protocol::CandidatePeerInfo& peer, bool is_udpserver = false);
         bool GetForExchange(protocol::CandidatePeerInfo& peer);

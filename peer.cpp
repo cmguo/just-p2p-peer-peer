@@ -178,9 +178,10 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     Event::p event_wait = Event::Create();
     boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
     boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    boost::uint16_t local_http_port;
 
     global_io_svc().post(boost::bind(&p2sp::AppModule::Start, p2sp::AppModule::Inst(), 
-        boost::ref(global_io_svc()), appmodule_start_interface, fun));
+        boost::ref(global_io_svc()), appmodule_start_interface, fun, & local_http_port));
 
     MainThread::Start();
 
@@ -1155,6 +1156,18 @@ void PEER_API SetRestPlayTimeByUrl(const char * url, boost::uint32_t rest_play_t
         string(url), rest_play_time));
 }
 
+void PEER_API SetVipLevelByUrl(const char * url, boost::uint32_t url_len, boost::uint32_t vip_level)
+{
+    string url_string(url, url_len);
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+    global_io_svc().post(
+        boost::bind(
+        &p2sp::ProxyModule::SetVipLevelByUrl, p2sp::ProxyModule::Inst(), url_string, vip_level));
+}
+
 void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 {
     if (!IsProxyModuleStarted())
@@ -1404,4 +1417,5 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     lpNetInterface->SetUpnpPortForTcpUpload = SetUpnpPortForTcpUpload;
     lpNetInterface->QueryDownloadProgressByUrlNew = QueryDownloadProgressByUrlNew;
     lpNetInterface->QueryDownloadProgress2 = QueryDownloadProgress2;
+    lpNetInterface->SetVipLevelByUrl = SetVipLevelByUrl;
 }

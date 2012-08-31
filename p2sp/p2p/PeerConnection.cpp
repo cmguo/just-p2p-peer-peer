@@ -224,6 +224,10 @@ namespace p2sp
         }
         else
         {
+            if (!BootStrapGeneralConfig::Inst()->OpenRequestSubpiecePacketOld())
+            {
+                return;
+            }
             protocol::RequestSubPiecePacketOld packet(trans_id,
                 p2p_downloader_->GetRid(), AppModule::Inst()->GetPeerGuid(), subpiece_info, end_point_);
 
@@ -270,7 +274,7 @@ namespace p2sp
         statistic_->SubmitUploadedBytes(packet.length());
 
         // 请求rid信息
-        if (peer_version_ >= 0x00000007)
+        if (BootStrapGeneralConfig::Inst()->OpenRIDInfoRequestResponse() && peer_version_ >= 0x00000007)
         {
             DoRequestRIDInfo();
         }
@@ -476,7 +480,7 @@ namespace p2sp
             {
             p2p_downloader_->DoSendPacket(packet, peer_version_);
             }
-            statistic_->SubmitUploadedBytes(packet.length());
+            statistic_->SubmitUploadedBytes(copy_count * packet.length());
         }
         else if (peer_version_ == protocol::PEER_VERSION_V3)
         {
@@ -491,6 +495,10 @@ namespace p2sp
         }
         else
         {
+            if (!BootStrapGeneralConfig::Inst()->OpenRequestSubpiecePacketOld())
+            {
+                return;
+            }
             protocol::RequestSubPiecePacketOld packet(protocol::Packet::NewTransactionID(),
             p2p_downloader_->GetRid(), AppModule::Inst()->GetPeerGuid(), subpieces, endpoint_);
 

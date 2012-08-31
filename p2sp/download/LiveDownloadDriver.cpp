@@ -12,8 +12,8 @@
 #include "statistic/DACStatisticModule.h"
 #include "p2sp/tracker/TrackerModule.h"
 #include "p2sp/config/Config.h"
-#include "LiveDacStopDataStruct.h"
 #include "p2sp/download/LiveStream.h"
+#include "p2sp/p2p/UdpServerFromBSPool.h"
 
 namespace p2sp
 {
@@ -28,6 +28,10 @@ namespace p2sp
     const std::string LiveDownloadDriver::LiveHistorySettings::RatioOfUploadToDownload = "r";
     const std::string LiveDownloadDriver::LiveHistorySettings::UdpServerScore = "uss";
     const std::string LiveDownloadDriver::LiveHistorySettings::UdpServerIpAddress = "usia";
+
+    const boost::uint8_t LiveDownloadDriver::DefaultUdpServerUploadPriority = 255;
+    const boost::uint8_t LiveDownloadDriver::DefaultUdpServerIdleTime = 0;
+    const boost::uint8_t LiveDownloadDriver::DefaultUdpServerTrackerPriority = 100;
 
     LiveDownloadDriver::LiveDownloadDriver(boost::asio::io_service &io_svc, p2sp::ProxyConnection__p proxy_connetction)
         : io_svc_(io_svc)
@@ -66,6 +70,7 @@ namespace p2sp
         , total_upload_bytes_when_using_cdn_because_of_large_upload_(0)
         , is_history_upload_good_(false)
         , is_saving_mode_(false)
+        , udpserver_count_(0)
     {
         history_record_count_ = BootStrapGeneralConfig::Inst()->GetMaxTimesOfRecord();
         LoadConfig();
@@ -162,6 +167,17 @@ namespace p2sp
         download_time_.start();
 
         upload_bytes_when_start_ = statistic::StatisticModule::Inst()->GetUploadDataBytes();
+
+        if (udpserver_count_ != UdpServerFromBSPool::Inst()->GetUdpServerCount())
+        {
+            udpserver_count_ = UdpServerFromBSPool::Inst()->GetUdpServerCount();
+            AddLiveUdpServerFromBS();
+        }
+
+        if (BootStrapGeneralConfig::Inst()->UseUdpServerFromCdn())
+        {
+            AddLiveUdpServerFromCDN();
+        }
     }
 
     void LiveDownloadDriver::Stop()
@@ -375,6 +391,12 @@ namespace p2sp
 
                 max_push_data_interval_ = tick_count_since_last_recv_subpiece_.elapsed();
 #endif
+            }
+
+            if (udpserver_count_ != UdpServerFromBSPool::Inst()->GetUdpServerCount())
+            {
+                udpserver_count_ = UdpServerFromBSPool::Inst()->GetUdpServerCount();
+                AddLiveUdpServerFromBS();
             }
         }
     }
@@ -639,6 +661,12 @@ namespace p2sp
         // J2: 在每次使用UdpServer期间，收到/请求的最小值
         // K2: 在每次使用UdpServer期间，收到/请求的最大值
         // L2: BWType
+        // M2: ppbscf文件的大小
+        // N2: 开始使用http的时间
+        // O2: 结束使用http的时间
+        // P2: 使用http的原因
+        // Q2: 结束使用http的原因
+        // R2: 使用http的下载量
 
         LIVE_DAC_STOP_DATA_STRUCT info;
         info.ResourceIDs = data_rate_manager_.GetRids();
@@ -794,6 +822,10 @@ namespace p2sp
         }
 
         info.BWType = bwtype_;
+
+        info.PPbscfLength = BootStrapGeneralConfig::Inst()->GetConfigStringLength();
+
+        UpdateHttpDownloadStatistic(info);
 
         string log = info.ToString();
 
@@ -1093,5 +1125,134 @@ namespace p2sp
         total_time_elapsed_use_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetTimeElapsedUseCdnBecauseOfLargeUpload();
         total_download_bytes_use_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetDownloadBytesUseCdnBecauseOfLargeUpload();
         total_upload_bytes_when_using_cdn_because_of_large_upload_ += live_streams_[data_rate_pos]->GetTotalUploadBytesWhenUsingCdnBecauseOfLargeUpload();
+    }
+
+    void LiveDownloadDriver::AddLiveUdpServerFromCDN()
+    {
+        if (!GetP2PControlTarget())
+        {
+            return;
+        }
+
+        std::vector<protocol::CandidatePeerInfo> udpservers;
+
+        PlayInfo::p play_info = proxy_connection_->GetPlayInfo();
+        std::vector<std::string> back_hosts = play_info->GetBakHosts();
+        for (int i = 0; i < back_hosts.size(); ++i)
+        {
+            boost::system::error_code ec;
+            boost::asio::ip::address_v4 addr = boost::asio::ip::address_v4::from_string(back_hosts[i], ec);
+            if (!ec)
+            {
+                protocol::CandidatePeerInfo udpserver_info(
+                    addr.to_ulong(),
+                    BootStrapGeneralConfig::Inst()->GetUdpserverUdpPort(),
+                    (boost::uint16_t)AppModule::Inst()->GetPeerVersion(),
+                    addr.to_ulong(),
+                    BootStrapGeneralConfig::Inst()->GetUdpserverUdpPort(),
+                    0,
+                    0,
+                    protocol::TYPE_FULLCONENAT,
+                    DefaultUdpServerUploadPriority,
+                    DefaultUdpServerIdleTime,
+                    DefaultUdpServerTrackerPriority);
+
+                udpservers.push_back(udpserver_info);
+            }
+        }
+
+        string url = play_info->GetUrlInfo().url_;
+        network::Uri uri(url);
+        std::string host = uri.getdomain();
+        boost::system::error_code ec;
+        boost::asio::ip::address_v4 addr = boost::asio::ip::address_v4::from_string(host, ec);
+        if (!ec)
+        {
+            protocol::CandidatePeerInfo udpserver_info(
+                addr.to_ulong(),
+                BootStrapGeneralConfig::Inst()->GetUdpserverUdpPort(),
+                (boost::uint16_t)AppModule::Inst()->GetPeerVersion(),
+                addr.to_ulong(),
+                BootStrapGeneralConfig::Inst()->GetUdpserverUdpPort(),
+                0,
+                0,
+                protocol::TYPE_FULLCONENAT,
+                DefaultUdpServerUploadPriority,
+                DefaultUdpServerIdleTime,
+                DefaultUdpServerTrackerPriority);
+
+            udpservers.push_back(udpserver_info);
+        }
+
+        GetP2PControlTarget()->AddCandidatePeers(udpservers, true, true, false);
+    }
+
+    void LiveDownloadDriver::StartHttp(boost::uint8_t reason)
+    {
+        assert(GetHTTPControlTarget());
+
+        boost::shared_ptr<HttpDownloadStatistic> http_download_statistic =
+            boost::shared_ptr<HttpDownloadStatistic>(new HttpDownloadStatistic());
+
+        http_download_statistic->Start(download_time_.elapsed(), reason, GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes);
+        http_download_statistic_.push_back(http_download_statistic);
+    }
+
+    void LiveDownloadDriver::StopHttp(boost::uint8_t reason)
+    {
+        assert(GetHTTPControlTarget());
+        assert(!http_download_statistic_.empty());
+
+        boost::shared_ptr<HttpDownloadStatistic> http_download_statistic = http_download_statistic_[http_download_statistic_.size() - 1];
+        assert(http_download_statistic->IsRunning());
+
+        http_download_statistic->Stop(download_time_.elapsed(), reason, GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes);
+    }
+
+    void LiveDownloadDriver::UpdateHttpDownloadStatistic(LIVE_DAC_STOP_DATA_STRUCT & info)
+    {
+        std::ostringstream http_download_start_time;
+        std::ostringstream http_download_stop_time;
+        std::ostringstream http_download_start_reason;
+        std::ostringstream http_download_stop_reason;
+        std::ostringstream http_download_download_byte;
+
+        for (int i = 0; i < _LIVE_DAC_STOP_DATA_STRUCT::MaxHttpStatisticCount && i < http_download_statistic_.size(); ++i)
+        {
+            if (i != 0)
+            {
+                http_download_start_time << ",";
+                http_download_stop_time << ",";
+                http_download_start_reason << ",";
+                http_download_stop_reason << ",";
+                http_download_download_byte << ",";
+            }
+
+            if (http_download_statistic_[i]->IsRunning())
+            {
+                assert(i + 1 == http_download_statistic_.size());
+                http_download_statistic_[i]->Stop(download_time_.elapsed(), 255, GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes);
+            }
+
+            http_download_start_time << http_download_statistic_[i]->GetStartTime();
+            http_download_stop_time << http_download_statistic_[i]->GetStopTime();
+            http_download_start_reason << (uint32_t)http_download_statistic_[i]->GetStartReason();
+            http_download_stop_reason << (uint32_t)http_download_statistic_[i]->GetStopReason();
+            http_download_download_byte << http_download_statistic_[i]->GetDownloadedBytes();
+        }
+
+        info.HttpDownloadStartTimeEveryTime = http_download_start_time.str();
+        info.HttpDownloadEndTimeEveryTime = http_download_stop_time.str();
+        info.ReasonOfUsingHttpEveryTime = http_download_start_reason.str();
+        info.ReasonOfStopingHttpEveryTime = http_download_stop_reason.str();
+        info.HttpDownloadBytesEveryTime = http_download_download_byte.str();
+    }
+
+    void LiveDownloadDriver::AddLiveUdpServerFromBS()
+    {
+        if (GetP2PControlTarget())
+        {
+            GetP2PControlTarget()->AddCandidatePeers(UdpServerFromBSPool::Inst()->GetUdpServerList(), true, false, true);
+        }
     }
 }

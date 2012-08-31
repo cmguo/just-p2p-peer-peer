@@ -788,6 +788,33 @@ namespace p2sp
         }
     }
 
+    void ProxyModule::SetVipLevelByUrl(string url_str, boost::uint32_t vip_level)
+    {
+        if (!is_running_)
+        {
+            return;
+        }
+        for (std::set<ProxyConnection__p>::iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            ProxyConnection::p proxy_conn = *iter;
+            if (!proxy_conn) 
+            {
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
+                continue;
+            }
+
+            PlayInfo::p play_info = proxy_conn->GetPlayInfo();
+            if (play_info && play_info->GetUrlInfo().url_ == url_str)
+            {
+                DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
+                if (dd)
+                {
+                    dd->SetVipLevel((VIP_LEVEL)vip_level);
+                }
+            }
+        }
+    }
     void ProxyModule::SetDownloadMode(RID rid, boost::uint32_t download_mode)
     {
         if (!is_running_)

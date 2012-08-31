@@ -49,5 +49,6 @@ namespace p2sp
         tracker_priority_ = 255 - candidate_peer.TrackerPriority;
         should_use_firstly_ = candidate_peer.should_use_firstly_;
         peer_score_ = candidate_peer.peer_score_;
+        is_udpserver_from_cdn_ = candidate_peer.is_udpserver_from_cdn_;
     }
 }

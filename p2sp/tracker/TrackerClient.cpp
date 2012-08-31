@@ -57,7 +57,7 @@ namespace p2sp
         last_transaction_id_ = protocol::Packet::NewTransactionID();
         protocol::ListPacket list_request_packet(last_transaction_id_,
                 protocol::PEER_VERSION, rid, p2sp::AppModule::Inst()->GetPeerGuid(),
-                MAX_REQUEST_PEER_COUNT_, end_point_);
+                MAX_REQUEST_PEER_COUNT_, end_point_,StunModule::Inst()->GetPeerNatType());
 
         // 从该TrackerClient发送ListRequestPacket
         LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoList " << rid << " " << end_point_);
@@ -300,6 +300,9 @@ namespace p2sp
             upload_speed_limit_kbs = std::numeric_limits<boost::int32_t>::max();
         }
 
+        //TODO:设置到tracker的路由ip。5个就够了。
+        std::vector<boost::uint32_t> traceroute_ips;
+
         // request
         protocol::ReportPacket report_request(
                 last_transaction_id_,
@@ -322,7 +325,8 @@ namespace p2sp
                 (boost::int32_t)statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps(),
                 end_point_,
                 local_tcp_port,
-                p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload()
+                p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload(),
+                traceroute_ips
            );
 
         LOG4CPLUS_DEBUG_LOG(logger_tracker_client, "DoReport, TrackerInfo: " << end_point_);
@@ -353,6 +357,11 @@ namespace p2sp
 
     std::set<RID> TrackerClient::GetClientResource() const
     {
+        if (group_count_ == 0)
+        {
+            return std::set<RID>();
+        }
+
         if (is_vod_)
         {
             return p2sp::AppModule::Inst()->GetVodResource(tracker_info_.ModNo, group_count_);

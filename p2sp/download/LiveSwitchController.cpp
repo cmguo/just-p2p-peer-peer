@@ -77,16 +77,31 @@ namespace p2sp
         if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_PAUSING)
         {
             CheckState2300();
+
+            if (state_.http_ != State::HTTP_DOWNLOADING)
+            {
+                live_download_driver_->StopHttp(reason_of_stoping_http_);
+            }
         }
         // 3200
         else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_DOWNLOADING)
         {
             CheckState3200();
+
+            if (state_.http_ == State::HTTP_DOWNLOADING)
+            {
+                live_download_driver_->StartHttp(reason_of_using_http_);
+            }
         }
         // 3300
         else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_PAUSING)
         {
             CheckState3300();
+
+            if (state_.http_ == State::HTTP_DOWNLOADING)
+            {
+                live_download_driver_->StartHttp(reason_of_using_http_);
+            }
         }
     }
 
@@ -139,6 +154,7 @@ namespace p2sp
 
         if (live_download_driver_->DoesFallBehindTooMuch())
         {
+            reason_of_using_http_ = FALL_BEHIND;
             return true;
         }
 
@@ -147,7 +163,48 @@ namespace p2sp
             live_download_driver_->ShouldUseCdnToAccelerate())
         {
             changed_to_http_because_of_large_upload_ = true;
+            reason_of_using_http_ = LARGE_UPLOAD;
             return true;
+        }
+
+        if (BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload(is_saving_mode_)
+            && (is_http_fast_ || time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetTimeToIgnoreHttpBad(is_saving_mode_))
+            && rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim(is_saving_mode_)
+            && live_download_driver_->IsUploadSpeedLargeEnough())
+        {
+            changed_to_http_because_of_large_upload_ = true;
+            reason_of_using_http_ = LARGE_UPLOAD;
+            return true;
+        }
+
+        if (is_started_)
+        {
+            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
+                time_counter_3200_.elapsed() > 5 * 1000 &&
+                BootStrapGeneralConfig::Inst()->GetUseHttpWhenConnectedNonePeers(is_saving_mode_) &&
+                rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelimWhenNonePeers(is_saving_mode_))
+            {
+                SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = NONE_PEERS;
+                return true;
+            }
+        }
+        else
+        {
+            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
+                BootStrapGeneralConfig::Inst()->GetUseHttpWhenConnectedNonePeers(is_saving_mode_) &&
+                rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelimWhenNonePeers(is_saving_mode_))
+            {
+                SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = NONE_PEERS;
+                return true;
+            }
+        }
+
+        // 如果之前没有因为落后太多、节点数为0、大上传切换到Http，并且紧急情况下不使用Http的话，则停留在P2P状态下
+        if (!BootStrapGeneralConfig::Inst()->GetUseHttpWhenUrgent(is_saving_mode_))
+        {
+            return false;
         }
 
         if (is_started_)
@@ -156,13 +213,7 @@ namespace p2sp
                 time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenStart(is_saving_mode_))
             {
                 SetChangeToHttpBecauseOfUrgent();
-                return true;
-            }
-
-            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
-                time_counter_3200_.elapsed() > 5 * 1000)
-            {
-                SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = URGENT;
                 return true;
             }
 
@@ -171,16 +222,12 @@ namespace p2sp
                 time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeIfStartAndSpeedIs0(is_saving_mode_))
             {
                 SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = URGENT;
                 return true;
             }
         }
         else
         {
-            if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
-            {
-                return true;
-            }
-
             // http速度很好，等到剩余时间比较短时才切过去，提高节约比并且不会卡
             if (rest_play_time_when_switched_ > BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayableTime(is_saving_mode_))
             {
@@ -188,6 +235,7 @@ namespace p2sp
                     + time_of_advancing_switching_to_http)
                 {
                     SetChangeToHttpBecauseOfUrgent();
+                    reason_of_using_http_ = URGENT;
                     return true;
                 }
             }
@@ -199,6 +247,7 @@ namespace p2sp
                     && time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithNotEnoughTime(is_saving_mode_))
                 {
                     SetChangeToHttpBecauseOfUrgent();
+                    reason_of_using_http_ = URGENT;
                     return true;
                 }
             }
@@ -210,6 +259,7 @@ namespace p2sp
                 time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetP2PProtectTimeWhenSwitchedWithBuffering(is_saving_mode_))
             {
                 SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = URGENT;
                 return true;
             }
 
@@ -219,18 +269,9 @@ namespace p2sp
                 rest_play_time_when_switched_ != 0)
             {
                 SetChangeToHttpBecauseOfUrgent();
+                reason_of_using_http_ = URGENT;
                 return true;
             }
-
-        }
-
-        if (BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload(is_saving_mode_)
-            && (is_http_fast_ || time_counter_3200_.elapsed() > BootStrapGeneralConfig::Inst()->GetTimeToIgnoreHttpBad(is_saving_mode_))
-            && rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetRestPlayTimeDelim(is_saving_mode_)
-            && live_download_driver_->IsUploadSpeedLargeEnough())
-        {
-            changed_to_http_because_of_large_upload_ = true;
-            return true;
         }
 
         return false;
@@ -239,6 +280,52 @@ namespace p2sp
     bool LiveSwitchController::NeedChangeTo3200()
     {
         boost::uint32_t rest_play_time_in_second = live_download_driver_->GetRestPlayableTime();
+
+        // 紧急情况不使用http
+        if (!BootStrapGeneralConfig::Inst()->GetUseHttpWhenUrgent(is_saving_mode_))
+        {
+            // http启动，检查当前上传是否足够大，足够大就停留在2300，否则切走
+            if (is_started_)
+            {
+                if (BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload(is_saving_mode_)
+                    && live_download_driver_->IsUploadSpeedLargeEnough()
+                    && rest_play_time_in_second > 0)
+                {
+                    return false;
+                }
+
+                reason_of_stoping_http_ = NO_USE_HTTP_WHEN_URGENT;
+                return true;
+            }
+            else
+            {
+                // 因为大上传使用http的，上传不够大就切走
+                if (BootStrapGeneralConfig::Inst()->ShouldUseCDNWhenLargeUpload(is_saving_mode_) && changed_to_http_because_of_large_upload_)
+                {
+                    if (rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim(is_saving_mode_)
+                        && time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenLargeUpload(is_saving_mode_))
+                    {
+                        reason_of_stoping_http_ = UPLOAD_NOT_LARGE_ENOUGH;
+                        return true;
+                    }
+
+                    if (live_download_driver_->IsUploadSpeedSmallEnough()
+                        && time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim(is_saving_mode_) * 1000)
+                    {
+                        reason_of_stoping_http_ = UPLOAD_NOT_LARGE_ENOUGH;
+                        return true;
+                    }
+
+                    return false;
+                }
+                // 不是因为大上传使用http的，切走
+                else
+                {
+                    reason_of_stoping_http_ = NO_USE_HTTP_WHEN_URGENT;
+                    return true;
+                }
+            }
+        }
 
         if (is_started_)
         {
@@ -252,12 +339,14 @@ namespace p2sp
             if (rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayableTime(is_saving_mode_))
             {
                 live_download_driver_->SubmitChangedToP2PCondition(REST_PLAYABLE_TIME_ENOUGTH);
+                reason_of_stoping_http_ = REST_PLAYABLE_TIME_ENOUGTH;
                 return true;
             }
 
             if (time_counter_2300_.elapsed() >= BootStrapGeneralConfig::Inst()->GetHttpRunningLongEnoughTimeWhenStart(is_saving_mode_))
             {
                 live_download_driver_->SubmitChangedToP2PCondition(LONG_TIME_USING_CDN);
+                reason_of_stoping_http_ = LONG_TIME_USING_CDN;
                 return true;
             }
 
@@ -265,6 +354,7 @@ namespace p2sp
                 time_counter_2300_.elapsed() >= BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenStart(is_saving_mode_))
             {
                 live_download_driver_->SubmitChangedToP2PCondition(BLOCK);
+                reason_of_stoping_http_ = BLOCK;
                 return true;
             }
 
@@ -286,14 +376,28 @@ namespace p2sp
             if (rest_play_time_in_second <= rest_play_time_when_switched_ &&
                 time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenUrgentSwitched(is_saving_mode_))
             {
+                reason_of_stoping_http_ = WORSE_THAN_P2P;
                 return true;
             }
 
             // 剩余时间足够了或者是跑了很长时间并且剩余时间还可以，再去试试P2P
-            if ((rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayableTime(is_saving_mode_))
-                || (time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetHttpRunningLongEnoughTimeWhenUrgentSwitched(is_saving_mode_)
+            if (rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetSafeEnoughRestPlayableTime(is_saving_mode_))
+            {
+                reason_of_stoping_http_ = REST_PLAYABLE_TIME_ENOUGTH;
+                return true;
+            }
+
+            // 跑了很长时间并且剩余时间还可以，再去试试P2P
+            if ((time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetHttpRunningLongEnoughTimeWhenUrgentSwitched(is_saving_mode_)
                 && rest_play_time_in_second > BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim(is_saving_mode_)))
             {
+                reason_of_stoping_http_ = REST_PLAYABLE_TIME_NOT_SHORT;
+                return true;
+            }
+
+            if (time_counter_2300_.elapsed() >= BootStrapGeneralConfig::Inst()->GetHttpRunningLongestTimeWhenUrgentSwitched(is_saving_mode_))
+            {
+                reason_of_stoping_http_ = LONG_TIME_USING_CDN;
                 return true;
             }
 
@@ -303,12 +407,14 @@ namespace p2sp
         if (rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetSafeRestPlayableTimeDelim(is_saving_mode_)
             && time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenLargeUpload(is_saving_mode_))
         {
+            reason_of_stoping_http_ = UPLOAD_NOT_LARGE_ENOUGH;
             return true;
         }
 
         if (live_download_driver_->IsUploadSpeedSmallEnough()
             && time_counter_2300_.elapsed() > BootStrapGeneralConfig::Inst()->GetUsingCDNOrUdpServerTimeDelim(is_saving_mode_) * 1000)
         {
+            reason_of_stoping_http_ = UPLOAD_NOT_LARGE_ENOUGH;
             return true;
         }
 
@@ -331,15 +437,17 @@ namespace p2sp
             return;
         }
 
+        boost::uint32_t rest_play_time_in_second = live_download_driver_->GetRestPlayableTime();
+
         // 如果P2P节点数为0，不再进行判断
-        if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
+        if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
+            BootStrapGeneralConfig::Inst()->GetUseHttpWhenConnectedNonePeers(is_saving_mode_) &&
+            rest_play_time_in_second < BootStrapGeneralConfig::Inst()->GetEnoughRestPlayTimeDelimWhenNonePeers(is_saving_mode_))
             return;
 
         // 如果落后太多，一直用Http，不再切换P2P
         if (live_download_driver_->DoesFallBehindTooMuch())
             return;
-
-        boost::uint32_t rest_play_time_in_second = live_download_driver_->GetRestPlayableTime();
 
         if (NeedChangeTo3200())
         {
@@ -378,6 +486,21 @@ namespace p2sp
 
     void LiveSwitchController::CheckState3300()
     {
+        if (!BootStrapGeneralConfig::Inst()->GetUseHttpWhenUrgent(is_saving_mode_))
+        {
+            if (GetP2PControlTarget())
+            {
+                ResumeP2PDownloader();
+            }
+            else if (GetHTTPControlTarget())
+            {
+                reason_of_using_http_ = NO_P2P;
+                ResumeHttpDownloader();
+            }
+
+            return;
+        }
+
         if (is_started_)
         {
             if (BootStrapGeneralConfig::Inst()->GetShouldJudgeSwitchingDatarateManually() && is_too_near_from_last_vv_of_same_channel_
@@ -385,6 +508,7 @@ namespace p2sp
             {
                 if (GetHTTPControlTarget())
                 {
+                    reason_of_using_http_ = DRAG;
                     ChangeTo2300();
                     return;
                 }
@@ -401,6 +525,7 @@ namespace p2sp
                 }
                 else
                 {
+                    reason_of_using_http_ = START;
                     ChangeTo2300();
                 }
 
@@ -410,6 +535,7 @@ namespace p2sp
             // bs开关为关，只要有Http，则Http启动
             if (GetHTTPControlTarget())
             {
+                reason_of_using_http_ = START;
                 ResumeHttpDownloader();
             }
             else if (GetP2PControlTarget())
@@ -421,8 +547,14 @@ namespace p2sp
         {
             if (GetP2PControlTarget() && GetHTTPControlTarget())
             {
-                if (GetP2PControlTarget()->GetConnectedPeersCount() == 0 || live_download_driver_->DoesFallBehindTooMuch())
+                if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
                 {
+                    reason_of_using_http_ = NONE_PEERS;
+                    ResumeHttpDownloader();
+                }
+                else if (live_download_driver_->DoesFallBehindTooMuch())
+                {
+                    reason_of_using_http_ = FALL_BEHIND;
                     ResumeHttpDownloader();
                 }
                 else
@@ -436,6 +568,7 @@ namespace p2sp
             }
             else if (GetHTTPControlTarget())
             {
+                reason_of_using_http_ = NO_P2P;
                 ResumeHttpDownloader();
             }
         }

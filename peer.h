@@ -441,6 +441,11 @@ void PEER_API SetRestPlayTimeByUrl(const char * url, boost::uint32_t rest_play_t
 typedef
 void (PEER_API * LPSETRESTPLAYTIMEBYURL)(const char * url, boost::uint32_t rest_play_time);
 
+//设置VIP_LEVEL
+void PEER_API SetVipLevelByUrl(const char * url, boost::uint32_t url_len, boost::uint32_t vip_level);
+typedef
+void (PEER_API * LPSETVIPLEVELBYURL)(const char * url, boost::uint32_t url_len, boost::uint32_t vip_level);
+
 void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state);
 typedef
 void (PEER_API * LPQUERYDRAGPEERSTATEBYURL)(const char * url, boost::int32_t * state);
@@ -554,7 +559,8 @@ typedef struct _NETINTERFACE{
     // version 0, 24
     boost::uint32_t                Reserved5;
     LPQUERYDOWNLOADPROGRESS2 QueryDownloadProgress2;
-    boost::uint32_t                Reserved4[36];
+    LPSETVIPLEVELBYURL SetVipLevelByUrl;
+    boost::uint32_t                Reserved4[35];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef BOOST_WINDOWS_API
 #pragma pack(pop)

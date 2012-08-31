@@ -127,19 +127,6 @@ namespace p2sp
         //        timer_->Start();
     }
 
-    // ???
-    void CommonProxySender::OnNotice403Header()
-    {
-        if (false == is_running_)
-            return;
-        if (true == is_response_header_)
-            return;
-
-        LOG4CPLUS_INFO_LOG(logger_proxy, __FUNCTION__ << ": Notice 403 header");
-
-        http_server_socket_->HttpSend403Header();
-    }
-
     void CommonProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
     {
         if (false == is_running_)

@@ -142,7 +142,8 @@ namespace p2sp
         void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point);
     public:
         void Start();
-        void AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver);
+        void AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo> & peers, bool is_live_udpserver,
+            bool is_live_udpserver_from_cdn, bool is_live_udpserver_from_bs);
         void OnP2PTimer(boost::uint32_t times);
         RID GetRid();
 

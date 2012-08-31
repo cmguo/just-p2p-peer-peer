@@ -11,6 +11,7 @@
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "network/Uri.h"
 #include "p2sp/p2p/SNPool.h"
+#include "p2sp/p2p/UdpServerFromBSPool.h"
 
 #ifdef NOTIFY_ON
 #include "p2sp/notify/NotifyModule.h"
@@ -19,6 +20,7 @@
 #include "statistic/DACStatisticModule.h"
 #include "statistic/StatisticModule.h"
 #include "message.h"
+
 
 using namespace statistic;
 using namespace network;
@@ -49,6 +51,7 @@ namespace p2sp
         , is_resolving_(false)
         , is_have_sn_list_(false)
         , is_have_vip_sn_list_(false)
+        , is_have_udpserver_list_(false)
 
         , query_vod_list_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_list_tracker_list_timer_))
         , query_vod_report_tracker_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_vod_report_tracker_list_timer_))
@@ -59,12 +62,14 @@ namespace p2sp
 #ifdef NOTIFY_ON
         , query_notify_server_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, boost::bind(&IndexManager::OnTimerElapsed, this, &query_notify_server_list_timer_))
 #endif
-        , query_bootstrap_config_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
+        , query_bootstrap_config_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL,
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_bootstrap_config_timer_))
-        , query_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
+        , query_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL,
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_sn_list_timer_))
-        , query_vip_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL, 
+        , query_vip_sn_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL,
             boost::bind(&IndexManager::OnTimerElapsed, this, &query_vip_sn_list_timer_))
+        , query_udpserver_list_timer_(global_second_timer(), INITIAL_QUERY_INTERVAL,
+            boost::bind(&IndexManager::OnTimerElapsed, this, &query_udpserver_list_timer_))
         , is_running_(false)
         , failed_times_(0)
         , resolve_times_(0)
@@ -118,6 +123,11 @@ namespace p2sp
         {
             DoQueryVipSnList();
         }
+
+        if (!is_have_udpserver_list_)
+        {
+            DoQueryUdpServerList();
+        }
     }
 
     void IndexManager::OnResolverFailed(uint32_t error_code)  // 1-Url锟斤拷锟斤拷锟斤拷 2-锟斤拷锟斤拷锟睫凤拷锟斤拷锟斤拷 3-锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷 4-锟斤拷锟绞э拷锟?
@@ -169,6 +179,7 @@ namespace p2sp
 #endif
             DoQuerySnList();
             DoQueryVipSnList();
+            DoQueryUdpServerList();
         }
 
         LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnResolverFailed " << error_code);
@@ -210,6 +221,7 @@ namespace p2sp
         last_query_live_report_tracker_list_interval_ = INITIAL_QUERY_INTERVAL;
 
         last_query_sn_list_interval_times_ = INITIAL_QUERY_INTERVAL;
+        last_query_udpserver_list_interval_times_ = INITIAL_QUERY_INTERVAL;
 
         resolver_ = Resolver::create(io_svc_, domain_, port_, shared_from_this());
         resolver_->DoResolver();
@@ -241,6 +253,8 @@ namespace p2sp
 
         query_live_list_tracker_list_timer_.stop();
         query_live_report_tracker_list_timer_.stop();
+
+        query_udpserver_list_timer_.stop();
 
         if (resolver_) { resolver_->Close(); resolver_.reset(); }
 
@@ -381,6 +395,9 @@ namespace p2sp
             break;
         case protocol::QueryVipSnListPacket::Action:
             OnQueryVipSnListPacket((protocol::QueryVipSnListPacket const &)packet);
+            break;
+        case protocol::QueryUdpServerListPacket::Action:
+            OnQueryUdpServernListPacket((protocol::QueryUdpServerListPacket const &)packet);
             break;
         default:
             assert(0);
@@ -568,6 +585,10 @@ namespace p2sp
         else if (pointer == &query_vip_sn_list_timer_)
         {
             OnQueryVipSnListTimerElapsed(times);
+        }
+        else if (pointer == &query_udpserver_list_timer_)
+        {
+            OnQueryUdpServerListTimerElapsed(times);
         }
         else
         {    // 本类中不存在这个定时器
@@ -999,6 +1020,70 @@ namespace p2sp
 
             TrackerModule::Inst()->SetTrackerList(packet.response.tracker_group_count_, packet.response.tracker_info_, false, p2sp::LIST);
             statistic::DACStatisticModule::Inst()->SubmitLiveTrackerForListResponse();
+        }
+    }
+
+    void IndexManager::OnQueryUdpServerListTimerElapsed(boost::uint32_t times)
+    {
+        if (false == is_running_)
+        {
+            return;
+        }
+
+        // 如果是成功状态
+        // 定时时间4个小时
+        if (is_resolving_)
+        {
+            return;
+        }
+
+        ++failed_times_;
+
+        DoQueryUdpServerList();
+
+        // 指数增长
+        last_query_udpserver_list_interval_times_ *= 2;
+        if (last_query_udpserver_list_interval_times_ > DEFAULT_QUERY_INTERVAL)
+        {
+            last_query_udpserver_list_interval_times_ = DEFAULT_QUERY_INTERVAL;
+        }
+    }
+
+    void IndexManager::DoQueryUdpServerList()
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        query_udpserver_list_timer_.interval(last_query_udpserver_list_interval_times_);
+        query_udpserver_list_timer_.start();
+
+        //查询与CDN同机部署的UdpServer
+        protocol::QueryUdpServerListPacket query_udpserver_list_packet(protocol::Packet::NewTransactionID(),
+            protocol::PEER_VERSION, server_list_endpoint_);
+        AppModule::Inst()->DoSendPacket(query_udpserver_list_packet);
+    }
+
+    void IndexManager::OnQueryUdpServernListPacket(protocol::QueryUdpServerListPacket const & packet)
+    {
+        if (is_running_ == false)
+        {
+            return;
+        }
+
+        // 判断时都出错
+        if (packet.error_code_ == 0)
+        {
+            // 成功收到服务器回复，定时器时间设置为比较长的时间
+            query_udpserver_list_timer_.interval(DEFAULT_QUERY_INTERVAL);
+            query_udpserver_list_timer_.start();
+            is_have_udpserver_list_ = true;
+            failed_times_ = 0;
+            resolve_times_ = 0;
+            last_query_udpserver_list_interval_times_ = INITIAL_QUERY_INTERVAL;
+
+            UdpServerFromBSPool::Inst()->AddUdpServer(packet.response.udpserver_infos_);
         }
     }
 }

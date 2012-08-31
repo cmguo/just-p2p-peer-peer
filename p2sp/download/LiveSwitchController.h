@@ -85,14 +85,31 @@ namespace p2sp
 
         bool is_too_near_from_last_vv_of_same_channel_;
 
-        enum ChangedToP2PCondition
+        enum StopHttpCondition
         {
             REST_PLAYABLE_TIME_ENOUGTH = 0,
             LONG_TIME_USING_CDN = 1,
             BLOCK = 2,
+            UPLOAD_NOT_LARGE_ENOUGH = 3,
+            NO_USE_HTTP_WHEN_URGENT = 4,
+            WORSE_THAN_P2P = 5,
+            REST_PLAYABLE_TIME_NOT_SHORT = 6,
+        };
+
+        enum StartHttpCondition
+        {
+            START = 0,
+            URGENT = 1,
+            LARGE_UPLOAD = 2,
+            FALL_BEHIND = 3,
+            NONE_PEERS = 4,
+            NO_P2P = 5,
+            DRAG = 6,
         };
 
         bool is_saving_mode_;
+        boost::uint8_t reason_of_using_http_;
+        boost::uint8_t reason_of_stoping_http_;
     };
 }
 

@@ -83,7 +83,8 @@ namespace p2sp
     bool AppModule::Start(
         boost::asio::io_service & io_svc,
         AppModuleStartInterface::p appmodule_start_interface,
-        boost::function<void()> fun)
+        boost::function<void()> fun,
+        boost::uint16_t * local_http_port)
     {
         if (is_running_ == true)
         {
@@ -155,6 +156,7 @@ namespace p2sp
             return false;
         }
 
+        * local_http_port = ProxyModule::Inst()->GetHttpPort();
         StatisticModule::Inst()->SetHttpProxyPort(ProxyModule::Inst()->GetHttpPort());
 
         // 启动Udp服务器
@@ -449,7 +451,8 @@ namespace p2sp
             return;
         }
 
-        if (packet.PacketAction  >= 0x70 && packet.PacketAction  < 0xA0)
+        if ((packet.PacketAction  >= 0x70 && packet.PacketAction  < 0xA0) ||
+            (packet.PacketAction >= 0x81 && packet.PacketAction <= 0x83))
         {
             // Instance->OnUdpRecv(peer_packet, buffer, end_point);
             StunModule::Inst()->OnUdpRecv((protocol::Packet const &)packet);
@@ -588,6 +591,7 @@ namespace p2sp
         register_notify_packet(*udp_server_);
         register_live_peer_packet(*udp_server_);
         register_push_packetv3(*udp_server_);
+        register_natcheck_packet(*udp_server_);
     }
 
     boost::shared_ptr<statistic::BufferringMonitor> AppModule::CreateBufferringMonitor(const RID& rid)

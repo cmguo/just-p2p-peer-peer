@@ -79,7 +79,7 @@ namespace p2sp
     void TrackerStation::SetTrackers(boost::uint32_t gropup_count,
         const std::set<protocol::TRACKER_INFO> & trackers)
     {
-        // Ê×ÏÈ¼ì²éµ±Ç°ÕıÔÚÊ¹ÓÃµÄTrackerÊÇ·ñÔÚ×îĞÂÁĞ±í
+        // é¦–å…ˆæ£€æŸ¥å½“å‰æ­£åœ¨ä½¿ç”¨çš„Trackeræ˜¯å¦åœ¨æœ€æ–°åˆ—è¡¨
         TrackerClient::p using_tracker;
         if (current_report_tracker_)
         {
@@ -94,7 +94,7 @@ namespace p2sp
         {
             if (trackers.find(using_tracker->GetTrackerInfo()) != trackers.end())
             {
-                // µ±Ç°ÕıÔÚÊ¹ÓÃµÄTrackerÔÚ×îĞÂµÄÁĞ±íÀï
+                // å½“å‰æ­£åœ¨ä½¿ç”¨çš„Trackeråœ¨æœ€æ–°çš„åˆ—è¡¨é‡Œ
                 for (std::map<boost::asio::ip::udp::endpoint, boost::shared_ptr<TrackerClient> >::iterator
                     iter = tracker_client_map_.begin(); iter != tracker_client_map_.end(); ++iter)
                 {
@@ -105,14 +105,14 @@ namespace p2sp
                     iter->second->Stop();
                 }
 
-                // Õâ¸öclear£¬ÊÇÒòÎªµ±Ç°ÕıÔÚÊ¹ÓÃµÄtrackerµÄshare_ptr±»current_report_tracker_
-                // »òÕßtrying_report_tracker_ÀïÃæÓĞ£¬²»»áÎö¹¹
+                // è¿™ä¸ªclearï¼Œæ˜¯å› ä¸ºå½“å‰æ­£åœ¨ä½¿ç”¨çš„trackerçš„share_ptrè¢«current_report_tracker_
+                // æˆ–è€…trying_report_tracker_é‡Œé¢æœ‰ï¼Œä¸ä¼šææ„
                 tracker_client_map_.clear();
                 tracker_client_list_.clear();
             }
             else
             {
-                // µ±Ç°ÕıÔÚÊ¹ÓÃµÄTracker²»ÔÚÁĞ±íÁË
+                // å½“å‰æ­£åœ¨ä½¿ç”¨çš„Trackerä¸åœ¨åˆ—è¡¨äº†
                 using_tracker->PPLeave();
                 using_tracker.reset();
                 ClearAllClient();
@@ -156,8 +156,10 @@ namespace p2sp
 
     void TrackerStation::DoList(const RID& rid, bool list_for_live_udpserver)
     {
-        if (is_vod_ && list_get_response_.count(rid))
+        std::map<RID,boost::uint32_t>::iterator it = list_get_response_.find(rid);
+        if (is_vod_ && it != list_get_response_.end() && (time(NULL) -it->second < 30))
         {
+             //å¦‚æœæœ‰å›å¤ï¼Œè¶…è¿‡30ç§’æ‰å¯ä»¥é‡æŸ¥
             return;
         }
         boost::uint32_t x = Random::GetGlobal().Next(tracker_client_map_.size());
@@ -175,8 +177,8 @@ namespace p2sp
     void TrackerStation::DoReport()
     {
         assert(tracker_type_ == p2sp::REPORT);
-        // ±¾µØÃ»ÓĞ×ÊÔ´µÄÇé¿öÏÂ£¬²»½øĞĞreport
-        // ¶Ôµã²¥ºÍÖ±²¥¶¼ÓĞĞ§
+        // æœ¬åœ°æ²¡æœ‰èµ„æºçš„æƒ…å†µä¸‹ï¼Œä¸è¿›è¡Œreport
+        // å¯¹ç‚¹æ’­å’Œç›´æ’­éƒ½æœ‰æ•ˆ
         if (tracker_client_map_.empty())
         {
             return;
@@ -243,7 +245,7 @@ namespace p2sp
             trying_report_tracker_ = *trying_tracker_iterator_;
             is_report_response_ = false;
 
-            // Ê¹SubmitÊ±Çå¿ÕÍ¬²½×ÊÔ´£¬²¢½øĞĞÈ«ĞÂReport
+            // ä½¿Submitæ—¶æ¸…ç©ºåŒæ­¥èµ„æºï¼Œå¹¶è¿›è¡Œå…¨æ–°Report
             trying_report_tracker_->SetRidCount(0);
             last_report_transaction_id_ = trying_report_tracker_->DoSubmit();
         }
@@ -266,8 +268,8 @@ namespace p2sp
         {
             iter->second->OnListResponsePacket(packet);
             if (is_vod_)
-            {
-                list_get_response_.insert(packet.response.resource_id_);
+            {               
+                list_get_response_[packet.response.resource_id_] = time(NULL);
             }
         }
     }

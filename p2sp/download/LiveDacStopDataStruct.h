@@ -3,30 +3,32 @@
 
 namespace p2sp
 {
-    // ÄÚºËÔÚ¿´ÍêÒ»¸öÖ±²¥ÆµµÀºóÌá½»µÄÊı¾İ
+    // å†…æ ¸åœ¨çœ‹å®Œä¸€ä¸ªç›´æ’­é¢‘é“åæäº¤çš„æ•°æ®
     typedef struct _LIVE_DAC_STOP_DATA_STRUCT
     {
-        vector<RID>             ResourceIDs;            // ×ÊÔ´ID
-        boost::uint32_t         PeerVersion[4];         // ÄÚºË°æ±¾£ºmajor, minor, micro, extra
-        vector<boost::uint32_t> DataRates;              // ÂëÁ÷ÂÊ
+        static const boost::uint8_t MaxHttpStatisticCount = 5;
+
+        vector<RID>             ResourceIDs;            // èµ„æºID
+        boost::uint32_t         PeerVersion[4];         // å†…æ ¸ç‰ˆæœ¬ï¼šmajor, minor, micro, extra
+        vector<boost::uint32_t> DataRates;              // ç æµç‡
         string                  OriginalUrl;            // Url
-        boost::uint32_t         P2PDownloadBytes;       // P2PÏÂÔØ×Ö½ÚÊı(²»°üÀ¨UdpServer)
-        boost::uint32_t         HttpDownloadBytes;      // HttpÏÂÔØ×Ö½ÚÊı
-        boost::uint32_t         TotalDownloadBytes;     // ×ÜÏÂÔØ×Ö½ÚÊı
-        boost::uint32_t         AvgP2PDownloadSpeed;    // P2PÆ½¾ùËÙ¶È
-        boost::uint32_t         MaxP2PDownloadSpeed;    // P2P×î´óËÙ¶È
-        boost::uint32_t         MaxHttpDownloadSpeed;   // Http×î´óËÙ¶È
-        boost::uint32_t         ConnectedPeerCount;     // Á¬½ÓÉÏµÄ½ÚµãÊıÄ¿
-        boost::uint32_t         QueriedPeerCount;       // ²éÑ¯µ½µÄ½ÚµãÊıÄ¿
-        boost::uint32_t         StartPosition;          // ¿ªÊ¼²¥·Åµã
-        boost::uint32_t         JumpTimes;              // ÌøÔ¾´ÎÊı
-        boost::uint32_t         NumOfCheckSumFailedPieces;// Ğ£ÑéÊ§°ÜµÄpiece¸öÊı
+        boost::uint32_t         P2PDownloadBytes;       // P2Pä¸‹è½½å­—èŠ‚æ•°(ä¸åŒ…æ‹¬UdpServer)
+        boost::uint32_t         HttpDownloadBytes;      // Httpä¸‹è½½å­—èŠ‚æ•°
+        boost::uint32_t         TotalDownloadBytes;     // æ€»ä¸‹è½½å­—èŠ‚æ•°
+        boost::uint32_t         AvgP2PDownloadSpeed;    // P2På¹³å‡é€Ÿåº¦
+        boost::uint32_t         MaxP2PDownloadSpeed;    // P2Pæœ€å¤§é€Ÿåº¦
+        boost::uint32_t         MaxHttpDownloadSpeed;   // Httpæœ€å¤§é€Ÿåº¦
+        boost::uint32_t         ConnectedPeerCount;     // è¿æ¥ä¸Šçš„èŠ‚ç‚¹æ•°ç›®
+        boost::uint32_t         QueriedPeerCount;       // æŸ¥è¯¢åˆ°çš„èŠ‚ç‚¹æ•°ç›®
+        boost::uint32_t         StartPosition;          // å¼€å§‹æ’­æ”¾ç‚¹
+        boost::uint32_t         JumpTimes;              // è·³è·ƒæ¬¡æ•°
+        boost::uint32_t         NumOfCheckSumFailedPieces;// æ ¡éªŒå¤±è´¥çš„pieceä¸ªæ•°
         boost::uint32_t         SourceType;             //
-        RID                     ChannelID;              // ÆµµÀID
-        boost::uint32_t         UdpDownloadBytes;       // ´ÓUdpServerÏÂÔØµÄ×Ö½ÚÊı
-        boost::uint32_t         MaxUdpServerDownloadSpeed;  // ´ÓUdpServerÏÂÔØµÄ×î´óËÙ¶È
-        boost::uint32_t         UploadBytes;            // ÉÏ´«×Ö½ÚÊı
-        boost::uint32_t         DownloadTime;           // ÏÂÔØÊ±¼ä
+        RID                     ChannelID;              // é¢‘é“ID
+        boost::uint32_t         UdpDownloadBytes;       // ä»UdpServerä¸‹è½½çš„å­—èŠ‚æ•°
+        boost::uint32_t         MaxUdpServerDownloadSpeed;  // ä»UdpServerä¸‹è½½çš„æœ€å¤§é€Ÿåº¦
+        boost::uint32_t         UploadBytes;            // ä¸Šä¼ å­—èŠ‚æ•°
+        boost::uint32_t         DownloadTime;           // ä¸‹è½½æ—¶é—´
         boost::uint32_t         TimesOfUseCdnBecauseLargeUpload;
         boost::uint32_t         TimeElapsedUseCdnBecauseLargeUpload;
         boost::uint32_t         DownloadBytesUseCdnBecauseLargeUpload;
@@ -68,6 +70,12 @@ namespace p2sp
         boost::uint32_t         MinRatioOfResponseToRequestFromUdpserver;
         boost::uint32_t         MaxRatioOfResponseToRequestFromUdpserver;
         boost::uint8_t          BWType;
+        boost::uint32_t         PPbscfLength;  // ppbscfæ–‡ä»¶é•¿åº¦
+        string                  HttpDownloadStartTimeEveryTime;  // å¼€å§‹ä½¿ç”¨httpçš„æ—¶é—´
+        string                  HttpDownloadEndTimeEveryTime;  // ç»“æŸä½¿ç”¨httpçš„æ—¶é—´
+        string                  ReasonOfUsingHttpEveryTime;  // ä½¿ç”¨httpçš„åŸå› 
+        string                  ReasonOfStopingHttpEveryTime;  // ç»“æŸä½¿ç”¨httpçš„åŸå› 
+        string                  HttpDownloadBytesEveryTime;  // ä½¿ç”¨httpçš„ä¸‹è½½é‡
 
         string ToString()
         {
@@ -155,6 +163,12 @@ namespace p2sp
             log_stream << "&J2=" << MinRatioOfResponseToRequestFromUdpserver;
             log_stream << "&K2=" << MaxRatioOfResponseToRequestFromUdpserver;
             log_stream << "&L2=" << (uint32_t)BWType;
+            log_stream << "&M2=" << PPbscfLength;
+            log_stream << "&N2=" << HttpDownloadStartTimeEveryTime;
+            log_stream << "&O2=" << HttpDownloadEndTimeEveryTime;
+            log_stream << "&P2=" << ReasonOfUsingHttpEveryTime;
+            log_stream << "&Q2=" << ReasonOfStopingHttpEveryTime;
+            log_stream << "&R2=" << HttpDownloadBytesEveryTime;
 
             return log_stream.str();
         }

@@ -78,8 +78,9 @@ namespace p2sp
         uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
         boost::asio::ip::udp::endpoint end_point = candidate_peer_info.GetConnectEndPoint(local_detected_ip);
         boost::asio::ip::udp::endpoint end_point_detected = candidate_peer_info.GetConnectEndPoint(0);
-
-        if (false == FindConnectingPeerEndPoint(end_point))
+    
+        //这里对一个ip上有多个endpoint的，只会选择一个来连接，这是合理的。
+        if (!FindConnectingPeerEndPointByIp(end_point))
         {
             boost::uint8_t connect_type;
             if (p2p_downloader_->IsLive())
@@ -154,7 +155,7 @@ namespace p2sp
         }
         else
         {
-            LOG4CPLUS_INFO_LOG(logger_peer_connector, "FindConnectingPeerEndPoint(end_point) exist " << 
+            LOG4CPLUS_INFO_LOG(logger_peer_connector, "FindConnectingPeerEndPointByIp(end_point) exist " << 
                 connecting_peers_.size());
         }
     }
@@ -214,7 +215,7 @@ namespace p2sp
             return;
         }
 
-        if (FindConnectingPeerEndPoint(packet.end_point) &&
+        if (FindConnectingPeerEndPointByIp(packet.end_point) &&
             packet.peer_guid_ != AppModule::Inst()->GetPeerGuid())
         {
             if (!p2p_downloader_->IsLive())
@@ -246,12 +247,20 @@ namespace p2sp
 
                 boost::intrusive_ptr<PeerConnection> connect_peer = new PeerConnection(p2p_downloader, packet.end_point);
 
-                ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
+                ConnectingPeer::p connecting_peer = GetConnectingPeerByIp(packet.end_point);
+
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;
                 if (connecting_peer)
                 {
+                    //对于symnat和ipport_restrict反连过来的情况，port可能变化了，所以按照socket里看到的为准。
+                    connecting_peer->candidate_peer_info_.DetectUdpPort = packet.end_point.port();
                     info = connecting_peer->candidate_peer_info_;
                 }
+                else
+                {   
+                    info.DetectUdpPort = packet.end_point.port();
+                }
+               
 
                 connect_peer->Start(packet, packet.end_point, info);
                 p2p_downloader->AddPeer(connect_peer);
@@ -274,11 +283,17 @@ namespace p2sp
                 // 创建LivePeerConnection
                 LivePeerConnection::p connect_peer = LivePeerConnection::create(p2p_downloader, packet.connect_type_);
 
-                ConnectingPeer::p connecting_peer = GetConnectingPeer(packet.end_point);
+                ConnectingPeer::p connecting_peer = GetConnectingPeerByIp(packet.end_point);
                 protocol::CandidatePeerInfo info = (protocol::CandidatePeerInfo)packet.peer_info_;
                 if (connecting_peer)
                 {
+                    //对于symnat和ipport_restrict反连过来的情况，port可能变化了，所以按照socket里看到的为准。
+                    connecting_peer->candidate_peer_info_.DetectUdpPort = packet.end_point.port();
                     info = connecting_peer->candidate_peer_info_;
+                }
+                else
+                {   
+                    info.DetectUdpPort = packet.end_point.port();
                 }
 
                 connect_peer->Start(packet, packet.end_point, info);
@@ -287,46 +302,80 @@ namespace p2sp
             }
 
             ippool_->OnConnectSucced(packet.end_point);
-            EraseConnectingPeer(packet.end_point);
+            EraseConnectingPeerByIp(packet.end_point);
 
             LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "Peer Connected. P2PDownloader = " << p2p_downloader_ << 
                 ", Endpoint = " << packet.end_point << ", PeerGuid = " << packet.peer_guid_);
         }
     }
 
-    ConnectingPeer::p PeerConnector::GetConnectingPeer(boost::asio::ip::udp::endpoint end_point)
-    {
-        if (false == is_running_) {
-            return ConnectingPeer::p();
-        }
+   
 
-        std::map<boost::asio::ip::udp::endpoint, ConnectingPeer::p>::iterator iter = connecting_peers_.find(end_point);
-        if (iter != connecting_peers_.end())
-        {
-            return iter->second;
-        }
-        return ConnectingPeer::p();
-    }
-
-    bool PeerConnector::FindConnectingPeerEndPoint(boost::asio::ip::udp::endpoint end_point)
+    //查找是否有ip匹配的
+    bool PeerConnector::FindConnectingPeerEndPointByIp(const boost::asio::ip::udp::endpoint& end_point)
     {
         if (is_running_ == false)
         {
             return false;
         }
 
-        if (connecting_peers_.find(end_point) != connecting_peers_.end())
+        //传入一个port为0
+        boost::asio::ip::udp::endpoint end_point2 =end_point;
+        end_point2.port(0);
+
+        //endpoint的比较是基于ip和port的，如果ip相同，那么port小的排在前面。所以lower_bound能找到和指定ip有相同ip的那个endpoint
+        std::map<boost::asio::ip::udp::endpoint, ConnectingPeer::p>::const_iterator iter 
+            = connecting_peers_.lower_bound(end_point2);
+
+        if ( (iter!= connecting_peers_.end()) && (iter->first.address() == end_point2.address()))
         {
+            if(iter->first.port() != end_point.port())
+            {
+                //走到这里，可能是因为对方是symnat或者ipport_retrict_nat
+                LOG4CPLUS_INFO_LOG(logger_peer_connector, "FindConnectingPeerEndPointByIp, connecting peer info: " 
+                    << iter->second->candidate_peer_info_<<" judge endpoint2:"<<end_point);
+            }
             return true;
         }
         return false;
     }
 
-    bool PeerConnector::EraseConnectingPeer(boost::asio::ip::udp::endpoint end_point)
+    bool PeerConnector::EraseConnectingPeerByIp(const boost::asio::ip::udp::endpoint& end_point)
     {
         if (is_running_ == false) return false;
 
-        return connecting_peers_.erase(end_point) > 0;
+        boost::asio::ip::udp::endpoint end_point2 =end_point;
+        end_point2.port(0);
+
+        std::map<boost::asio::ip::udp::endpoint, ConnectingPeer::p>::iterator iter 
+            = connecting_peers_.lower_bound(end_point2);
+
+        if ( (iter!= connecting_peers_.end()) && (iter->first.address() == end_point2.address()))
+        {
+            //走到这里，说明ip是相同的，但是port不一定相同
+            connecting_peers_.erase(iter);
+            return true;
+        }
+        return false;
+
+    }
+
+    ConnectingPeer::p PeerConnector::GetConnectingPeerByIp(const boost::asio::ip::udp::endpoint& end_point)
+    {
+        if (false == is_running_) {
+            return ConnectingPeer::p();
+        }
+
+        boost::asio::ip::udp::endpoint end_point2 =end_point;
+        end_point2.port(0);
+
+        std::map<boost::asio::ip::udp::endpoint, ConnectingPeer::p>::iterator iter 
+            = connecting_peers_.lower_bound(end_point2);
+        if ( (iter!= connecting_peers_.end()) && (iter->first.address() == end_point2.address()))
+        {
+            return iter->second;
+        }
+        return ConnectingPeer::p();
     }
 
     void PeerConnector::OnErrorPacket(protocol::ErrorPacket const & packet)
@@ -342,7 +391,7 @@ namespace p2sp
         //
         // 日志，erase, 返回
         // 将来还会把信息反馈给 IpPool
-        if (false == FindConnectingPeerEndPoint(packet.end_point))
+        if (!FindConnectingPeerEndPointByIp(packet.end_point))
         {
             LOG4CPLUS_DEBUG_LOG(logger_peer_connector, "PeerNotInConnectingSet, P2PDownloader = " << p2p_downloader_ 
                 << ", EndPoint = " << packet.end_point);
@@ -361,7 +410,7 @@ namespace p2sp
                     << p2p_downloader_ << ", EndPoint = " << packet.end_point);
                 ippool_->OnConnectTimeout(packet.end_point);
             }
-            EraseConnectingPeer(packet.end_point);
+            EraseConnectingPeerByIp(packet.end_point);
         }
     }
 }

@@ -50,7 +50,11 @@ namespace p2sp
         head.path = path_;
         head["Accept"] = "{*/*}";
         head.host = server_;
+#ifdef BOOST_WINDOWS_API
+        head.connection = util::protocol::http_filed::Connection::close;
+#else
         head.connection = util::protocol::http_field::Connection::close;
+#endif
 
         http_client->async_fetch(head, boost::bind(&ConfigurationDownloader::HandleFetchResult, shared_from_this(), http_client, _1));
     }

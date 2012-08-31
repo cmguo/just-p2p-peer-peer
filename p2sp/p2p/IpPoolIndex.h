@@ -55,6 +55,8 @@ namespace p2sp
 
         size_t peer_score_;
 
+        bool is_udpserver_from_cdn_;
+
         // 只是检测了是不是正在连接或者是已经连接上了
         bool CanConnect() const
         {
@@ -70,6 +72,11 @@ namespace p2sp
         if (x.CanConnect() != y.CanConnect())
         {
             return x.CanConnect();
+        }
+
+        if (x.is_udpserver_from_cdn_ != y.is_udpserver_from_cdn_)
+        {
+            return x.is_udpserver_from_cdn_;
         }
 
         if (x.next_time_to_connect_ != y.next_time_to_connect_)
@@ -124,9 +131,9 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<CandidatePeer> p;
-        static p create(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score)
+        static p create(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score, bool is_udpserver_from_cdn)
         {
-            return p(new CandidatePeer(peer, should_use_firstly, peer_score));
+            return p(new CandidatePeer(peer, should_use_firstly, peer_score, is_udpserver_from_cdn));
         }
     public:
         /// 上一次活跃时间
@@ -157,6 +164,7 @@ namespace p2sp
         bool should_use_firstly_;
 
         size_t peer_score_;
+        bool is_udpserver_from_cdn_;
 
     public:
         // 属性
@@ -259,7 +267,7 @@ namespace p2sp
         }
 
     private:
-        CandidatePeer(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score)
+        CandidatePeer(const protocol::CandidatePeerInfo& peer, bool should_use_firstly, size_t peer_score, bool is_udpserver_from_cdn)
             : protocol::CandidatePeerInfo(peer)
             , last_active_time_(framework::timer::TickCounter::tick_count())
             , last_exchage_time_(0)
@@ -272,6 +280,7 @@ namespace p2sp
             , connections_attempted_(0)
             , should_use_firstly_(should_use_firstly)
             , peer_score_(peer_score)
+            , is_udpserver_from_cdn_(is_udpserver_from_cdn)
         {
         }
     };

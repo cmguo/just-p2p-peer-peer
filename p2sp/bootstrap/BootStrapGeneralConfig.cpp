@@ -33,9 +33,9 @@ namespace p2sp
         , limit_upload_speed_for_live2_(true)
         , send_peer_info_packet_interval_in_second_(5)
         , safe_enough_rest_playable_time_delim_under_http_(20)
-        , safe_enough_rest_playable_time_delim_under_http_in_saving_mode_(18)
+        , safe_enough_rest_playable_time_delim_under_http_in_saving_mode_(0)
         , http_running_long_enough_time_when_start_(3 * 60 * 1000)
-        , http_running_long_enough_time_when_start_in_saving_mode_(45000)
+        , http_running_long_enough_time_when_start_in_saving_mode_(0)
         , http_protect_time_when_start_(10 * 1000)
         , http_protect_time_when_start_in_saving_mode_(10000)
         , http_protect_time_when_urgent_switched_(20 * 1000)
@@ -47,9 +47,9 @@ namespace p2sp
         , http_protect_time_when_large_upload_(10 * 1000)
         , http_protect_time_when_large_upload_in_saving_mode_(10000)
         , p2p_rest_playable_time_delim_when_switched_with_large_time_(6)
-        , p2p_rest_playable_time_delim_when_switched_with_large_time_in_saving_mode_(5)
+        , p2p_rest_playable_time_delim_when_switched_with_large_time_in_saving_mode_(0)
         , p2p_rest_playable_time_delim_(5)
-        , p2p_rest_playable_time_delim_in_saving_mode_(4)
+        , p2p_rest_playable_time_delim_in_saving_mode_(0)
         , p2p_protect_time_when_switched_with_not_enough_time_(15 * 1000)
         , p2p_protect_time_when_switched_with_not_enough_time_in_saving_mode_(20000)
         , p2p_protect_time_when_switched_with_buffering_(30 * 1000)
@@ -57,7 +57,7 @@ namespace p2sp
         , time_to_ignore_http_bad_(3 * 60 * 1000)
         , time_to_ignore_http_bad_in_saving_mode_(180000)
         , urgent_rest_playable_time_delim_(10)
-        , urgent_rest_playable_time_delim_in_saving_mode_(8)
+        , urgent_rest_playable_time_delim_in_saving_mode_(12)
         , safe_rest_playable_time_delim_(15)
         , safe_rest_playable_time_delim_in_saving_mode_(13)
         , safe_enough_rest_playable_time_delim_(20)
@@ -94,7 +94,7 @@ namespace p2sp
         , udpserver_maximum_window_size_(25)
         , live_minimum_upload_speed_in_kilobytes_(20)
         , p2p_speed_threshold_(5)
-        , p2p_speed_threshold_in_saving_mode_(5)
+        , p2p_speed_threshold_in_saving_mode_(0)
         , time_of_advancing_switching_to_http_when_p2p_slow_(3)
         , time_of_advancing_switching_to_http_when_p2p_slow_in_saving_mode_(3)
         , p2p_protect_time_if_start_and_speed_is_0_(10 * 1000)
@@ -126,7 +126,8 @@ namespace p2sp
         , p2p_download_min_connect_count_bound(5)
         , udp_server_usage_history_enabled_(true)
         , auto_switch_stream_(false)
-        , max_sn_list_size_(4)
+        , max_sn_list_size_(2)
+        , max_sn_list_size_for_vip_(3)
         , sn_request_number_(20)
         , should_judge_switching_datarate_manually_(true)
         , interval_of_two_vv_delim_(5 * 1000)
@@ -146,6 +147,25 @@ namespace p2sp
         , time_wait_for_tinydrag_(1)
         , sn_port_on_cdn_(19001)
         , seconds_wait_for_tinydrag_in_download_mode_(2)
+        , use_http_when_connected_none_peers_(true)
+        , use_http_when_connected_none_peers_in_saving_mode_(false)
+        , rest_play_time_delim_when_none_peers_(50)
+        , rest_play_time_delim_when_none_peers_in_saving_mode_(10)
+        , enough_rest_play_time_delim_when_none_peers_(100)
+        , enough_rest_play_time_delim_when_none_peers_in_saving_mode_(15)
+        , use_http_when_urgent_(true)
+        , use_http_when_urgent_in_saving_mode_(false)
+        , http_running_longest_time_when_urgent_switched_(60000)
+        , http_running_longest_time_when_urgent_switched_in_saving_mode_(0)
+        , config_string_length_(0)
+        , open_request_subpiece_packet_old_(false)
+        , open_rid_info_request_response_(true)
+        , udpserver_udp_port_(19001)
+        , use_udpserver_from_cdn_(true)
+        , is_vip_use_sn_all_time_(true)
+        , nat_check_server_ip_("202.102.68.38@202.102.68.208@115.238.166.151@115.238.166.211@124.160.184.157@124.160.184.217@122.141.230.143@122.141.230.173")
+        , nat_need_check_min_days_(3)
+        , need_use_stunclient_nat_check_(false)
     {
     }
 
@@ -308,6 +328,7 @@ namespace p2sp
                 ("config.usuhe", po::value<bool>()->default_value(udp_server_usage_history_enabled_))
                 ("config.ass", po::value<bool>()->default_value(auto_switch_stream_))
                 ("config.maxsnls", po::value<uint32_t>()->default_value(max_sn_list_size_))
+                ("config.snfvip", po::value<uint32_t>()->default_value(max_sn_list_size_for_vip_))
                 ("config.snrc", po::value<uint32_t>()->default_value(sn_request_number_))
                 ("config.jsd", po::value<bool>()->default_value(should_judge_switching_datarate_manually_))
                 ("config.i2vv", po::value<uint32_t>()->default_value(interval_of_two_vv_delim_))
@@ -327,6 +348,24 @@ namespace p2sp
                 ("config.lsc", po::value<bool>()->default_value(load_sn_on_cdn_))
                 ("config.spc", po::value<uint32_t>()->default_value(sn_port_on_cdn_))
                 ("config.swtdm", po::value<uint32_t>()->default_value(seconds_wait_for_tinydrag_in_download_mode_))
+                ("config.uh0p", po::value<bool>()->default_value(use_http_when_connected_none_peers_))
+                ("config.uh0psave", po::value<bool>()->default_value(use_http_when_connected_none_peers_in_saving_mode_))
+                ("config.rptd0p", po::value<uint32_t>()->default_value(rest_play_time_delim_when_none_peers_))
+                ("config.rptd0psave", po::value<uint32_t>()->default_value(rest_play_time_delim_when_none_peers_in_saving_mode_))
+                ("config.erptd0p", po::value<uint32_t>()->default_value(enough_rest_play_time_delim_when_none_peers_))
+                ("config.erptd0psave", po::value<uint32_t>()->default_value(enough_rest_play_time_delim_when_none_peers_in_saving_mode_))
+                ("config.uswu", po::value<bool>()->default_value(use_http_when_urgent_))
+                ("config.uswusave", po::value<bool>()->default_value(use_http_when_urgent_in_saving_mode_))
+                ("config.hrlt", po::value<uint32_t>()->default_value(http_running_longest_time_when_urgent_switched_))
+                ("config.hrltsave", po::value<uint32_t>()->default_value(http_running_longest_time_when_urgent_switched_in_saving_mode_))
+                ("config.spold", po::value<bool>()->default_value(open_request_subpiece_packet_old_))
+                ("config.ridinfo", po::value<bool>()->default_value(open_rid_info_request_response_))
+                ("config.uup", po::value<uint16_t>()->default_value(udpserver_udp_port_))
+                ("config.uufc", po::value<bool>()->default_value(use_udpserver_from_cdn_))
+                ("config.vusat", po::value<bool>()->default_value(is_vip_use_sn_all_time_))
+                ("config.nsip", po::value<string>()->default_value(nat_check_server_ip_))
+                ("config.nnmd", po::value<uint32_t>()->default_value(nat_need_check_min_days_))
+                ("config.nsnc", po::value<bool>()->default_value(need_use_stunclient_nat_check_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -445,6 +484,7 @@ namespace p2sp
             udp_server_usage_history_enabled_ = vm["config.usuhe"].as<bool>();
             auto_switch_stream_ = vm["config.ass"].as<bool>();
             max_sn_list_size_ = vm["config.maxsnls"].as<uint32_t>();
+            max_sn_list_size_for_vip_ = vm["config.snfvip"].as<uint32_t>();
             sn_request_number_ = vm["config.snrc"].as<uint32_t>();
             should_judge_switching_datarate_manually_ = vm["config.jsd"].as<bool>();
             interval_of_two_vv_delim_ = vm["config.i2vv"].as<uint32_t>();
@@ -464,6 +504,24 @@ namespace p2sp
             time_wait_for_tinydrag_ = vm["config.twtd"].as<uint32_t>();
             sn_port_on_cdn_ = vm["config.spc"].as<uint32_t>();
             seconds_wait_for_tinydrag_in_download_mode_ = vm["config.swtdm"].as<uint32_t>();
+            use_http_when_connected_none_peers_ = vm["config.uh0p"].as<bool>();
+            use_http_when_connected_none_peers_in_saving_mode_ = vm["config.uh0psave"].as<bool>();
+            rest_play_time_delim_when_none_peers_ = vm["config.rptd0p"].as<uint32_t>();
+            rest_play_time_delim_when_none_peers_in_saving_mode_ = vm["config.rptd0psave"].as<uint32_t>();
+            enough_rest_play_time_delim_when_none_peers_ = vm["config.erptd0p"].as<uint32_t>();
+            enough_rest_play_time_delim_when_none_peers_in_saving_mode_ = vm["config.erptd0psave"].as<uint32_t>();
+            use_http_when_urgent_ = vm["config.uswu"].as<bool>();
+            use_http_when_urgent_in_saving_mode_ = vm["config.uswusave"].as<bool>();
+            http_running_longest_time_when_urgent_switched_ = vm["config.hrlt"].as<uint32_t>();
+            http_running_longest_time_when_urgent_switched_in_saving_mode_ = vm["config.hrltsave"].as<uint32_t>();
+            open_request_subpiece_packet_old_ = vm["config.spold"].as<bool>();
+            open_rid_info_request_response_ = vm["config.ridinfo"].as<bool>();
+            udpserver_udp_port_ = vm["config.uup"].as<uint16_t>();
+            use_udpserver_from_cdn_ = vm["config.uufc"].as<bool>();
+            is_vip_use_sn_all_time_ = vm["config.vusat"].as<bool>();
+            nat_check_server_ip_ = vm["config.nsip"].as<string>();
+            nat_need_check_min_days_ = vm["config.nnmd"].as<uint32_t>();
+            need_use_stunclient_nat_check_ = vm["config.nsnc"].as<bool>();
 
             if (save_to_disk)
             {
@@ -471,6 +529,8 @@ namespace p2sp
             }
 
             NotifyConfigUpdateEvent();
+
+            config_string_length_ = config_string.length();
         }
         catch (boost::program_options::error & e)
         {

@@ -116,7 +116,8 @@ public:
     bool Start(
         boost::asio::io_service & io_svc,
         AppModuleStartInterface::p appmodule_start_interface,
-        boost::function<void()> fun);
+        boost::function<void()> fun,
+        boost::uint16_t * local_http_port);
 
     void Stop();
 

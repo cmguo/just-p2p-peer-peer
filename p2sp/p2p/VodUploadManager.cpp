@@ -284,6 +284,10 @@ namespace p2sp
 
     void VodUploadManager::SendRIDInfoPacket(const protocol::CommonPeerPacket & packet, storage::Instance::p inst)
     {
+        if (!BootStrapGeneralConfig::Inst()->OpenRIDInfoRequestResponse())
+        {
+            return;
+        }
         protocol::RidInfo rid_info;
         inst->GetRidInfo(rid_info);
 

@@ -90,6 +90,7 @@ namespace p2sp
 
         void SetRestPlayTime(RID rid, boost::uint32_t rest_play_time);
         void SetRestPlayTimeByUrl(string url, boost::uint32_t rest_play_time_in_millisecond);
+        void SetVipLevelByUrl(string url_str, boost::uint32_t vip_level);
         void SetDownloadMode(RID rid, boost::uint32_t download_mode);
         void SetDownloadModeByUrl(string url, boost::uint32_t download_mode);
 

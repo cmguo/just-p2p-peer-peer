@@ -703,8 +703,16 @@ namespace p2sp
 
             string index = filename.substr(filename.find_last_of('['),
                 filename.find_last_of(']') - filename.find_last_of('[') + 1);
-            string file_ext = filename.substr(filename.find_last_of('.'),
-                filename.length() - filename.find_last_of('.'));
+            string file_ext;
+            if (filename.find_last_of('.') != string::npos)
+            {
+                file_ext = filename.substr(filename.find_last_of('.'),
+                    filename.length() - filename.find_last_of('.'));
+            }
+            else
+            {
+                file_ext = "";
+            }
             download_driver_->SetOpenServiceFileName(filename);
             string segno = base::util::GetSegno(uri);
 #ifdef DISK_MODE            
@@ -925,11 +933,6 @@ namespace p2sp
                     oss << "  <PPVA v=\"" PEER_KERNEL_VERSION_STR "\" p=\"" << AppModule::Inst()->GetLocalTcpPort() << "\"/>\n"
                         "</root>\n";
                     http_server_socket_->HttpSendContent(oss.str(), "text/xml");
-                }
-                else
-                {
-                    LOG4CPLUS_INFO_LOG(logger_proxy_connection, "OnHttpRecvSucced Reject: \n" << *http_request);
-                    http_server_socket_->HttpSend403Header();
                 }
             }
             WillStop();
@@ -1254,8 +1257,6 @@ namespace p2sp
             }
             else if (false == IsWillStopDownload())
             {
-                // check
-                CheckDeath();
             }
             // accelerate
             else
@@ -1347,69 +1348,6 @@ namespace p2sp
         proxy_sender_ = DirectProxySender::create(io_svc_, http_server_socket_, true);
         proxy_sender_->Start(http_request_demo_, shared_from_this());
         proxy_sender_->SendHttpRequest();
-    }
-
-    void ProxyConnection::CheckDeath()
-    {
-        if (false == is_running_)
-            return;
-
-        // 直播不主动断连接
-        if (is_live_connection_)
-        {
-            return;
-        }
-
-        if (silent_time_counter_.elapsed() > DEFAULT_SILENT_TIME_LIMIT &&
-            (!download_driver_ || download_driver_->IsOpenService() || false == download_driver_->IsRunning()) &&
-            proxy_sender_->GetPlayingPosition() >= file_length_)
-        {
-
-            LOG4CPLUS_WARN_LOG(logger_proxy_connection,
-                " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; openservice; playingpos >= file_length");
-            LOG4CPLUS_WARN_LOG(logger_proxy_connection, 
-                " playingpos >= file_length " << proxy_sender_->GetPlayingPosition() << ">" << file_length_);
-            WillStop();
-            return;
-        }
-
-        if (
-            silent_time_counter_.elapsed() > DEFAULT_SILENT_TIME_LIMIT &&
-            download_driver_ && download_driver_->GetStatistic() &&
-            download_driver_->GetStatistic()->GetSpeedInfo().MinuteDownloadSpeed == 0 &&
-            download_driver_->GetInstance() && download_driver_->GetInstance()->GetRID().is_empty()
-           )
-        {
-
-            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << 
-                " silent_time_counter_ > DEFAULT_SILENT_TIME_LIMIT; MinuteSpeed=0; RID=Empty");
-            proxy_sender_->OnNotice403Header();
-            WillStop();
-            return;
-        }
-
-        if (
-            silent_time_counter_.elapsed() > DEFAULT_SILENT_TIME_LIMIT &&
-            download_driver_ && (
-                !(download_driver_->GetHTTPControlTarget() || download_driver_->GetP2PControlTarget()) ||
-                (
-                    download_driver_->IsHttp403Header() &&
-                    (
-                        !download_driver_->GetP2PControlTarget() ||
-                        (download_driver_->GetP2PControlTarget()->GetConnectedPeersCount() == 0 &&
-                        download_driver_->GetP2PControlTarget()->GetRecentDownloadSpeed() == 0)
-                   )
-               )
-           )
-           )
-        {
-
-            LOG4CPLUS_WARN_LOG(logger_proxy_connection, __FUNCTION__ << 
-                " silent_time_counter_ > 20s; !Http&!P2P; 403&!P2P");
-            proxy_sender_->OnNotice403Header();
-            WillStop();
-            return;
-        }
     }
 
     /************************************************************************/

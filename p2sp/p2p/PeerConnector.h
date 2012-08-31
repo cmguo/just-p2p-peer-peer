@@ -51,9 +51,9 @@ namespace p2sp
         // 属性
         uint32_t GetConnectingPeerCount() const {return connecting_peers_.size();}
     private:
-        bool FindConnectingPeerEndPoint(boost::asio::ip::udp::endpoint end_point);
-        bool EraseConnectingPeer(boost::asio::ip::udp::endpoint end_point);
-        ConnectingPeer::p GetConnectingPeer(boost::asio::ip::udp::endpoint end_point);
+        bool FindConnectingPeerEndPointByIp(const boost::asio::ip::udp::endpoint& end_point);
+        bool EraseConnectingPeerByIp(const boost::asio::ip::udp::endpoint& end_point);
+        ConnectingPeer::p GetConnectingPeerByIp(const boost::asio::ip::udp::endpoint& end_point);
     private:
         // 模块
         IP2PControlTarget::p p2p_downloader_;

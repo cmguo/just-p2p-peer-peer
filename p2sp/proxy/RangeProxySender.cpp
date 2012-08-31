@@ -184,19 +184,6 @@ namespace p2sp
         }
     }
 
-    // ???
-    void RangeProxySender::OnNotice403Header()
-    {
-        if (false == is_running_)
-            return;
-        if (true == is_response_header_)
-            return;
-
-        LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "Notice 403 header");
-
-        http_server_socket_->HttpSend403Header();
-    }
-
     void RangeProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
     {
         if (false == is_running_)

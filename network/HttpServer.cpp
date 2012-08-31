@@ -398,17 +398,4 @@ namespace network
     {
         HttpSendContent((const boost::uint8_t*) text.c_str(), text.length(), content_type);
     }
-
-    void HttpServer::HttpSend403Header()
-    {
-        LOG4CPLUS_DEBUG_LOG(logger_httpserver, "send 403");
-
-        std::ostringstream response_stream;
-        response_stream << "HTTP 403 Forbidden\r\n";
-        response_stream << "Connection: Close\r\n";
-        response_stream << "\r\n";
-
-        base::AppBuffer buffer(response_stream.str());
-        TcpSend(buffer);
-    }
 }

@@ -41,7 +41,6 @@ namespace p2sp
         virtual void OnClose();
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
-        virtual void OnNotice403Header();
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
 
     private:

@@ -56,7 +56,6 @@ namespace network
         void HttpRecvTillClose();
         void HttpSendHeader(uint32_t content_length, string content_type = "html/text");
         void HttpSendKeepAliveHeader(uint32_t content_length, string content_type = "html/text");
-        void HttpSend403Header();
         void HttpSendHeader(string header_string);
         void HttpSendBuffer(const boost::uint8_t* data, uint32_t length);
         void HttpSendBuffer(const base::AppBuffer& buffer);

@@ -82,7 +82,8 @@ namespace p2sp
 
         boost::uint32_t report_failed_times_;
 
-        std::set<RID> list_get_response_;
+        //前一项是查询到的rid，后一项是查询到的时间。
+        std::map<RID,boost::uint32_t> list_get_response_;
     };
 }
 

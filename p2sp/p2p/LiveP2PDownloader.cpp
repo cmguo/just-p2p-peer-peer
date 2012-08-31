@@ -328,31 +328,32 @@ namespace p2sp
     };
 
     // 查询到的节点加入IPPool
-    void LiveP2PDownloader::AddCandidatePeers(std::vector<protocol::CandidatePeerInfo> peers, bool is_live_udpserver)
+    void LiveP2PDownloader::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo> & peers, bool is_live_udpserver,
+        bool is_live_udpserver_from_cdn, bool is_live_udpserver_from_bs)
     {
         if (is_live_udpserver)
         {
             if (BootStrapGeneralConfig::Inst()->UdpServerUsageHistoryEnabled())
             {
                 UdpServerHistoricalScoreCalculator score_calculator(live_stream_->GetDownloadDriver());
-                udpserver_pool_->AddCandidatePeers(peers, false, score_calculator);
+                udpserver_pool_->AddCandidatePeers(peers, is_live_udpserver_from_bs, score_calculator, is_live_udpserver_from_cdn);
             }
             else
             {
-                udpserver_pool_->AddCandidatePeers(peers, false);
+                udpserver_pool_->AddCandidatePeers(peers, is_live_udpserver_from_bs, is_live_udpserver_from_cdn);
             }
         }
         else
         {
             if (ippool_->GetPeerCount() == 0)
             {
-                ippool_->AddCandidatePeers(peers, false);
+                ippool_->AddCandidatePeers(peers, false, false);
                 LIVE_CONNECT_LEVEL connect_level = GetConnectLevel();
                 InitPeerConnection(connect_level);
             }
             else
             {
-                ippool_->AddCandidatePeers(peers, false);
+                ippool_->AddCandidatePeers(peers, false, false);
             }
         }
     }

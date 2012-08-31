@@ -120,6 +120,8 @@ namespace p2sp
             requesting_count_--;
         }
 
+        avg_delta_time_ += 10;
+
         RequestNextSubpiece();
     }
 

@@ -19,6 +19,7 @@
 #include "p2sp/p2s/HttpDragDownloader.h"
 #include "p2sp/proxy/PlayInfo.h"
 #include "p2sp/proxy/ProxyModule.h"
+#include "p2sp/stun/StunModule.h"
 #include "random.h"
 
 #include "storage/Storage.h"
@@ -1101,6 +1102,11 @@ namespace p2sp
             info.peer_connect_request_sucess_count = p2p_downloader_->GetStatistic()->GetPeerConnectString();
         }
 
+        // M2: 获取NAT类型
+        info.nat_type = p2sp::StunModule::Inst()->GetPeerNatType();
+
+        info.nat_check_state = p2sp::StunModule::Inst()->GetNatCheckState();
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1171,6 +1177,8 @@ namespace p2sp
         log_stream << "&_J2=" << info.channel_name;
         log_stream << "&_K2=" << info.tracker_respons_info;
         log_stream << "&_L2=" << info.peer_connect_request_sucess_count;
+        log_stream << "&M2=" << info.nat_type;
+        log_stream << "&N2=" << info.nat_check_state;
 
         string log = log_stream.str();
 
@@ -2736,7 +2744,13 @@ namespace p2sp
 
         if (p2p_downloader_)
         {
-            if (p2p_downloader_->GetPooledPeersCount() < BootStrapGeneralConfig::Inst()->GetPeerCountWhenUseSn() || vip_level_)
+            if (BootStrapGeneralConfig::Inst()->IsVipUseSnAllTime() && vip_level_)
+            {
+                p2p_downloader_->SetSnEnable(true);
+                statistic_->SetSnState(1);
+            }
+            else if (p2p_downloader_->GetPooledPeersCount() < BootStrapGeneralConfig::Inst()->GetPeerCountWhenUseSn() 
+                || vip_level_)
             {
                 if (GetRestPlayableTime() < 20*1000 &&
                     p2p_downloader_->GetStatistic()->GetPeerSpeedInfo().NowDownloadSpeed < 1.2 * GetDataRate())

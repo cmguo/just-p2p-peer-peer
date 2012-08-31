@@ -45,8 +45,6 @@ namespace p2sp
     public:
         // 获得Contentlength
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
-        // 失败
-        virtual void OnNotice403Header();
 
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
         virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);

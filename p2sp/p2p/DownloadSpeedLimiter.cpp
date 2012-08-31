@@ -84,7 +84,10 @@ namespace p2sp
 
                     if (data.is_old_packet)
                     {
-                        AppModule::Inst()->DoSendPacket(data.subpiece_packet_old_, data.dest_protocol_version_);
+                        if (BootStrapGeneralConfig::Inst()->OpenRequestSubpiecePacketOld())
+                        {
+                            AppModule::Inst()->DoSendPacket(data.subpiece_packet_old_, data.dest_protocol_version_);
+                        }
                     }
                     else
                     {

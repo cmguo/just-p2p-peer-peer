@@ -16,6 +16,7 @@
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "UdpServersScoreHistory.h"
 #include "p2sp/download/LiveDataRateManager.h"
+#include "LiveDacStopDataStruct.h"
 
 namespace storage
 {
@@ -142,6 +143,9 @@ namespace p2sp
             return is_saving_mode_;
         }
 
+        void StartHttp(boost::uint8_t reason);
+        void StopHttp(boost::uint8_t reason);
+
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -160,6 +164,8 @@ namespace p2sp
 
         void SaveHistoryConfig();
         void CalcCdnAccelerationStatusWhenStop(boost::uint32_t data_rate_pos);
+        void AddLiveUdpServerFromCDN();
+        void AddLiveUdpServerFromBS();
 
     private:
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
@@ -264,6 +270,7 @@ namespace p2sp
         bool is_history_upload_good_;
         framework::timer::TickCounter tick_counter_since_last_advance_using_cdn_;
         boost::uint32_t history_record_count_;
+        boost::uint32_t udpserver_count_;
 
         class LiveHistorySettings
         {
@@ -274,6 +281,9 @@ namespace p2sp
         };
 
         bool is_saving_mode_;
+        static const boost::uint8_t DefaultUdpServerUploadPriority;
+        static const boost::uint8_t DefaultUdpServerIdleTime;
+        static const boost::uint8_t DefaultUdpServerTrackerPriority;
 
     private:
         // statistic
@@ -295,6 +305,84 @@ namespace p2sp
     public:
         const statistic::LIVE_DOWNLOADDRIVER_STATISTIC_INFO & GetLiveDownloadDirverStatisticInfo() const;
 #endif
+
+        class HttpDownloadStatistic
+        {
+        private:
+            boost::uint32_t start_time_;
+            boost::uint32_t stop_time_;
+            boost::uint8_t start_reason_;
+            boost::uint8_t stop_reason_;
+            boost::uint32_t download_bytes_;
+
+            boost::uint32_t http_downloaded_bytes_when_start_;
+            bool is_running_;
+
+        public:
+            HttpDownloadStatistic()
+            {
+                is_running_ = false;
+                start_time_ = 0;
+                stop_time_ = 0;
+                start_reason_ = 255;
+                stop_reason_ = 255;
+                download_bytes_ = 0;
+            }
+
+            void Start(boost::uint32_t start_time, boost::uint8_t start_reason, boost::uint32_t http_downloaded_bytes)
+            {
+                is_running_ = true;
+                start_time_ = start_time;
+                start_reason_ = start_reason;
+                http_downloaded_bytes_when_start_ = http_downloaded_bytes;
+            }
+
+            void Stop(boost::uint32_t stop_time, boost::uint8_t stop_reason, boost::uint32_t http_downloaded_bytes)
+            {
+                assert(is_running_);
+                is_running_ = false;
+
+                stop_time_ = stop_time;
+                stop_reason_ = stop_reason;
+                assert(http_downloaded_bytes >= http_downloaded_bytes_when_start_);
+                download_bytes_ = http_downloaded_bytes - http_downloaded_bytes_when_start_;
+            }
+
+            bool IsRunning() const
+            {
+                return is_running_;
+            }
+
+            boost::uint32_t GetStartTime() const
+            {
+                return start_time_;
+            }
+
+            boost::uint32_t GetStopTime() const
+            {
+                return stop_time_;
+            }
+
+            boost::uint8_t GetStartReason() const
+            {
+                return start_reason_;
+            }
+
+            boost::uint8_t GetStopReason() const
+            {
+                return stop_reason_;
+            }
+
+            boost::uint32_t GetDownloadedBytes() const
+            {
+                return download_bytes_;
+            }
+        };
+
+        void UpdateHttpDownloadStatistic(LIVE_DAC_STOP_DATA_STRUCT & info);
+
+    private:
+        std::vector<boost::shared_ptr<HttpDownloadStatistic> > http_download_statistic_;
     };
 
     inline boost::uint8_t LiveDownloadDriver::IsPlayingPositionBlockFull() const

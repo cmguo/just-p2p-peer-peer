@@ -38,7 +38,10 @@ namespace statistic
         boost::uint32_t       query_live_tracker_for_list_request_count;   // A1: 查询live_tracker_for_list_request包的总数
         boost::uint32_t       query_live_tracker_for_list_response_count;  // B1: 查询live_tracker_for_list_response包的总数
         boost::uint32_t       query_live_tracker_for_report_request_count; // C1: 查询live_tracker_for_report_request包的总数
-        boost::uint32_t       query_live_tracker_for_report_response_count;// D1: 查询live_tracker_for_report_response包的总数
+        boost::uint32_t       query_live_tracker_for_report_response_count;// D1: 查询live_tracker_for_report_response包的总数       
+        std::string           stun_handshake_statistic_info_;       // E1:统计到stun发送handshake的次数和成功返回次数
+        int                   nat_check_time_cost_in_ms;            // F1:统计Nat Check检测耗费时间,单位：毫秒
+
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -71,6 +74,9 @@ namespace statistic
             rid_upload_count_total_++;
             rid_upload_count_in_ten_minutes_++;
         }
+        void SubmitStunHandShakeRequestCount(boost::uint32_t stun_ip);
+        void SubmitStunHandShakeResponseCount(boost::uint32_t stun_ip);
+        std::string GetStunHandShakeInfoString() const;
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -85,6 +91,11 @@ namespace statistic
                 inst_.reset(new DACStatisticModule());
             }
             return inst_;
+        }
+
+        void SubmitNatCheckTimeCost(uint32_t time_cost)
+        {
+            nat_check_time_cost_in_ms_ = time_cost;
         }
 
     private:
@@ -132,6 +143,10 @@ namespace statistic
         boost::uint32_t query_live_tracker_for_list_response_count_;
         boost::uint32_t query_live_tracker_for_report_request_count_;
         boost::uint32_t query_live_tracker_for_report_response_count_;
+
+        //<stun的ip，<发送的请求数，收到的回复数> >
+        std::map<boost::uint32_t, std::pair<boost::uint32_t, boost::uint32_t> > stun_handshake_statistic_; 
+        int nat_check_time_cost_in_ms_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
@@ -224,6 +239,45 @@ namespace statistic
     inline void DACStatisticModule::SubmitLiveTrackerForReportResponse()
     {
         query_live_tracker_for_report_response_count_++;
+    }
+
+    inline void DACStatisticModule::SubmitStunHandShakeRequestCount(boost::uint32_t stun_ip)
+    {
+        if (stun_handshake_statistic_.find (stun_ip) != stun_handshake_statistic_.end())
+        {
+            stun_handshake_statistic_[stun_ip].first++;
+        }
+        else
+        {
+            stun_handshake_statistic_[stun_ip] = std::make_pair(1, 0);
+        }
+    }
+
+    inline void DACStatisticModule::SubmitStunHandShakeResponseCount(boost::uint32_t stun_ip)
+    {
+        assert(stun_handshake_statistic_.find(stun_ip) != stun_handshake_statistic_.end());
+        stun_handshake_statistic_[stun_ip].second++;
+    }
+
+    inline std::string DACStatisticModule::GetStunHandShakeInfoString() const
+    {
+        std::ostringstream os;
+        std::map<boost::uint32_t, std::pair<boost::uint32_t, boost::uint32_t> >::const_iterator iter
+            = stun_handshake_statistic_.begin();
+        for (iter; iter != stun_handshake_statistic_.end(); )
+        {
+            in_addr add;
+            add.s_addr = htonl(iter->first);           
+            os <<inet_ntoa(add) <<":"
+                << (uint32_t)iter->second.first << ":"
+                << (uint32_t)iter->second.second;
+
+            if (++iter != stun_handshake_statistic_.end())
+            {
+                os << ",";
+            }
+        }
+        return os.str();
     }
 }
 

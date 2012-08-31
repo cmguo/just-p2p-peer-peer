@@ -223,19 +223,6 @@ namespace p2sp
 
         LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "file_length=" << file_length_);
     }
-    // 失败
-    void OpenServiceProxySender::OnNotice403Header()
-    {
-        if (false == is_running_)
-            return;
-
-        if (true == is_response_header_)
-            return;
-
-        LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "");
-
-        http_server_socket_->HttpSend403Header();
-    }
 
     void OpenServiceProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
     {

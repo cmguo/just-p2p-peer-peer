@@ -639,6 +639,15 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
+            std::set<DownloadDriver::p>::const_iterator it;
+            for (it = download_driver_s_.begin(); it != download_driver_s_.end(); ++it)
+            {
+                DownloadDriver::p dd = *it;
+                if (dd->GetVipLevel() > vip_level_)
+                {
+                    vip_level_ = dd->GetVipLevel();
+                }
+            }
             if (!is_p2p_pausing_)
             {
                 downloading_time_in_seconds_++;
@@ -858,12 +867,12 @@ namespace p2sp
 
         if (ippool_->GetPeerCount() == 0)
         {
-            ippool_->AddCandidatePeers(peers, false);
+            ippool_->AddCandidatePeers(peers, false, false);
             InitPeerConnection();
         }
         else
         {
-            ippool_->AddCandidatePeers(peers, false);
+            ippool_->AddCandidatePeers(peers, false, false);
         }
     }
 
@@ -939,7 +948,8 @@ namespace p2sp
         }
         // 如果是 RIDResponse 报文
         //   下发给对应的PeerGuid，否则放弃
-        else if (packet.PacketAction == protocol::RIDInfoResponsePacket::Action)
+        else if (BootStrapGeneralConfig::Inst()->OpenRIDInfoRequestResponse() && 
+            packet.PacketAction == protocol::RIDInfoResponsePacket::Action)
         {
             std::map<boost::asio::ip::udp::endpoint, boost::intrusive_ptr<ConnectionBase> >::iterator peer = peers_.find(packet.end_point);
             if (peer != peers_.end())
@@ -1666,7 +1676,8 @@ namespace p2sp
     void P2PDownloader::InitSnList(const std::list<boost::asio::ip::udp::endpoint> & sn_list)
     {
         sn_pool_object_.Add(sn_list);
-        boost::uint32_t max_sn_list_sz = BootStrapGeneralConfig::Inst()->MaxSNListSize();
+        boost::uint32_t max_sn_list_sz = vip_level_ ? BootStrapGeneralConfig::Inst()->MaxSNListSizeForVIP() : 
+            BootStrapGeneralConfig::Inst()->MaxSNListSize();
 
         while (sn_.size() < max_sn_list_sz && sn_pool_object_.IsHaveReserveSn())
         {

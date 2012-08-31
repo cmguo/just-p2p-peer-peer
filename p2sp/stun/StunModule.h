@@ -8,6 +8,7 @@
 
 #include <protocol/StunServerPacket.h>
 #include <p2sp/AppModule.h>
+#include "NatCheckClient.h"
 
 namespace p2sp
 {
@@ -39,6 +40,8 @@ namespace p2sp
 
         protocol::MY_STUN_NAT_TYPE GetPeerNatType() const { return nat_type_; }
 
+        p2sp::CheckState GetNatCheckState() const { return nat_check_client_.GetNatCheckState();}
+
     private:
         // 清理StunServer信息
         void ClearStunInfo();
@@ -62,6 +65,8 @@ namespace p2sp
         volatile bool is_needed_stun_;
         protocol::MY_STUN_NAT_TYPE nat_type_;
         string ppva_config_path_;
+        NatCheckClient nat_check_client_;
+        framework::timer::TickCounter nat_check_timer_;
     private:
         static StunModule::p inst_;
         StunModule(

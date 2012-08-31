@@ -49,6 +49,7 @@ namespace statistic
         , query_live_tracker_for_list_response_count_(0)
         , query_live_tracker_for_report_request_count_(0)
         , query_live_tracker_for_report_response_count_(0)
+        , nat_check_time_cost_in_ms_(-1)
     {
     }
 
@@ -179,6 +180,12 @@ namespace statistic
         // D1: 查询live_tracker_for_report_response包的总数
         info.query_live_tracker_for_report_response_count = query_live_tracker_for_report_response_count_;
 
+        // E1:统计到stun发送handshake的次数和成功返回次数
+        info.stun_handshake_statistic_info_ = GetStunHandShakeInfoString();
+
+        // F1:Nat Check检测耗费时间,单位：毫秒
+        info.nat_check_time_cost_in_ms = nat_check_time_cost_in_ms_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
@@ -214,6 +221,8 @@ namespace statistic
         log_stream << "&B1=" << info.query_live_tracker_for_list_response_count;
         log_stream << "&C1=" << info.query_live_tracker_for_report_request_count;
         log_stream << "&D1=" << info.query_live_tracker_for_report_response_count;
+        log_stream << "&E1=" << info.stun_handshake_statistic_info_;
+        log_stream << "&F1=" << info.nat_check_time_cost_in_ms;
 
         string log = log_stream.str();
 
@@ -253,6 +262,8 @@ namespace statistic
         query_live_tracker_for_list_request_count_=0;
         query_live_tracker_for_list_response_count_=0;
         query_live_tracker_for_report_request_count_=0;
-        query_live_tracker_for_report_response_count_=0;       
+        query_live_tracker_for_report_response_count_=0;     
+        stun_handshake_statistic_.clear();
+        nat_check_time_cost_in_ms_ = -1;
     }
 }

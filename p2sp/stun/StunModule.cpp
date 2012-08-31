@@ -11,9 +11,12 @@
 #include "p2sp/stun/GetNATTypeThread.h"
 
 #include "statistic/StatisticModule.h"
+#include "statistic/DACStatisticModule.h"
 #include "storage/Storage.h"
 
 #include <framework/network/Interface.h>
+#include <boost/date_time.hpp>
+#include "../bootstrap/BootStrapGeneralConfig.h"
 using namespace framework::network;
 
 using namespace protocol;
@@ -34,6 +37,7 @@ namespace p2sp
         , is_select_stunserver_(false)
         , is_needed_stun_(true)
         , nat_type_(protocol::TYPE_ERROR)
+        , nat_check_client_(io_svc)
     {
     }
 
@@ -52,10 +56,19 @@ namespace p2sp
 
         // IndexManager::Inst()->DoQueryStunServerList();
 
-        GetNATTypeThread::Inst().Start(io_svc_);
-        GetNATTypeThread::IOS().post(
-            boost::bind(&GetNATTypeThread::GetNATType, &GetNATTypeThread::Inst(), ppva_config_path_)
-           );
+        nat_check_timer_.reset();
+        if (BootStrapGeneralConfig::Inst()->NeedUseStunClientNatCheck())
+        {
+            GetNATTypeThread::Inst().Start(io_svc_);
+            GetNATTypeThread::IOS().post(
+                boost::bind(&GetNATTypeThread::GetNATType, &GetNATTypeThread::Inst(), ppva_config_path_)
+               );
+        }
+        else
+        {
+            nat_check_client_.Start(ppva_config_path_);
+        }
+
         is_running_ = true;
     }
 
@@ -76,6 +89,9 @@ namespace p2sp
 
     void StunModule::OnGetNATType(protocol::MY_STUN_NAT_TYPE nat_type)
     {
+        //统计正式检测NAT TYPE所耗费的时间
+        statistic::DACStatisticModule::Inst()->SubmitNatCheckTimeCost(
+            nat_check_client_.GetNatCheckState() == p2sp::IDLE ? 0 : nat_check_timer_.elapsed());
         if (is_running_ == false) return;
 
         if (nat_type == TYPE_PUBLIC || nat_type == TYPE_FULLCONENAT)
@@ -216,6 +232,13 @@ namespace p2sp
                 OnStunInvokePacket(stun_invoke_packet);
             }
             break;
+        case protocol::NatCheckSameRoutePacket::Action:
+        case protocol::NatCheckDiffPortPacket::Action:
+        case protocol::NatCheckDiffIpPacket::Action:
+            {
+                nat_check_client_.OnUdpReceive((ServerPacket const &)packet_header);
+            }
+            break;
         default:
             {
                 assert(0);
@@ -321,6 +344,8 @@ namespace p2sp
         if (is_running_ == false)
             return;
 
+        statistic::DACStatisticModule::Inst()->SubmitStunHandShakeResponseCount(packet.end_point.address().to_v4().to_ulong());
+
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::OnStunHandShakePacket ");
 
         if (nat_type_ != TYPE_FULLCONENAT  && nat_type_ != TYPE_PUBLIC)
@@ -402,6 +427,8 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_stun, "DoHandShake " << stun_endpoint_);
         AppModule::Inst()->DoSendPacket(stun_handshake_packet);
+
+        statistic::DACStatisticModule::Inst()->SubmitStunHandShakeRequestCount(stun_endpoint_.address().to_v4().to_ulong());
     }
 
     void StunModule::DoKPL()

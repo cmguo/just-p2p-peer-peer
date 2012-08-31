@@ -420,6 +420,11 @@ namespace p2sp
             return max_sn_list_size_;
         }
 
+        boost::uint32_t MaxSNListSizeForVIP() const
+        {
+            return max_sn_list_size_for_vip_;
+        }
+
         boost::uint32_t GetMaxMaterialDolistCount() const
         {
             return max_material_do_list_count_;
@@ -511,6 +516,79 @@ namespace p2sp
         boost::uint32_t GetWaitTimeForTinydragInDownloadMode() const
         {
             return seconds_wait_for_tinydrag_in_download_mode_;
+        }
+
+        bool GetUseHttpWhenConnectedNonePeers(bool is_saving_mode) const
+        {
+            return is_saving_mode ? use_http_when_connected_none_peers_in_saving_mode_ : use_http_when_connected_none_peers_;
+        }
+
+        boost::uint32_t GetRestPlayTimeDelimWhenNonePeers(bool is_saving_mode) const
+        {
+            return is_saving_mode ? rest_play_time_delim_when_none_peers_in_saving_mode_ :
+                rest_play_time_delim_when_none_peers_;
+        }
+
+        boost::uint32_t GetEnoughRestPlayTimeDelimWhenNonePeers(bool is_saving_mode) const
+        {
+            return is_saving_mode ? enough_rest_play_time_delim_when_none_peers_in_saving_mode_ :
+                enough_rest_play_time_delim_when_none_peers_;
+        }
+
+        bool GetUseHttpWhenUrgent(bool is_saving_mode) const
+        {
+            return is_saving_mode ? use_http_when_urgent_in_saving_mode_ : use_http_when_urgent_;
+        }
+
+        boost::uint32_t GetHttpRunningLongestTimeWhenUrgentSwitched(bool is_saving_mode) const
+        {
+            return is_saving_mode ? http_running_longest_time_when_urgent_switched_in_saving_mode_ :
+                http_running_longest_time_when_urgent_switched_;
+        }
+
+        boost::uint32_t GetConfigStringLength() const
+        {
+            return config_string_length_;
+        }
+
+        bool OpenRequestSubpiecePacketOld() const
+        {
+            return open_request_subpiece_packet_old_;
+        }
+
+        bool OpenRIDInfoRequestResponse() const
+        {
+            return open_rid_info_request_response_;
+        }
+
+        boost::uint16_t GetUdpserverUdpPort() const
+        {
+            return udpserver_udp_port_;
+        }
+
+        bool UseUdpServerFromCdn() const
+        {
+            return use_udpserver_from_cdn_;
+        }
+
+        bool IsVipUseSnAllTime() const
+        {
+            return is_vip_use_sn_all_time_;
+        }
+
+        string GetNatCheckServerIP() const
+        {
+            return nat_check_server_ip_;
+        }
+
+        uint32_t GetNatNeedCheckMinDays() const
+        {
+            return nat_need_check_min_days_;
+        }
+
+        bool NeedUseStunClientNatCheck() const
+        {
+            return need_use_stunclient_nat_check_;
         }
 
     private:
@@ -792,8 +870,11 @@ namespace p2sp
         //最小peer连接数
         boost::uint32_t p2p_download_min_connect_count_bound;
 
-        //最大SN list size
+        //普通用户最大SN list size
         boost::uint32_t max_sn_list_size_;
+
+        //VIP用户使用SN数
+        boost::uint32_t max_sn_list_size_for_vip_;
 
         //最大广告素材DoList次数
         boost::uint32_t max_material_do_list_count_;
@@ -843,6 +924,50 @@ namespace p2sp
 
         // 下载状态机中用于等待获取tinydrag的时间
         boost::uint32_t seconds_wait_for_tinydrag_in_download_mode_;
+
+        // 在节点数为0时要不要使用Http
+        bool use_http_when_connected_none_peers_;
+        bool use_http_when_connected_none_peers_in_saving_mode_;
+
+        // 在节点数为0时，剩余时间小于多少开始使用Http
+        boost::uint32_t rest_play_time_delim_when_none_peers_;
+        boost::uint32_t rest_play_time_delim_when_none_peers_in_saving_mode_;
+
+        // 在节点数为0时，剩余时间大于多少开始使用P2P
+        boost::uint32_t enough_rest_play_time_delim_when_none_peers_;
+        boost::uint32_t enough_rest_play_time_delim_when_none_peers_in_saving_mode_;
+
+        // 紧急情况下是否使用Http
+        bool use_http_when_urgent_;
+        bool use_http_when_urgent_in_saving_mode_;
+
+        // 非启动时因为紧急在http下最长停留多长时间
+        boost::uint32_t http_running_longest_time_when_urgent_switched_;
+        boost::uint32_t http_running_longest_time_when_urgent_switched_in_saving_mode_;
+
+        // 配置字符串长度
+        boost::uint32_t config_string_length_;
+
+        bool open_request_subpiece_packet_old_;
+        bool open_rid_info_request_response_;
+
+        // 与CDN同机部署的udpserver的默认端口
+        boost::uint16_t udpserver_udp_port_;
+
+        // 是不是要用跟CDN同机部署的UdpServer
+        bool use_udpserver_from_cdn_;
+
+        //VIP用户是否全程使用SN
+        bool is_vip_use_sn_all_time_;
+
+        //nat check服务器ip
+        string nat_check_server_ip_;
+
+        //nat check复查时间间隔
+        boost::uint32_t nat_need_check_min_days_;
+
+        //是否启用原有stunclient nat检测
+        bool need_use_stunclient_nat_check_;
     };
 }
 #endif

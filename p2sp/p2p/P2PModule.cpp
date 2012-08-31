@@ -158,7 +158,7 @@ namespace p2sp
             for (std::multimap<RID, LiveP2PDownloader__p>::iterator iter = live_rid_index_.lower_bound(rid);
                 iter != live_rid_index_.upper_bound(rid); ++iter)
             {
-                iter->second->AddCandidatePeers(peers, is_live_udpserver);
+                iter->second->AddCandidatePeers(peers, is_live_udpserver, false, false);
             }
         }
     }

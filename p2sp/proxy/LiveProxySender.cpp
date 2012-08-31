@@ -89,11 +89,6 @@ namespace p2sp
         is_response_header_ = true;
     }
 
-    void LiveProxySender::OnNotice403Header()
-    {
-        assert(false);
-    }
-
     void LiveProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
     {
         assert(false);

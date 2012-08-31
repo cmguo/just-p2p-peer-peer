@@ -130,7 +130,14 @@ namespace p2sp
         if (peer_version_ < 0x00000007)
             return true;
 
-        return false == rid_info_.GetRID().is_empty();
+        if (BootStrapGeneralConfig::Inst()->OpenRIDInfoRequestResponse())
+        {
+            return false == rid_info_.GetRID().is_empty();
+        }
+        else
+        {
+            return true;
+        }
     }
 
     inline bool PeerConnection::IsRidInfoValid() const
@@ -144,7 +151,14 @@ namespace p2sp
 #ifndef PEER_PC_CLIENT
         return true;
 #endif
-        return is_rid_info_valid_;
+        if (BootStrapGeneralConfig::Inst()->OpenRIDInfoRequestResponse())
+        {
+            return is_rid_info_valid_;
+        }
+        else
+        {
+            return true;
+        }
     }
 
     inline bool PeerConnection::HasSubPiece(const protocol::SubPieceInfo & subpiece_info)

@@ -44,7 +44,6 @@ public:
         // 获得Contentlength
         virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response) = 0;
         // 失败
-        virtual void OnNotice403Header() = 0;
         virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length) = 0;
     };
 }

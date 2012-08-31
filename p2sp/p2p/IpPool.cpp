@@ -24,6 +24,8 @@ namespace p2sp
         {
             assert(ip_pool_);
             assert(peer_);
+            is_udpserver_from_cdn_ = peer->is_udpserver_from_cdn_;
+            should_use_firstly_ = peer->should_use_firstly_;
             ip_pool_->DeleteIndex(peer_);
 
         }
@@ -32,6 +34,8 @@ namespace p2sp
             assert(ip_pool_);
             if (peer_)
             {
+                peer_->is_udpserver_from_cdn_ = peer_->is_udpserver_from_cdn_ || is_udpserver_from_cdn_;
+                peer_->should_use_firstly_ = peer_->should_use_firstly_ || should_use_firstly_;
                 ip_pool_->AddIndex(peer_);
             }
         }
@@ -44,6 +48,8 @@ namespace p2sp
     private:
         IpPool::p ip_pool_;
         CandidatePeer::p peer_;
+        bool is_udpserver_from_cdn_;
+        bool should_use_firstly_;
     };
 
     void IpPool::Start()
@@ -119,12 +125,14 @@ namespace p2sp
         return false;
     }
 
-    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly)
+    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly,
+        bool is_udpserver_from_cdn)
     {
-        AddCandidatePeers(peers, should_use_firstly, PeersScoreCalculator());
+        AddCandidatePeers(peers, should_use_firstly, PeersScoreCalculator(), is_udpserver_from_cdn);
     }
 
-    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly, const PeersScoreCalculator& score_calculator)
+    void IpPool::AddCandidatePeers(const std::vector<protocol::CandidatePeerInfo>& peers, bool should_use_firstly,
+        const PeersScoreCalculator& score_calculator, bool is_udpserver_from_cdn)
     {
         if (is_running_ == false) return;
 
@@ -132,7 +140,8 @@ namespace p2sp
         for (std::vector<protocol::CandidatePeerInfo>::const_iterator iter = peers.begin(); iter != peers.end(); iter ++)
         {
             size_t peer_score = score_calculator.GetPeerScore(iter->GetDetectSocketAddr());
-            CandidatePeer::p peer = CandidatePeer::create(*iter, should_use_firstly && should_use_exchange_peers_firstly_, peer_score);
+            CandidatePeer::p peer = CandidatePeer::create(*iter, should_use_firstly && should_use_exchange_peers_firstly_,
+                peer_score, is_udpserver_from_cdn);
 
             if (true == IsSelf(peer))
             {

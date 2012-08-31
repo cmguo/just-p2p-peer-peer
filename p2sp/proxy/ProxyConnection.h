@@ -237,9 +237,6 @@ namespace p2sp
         void OnDownloadByUrlRequest(PlayInfo::p play_info);
 
     private:
-        void CheckDeath();
-
-    private:
         boost::asio::io_service & io_svc_;
         network::HttpServer::pointer http_server_socket_;
         network::HttpRequest::p http_request_demo_;

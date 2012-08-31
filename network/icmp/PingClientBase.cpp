@@ -10,20 +10,25 @@ namespace network
     typedef boost::shared_ptr<PingClientBase> p;
     p PingClientBase::create(boost::asio::io_service & io_svc)
     {
-        try
+#ifdef BOOST_WINDOWS_API
+        //已知在Win7下构造raw socket会抛出异常，或者构造后不能正常收到ICMP回包
+        OSVERSIONINFO osi;
+        ZeroMemory(&osi, sizeof(OSVERSIONINFO));
+        osi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        GetVersionEx((OSVERSIONINFO*) &osi);
+
+        //Win vista及以上操作系统
+        if (osi.dwMajorVersion >= 6)
+        {
+            return PingClientWithAPI::Create();
+        }
+        else
         {
             return PingClient::Create(io_svc);
         }
-        catch(boost::system::system_error & e)
-        {
-            // 目前已经的问题是在win 7系统，由于权限不够，创建raw socket会异常
-            DebugLog("upload create ping client failed ec:%d, %s\n", e.code().value(), e.what());
-#if (defined BOOST_WINDOWS_API) && !(defined __MINGW32__)
-            return PingClientWithAPI::Create();
 #else
-            return PingClient::p();
+        return PingClient::Create(io_svc);
 #endif
-        }
     }
 
     void PingClientBase::AddHandler(uint16_t sequence_num, 
