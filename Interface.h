@@ -98,7 +98,7 @@ typedef struct _STRATPARAM{
     boost::int32_t             bUsePush;                 // 是否进行push，默认为TRUE
     boost::int32_t             bReadOnly;                // 磁盘只读，默认为FALSE
     boost::int32_t             bHttpProxyEnabled;        // 是否进行本地代理监听，默认为TRUE
-    boost::uint8_t             reserve4;
+    boost::uint8_t             memory_pool_size_in_MB;
 } STARTPARAM, *LPSTARTPARAM;
 
 typedef struct _PEERSTATEMACHINE
