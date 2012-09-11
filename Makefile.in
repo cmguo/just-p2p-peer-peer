@@ -69,6 +69,7 @@ PROJECT_DEPENDS			:= \
 				/base/boost/program_options \
 				/base/zlib \
 				../tinyxml \
+				../log4cplus \
 				../protocol/udpserver_mod \
 
 ## 该项目特定的引用库
