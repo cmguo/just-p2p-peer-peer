@@ -639,13 +639,20 @@ namespace p2sp
 
         if (times % 4 == 0)
         {
-            std::set<DownloadDriver::p>::const_iterator it;
-            for (it = download_driver_s_.begin(); it != download_driver_s_.end(); ++it)
+            vip_level_ = 0;
+            if (download_driver_s_.size() == 1)
             {
-                DownloadDriver::p dd = *it;
-                if (dd->GetVipLevel() > vip_level_)
+                vip_level_ = (*download_driver_s_.begin())->GetVipLevel();
+            }
+            else if (download_driver_s_.size() > 1)
+            {
+                for (std::set<DownloadDriver::p>::const_iterator iter = download_driver_s_.begin();
+                    iter != download_driver_s_.end(); ++iter)
                 {
-                    vip_level_ = dd->GetVipLevel();
+                    if ((*iter)->GetVipLevel() > vip_level_)
+                    {
+                        vip_level_ = (*iter)->GetVipLevel();
+                    }
                 }
             }
             if (!is_p2p_pausing_)
@@ -1612,11 +1619,18 @@ namespace p2sp
         for (iter = peers_.begin(); iter != peers_.end(); iter++)
         {
             if (sn_pool_object_.IsSn(iter->first) && 
-                iter->second->GetConnectedTime() > 5*1000)
+                iter->second->GetConnectedTime() > BootStrapGeneralConfig::Inst()->SecondDelayForCheckSnSpeed() * 1000)
             {
-                if (iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed < min_speed)
+                bool is_cdn_sn = (std::find(sn_on_cdn_.begin(), sn_on_cdn_.end(), iter->first) != sn_on_cdn_.end());
+                boost::uint32_t factor = is_cdn_sn ? BootStrapGeneralConfig::Inst()->GetCdnSnSpeedFactor() : 1;
+                if (BootStrapGeneralConfig::Inst()->NeedProtectCDNSn() && is_cdn_sn)
                 {
-                    min_speed = iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
+                    continue;
+                }
+
+                if (iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed * factor < min_speed)
+                {
+                    min_speed = iter->second->GetStatistic()->GetSpeedInfo().NowDownloadSpeed * factor;
                     kick_sn_connection = iter->second;
                 }
             }
@@ -1694,6 +1708,7 @@ namespace p2sp
     void P2PDownloader::AddSnOnCDN(const std::list<boost::asio::ip::udp::endpoint> & sn_list)
     {
         sn_pool_object_.Add(sn_list);
+        sn_on_cdn_ = sn_list;
     }
 
     boost::int32_t P2PDownloader::GetDownloadPriority()

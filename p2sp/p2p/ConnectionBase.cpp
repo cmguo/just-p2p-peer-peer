@@ -121,6 +121,8 @@ namespace p2sp
         }
 
         avg_delta_time_ += 10;
+		
+		LIMIT_MAX(avg_delta_time_, 1000);
 
         RequestNextSubpiece();
     }

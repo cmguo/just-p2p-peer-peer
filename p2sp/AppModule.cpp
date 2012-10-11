@@ -25,6 +25,7 @@
 #include "statistic/BufferringMonitor.h"
 #include "statistic/StatisticsReporter.h"
 #include "network/tcp/CrossDomainConfig.h"
+#include "network/upnp/UpnpModule.h"
 #ifdef AUTO_SVN_VERSION
 #include "autopeerversion.hpp"
 #else
@@ -106,11 +107,7 @@ namespace p2sp
         P2SPConfigs::LoadConfig();
 
 #ifdef USE_MEMORY_POOL
-#ifndef DISK_MODE
-        protocol::SubPieceContent::set_pool_capacity(3 * 1024 * 1024);
-#else
-        protocol::SubPieceContent::set_pool_capacity(30 * 1024 * 1024);
-#endif
+        protocol::SubPieceContent::set_pool_capacity(appmodule_start_interface->memory_pool_size_in_MB_ * 1024 * 1024);
         protocol::LiveSubPieceContent::set_pool_capacity(20 * 1024 * 1024);
         protocol::LiveSubPieceContent::pointer live_subpiece_content = new protocol::LiveSubPieceContent();
         live_subpiece_content.reset();
@@ -227,7 +224,7 @@ namespace p2sp
         // 记录端口，汇报
         upnp_port_ = 0;
 
-        for (boost::uint32_t port = 16000; port <=16010; port++)
+        for (boost::uint32_t  port = 16000; port <=16010; port++)
         {
             if (tcp_server_->Start(port))
             {
@@ -242,6 +239,15 @@ namespace p2sp
         // 参考http://macromedia.com/cn/devnet/flashplayer/articles/fplayer9_security.html
         tcp_server_843_.reset(new network::TcpServer(global_io_svc()));
         tcp_server_843_->Start(843);
+
+        //绑定的端口都知道了，可以开始映射了
+        map<uint16_t,uint16_t> tcpport,udpport;
+        tcpport[tcp_server_->GetTcpPort()] = 0;
+        tcpport[tcp_server_843_->GetTcpPort()] = tcp_server_843_->GetTcpPort();
+        udpport[local_udp_port] = 0;
+        UpnpModule::Inst()->Start();   
+
+        UpnpModule::Inst()->AddUpnpPort(tcpport,udpport);
 
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
@@ -350,6 +356,8 @@ namespace p2sp
         P2PModule::Inst()->Stop();
 
         StunModule::Inst()->Stop();
+
+        UpnpModule::Inst()->Stop();
 
         StatisticModule::Inst()->Stop();
 

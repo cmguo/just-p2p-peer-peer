@@ -15,6 +15,7 @@
 #include <framework/network/Endpoint.h>
 #include <limits>
 #include "statistic/DACStatisticModule.h"
+#include "network/upnp/UpnpModule.h"
 
 namespace p2sp
 {
@@ -303,6 +304,8 @@ namespace p2sp
         //TODO:设置到tracker的路由ip。5个就够了。
         std::vector<boost::uint32_t> traceroute_ips;
 
+        boost::uint16_t upnp_tcp_port = UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
+
         // request
         protocol::ReportPacket report_request(
                 last_transaction_id_,
@@ -325,7 +328,8 @@ namespace p2sp
                 (boost::int32_t)statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps(),
                 end_point_,
                 local_tcp_port,
-                p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload(),
+                //如果内核没有获取到，那么就看看播放器是否获取到了，然后设置进来
+                0 == upnp_tcp_port ? p2sp::AppModule::Inst()->GetUpnpPortForTcpUpload():upnp_tcp_port,
                 traceroute_ips
            );
 

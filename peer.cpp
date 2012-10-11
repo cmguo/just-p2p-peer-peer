@@ -172,7 +172,8 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
         lpParam->bUsePush != 0,
         lpParam->bReadOnly != 0,
-        lpParam->bHttpProxyEnabled != 0
+        lpParam->bHttpProxyEnabled != 0,
+        lpParam->memory_pool_size_in_MB
         );
 
     Event::p event_wait = Event::Create();

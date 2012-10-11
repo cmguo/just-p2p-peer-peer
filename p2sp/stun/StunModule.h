@@ -40,7 +40,7 @@ namespace p2sp
 
         protocol::MY_STUN_NAT_TYPE GetPeerNatType() const { return nat_type_; }
 
-        p2sp::CheckState GetNatCheckState() const { return nat_check_client_.GetNatCheckState();}
+        int GetNatCheckState() const {  return nat_check_returned_ ? nat_check_client_.GetNatCheckState() : -1;}
 
     private:
         // 清理StunServer信息
@@ -67,6 +67,7 @@ namespace p2sp
         string ppva_config_path_;
         NatCheckClient nat_check_client_;
         framework::timer::TickCounter nat_check_timer_;
+        bool nat_check_returned_;
     private:
         static StunModule::p inst_;
         StunModule(

@@ -2764,6 +2764,11 @@ namespace p2sp
                     statistic_->SetSnState(0);
                 }
             }
+            else
+            {
+                p2p_downloader_->SetSnEnable(false);
+                statistic_->SetSnState(0);
+            }
         }
     }
 

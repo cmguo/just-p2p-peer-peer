@@ -203,6 +203,7 @@ namespace p2sp
 
         // 可以使用的SN
         std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> sn_;
+        std::list<boost::asio::ip::udp::endpoint> sn_on_cdn_;
 
         IpPool__p ippool_;
         Exchanger__p exchanger_;

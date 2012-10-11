@@ -8,7 +8,6 @@
 #include "p2sp/index/IndexManager.h"
 
 #include "p2sp/stun/StunModule.h"
-#include "p2sp/stun/GetNATTypeThread.h"
 
 #include "statistic/StatisticModule.h"
 #include "statistic/DACStatisticModule.h"
@@ -38,6 +37,7 @@ namespace p2sp
         , is_needed_stun_(true)
         , nat_type_(protocol::TYPE_ERROR)
         , nat_check_client_(io_svc)
+        , nat_check_returned_(false)
     {
     }
 
@@ -57,18 +57,7 @@ namespace p2sp
         // IndexManager::Inst()->DoQueryStunServerList();
 
         nat_check_timer_.reset();
-        if (BootStrapGeneralConfig::Inst()->NeedUseStunClientNatCheck())
-        {
-            GetNATTypeThread::Inst().Start(io_svc_);
-            GetNATTypeThread::IOS().post(
-                boost::bind(&GetNATTypeThread::GetNATType, &GetNATTypeThread::Inst(), ppva_config_path_)
-               );
-        }
-        else
-        {
-            nat_check_client_.Start(ppva_config_path_);
-        }
-
+        nat_check_client_.Start(ppva_config_path_);
         is_running_ = true;
     }
 
@@ -81,14 +70,13 @@ namespace p2sp
 
         stun_timer_.stop();
 
-        GetNATTypeThread::Inst().Stop();
-
         is_running_ = false;
         inst_.reset();
     }
 
     void StunModule::OnGetNATType(protocol::MY_STUN_NAT_TYPE nat_type)
     {
+        nat_check_returned_ = true;
         //统计正式检测NAT TYPE所耗费的时间
         statistic::DACStatisticModule::Inst()->SubmitNatCheckTimeCost(
             nat_check_client_.GetNatCheckState() == p2sp::IDLE ? 0 : nat_check_timer_.elapsed());
@@ -108,7 +96,6 @@ namespace p2sp
         }
 
         nat_type_ = nat_type;
-        GetNATTypeThread::Inst().Stop();
     }
 
     void StunModule::ClearStunInfo()

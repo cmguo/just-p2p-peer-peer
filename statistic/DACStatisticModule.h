@@ -41,6 +41,8 @@ namespace statistic
         boost::uint32_t       query_live_tracker_for_report_response_count;// D1: 查询live_tracker_for_report_response包的总数       
         std::string           stun_handshake_statistic_info_;       // E1:统计到stun发送handshake的次数和成功返回次数
         int                   nat_check_time_cost_in_ms;            // F1:统计Nat Check检测耗费时间,单位：毫秒
+        boost::uint8_t        upnp_stat_;                           //G1:统计upnp的映射状态
+        std::string           upnp_port_mapping_; //H1: 统计upnp成功和失败的次数，格式为:tcp成功数:tcp失败数:udp成功数:udp失败数
 
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
@@ -77,6 +79,9 @@ namespace statistic
         void SubmitStunHandShakeRequestCount(boost::uint32_t stun_ip);
         void SubmitStunHandShakeResponseCount(boost::uint32_t stun_ip);
         std::string GetStunHandShakeInfoString() const;
+        void SubmitUpnpStat(boost::uint8_t stat);
+        void SubmitUpnpPortMapping(bool isTcp,bool isSucc);
+        std::string GetUpnpPortMappingString() const;
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -147,6 +152,12 @@ namespace statistic
         //<stun的ip，<发送的请求数，收到的回复数> >
         std::map<boost::uint32_t, std::pair<boost::uint32_t, boost::uint32_t> > stun_handshake_statistic_; 
         int nat_check_time_cost_in_ms_;
+
+        //标记进行upnp到了哪个步骤
+        boost::uint8_t       upnp_stat_; 
+
+        //tcpport映射成功，失败，udpport映射成功，失败
+        std::pair<std::pair<boost::uint32_t,boost::uint32_t>,std::pair<boost::uint32_t,boost::uint32_t> > upnp_port_mapping_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
@@ -255,7 +266,6 @@ namespace statistic
 
     inline void DACStatisticModule::SubmitStunHandShakeResponseCount(boost::uint32_t stun_ip)
     {
-        assert(stun_handshake_statistic_.find(stun_ip) != stun_handshake_statistic_.end());
         stun_handshake_statistic_[stun_ip].second++;
     }
 
@@ -279,6 +289,39 @@ namespace statistic
         }
         return os.str();
     }
+
+    inline void DACStatisticModule::SubmitUpnpStat(boost::uint8_t stat)
+    {
+        upnp_stat_ = stat;
+    }
+    inline void DACStatisticModule::SubmitUpnpPortMapping(bool isTcp,bool isSucc)
+    {
+        if(isTcp){
+            if(isSucc){
+                ++upnp_port_mapping_.first.first;
+            }
+            else{
+                ++upnp_port_mapping_.first.second;
+            }
+        }
+        else{
+            if(isSucc){
+                ++upnp_port_mapping_.second.first;
+            }
+            else{
+                ++upnp_port_mapping_.second.second;
+            }
+        }
+    }
+
+    inline std::string DACStatisticModule::GetUpnpPortMappingString() const
+    {
+       std::ostringstream os;
+       os<<upnp_port_mapping_.first.first<<":"<<upnp_port_mapping_.first.second<<":"
+           <<upnp_port_mapping_.second.first<<":"<<upnp_port_mapping_.second.second;
+       return os.str();
+    }   
+
 }
 
 #endif

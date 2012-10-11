@@ -10,7 +10,6 @@
 #include "statistic/LiveDownloadDriverStatistic.h"
 #include "statistic/StatisticUtil.h"
 #include "storage/Storage.h"
-#include "p2sp/stun/StunClient.h"
 #include "statistic/DACStatisticModule.h"
 #include "statistic/UploadStatisticModule.h"
 #include "p2sp/p2p/P2PModule.h"
@@ -1278,7 +1277,7 @@ namespace statistic
                 uint32_t duration_in_sec = 10 * 3600;
 
                 // 获得本机IP
-                uint32_t ip_local_now = p2sp::CStunClient::GetLocalFirstIP();
+                uint32_t ip_local_now = base::util::GetLocalFirstIP();
 
                 // 如果IP地址与原来的不同，则带宽从最低值512Kbps(64KB)开始
                 if (ip_local && ip_local == ip_local_now
@@ -1344,7 +1343,7 @@ namespace statistic
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("B", bandwidth));
 
                 // ip
-                ip_local = p2sp::CStunClient::GetLocalFirstIP();
+                ip_local = base::util::GetLocalFirstIP();
                 // date
                 time_stamp = time(NULL);
 

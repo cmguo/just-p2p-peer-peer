@@ -22,13 +22,14 @@ namespace network
                 return false;
             }
 
-            is_running_ = true;
-
             tcp_port_ = port;
 
             boost::system::error_code error;
 
             boost::asio::ip::tcp::endpoint tcp_endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port);
+
+            //因为start函数有可能重入的，所以需要先close，再open
+            acceptor_.close(error);
 
             acceptor_.open(tcp_endpoint.protocol(), error);
 
@@ -63,6 +64,9 @@ namespace network
             }
 
             StartAccept();
+
+            is_running_ = true;
+
             return true;
         }
 

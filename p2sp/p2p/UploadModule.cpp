@@ -1,6 +1,5 @@
 #include "Common.h"
 #include "UploadModule.h"
-#include "p2sp/stun/StunClient.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "p2sp/proxy/ProxyModule.h"
 #include "statistic/DACStatisticModule.h"
@@ -112,7 +111,7 @@ namespace p2sp
                 // 缓存淘汰
                 UploadCacheModule::Inst()->OnP2PTimer(times);
 
-                if (CStunClient::GetLocalFirstIP() != local_ip_from_ini_)
+                if (base::util::GetLocalFirstIP() != local_ip_from_ini_)
                 {
                     upload_speed_limit_tracker_.Reset(P2SPConfigs::UPLOAD_MIN_UPLOAD_BANDWIDTH);
 
@@ -215,7 +214,7 @@ namespace p2sp
 
                 // IP check
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("I", local_ip_from_ini_));
-                uint32_t ip_local = CStunClient::GetLocalFirstIP();
+                uint32_t ip_local = base::util::GetLocalFirstIP();
 
                 if (local_ip_from_ini_ == ip_local)
                 {
@@ -252,7 +251,7 @@ namespace p2sp
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("I", ip_local));
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("V", v));
 
-                ip_local = CStunClient::GetLocalFirstIP();
+                ip_local = base::util::GetLocalFirstIP();
                 v = upload_speed_limit_tracker_.GetMaxUnlimitedUploadSpeedInRecord();
 
                 conf.sync();

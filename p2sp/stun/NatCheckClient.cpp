@@ -9,8 +9,8 @@
 #include <boost/date_time.hpp>
 #include <algorithm>
 #include "p2sp/stun/StunModule.h"
-#include "p2sp/stun/StunClient.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
+#include "base/util.h"
 
 namespace p2sp
 {
@@ -50,7 +50,7 @@ namespace p2sp
 
             LoadLocalIPs(local_ips_);
             //这里利用Windows Api取到的是网络序，发到服务器的地址需要转成主机序方便统计
-            uint32_t tmp_ip = CStunClient::GetLocalFirstIP();
+            uint32_t tmp_ip = base::util::GetLocalFirstIP();
 #ifdef BOOST_WINDOWS_API
             local_first_ip_ = ntohl(tmp_ip); 
 #else
@@ -375,7 +375,7 @@ namespace p2sp
             }
 
             ppva_conf(CONFIG_PARAM_NAME_RDONLY("NIP", LastLocalIP));
-            if (LastLocalIP != CStunClient::GetLocalFirstIP())
+            if (LastLocalIP != base::util::GetLocalFirstIP())
             {
                 return true;
             }
@@ -423,7 +423,7 @@ namespace p2sp
 
             // 保存获取的本地IP
             ppva_conf(CONFIG_PARAM_NAME_RDONLY("NIP", LastLocalIP));
-            LastLocalIP = CStunClient::GetLocalFirstIP();
+            LastLocalIP = base::util::GetLocalFirstIP();
 
             ppva_conf(CONFIG_PARAM_NAME_RDONLY("NATTYPE", nat_string));
 

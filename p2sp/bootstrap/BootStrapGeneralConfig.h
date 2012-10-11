@@ -591,6 +591,21 @@ namespace p2sp
             return need_use_stunclient_nat_check_;
         }
 
+        boost::uint32_t GetCdnSnSpeedFactor() const
+        {
+            return factor_used_on_cdn_sn_speed_;
+        }
+
+        bool NeedProtectCDNSn() const
+        {
+            return need_protect_cdn_sn_;
+        }
+
+        boost::uint32_t SecondDelayForCheckSnSpeed() const
+        {
+            return second_delay_for_check_sn_speed_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -968,6 +983,15 @@ namespace p2sp
 
         //是否启用原有stunclient nat检测
         bool need_use_stunclient_nat_check_;
+
+        //用于KickSnConnection中，同机部署SN即时速度相乘系数
+        boost::uint32_t factor_used_on_cdn_sn_speed_;
+
+        //是否永久保留同机部署SN
+        bool need_protect_cdn_sn_;
+
+        //SN延迟检测时间，单位：s
+        boost::uint32_t second_delay_for_check_sn_speed_;
     };
 }
 #endif

@@ -166,6 +166,9 @@ namespace p2sp
         , nat_check_server_ip_("202.102.68.38@202.102.68.208@115.238.166.151@115.238.166.211@124.160.184.157@124.160.184.217@122.141.230.143@122.141.230.173")
         , nat_need_check_min_days_(3)
         , need_use_stunclient_nat_check_(false)
+        , factor_used_on_cdn_sn_speed_(2)
+        , need_protect_cdn_sn_(false)
+        , second_delay_for_check_sn_speed_(8)
     {
     }
 
@@ -366,6 +369,9 @@ namespace p2sp
                 ("config.nsip", po::value<string>()->default_value(nat_check_server_ip_))
                 ("config.nnmd", po::value<uint32_t>()->default_value(nat_need_check_min_days_))
                 ("config.nsnc", po::value<bool>()->default_value(need_use_stunclient_nat_check_))
+                ("config.fcss", po::value<uint32_t>()->default_value(factor_used_on_cdn_sn_speed_))
+                ("config.npcs", po::value<bool>()->default_value(need_protect_cdn_sn_))
+                ("config.sdss", po::value<uint32_t>()->default_value(second_delay_for_check_sn_speed_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -522,6 +528,9 @@ namespace p2sp
             nat_check_server_ip_ = vm["config.nsip"].as<string>();
             nat_need_check_min_days_ = vm["config.nnmd"].as<uint32_t>();
             need_use_stunclient_nat_check_ = vm["config.nsnc"].as<bool>();
+            factor_used_on_cdn_sn_speed_ = vm["config.fcss"].as<uint32_t>();
+            need_protect_cdn_sn_ = vm["config.npcs"].as<bool>();
+            second_delay_for_check_sn_speed_ = vm["config.sdss"].as<uint32_t>();
 
             if (save_to_disk)
             {

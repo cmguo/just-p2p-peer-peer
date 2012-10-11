@@ -12,7 +12,6 @@
 #include "p2sp/stun/StunModule.h"
 #include "p2sp/download/DownloadDriver.h"
 #include "p2sp/p2p/P2PDownloader.h"
-#include "p2sp/stun/StunClient.h"
 
 #include "p2sp/download/LiveDownloadDriver.h"
 
@@ -216,7 +215,7 @@ namespace p2sp
 
         if (times % (4*5) == 0)  // 5s
         {
-            uint32_t local_ip = p2sp::CStunClient::GetLocalFirstIP();
+            uint32_t local_ip = base::util::GetLocalFirstIP();
             if (local_ip_from_ini_ != local_ip)
             {
                 history_max_download_speed_ = 0;
@@ -794,6 +793,8 @@ namespace p2sp
         {
             return;
         }
+        string filename = ParseOpenServiceFileName(network::Uri(url_str));
+
         for (std::set<ProxyConnection__p>::iterator iter = proxy_connections_.begin();
             iter != proxy_connections_.end(); ++iter)
         {
@@ -804,11 +805,10 @@ namespace p2sp
                 continue;
             }
 
-            PlayInfo::p play_info = proxy_conn->GetPlayInfo();
-            if (play_info && play_info->GetUrlInfo().url_ == url_str)
+            DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
+            if (dd)
             {
-                DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
-                if (dd)
+                if (dd->GetOpenServiceFileName() == filename)
                 {
                     dd->SetVipLevel((VIP_LEVEL)vip_level);
                 }
@@ -1292,7 +1292,7 @@ namespace p2sp
 
                 ppva_dm_conf(CONFIG_PARAM_NAME_RDONLY("I", local_ip_from_ini_));
                 // IP check
-                boost::uint32_t ip_local = CStunClient::GetLocalFirstIP();
+                boost::uint32_t ip_local = base::util::GetLocalFirstIP();
                 if (local_ip_from_ini_ != ip_local)
                     return;
 

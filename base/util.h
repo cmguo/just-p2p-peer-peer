@@ -9,6 +9,16 @@
 #include <network/Uri.h>
 #include "random.h"
 
+#ifdef BOOST_WINDOWS_API
+
+// #include <shlwapi.h>
+// #pragma comment(lib. "shlwapi.lib")
+#include <Iphlpapi.h>
+#pragma comment(lib, "Iphlpapi.lib")
+#else
+#include "framework/network/Interface.h"
+#endif
+
 namespace base
 {
     namespace util
@@ -115,6 +125,59 @@ namespace base
                 char *bad_ptr = 0;
                 *bad_ptr = 0;
             }
+        }
+
+        inline uint32_t GetLocalFirstIP()
+        {
+#ifdef BOOST_WINDOWS_API
+            // Ê¹ÓÃ ip helperº¯Êý
+            boost::uint32_t nip = 0;
+            PMIB_IPADDRTABLE pIPAddrTable;
+            uint32_t dwSize = 0 , dwRetVal;
+
+            pIPAddrTable = (MIB_IPADDRTABLE*) malloc(sizeof(MIB_IPADDRTABLE));
+
+            // Make an initial call to GetIpAddrTable to get the
+            // necessary size into the dwSize variable
+            if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
+            {
+                free(pIPAddrTable);
+                pIPAddrTable = (MIB_IPADDRTABLE *) malloc (dwSize);
+            }
+
+            // Make a second call to GetIpAddrTable to get the
+            // actual data we want
+            if ((dwRetVal = GetIpAddrTable(pIPAddrTable, &dwSize, 0)) == NO_ERROR)
+            {
+                for (uint32_t i = 0; i < pIPAddrTable->dwNumEntries; i++)
+                {
+                    if (pIPAddrTable->table[i].dwAddr != inet_addr("127.0.0.1") && pIPAddrTable->table[i].dwAddr != 0)
+                    {
+                        nip = pIPAddrTable->table[i].dwAddr;
+                        break;
+                    }
+                }
+
+            }
+
+            free(pIPAddrTable);
+
+            return nip;
+#else
+        std::vector<framework::network::Interface> interfaces;
+        if (::framework::network::enum_interface(interfaces))
+            return 0;
+
+        uint32_t local_ip = 0;
+        for (uint32_t i = 0; i < interfaces.size(); ++i) {
+            framework::network::Interface const & inf = interfaces[i];
+            if (string(inf.name) != "lo" && inf.up && inf.addr.is_v4()) {
+                return inf.addr.to_v4().to_ulong();
+            }
+        }
+
+        return 0;
+#endif
         }
     }
 }

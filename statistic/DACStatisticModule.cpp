@@ -186,6 +186,12 @@ namespace statistic
         // F1:Nat Check检测耗费时间,单位：毫秒
         info.nat_check_time_cost_in_ms = nat_check_time_cost_in_ms_;
 
+        //G1:统计upnp映射的状态
+        info.upnp_stat_ = upnp_stat_;
+
+        // H1:统计upnp端口映射成功失败的次数
+        info.upnp_port_mapping_ = GetUpnpPortMappingString();
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
@@ -223,6 +229,8 @@ namespace statistic
         log_stream << "&D1=" << info.query_live_tracker_for_report_response_count;
         log_stream << "&E1=" << info.stun_handshake_statistic_info_;
         log_stream << "&F1=" << info.nat_check_time_cost_in_ms;
+        log_stream << "&G1=" << (boost::uint32_t)info.upnp_stat_;
+        log_stream << "&H1=" << info.upnp_port_mapping_;
 
         string log = log_stream.str();
 
@@ -265,5 +273,10 @@ namespace statistic
         query_live_tracker_for_report_response_count_=0;     
         stun_handshake_statistic_.clear();
         nat_check_time_cost_in_ms_ = -1;
+        upnp_stat_ = 0;
+        upnp_port_mapping_.first.first = 0;
+        upnp_port_mapping_.first.second = 0;
+        upnp_port_mapping_.second.first = 0;
+        upnp_port_mapping_.second.second = 0;
     }
 }
