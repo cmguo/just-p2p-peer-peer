@@ -42,8 +42,10 @@ namespace statistic
         std::string           stun_handshake_statistic_info_;       // E1:统计到stun发送handshake的次数和成功返回次数
         int                   nat_check_time_cost_in_ms;            // F1:统计Nat Check检测耗费时间,单位：毫秒
         boost::uint8_t        upnp_stat_;                           //G1:统计upnp的映射状态
-        std::string           upnp_port_mapping_; //H1: 统计upnp成功和失败的次数，格式为:tcp成功数:tcp失败数:udp成功数:udp失败数
-
+        std::string           upnp_port_mapping_;                   //H1: 统计upnp成功和失败的次数，格式为:tcp成功数:tcp失败数:udp成功数:udp失败数
+        std::string           nat_name_;                        //I1:从upnp模块获取到的路由器信息
+        std::string           invalid_ip_count_;                // J1: 非法IP发送包的个数
+        boost::int8_t         upnp_check_result;                       //K1:upnp成功之后，会触发一次natcheck的检测，这里记录检测的结果。0成功，1失败。默认值-1
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -82,6 +84,8 @@ namespace statistic
         void SubmitUpnpStat(boost::uint8_t stat);
         void SubmitUpnpPortMapping(bool isTcp,bool isSucc);
         std::string GetUpnpPortMappingString() const;
+        void SetNatName(std::string &natName);
+        void SetUpnpCheckResult(boost::int8_t upnp_check_result);
 
         void SetIntervalTime(boost::uint8_t interval_time);
         boost::uint8_t GetIntervalTime();
@@ -158,6 +162,12 @@ namespace statistic
 
         //tcpport映射成功，失败，udpport映射成功，失败
         std::pair<std::pair<boost::uint32_t,boost::uint32_t>,std::pair<boost::uint32_t,boost::uint32_t> > upnp_port_mapping_;
+
+        //nat的名称
+        std::string           nat_name_;
+
+        //upnp的natcheck的结果
+        boost::int8_t        upnp_check_result_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
@@ -321,6 +331,16 @@ namespace statistic
            <<upnp_port_mapping_.second.first<<":"<<upnp_port_mapping_.second.second;
        return os.str();
     }   
+
+    inline void DACStatisticModule::SetNatName(std::string &natName) 
+    {
+        nat_name_ = natName;
+    }
+
+    inline void DACStatisticModule::SetUpnpCheckResult(boost::int8_t upnp_check_result)
+    {
+        upnp_check_result_ = upnp_check_result;
+    }
 
 }
 

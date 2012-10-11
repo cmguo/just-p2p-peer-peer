@@ -290,6 +290,12 @@ namespace p2sp
         boost::uint32_t stun_detect_ip = statistic::StatisticModule::Inst()->GetLocalPeerInfo().DetectIP;
         boost::uint16_t stun_detect_port = statistic::StatisticModule::Inst()->GetLocalPeerInfo().DetectUdpPort;
 
+        //ck20120920采用的临时方案，用 stun_detect_port 表示upnp映射之后的port,最终的解决方法，是在report报文里加上一个字段表示
+        if(0 != StunModule::Inst()->GetUpnpExUdpport())
+        {
+            stun_detect_port = StunModule::Inst()->GetUpnpExUdpport();
+        }
+
         LoadLocalIPs(real_ips);
 
         boost::uint16_t local_udp_port = p2sp::AppModule::Inst()->GetLocalUdpPort();

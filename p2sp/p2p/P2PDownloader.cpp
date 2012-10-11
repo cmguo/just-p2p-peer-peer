@@ -1327,9 +1327,6 @@ namespace p2sp
             }
         }
 
-        if (P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT_ENABEL)
-            speed_limit_in_KBps = P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT;
-
         // 按照丢包率预测出实际需要限制的发包数来限速
         float rate = -1;
         if (GetStatistic())

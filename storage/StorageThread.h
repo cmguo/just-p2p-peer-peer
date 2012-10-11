@@ -7,12 +7,7 @@
 #ifndef _STORAGE_STORAGE_THREAD_H_
 #define _STORAGE_STORAGE_THREAD_H_
 
-namespace boost
-{
-    class thread;
-}
-
-#include <boost/function.hpp>
+#include "base/CommonThread.h"
 
 namespace storage
 {
@@ -21,10 +16,6 @@ namespace storage
     {
     public:
         typedef boost::shared_ptr<StorageThread> p;
-        boost::asio::io_service* ios_;
-    private:
-        boost::asio::io_service::work* work_;
-        boost::thread* thread_;
 
     public:
         void Start();
@@ -32,6 +23,7 @@ namespace storage
 
     private:
         static StorageThread::p main_thread_;
+        base::CommonThread storage_thread_;
     public:
         static StorageThread& Inst()
         {
@@ -43,11 +35,7 @@ namespace storage
             return *main_thread_; 
         }
 
-        static boost::asio::io_service& IOS() { return *main_thread_->ios_; };
-        static void Post(boost::function<void()> handler);
-        static void Dispatch(boost::function<void()> handler);
-    protected:
-        static void Run();
+        void Post(boost::function<void()> handler);
     private:
         StorageThread();
     };

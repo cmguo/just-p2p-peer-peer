@@ -150,7 +150,6 @@ namespace p2sp
         if (http_server_socket_)
         {
             http_server_socket_->SetListener(shared_from_this());
-            http_server_socket_->SetRecvTimeout(5*1000);
             http_server_socket_->HttpRecv();
         }
         rest_time = 0;
@@ -1083,12 +1082,7 @@ namespace p2sp
                 if (false == save_mode_)
                 {
                     LOG4CPLUS_INFO_LOG(logger_proxy_connection, "=========================> HttpRecv()");
-                    /*
-                    http_server_socket_->HttpRecvTillClose();
-                    /*/
-                    http_server_socket_->SetRecvTimeout(0);
                     http_server_socket_->HttpRecv();
-                    // */
                 }
                 else
                 {
@@ -1114,25 +1108,6 @@ namespace p2sp
                 error_code << " " << shared_from_this());
             WillStop();
         }
-    }
-
-    void ProxyConnection::OnHttpRecvTimeout()
-    {
-        if (is_running_ == false) return;
-
-        if (false == save_mode_)
-        {
-            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() 
-                << " " << shared_from_this());
-            LOG4CPLUS_ERROR_LOG(logger_proxy_connection, "OnHttpRecvTimeout " << http_server_socket_->GetEndPoint() 
-                << " " << shared_from_this());
-        }
-        else
-        {
-            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, __FUNCTION__ << ":" << __LINE__ << " " << shared_from_this());
-        }
-
-        WillStop();
     }
 
     void ProxyConnection::OnTcpSendFailed()

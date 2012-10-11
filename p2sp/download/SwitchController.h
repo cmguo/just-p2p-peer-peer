@@ -245,6 +245,7 @@ namespace p2sp
             void ChangeTo3200(bool is_p2p_start);
             void ChangeTo2300();
             void ChangeTo2000();
+            void ChangeTo0200();
 
 #ifdef USE_MEMORY_POOL
             bool CheckMemory();

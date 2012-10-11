@@ -15,7 +15,8 @@ namespace p2sp
         JBW_HTTP_MORE = 1,   // 带宽充足，可以多用HTTP
         JBW_HTTP_ONLY = 2,     // 强制使用纯HTTP模式
         JBW_HTTP_PREFERRED = 3,  //只要带宽足够，优先使用HTTP
-        JBW_P2P_MORE = 4  // 直播省带宽模式
+        JBW_P2P_MORE = 4,  // 直播省带宽模式
+        JBW_VOD_P2P_ONLY = 5   // 强制点播使用纯P2P模式 
     };
     //////////////////////////////////////////////////////////////////////////
     // Control Target

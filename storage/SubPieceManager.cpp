@@ -117,7 +117,7 @@ namespace storage
         }
         BlockNode::p & node = blocks_[in.block_index_];
         if (false == node->IsFull()) {
-            node->AddSubPiece(in.subpiece_index_, SubPieceNode::p(new SubPieceNode(NDST_MEM, buf)));
+            node->AddSubpiece(in.subpiece_index_, buf);
             download_bytes_ += buf.Length();
             if (node->IsFull()) {
                 block_bit_map_->Set(in.block_index_);
@@ -207,31 +207,24 @@ namespace storage
 #endif
     }
 
-    bool SubPieceManager::SetSubPieceReading(const protocol::SubPieceInfo &in)
+    bool SubPieceManager::SetBlockReading(const uint32_t block_index)
     {
-        if (!HasSubPiece(in) || HasSubPieceInMem(in))
-            return false;
-
-        LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "subpiece " << in);
-
-        BlockNode::p & node = blocks_[in.block_index_];
+        BlockNode::p & node = blocks_[block_index];
         if (!node) {
-            assert(block_bit_map_->HasBlock(in.block_index_));
-            if (!block_bit_map_->HasBlock(in.block_index_))
+            assert(block_bit_map_->HasBlock(block_index));
+            if (!block_bit_map_->HasBlock(block_index))
                 return false;
 
             // block_capacity indicating subpiece count in block @herain
             uint32_t block_capacity = 0;
-            if (in.block_index_ == last_subpiece_info_.block_index_)
+            if (block_index == last_subpiece_info_.block_index_)
                 block_capacity = last_subpiece_info_.subpiece_index_ + 1;
             else
                 block_capacity = rid_info_.GetBlockSize() / bytes_num_per_subpiece_g_;
-            blocks_[in.block_index_] = BlockNode::Create(in.block_index_, block_capacity, true);
-            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "New BlockNode[" << in.block_index_ << "] : block_capacity = " 
-                << block_capacity);
+            blocks_[block_index] = BlockNode::Create(block_index, block_capacity, true);
         }
 
-        return node->SetSubPieceReading(in.subpiece_index_);
+        return node->SetBlockReading();
     }
 
     protocol::SubPieceBuffer SubPieceManager::GetSubPiece(const protocol::SubPieceInfo& in) const {
@@ -334,11 +327,11 @@ namespace storage
                 delete buffer_set_p;
                 return;
             }
-            StorageThread::Post(
+            StorageThread::Inst().Post(
                 boost::bind(&Resource::ThreadPendingHashBlock, resource_p, block_index, buffer_set_p));
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to ThreadPendingHashBlock:" << block_index << 
                 " buffer count:" << buffer_set_p->size());
-            StorageThread::Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
+            StorageThread::Inst().Post(boost::bind(&Resource::SecSaveResourceFileInfo, resource_p));
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to SecSaveResourceFileInfo");
         }
     }

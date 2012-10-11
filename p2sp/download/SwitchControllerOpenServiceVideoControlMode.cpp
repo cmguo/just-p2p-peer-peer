@@ -54,7 +54,7 @@ namespace p2sp
         LOG4CPLUS_DEBUG_LOG(logger_switch, string(20, '-'));
 
         // 只有一个downloader，则立即开始下载
-        if (!GetHTTPControlTarget())
+        if (!GetHTTPControlTarget() && GetP2PControlTarget())
         {
             GetP2PControlTarget()->Resume();
         }
@@ -311,6 +311,15 @@ namespace p2sp
         state_.timer_using_ = State::TIMER_USING_NONE;
     }
 
+    void SwitchController::OpenServiceVideoControlMode::ChangeTo0200()
+    {
+        GetP2PControlTarget()->Resume();
+        assert(state_.http_ == State::HTTP_NONE);
+        state_.p2p_ = State::P2P_DOWNLOADING;
+        state_.timer_ = State::TIMER_NONE;
+        state_.timer_using_ = State::TIMER_USING_NONE;
+    }
+
 #ifdef USE_MEMORY_POOL
     bool SwitchController::OpenServiceVideoControlMode::CheckMemory()
     {
@@ -448,6 +457,35 @@ namespace p2sp
         {
             LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << " " << times);
 
+            // <0000>
+            if (
+                state_.http_ == State::HTTP_NONE && 
+                state_.p2p_ == State::P2P_NONE && 
+                state_.timer_using_ == State::TIMER_USING_NONE && 
+                state_.timer_ == State::TIMER_NONE)
+            {
+                if (GetHTTPControlTarget())
+                {
+                    state_.http_ = State::HTTP_PAUSING;
+                }
+                if (GetP2PControlTarget())
+                {
+                    state_.p2p_ = State::P2P_PAUSING;
+                }
+            }
+            // <0300>
+            if (
+                state_.http_ == State::HTTP_NONE && 
+                state_.p2p_ == State::P2P_PAUSING && 
+                state_.timer_using_ == State::TIMER_USING_NONE && 
+                state_.timer_ == State::TIMER_NONE)
+            {
+                if (GetP2PControlTarget())
+                {
+                    ChangeTo0200();
+                    break;
+                }
+            }
             // <3000>
             if (
                 state_.http_ == State::HTTP_PAUSING &&
@@ -871,6 +909,7 @@ namespace p2sp
         case JBW_NORMAL:
         case JBW_HTTP_MORE:
         case JBW_P2P_MORE:
+        case JBW_VOD_P2P_ONLY:
             return true;
         case JBW_HTTP_ONLY:
         case JBW_HTTP_PREFERRED:

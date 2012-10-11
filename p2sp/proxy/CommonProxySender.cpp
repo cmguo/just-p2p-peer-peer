@@ -101,7 +101,6 @@ namespace p2sp
         if (!http_response)
         {
             http_server_socket_->HttpSendHeader(content_length, "video/x-flv");
-            // http_server_socket_->HttpSendKeepAliveHeader(content_length, "video/x-flv");
         }
         else if (http_response->GetStatusCode() == 206)
         {

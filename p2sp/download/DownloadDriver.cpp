@@ -459,7 +459,7 @@ namespace p2sp
         }
         else
         {
-            if (force_mode != FORCE_MODE_P2P_ONLY && force_mode != FORCE_MODE_P2P_TEST)
+            if (force_mode != FORCE_MODE_P2P_ONLY && force_mode != FORCE_MODE_P2P_TEST && bwtype_ != JBW_VOD_P2P_ONLY)
             {
                 LOG4CPLUS_DEBUG_LOG(logger_download_driver, "Create HttpDownloader!");
                 downloader = AddHttpDownloader(network::HttpRequest::p(), original_url_info_, true);
@@ -480,12 +480,8 @@ namespace p2sp
 
         LOG4CPLUS_DEBUG_LOG(logger_download_driver, "downloader = " << downloader << 
             ", p2p_downloader = " << p2p_downloader_);
-        if (downloader || p2p_downloader_)
-        {
-            // start
-            switch_controller_->Start(switch_control_mode_);
-        }
 
+        switch_controller_->Start(switch_control_mode_);
         StartBufferringMonitor();
 
         io_svc_.post(boost::bind(&DownloadDriver::GetSubPieceForPlay, shared_from_this()));
@@ -2829,6 +2825,9 @@ namespace p2sp
         bool none_rid = !GetP2PControlTarget();             //没有取得rid
         switch(GetBWType())
         {
+            //点播只启动P2P带宽类型下，http无下载
+        case JBW_VOD_P2P_ONLY:
+            break;
             //http_only带宽类型下，http启动下载的数据就是全部http下载的数据
         case JBW_HTTP_ONLY:
             total_http_start_downloadbyte_ = total_bytes;

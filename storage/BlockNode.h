@@ -13,8 +13,9 @@ namespace storage
     #define BLOCK_ACCESS_TIMEOUT 0
 #endif
 
-    class PieceNode;
     class Resource;
+    class SubPieceInfo;
+    class SubPieceBuffer;
 
     //////////////////////////////////////////////////////////////////////////
     //     BlockNode
@@ -24,6 +25,17 @@ namespace storage
 #endif
     {
     public:
+        enum BlockNodeState
+        {
+            EMPTY,
+            DOWNLOADING,
+            MEM,
+            SAVING,
+            DISK,
+            READING,
+            ALL
+        };
+
         typedef boost::shared_ptr<BlockNode> p;
         friend std::ostream& operator << (std::ostream& os, const BlockNode& node);
     private:
@@ -37,35 +49,37 @@ namespace storage
         base::AppBuffer ToBuffer();
     private:
         static bool CheckBuf(base::AppBuffer inbuf, uint32_t &max_num_subpiece, uint32_t &pieces_buffer_size);
+        bool IsPieceFull(uint32_t piece_index) const;
+        bool IsBlockSavedOnDisk() const { return node_state_ == BlockNode::ALL || node_state_ == BlockNode::DISK || node_state_ == READING;}
 
     public:
         // subpiece management function @herain
-        bool AddSubPiece(uint32_t index, SubPieceNode::p node);
+        bool AddSubpiece(uint32_t index, protocol::SubPieceBuffer buf);
         bool LoadSubPieceBuffer(uint32_t index, protocol::SubPieceBuffer buf);
         bool HasSubPiece(const uint32_t subpiece_index) const;
         bool HasSubPieceInMem(const uint32_t subpiece_index) const;
-        bool SetSubPieceReading(const uint32_t index);
+        bool SetBlockReading();
         protocol::SubPieceBuffer GetSubPiece(uint32_t subpiece_index);
 
         // property query
         bool HasPiece (const uint32_t piece_index) const;
         uint32_t GetCurrNullSubPieceCount() const
         {
-            return total_subpiece_count_ - curr_subpiece_count_;
+            return total_subpiece_count_ - subpieces_.size();
         }
 
         bool GetNextNullSubPiece(const uint32_t sub_subpiece_index, uint32_t& subpiece_for_download) const;
         uint32_t GetCurrSubPieceCount() const
         {
-            return curr_subpiece_count_;
+            return subpieces_.size();
         }
 
         bool IsFull() const
         {
-            return curr_subpiece_count_ == total_subpiece_count_;
+            return subpieces_.size() == total_subpiece_count_ || IsBlockSavedOnDisk();
         }
 
-        bool IsEmpty()  const {return curr_subpiece_count_ == 0;}
+        bool IsEmpty()  const {return subpieces_.size() == 0 && !IsBlockSavedOnDisk();}
         bool IsSaving() const;
         bool NeedWrite() const {return need_write_;}
         bool IsAccessTimeout() const {return access_counter_.elapsed() > BLOCK_ACCESS_TIMEOUT*1000;}
@@ -74,10 +88,16 @@ namespace storage
         void OnWriteFinish();
         void GetBufferForSave (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> & buffer_set);
 
+        uint32_t GetTotalSubpieceCountInBlock()
+        {
+            return total_subpiece_count_;
+        }
+
     private:
-        std::vector<PieceNode::p> piece_nodes_;
+        std::map<uint32_t, protocol::SubPieceBuffer> subpieces_;
+        std::vector<uint32_t> piece_count_;
+        BlockNodeState node_state_;
         uint32_t total_subpiece_count_;
-        uint32_t curr_subpiece_count_;
         uint32_t last_piece_capacity_;
         uint32_t index_;
         bool need_write_;

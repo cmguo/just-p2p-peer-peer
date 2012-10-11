@@ -142,7 +142,7 @@ namespace storage
         LOG4CPLUS_DEBUG_LOG(logger_space_manager, " file_name:" << resource_p->GetLocalFileName() << " file_size:" 
             << resource_p->GetLocalFileSize());
 
-        StorageThread::Post(boost::bind(&Resource::FreeDiskSpace, resource_p, need_remove_file));
+        StorageThread::Inst().Post(boost::bind(&Resource::FreeDiskSpace, resource_p, need_remove_file));
     }
 
     void SpaceManager::OnFreeDiskSpaceFinish(uint32_t filesize, Resource::p resource_p)

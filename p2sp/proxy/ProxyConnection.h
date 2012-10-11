@@ -149,7 +149,6 @@ namespace p2sp
         // network::HttpServer
         virtual void OnHttpRecvSucced(network::HttpRequest::p http_request);
         virtual void OnHttpRecvFailed(uint32_t error_code);
-        virtual void OnHttpRecvTimeout();
         virtual void OnTcpSendFailed();
         virtual void OnClose();
         void OnProxyTimer(uint32_t times);

@@ -63,9 +63,8 @@ namespace network
                 return false;
             }
 
-            StartAccept();
-
             is_running_ = true;
+            StartAccept();          
 
             return true;
         }

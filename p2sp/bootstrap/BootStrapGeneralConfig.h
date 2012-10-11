@@ -606,6 +606,18 @@ namespace p2sp
             return second_delay_for_check_sn_speed_;
         }
 
+        boost::uint32_t GetHttpProtectTime2WhenStart(bool is_saving_mode) const
+        {
+            return is_saving_mode ? http_protect_time2_when_start_in_saving_mode_ :
+                http_protect_time2_when_start_;
+        }
+
+        boost::uint32_t GetHttpDownloadBytesDelimWhenStart(bool is_saving_mode) const
+        {
+            return is_saving_mode ? http_download_bytes_delim_when_start_in_saving_mode_ :
+                http_download_bytes_delim_when_start_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -992,6 +1004,14 @@ namespace p2sp
 
         //SN延迟检测时间，单位：s
         boost::uint32_t second_delay_for_check_sn_speed_;
+
+        // Http启动保护时间2
+        boost::uint32_t http_protect_time2_when_start_;
+        boost::uint32_t http_protect_time2_when_start_in_saving_mode_;
+
+        // Http启动时的最小下载量（超过保护时间2，下载量小于这个值就切换到P2P）
+        boost::uint32_t http_download_bytes_delim_when_start_;
+        boost::uint32_t http_download_bytes_delim_when_start_in_saving_mode_;
     };
 }
 #endif

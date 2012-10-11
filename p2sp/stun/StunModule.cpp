@@ -38,6 +38,7 @@ namespace p2sp
         , nat_type_(protocol::TYPE_ERROR)
         , nat_check_client_(io_svc)
         , nat_check_returned_(false)
+        , upnp_ex_udp_port_(0)
     {
     }
 
@@ -86,7 +87,10 @@ namespace p2sp
         {
             is_needed_stun_ = false;
             protocol::SocketAddr stun_socket_addr(0, 0);
+            //设置stunsocket，表示没有使用stun
             statistic::StatisticModule::Inst()->SetLocalStunSocketAddress(stun_socket_addr);
+            //设置detectsocket，是让tracker知道，无需使用stun检测到的ipport，而是用tracker从socket上看到的ipport
+            statistic::StatisticModule::Inst()->SetLocalDetectSocketAddress(stun_socket_addr);
             LOG4CPLUS_INFO_LOG(logger_stun, "OnGetNATType nat_type == TYPE_PUBLIC || nat_type == TYPE_FULLCONENAT");
         }
         else
@@ -94,8 +98,31 @@ namespace p2sp
             is_needed_stun_ = true;
             LOG4CPLUS_INFO_LOG(logger_stun, "OnGetNATType nat_type != TYPE_PUBLIC && nat_type != TYPE_FULLCONENAT");
         }
-
         nat_type_ = nat_type;
+    }
+
+    void StunModule::OnUpnpCheck(boost::uint16_t exUdpPort)
+    {
+        upnp_ex_udp_port_ = exUdpPort;
+        if(exUdpPort != 0)
+        {            
+            //走到这里，说明upnp是成功的
+            nat_check_returned_ = true;
+            protocol::SocketAddr stun_socket_addr(0, 0);
+            //设置stunsocket，表示没有使用stun
+            statistic::StatisticModule::Inst()->SetLocalStunSocketAddress(stun_socket_addr);
+            statistic::StatisticModule::Inst()->SetLocalDetectSocketAddress(stun_socket_addr);
+            nat_type_ = TYPE_FULLCONENAT;
+            is_needed_stun_ = false;
+
+                  //成功设置为0，失败设置为1
+             statistic::DACStatisticModule::Inst()->SetUpnpCheckResult(0);
+        }
+        else
+        {
+                  //成功设置为0，失败设置为1
+            statistic::DACStatisticModule::Inst()->SetUpnpCheckResult(1);
+        }
     }
 
     void StunModule::ClearStunInfo()
@@ -222,6 +249,7 @@ namespace p2sp
         case protocol::NatCheckSameRoutePacket::Action:
         case protocol::NatCheckDiffPortPacket::Action:
         case protocol::NatCheckDiffIpPacket::Action:
+        case protocol::NatCheckForUpnpPacket::Action:
             {
                 nat_check_client_.OnUdpReceive((ServerPacket const &)packet_header);
             }
@@ -429,6 +457,11 @@ namespace p2sp
         LOG4CPLUS_INFO_LOG(logger_stun, "DoKPL " << stun_endpoint_);
         AppModule::Inst()->DoSendPacket(stun_kpl_packet);
 
+    }
+
+    void StunModule::CheckForUpnp(boost::uint16_t innerUdpPort,boost::uint16_t exUdpPort)
+    {
+        nat_check_client_.CheckForUpnp(innerUdpPort,exUdpPort);
     }
 
 }

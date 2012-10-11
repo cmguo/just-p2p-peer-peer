@@ -96,11 +96,6 @@ namespace p2sp
         //
         static uint32_t P2P_DOWNLOAD_SPEED_LIMIT;
         //
-        static uint32_t P2P_DOWNLOAD_SPEED_LIMIT_TEST;
-        //
-        static uint32_t P2P_DOWNLOAD_SPEED_LIMIT_ENABEL;
-
-        //
         static uint32_t P2P_MAX_EXCHANGE_PEER_COUNT;
         //
         static uint32_t P2P_MAX_IPPOOL_PEER_COUNT;

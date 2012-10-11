@@ -192,7 +192,7 @@ namespace storage
         if (resource_p_)
         {
 #ifdef DISK_MODE
-            StorageThread::Post(boost::bind(&Resource::CloseResource, resource_p_, true));
+            StorageThread::Inst().Post(boost::bind(&Resource::CloseResource, resource_p_, true));
 #else
             resource_p_->CloseResource(true);
 #endif  // #ifdef DISK_MODE
@@ -246,7 +246,7 @@ namespace storage
 #ifdef DISK_MODE
             // 先关闭resource，然后调用OnResourceCloseFinish，但是如果此时instance已经销毁，则
             // 通知spacemanager释放资源空间
-            StorageThread::Post(boost::bind(&Resource::CloseResource, resource_p_, need_remove_file));
+            StorageThread::Inst().Post(boost::bind(&Resource::CloseResource, resource_p_, need_remove_file));
 #else
             resource_p_->CloseResource(need_remove_file);
 #endif  // #ifdef DISK_MODE
@@ -742,7 +742,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             if (resource_p_)
             {
 #ifdef DISK_MODE
-                StorageThread::Post(boost::bind(&Resource::ThreadRemoveBlock, resource_p_, block_index));
+                StorageThread::Inst().Post(boost::bind(&Resource::ThreadRemoveBlock, resource_p_, block_index));
 #else
                 resource_p_->ThreadRemoveBlock(block_index);
 #endif  // #ifdef DISK_MODE
@@ -833,7 +833,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         else
         {
             DebugLog("hash: Upload Get Block index: %d", block_index);
-            StorageThread::Post(boost::bind(&Resource::ThreadReadBlockForUpload, resource_p_, GetRID(), block_index,
+            StorageThread::Inst().Post(boost::bind(&Resource::ThreadReadBlockForUpload, resource_p_, GetRID(), block_index,
                 listener, CheckBlockNeedHash(block_index)));
         }
 #else
@@ -866,7 +866,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         else
         {
 #ifdef DISK_MODE
-            StorageThread::Post(boost::bind(&Resource::ThreadMergeSubPieceToInstance, resource_p_, subpiece_info,
+            StorageThread::Inst().Post(boost::bind(&Resource::ThreadMergeSubPieceToInstance, resource_p_, subpiece_info,
                 new protocol::SubPieceContent(), merge_to_instance_p));
 #endif  // #ifdef DISK_MODE
             return;
@@ -1371,7 +1371,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (resource_p_)
         {
 #ifdef DISK_MODE
-            StorageThread::Post(boost::bind(&Resource::Rename, resource_p_, new_name));
+            StorageThread::Inst().Post(boost::bind(&Resource::Rename, resource_p_, new_name));
             // resource_p_->Rename(new_name);
 #else
             resource_p_->Rename(new_name);
@@ -1511,7 +1511,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         if (resource_p_)
         {
 #ifdef DISK_MODE
-            StorageThread::Post(boost::bind(&Resource::CloseFileHandle, resource_p_));
+            StorageThread::Inst().Post(boost::bind(&Resource::CloseFileHandle, resource_p_));
 #endif  // #ifdef DISK_MODE
         }
     }
@@ -1568,26 +1568,26 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             std::vector<protocol::SubPieceContent*> buffs;
             protocol::SubPieceInfo iter_sub_piece(start_s_info);
-            for (int i = 0; i < 256; ++i)
+            uint32_t subpiece_count_in_block;
+
+            if (subpiece_manager_->SetBlockReading(iter_sub_piece.block_index_))
             {
-                protocol::SubPieceContent* content = new protocol::SubPieceContent();
-                if (!content->get_buffer())
-                    break;
-                buffs.push_back(content);
-
-                if (!subpiece_manager_->SetSubPieceReading(iter_sub_piece))
+                // 从一个Block的开始位置读取，每次读取一个block
+                iter_sub_piece.subpiece_index_ = 0;
+                subpiece_count_in_block = subpiece_manager_->GetTotalSubpieceCountInBlock(iter_sub_piece.block_index_);
+                for (int i = 0; i < subpiece_count_in_block; ++i)
                 {
-                    buffs.pop_back();
-                    break;
+                    protocol::SubPieceContent* content = new protocol::SubPieceContent();
+                    if (!content->get_buffer())
+                        break;
+                    buffs.push_back(content);
                 }
-
-                if (false == subpiece_manager_->IncSubPieceInfo(iter_sub_piece))
-                    break;
             }
 
             if (buffs.size() > 0)
             {
-                StorageThread::Post(boost::bind(&Resource::ThreadReadBufferForPlay, resource_p_, start_s_info, buffs));
+                assert(buffs.size() == subpiece_count_in_block);
+                StorageThread::Inst().Post(boost::bind(&Resource::ThreadReadBufferForPlay, resource_p_, iter_sub_piece, buffs));
                 LOG4CPLUS_DEBUG_LOG(logger_instance, "ReadFromDisk " << (int)buffs.size());
                 LOG4CPLUS_DEBUG_LOG(logger_instance, "post ThreadReadBufferForPlay. size=" << (int)buffs.size());
             }

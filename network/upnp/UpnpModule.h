@@ -39,6 +39,8 @@ namespace p2sp
         boost::uint16_t GetUpnpExternalTcpPort(boost::uint16_t inPort);
 
     private:
+        UpnpModule();
+
         void MapPort(const std::map<boost::uint16_t,boost::uint16_t>& tcpPorts,
             const std::map<boost::uint16_t,boost::uint16_t>& udpPorts);
 
@@ -50,8 +52,9 @@ namespace p2sp
 
         //删除端口映射
         void DoDelPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * proto);
-        //添加端口映射
-        void DoAddPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * desc,const char * proto);
+
+        //添加端口映射，映射失败返回0，映射成功返回对应的外网端口
+        boost::uint16_t DoAddPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * desc,const char * proto);
 
         //通过已有的映射和需要的映射，区分出哪些要删除，哪些要添加       
         void FilterProcess(const std::map<boost::uint16_t,boost::uint16_t>& requirePorts,
@@ -69,9 +72,13 @@ namespace p2sp
         bool RemoveFromMutiMap(std::multimap<boost::uint16_t,boost::uint16_t>& mappedPort,
             boost::uint16_t key,boost::uint16_t value);
 
-        UpnpModule();
-
         void OnTimerElapsed(framework::timer::Timer * pointer);
+
+        //获取igd设备的厂商信息
+        void GetManufacturer();
+
+        //促发一次nat类型的检测
+        void EvokeNatcheck(boost::uint16_t innerUdpPort,boost::uint16_t exUdpPort);
 
     private:
         framework::timer::PeriodicTimer upnp_timer_;
@@ -87,6 +94,11 @@ namespace p2sp
         std::string landAddr_;
         //上次获取igd设备的时间
         boost::uint32_t lastGetValidIGDTime_;
+
+        //用来获取idgManufacturer_的url
+        std::string descUrl_;
+        //路由器名称
+        std::string idgModName_;
         //是否正在映射中。
         bool isInMapping_;
 

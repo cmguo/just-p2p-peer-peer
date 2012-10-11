@@ -6,7 +6,6 @@
 #define SUBPEICE_MANAGER_H
 
 #include "storage/Resource.h"
-#include "storage/PieceNode.h"
 #include "storage/BlockNode.h"
 
 
@@ -47,7 +46,7 @@ namespace storage
         bool HasSubPieceInMem(const protocol::SubPieceInfo &in) const;
         bool HasPiece(const protocol::PieceInfo& piece_info) const;
         protocol::SubPieceBuffer GetSubPiece(const protocol::SubPieceInfo& in) const;
-        bool SetSubPieceReading(const protocol::SubPieceInfo &in);
+        bool SetBlockReading(const uint32_t block_index);
         bool IsSubPieceValid(const protocol::SubPieceInfo &in) const { return in <= last_subpiece_info_;}
         protocol::SubPieceInfo GetMaxSubPieceInfo() {return last_subpiece_info_;}
 
@@ -205,6 +204,14 @@ namespace storage
                 return false;
             }
              return true;
+        }
+
+        uint32_t GetTotalSubpieceCountInBlock(uint16_t block_index)
+        {
+            if (blocks_[block_index])
+                return blocks_[block_index]->GetTotalSubpieceCountInBlock();
+            else
+                return 0;
         }
 
 

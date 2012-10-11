@@ -29,7 +29,7 @@ namespace p2sp
     {
         protocol::MY_STUN_NAT_TYPE nat_type = protocol::TYPE_ERROR;
 
-        if (IsNeedToUpdateNat(nat_type, config_path))
+        //这些信息，是netcheck检查相关的，但是由于有些情况不用检查natcheck，但是需要检测upnp，所以这里提取出来。
         {
             string server_list = BootStrapGeneralConfig::Inst()->GetNatCheckServerIP();
             boost::algorithm::split(nat_check_server_list_, server_list,
@@ -57,7 +57,10 @@ namespace p2sp
             local_first_ip_ = tmp_ip;
 #endif
             local_port_ = AppModule::Inst()->GetLocalUdpPort();
+        }
 
+        if (IsNeedToUpdateNat(nat_type, config_path))
+        {
             check_state_ = ISNATCHECKING;
             DoSendNatCheckpacket();
         }
@@ -82,6 +85,9 @@ namespace p2sp
             break;
         case protocol::NatCheckDiffPortPacket::Action:
             OnReceiveNatCheckDiffPortPacket((protocol::NatCheckDiffPortPacket const &)packet);
+            break;
+        case protocol::NatCheckForUpnpPacket::Action:
+            OnReceiveNatCheckForUpnpPacket((protocol::NatCheckForUpnpPacket const &)packet);
             break;
         default:
             assert(false);
@@ -137,24 +143,23 @@ namespace p2sp
     {
         assert(check_state_ == FULLCORNCHECKING);
 
+        protocol::MY_STUN_NAT_TYPE nat_type;
+
         if (is_nat_)
         {
             //收到回包。返回nat类型为 TYPE_FULLCONENAT
-            protocol::MY_STUN_NAT_TYPE nat_type = protocol::TYPE_FULLCONENAT;
-            StunModule::Inst()->OnGetNATType(nat_type);
-
-            WriteConfigAfterCheck(nat_type);
-            check_state_ = COMPLETE;
+            nat_type = protocol::TYPE_FULLCONENAT;           
         }
         else
         {
             //公网环境
-            protocol::MY_STUN_NAT_TYPE nat_type = protocol::TYPE_PUBLIC;
-            StunModule::Inst()->OnGetNATType(nat_type);
-
-            WriteConfigAfterCheck(nat_type);
-            check_state_ = COMPLETE;
+            nat_type = protocol::TYPE_PUBLIC;            
         }
+
+        StunModule::Inst()->OnGetNATType(nat_type);
+
+        WriteConfigAfterCheck(nat_type);
+        check_state_ = COMPLETE;
 
     }
 
@@ -169,6 +174,18 @@ namespace p2sp
         WriteConfigAfterCheck(nat_type);
         check_state_ = COMPLETE;
     }
+
+    void NatCheckClient::OnReceiveNatCheckForUpnpPacket(protocol::NatCheckForUpnpPacket const &packet)
+    {
+        assert(check_state_ == UPNPCHECKING);
+
+        StunModule::Inst()->OnUpnpCheck(packet.response.send_udp_upnp_port_);
+
+        WriteConfigAfterCheck(protocol::TYPE_FULLCONENAT);
+        check_state_ = COMPLETE;
+            
+    }
+
 
     void NatCheckClient::DoSendNatCheckpacket()
     {
@@ -234,11 +251,26 @@ namespace p2sp
                 AppModule::Inst()->DoSendPacket(packet);
                 break;
             }
+        case UPNPCHECKING:
+            {
+                //向服务器(ip1,port1)发请求，要求服务用(ip2,port2)进行回应,且回复到upnp_ex_udp_port_ 端口上
+                protocol::NatCheckForUpnpPacket packet(
+                    times_,
+                    local_first_ip_,
+                    local_port_,
+                    upnp_ex_udp_port_,
+                    protocol::Packet::NewTransactionID(),
+                    protocol::PEER_VERSION,
+                    endpoint_
+                    );
+                AppModule::Inst()->DoSendPacket(packet);
+                break;
+            }
         default:
             break;
         }
 
-        timer_.expires_from_now(boost::posix_time::seconds(10));
+        timer_.expires_from_now(boost::posix_time::seconds(5));
         timer_.async_wait(boost::bind(&NatCheckClient::OnHandleTimeOut, this, boost::asio::placeholders::error));
     }
 
@@ -335,9 +367,23 @@ namespace p2sp
                 check_state_ = COMPLETE;
                 break;
             }
+        case UPNPCHECKING:
+            {
+                //upnp检测失败，nat类型保持不变
+                StunModule::Inst()->OnUpnpCheck(0);
+                check_state_ = COMPLETE;
+                break;
+            }
         default:
             break;
         }
+    }
+
+    void NatCheckClient::CheckForUpnp(boost::uint16_t innerUdpPort,boost::uint16_t exUdpPort)
+    {
+        check_state_ = UPNPCHECKING;
+        upnp_ex_udp_port_ = exUdpPort;
+        DoSendNatCheckpacket(); 
     }
 
     /*

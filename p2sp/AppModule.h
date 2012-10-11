@@ -219,6 +219,31 @@ public:
 
     boost::shared_ptr<statistic::BufferringMonitor> CreateBufferringMonitor(const RID& rid);
 
+    std::string GetInValidIpCountString()
+    {
+        std::map<boost::uint32_t, boost::uint32_t> invalid_map = udp_server_->GetInvalidIpCountMap();
+
+        std::ostringstream os;
+
+        for (std::map<boost::uint32_t, boost::uint32_t>::iterator iter = invalid_map.begin();
+            iter != invalid_map.end(); ++iter)
+        {
+            os << iter->first << ":" << iter->second;
+            
+            if (iter->first != invalid_map.rbegin()->first)
+            {
+                os << ",";
+            }
+        }
+
+        return os.str();
+    }
+
+    void ClearInvalidIpCountMap()
+    {
+        udp_server_->ClearInvalidIpCountMap();
+    }
+
     private:
     boost::shared_ptr<protocol::UdpServer> udp_server_;
 

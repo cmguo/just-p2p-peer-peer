@@ -483,7 +483,7 @@ namespace storage
 
         if (temp_subpiece_manager->IsFullFile())
         {
-            StorageThread::Post(boost::bind(&Resource::ThreadTryRenameToNormalFile, shared_from_this()));
+            StorageThread::Inst().Post(boost::bind(&Resource::ThreadTryRenameToNormalFile, shared_from_this()));
         }
     }
 

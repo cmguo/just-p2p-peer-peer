@@ -43,8 +43,12 @@ namespace p2sp
 
     void HttpTargetsManager::MoveBestHttpTarget()
     {
+        if (!trying_http_targets_)
+        {
+            return;
+        }
+
         assert(!http_targets_.empty());
-        assert(trying_http_targets_);
         assert(current_http_target_index_ == http_targets_.size() - 1);
 
         UpdateBestHttpTarget();

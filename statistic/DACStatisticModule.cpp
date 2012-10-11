@@ -50,6 +50,7 @@ namespace statistic
         , query_live_tracker_for_report_request_count_(0)
         , query_live_tracker_for_report_response_count_(0)
         , nat_check_time_cost_in_ms_(-1)
+        , upnp_check_result_(-1)
     {
     }
 
@@ -192,6 +193,16 @@ namespace statistic
         // H1:统计upnp端口映射成功失败的次数
         info.upnp_port_mapping_ = GetUpnpPortMappingString();
 
+        // I1:nat的名称
+        info.nat_name_ = nat_name_;
+
+        // J1: 非法IP发送包的个数
+        info.invalid_ip_count_ = AppModule::Inst()->GetInValidIpCountString();
+
+        // K1:统计upnp natcheck的结果
+        info.upnp_check_result = upnp_check_result_;
+
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
 
@@ -231,6 +242,10 @@ namespace statistic
         log_stream << "&F1=" << info.nat_check_time_cost_in_ms;
         log_stream << "&G1=" << (boost::uint32_t)info.upnp_stat_;
         log_stream << "&H1=" << info.upnp_port_mapping_;
+        log_stream << "&I1=" << info.nat_name_;
+        log_stream << "&J1=" << info.invalid_ip_count_;
+        log_stream << "&K1=" << (boost::int32_t)info.upnp_check_result;
+
 
         string log = log_stream.str();
 
@@ -274,9 +289,12 @@ namespace statistic
         stun_handshake_statistic_.clear();
         nat_check_time_cost_in_ms_ = -1;
         upnp_stat_ = 0;
+        upnp_check_result_ = -1;
         upnp_port_mapping_.first.first = 0;
         upnp_port_mapping_.first.second = 0;
         upnp_port_mapping_.second.first = 0;
         upnp_port_mapping_.second.second = 0;
+
+        AppModule::Inst()->ClearInvalidIpCountMap();
     }
 }

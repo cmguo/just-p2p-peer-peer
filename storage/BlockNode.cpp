@@ -5,8 +5,6 @@
 #include "Common.h"
 #include "storage/storage_base.h"
 #include "storage/Resource.h"
-#include "storage/StorageThread.h"
-#include "storage/PieceNode.h"
 #include "storage/BlockNode.h"
 #include "base/util.h"
 
@@ -28,20 +26,20 @@ namespace storage
         total_subpiece_count_ = subpiece_num;
         last_piece_capacity_ = (subpiece_num - 1) % subpiece_num_per_piece_g_ + 1;
         uint32_t piece_count = (subpiece_num + subpiece_num_per_piece_g_ - 1) / subpiece_num_per_piece_g_;
-        piece_nodes_.resize(piece_count, PieceNode::p());
+        piece_count_.resize(piece_count, 0);
 
         if (!is_full_disk)
         {
-            curr_subpiece_count_ = 0;
+            node_state_ = BlockNode::EMPTY;
         }
         else
         {
-            curr_subpiece_count_ = total_subpiece_count_;
+            node_state_ = BlockNode::DISK;
             uint32_t piece_capacity = 0;
             for (uint32_t pidx = 0; pidx < piece_count; ++pidx)
             {
                 piece_capacity = (pidx == piece_count-1) ? last_piece_capacity_ : subpiece_num_per_piece_g_;
-                piece_nodes_[pidx] = PieceNode::Create(protocol::PieceInfo(index, pidx), piece_capacity, true);
+                piece_count_[pidx] = piece_capacity;
             }
         }
         access_counter_.start();
@@ -77,7 +75,6 @@ namespace storage
         boost::uint16_t piece_index;
 
         BlockNode::p pointer = BlockNode::p(new BlockNode(index, total_subpiece_count, false));
-        std::set<uint32_t> empty_pieces;
 
         while (offset < pieces_buffer_size)
         {
@@ -91,7 +88,7 @@ namespace storage
             memcpy2((void*)(&piece_index), sizeof(piece_index), buf + offset, sizeof(boost::uint16_t));
             offset += 2;
 
-            if (piece_index > pointer->piece_nodes_.size())
+            if (piece_index > pointer->piece_count_.size())
             {
                 assert(false);
                 return false;
@@ -116,55 +113,46 @@ namespace storage
             base::AppBuffer piecebuf(buf + offset, piecebuflen);
             offset += piecebuflen;
 
-            PieceNode::p piece_node;
-            if (!PieceNode::Parse(protocol::PieceInfo(index, piece_index), piecebuf, piece_node))
+            uint32_t bitcount = 0;
+            uint32_t bitbuffersize = 0;
+            if (false == CheckBuf(piecebuf, bitcount, bitbuffersize))
             {
-                assert(false);
                 return false;
             }
-            pointer->piece_nodes_[piece_index] = piece_node;
-            if (!piece_node)
+
+            if (bitbuffersize == 0)
             {
-                empty_pieces.insert(piece_index);
+               break;
             }
+
+            // construct subpiece_set_ @herain
+            boost::dynamic_bitset<uint32_t> subpiece_set;
+            for (uint8_t i = 0; i < bitbuffersize / sizeof(uint32_t); ++i)
+            {
+                uint32_t v;
+                memcpy2(&v, sizeof(v), piecebuf.Data() + 4 + i*sizeof(uint32_t), sizeof(uint32_t));
+                subpiece_set.append(v);
+            }
+            subpiece_set.resize(bitcount, true);
+            subpiece_set.flip();
+
+            if (subpiece_set.count() < bitcount)
+            {
+                break;
+            }
+
+            pointer->piece_count_[piece_index] = bitcount;
         }
 
-        assert(offset == pieces_buffer_size);
-
-        // calculate cur_subpiece_count_ @herain
-        uint32_t curr_null_subpiece_count = 0;
-        for (uint32_t pidx = 0; pidx < pointer->piece_nodes_.size(); ++pidx)
+        if (offset < pieces_buffer_size)
         {
-            if (pointer->piece_nodes_[pidx])
-            {
-                curr_null_subpiece_count += pointer->piece_nodes_[pidx]->GetCurrNullSubPieceCount();
-            }
-            else if (empty_pieces.find(pidx) != empty_pieces.end())
-            {
-                // lost entire piece, null_subpiece_count == piece_capacity @herain
-                if (pidx == (pointer->total_subpiece_count_ - 1) / subpiece_num_per_piece_g_)
-                {
-                    curr_null_subpiece_count += pointer->last_piece_capacity_;
-                }
-                else
-                {
-                    curr_null_subpiece_count += subpiece_num_per_piece_g_;
-                }
-            }
-            else
-            {
-                // have entire piece, null_subpiece_count == 0 @herain
-                if (pidx == (pointer->total_subpiece_count_ - 1) / subpiece_num_per_piece_g_)
-                {
-                    pointer->piece_nodes_[pidx] = PieceNode::Create(protocol::PieceInfo(index, pidx), pointer->last_piece_capacity_, true);
-                }
-                else
-                {
-                    pointer->piece_nodes_[pidx] = PieceNode::Create(protocol::PieceInfo(index, pidx), subpiece_num_per_piece_g_, true);
-                }
-            }
+            // 旧版本存储模式，在block不满的情况下存储，在这里全部舍弃
+            pointer.reset();
         }
-        pointer->curr_subpiece_count_ = pointer->total_subpiece_count_ - curr_null_subpiece_count;
+        else
+        {
+            pointer->node_state_ = BlockNode::DISK;
+        }
 
         block_node = pointer;
         return true;
@@ -190,21 +178,28 @@ namespace storage
         memcpy2((void*)(tmp + buf_len), tmp_buffer_size - buf_len, (void*)(&total_subpiece_count_), sizeof(uint32_t));
         buf_len += 4;
 
-        std::vector<PieceNode::p>::const_iterator pieceit = piece_nodes_.begin();
-        for (uint16_t pidx = 0; pieceit != piece_nodes_.end(); ++pieceit, ++pidx)
+        for (uint16_t pidx = 0; pidx < piece_count_.size(); pidx++)
         {
             // write piece_index @herain
             memcpy2((void*)(tmp + buf_len), tmp_buffer_size - buf_len, (void*)(&pidx), sizeof(boost::uint16_t));
             buf_len += 2;
             // get PieceNode buffer @herain
             base::AppBuffer piecebuf;
-            if (!piece_nodes_[pidx])
+            if (IsBlockSavedOnDisk())
             {
-                piecebuf = PieceNode::NullPieceToBuffer();
+                boost::dynamic_bitset<uint32_t> subpieces_set(piece_count_[pidx], 0);
+                // buffer content contains subpiece count and blocks in subpiece_set_ @herain
+                uint32_t buf_len = sizeof(uint32_t) + subpieces_set.num_blocks() * sizeof(uint32_t);
+                piecebuf.Length(buf_len);
+                uint32_t total_subpiece_count = subpieces_set.size();
+                memcpy2(piecebuf.Data(), piecebuf.Length(), &total_subpiece_count, sizeof(uint32_t));  // write subpiece count @herain
+                // 为了和1.5的内核Cfg文件格式保持一致
+                // 1.5内核中使用0表示存在，1表示不存在。
+                boost::to_block_range(subpieces_set, (uint32_t*)(piecebuf.Data() + 4));     // write blocks in subpiece_set_ @herain
             }
             else
             {
-                piecebuf = piece_nodes_[pidx]->ToBuffer();
+                piecebuf = base::AppBuffer(4, 0);
             }
 
             // reallocate buffer when encounter buffer space shortage @herain
@@ -232,50 +227,48 @@ namespace storage
         return outbuf;
     }
 
-    bool BlockNode::AddSubPiece(uint32_t index, SubPieceNode::p node)
+    bool BlockNode::AddSubpiece(uint32_t index, protocol::SubPieceBuffer buf)
     {
         assert(index <= total_subpiece_count_ -1);
-        if (!need_write_)
-            need_write_ = true;
 
-        uint32_t piece_index = index / subpiece_num_per_piece_g_;
-        uint16_t subpiece_index = index % subpiece_num_per_piece_g_;
-        if (!piece_nodes_[piece_index])
+        if (node_state_ == BlockNode::EMPTY)
         {
-            uint32_t piece_capacity;
-            if (piece_index != piece_nodes_.size() - 1)
-                piece_capacity = subpiece_num_per_piece_g_;
-            else
-                piece_capacity = last_piece_capacity_;
-            piece_nodes_[piece_index] = PieceNode::Create(protocol::PieceInfo(index_, piece_index), piece_capacity);
+            node_state_ = BlockNode::DOWNLOADING;
         }
-        if (piece_nodes_[piece_index]->AddSubPiece(subpiece_index, node))
+
+        if (subpieces_.find(index) == subpieces_.end())
         {
-            ++curr_subpiece_count_;
+            subpieces_[index] = buf;
             access_counter_.reset();
-            LOG4CPLUS_DEBUG_LOG(logger_node, "AddSubPiece [" << index_ << "|" << piece_index << "|" 
-                << subpiece_index << "]");
-            LOG4CPLUS_DEBUG_LOG(logger_node, "curr_subpiece_count_=" << curr_subpiece_count_ << ", need_write="
-                << need_write_);
+
+            uint32_t piece_index = index / subpiece_num_per_piece_g_;
+            piece_count_[piece_index]++;
+
+            if (IsFull() && !need_write_)
+            {
+                need_write_ = true;
+                node_state_ = BlockNode::MEM;
+            }
+
             return true;
         }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 
     bool BlockNode::LoadSubPieceBuffer(uint32_t index, protocol::SubPieceBuffer buf)
     {
-        assert(index <= total_subpiece_count_-1);
-        uint32_t piece_index = index / subpiece_num_per_piece_g_;
-        uint16_t subpiece_index = index % subpiece_num_per_piece_g_;
-        assert(piece_nodes_[piece_index]);
-        if (!piece_nodes_[piece_index])
-            return false;
-        if (piece_nodes_[piece_index]->LoadSubPieceBuffer(subpiece_index, buf))
+        assert(node_state_ == BlockNode::READING);
+
+        if (subpieces_.find(index) == subpieces_.end())
         {
+            subpieces_[index] = buf;
             access_counter_.reset();
+
+            if (subpieces_.size() == total_subpiece_count_)
+            {
+                node_state_ = BlockNode::ALL;
+            }
             return true;
         }
         else
@@ -286,12 +279,9 @@ namespace storage
 
     bool BlockNode::HasPiece (const uint32_t piece_index) const
     {
-        if (piece_index < piece_nodes_.size())
+        if (piece_index < piece_count_.size())
         {
-            if (!piece_nodes_[piece_index])
-                return false;
-            else
-                return piece_nodes_[piece_index]->IsFull();
+            return IsPieceFull(piece_index);
         }
         else
         {
@@ -302,66 +292,53 @@ namespace storage
 
     bool BlockNode::HasSubPiece(const uint32_t index) const
     {
-        uint32_t piece_index = index / subpiece_num_per_piece_g_;
-        if (!piece_nodes_[piece_index])
-        {
-            return false;
-        }
-        return piece_nodes_[piece_index]->HasSubPiece(index % subpiece_num_per_piece_g_);
+        if (IsBlockSavedOnDisk())
+            return true;
+        return subpieces_.find(index) != subpieces_.end();
     }
 
     bool BlockNode::HasSubPieceInMem(const uint32_t index) const
     {
-        assert(index <= total_subpiece_count_-1);
-        uint32_t piece_index = index / subpiece_num_per_piece_g_;
-
-        if (!piece_nodes_[piece_index])
-        {
-            LOG4CPLUS_DEBUG_LOG(logger_node, "PieceNode[" << piece_index << "] not exist");
-            return false;
-        }
-        return piece_nodes_[piece_index]->HasSubPieceInMem(index % subpiece_num_per_piece_g_);
+        assert(index <= total_subpiece_count_ - 1);
+        return subpieces_.find(index) != subpieces_.end();
     }
 
-    bool BlockNode::SetSubPieceReading(const uint32_t index)
+    bool BlockNode::SetBlockReading()
     {
-        assert(index <= total_subpiece_count_-1);
-        uint32_t piece_index = index / subpiece_num_per_piece_g_;
-        if (!piece_nodes_[piece_index])
+        if (node_state_ == BlockNode::DISK)
         {
-            assert(false);
+            node_state_ = BlockNode::READING;
+            return true;
+        }
+        else
+        {
             return false;
         }
-        return piece_nodes_[piece_index]->SetSubPieceReading(index % subpiece_num_per_piece_g_);
     }
 
     protocol::SubPieceBuffer BlockNode::GetSubPiece(uint32_t subpiece_index)
     {
         assert(subpiece_index <= total_subpiece_count_ - 1);
-        uint32_t piece_index = subpiece_index / subpiece_num_per_piece_g_;
-
-        if (!piece_nodes_[piece_index])
+        if (subpieces_.find(subpiece_index) != subpieces_.end())
         {
-            return protocol::SubPieceBuffer();
+            protocol::SubPieceBuffer buf = subpieces_[subpiece_index];
+            if (buf.IsValid(SUB_PIECE_SIZE))
+            {
+                access_counter_.reset();
+                return buf;
+            }
         }
 
-        protocol::SubPieceBuffer buf = piece_nodes_[piece_index]->GetSubPiece(subpiece_index % subpiece_num_per_piece_g_);
-        if (buf.IsValid(SUB_PIECE_SIZE))
-        {
-            access_counter_.reset();
-            return buf;
-        }
-        else
-            return protocol::SubPieceBuffer();
+        return protocol::SubPieceBuffer();
     }
 
     bool BlockNode::GetNextNullSubPiece(const uint32_t start, uint32_t& subpiece_for_download) const
     {
         uint32_t start_piece_index = start / subpiece_num_per_piece_g_;
 
-        for (uint32_t pidx = start_piece_index; pidx < piece_nodes_.size(); ++pidx)
+        for (uint32_t pidx = start_piece_index; pidx < piece_count_.size(); ++pidx)
         {
-            if (!piece_nodes_[pidx])
+            if (piece_count_[pidx] == 0)
             {
                 if (pidx == start_piece_index)
                     subpiece_for_download = start;
@@ -370,7 +347,7 @@ namespace storage
                 return true;
             }
 
-            if (piece_nodes_[pidx]->IsFull())
+            if (IsPieceFull(pidx))
             {
                 continue;
             }
@@ -379,14 +356,17 @@ namespace storage
                 // start subpiece index in piece pidx@herain
                 uint32_t startindex;
                 if (start_piece_index == pidx)
-                    startindex = start % subpiece_num_per_piece_g_;
+                    startindex = start;
                 else
-                    startindex = 0;
+                    startindex = pidx * subpiece_num_per_piece_g_;
 
-                if (piece_nodes_[pidx]->GetNextNullSubPiece(startindex, subpiece_for_download))
+                for (uint16_t sidx = (uint16_t)startindex; sidx < total_subpiece_count_; ++sidx)
                 {
-                    subpiece_for_download += pidx * subpiece_num_per_piece_g_;
-                    return true;
+                    if (subpieces_.find(sidx) == subpieces_.end())
+                    {
+                        subpiece_for_download = sidx;
+                        return true;
+                    }
                 }
             }
         }
@@ -418,39 +398,34 @@ namespace storage
     void BlockNode::ClearBlockMemCache(uint32_t play_subpiece_index)
     {
         access_counter_.reset();
-        uint32_t play_piece = play_subpiece_index / subpiece_num_per_piece_g_;
         uint16_t play_subpiece = play_subpiece_index % subpiece_num_per_piece_g_;
         LOG4CPLUS_DEBUG_LOG(logger_node, "ClearBlockMemCache play_subpiece_index:" << play_subpiece_index);
 
-        for (uint32_t pidx = 0; pidx <= play_piece && pidx < piece_nodes_.size(); ++pidx)
+        for (uint32_t sidx = 0; sidx <= play_subpiece_index && sidx < subpieces_.size(); ++sidx)
         {
-            if (!piece_nodes_[pidx])
+            if (subpieces_.find(sidx) == subpieces_.end())
                 continue;
 
-            // 非磁盘模式ClearBlockMemCache会造成数据丢失 @herain
-#ifndef DISK_MODE
-            uint16_t old_subpiece_count = piece_nodes_[pidx]->GetCurrSubPieceCount();
-#endif
-            if (pidx == play_piece)
-                piece_nodes_[pidx]->ClearBlockMemCache(play_subpiece);
-            else
-                piece_nodes_[pidx]->ClearBlockMemCache(subpiece_num_per_piece_g_);
+            subpieces_.erase(sidx);
+            if (!IsBlockSavedOnDisk())
+            {
+                uint32_t play_piece = sidx / subpiece_num_per_piece_g_;
+                piece_count_[play_piece]--;
+            }
+        }
 
-#ifndef DISK_MODE
-            uint16_t new_subpiece_count = piece_nodes_[pidx]->GetCurrSubPieceCount();
-            curr_subpiece_count_ -= old_subpiece_count - new_subpiece_count;
-#endif
+        if (node_state_ == BlockNode::ALL)
+        {
+            node_state_ = BlockNode::DISK;
         }
     }
 
     void BlockNode::OnWriteFinish()
     {
-        for (uint32_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
+        if (node_state_ == BlockNode::SAVING)
         {
-            if (!piece_nodes_[pidx])
-                continue;
-
-            piece_nodes_[pidx]->OnWriteFinish();
+            subpieces_.clear();
+            node_state_ = BlockNode::DISK;
         }
     }
 
@@ -464,37 +439,65 @@ namespace storage
 
         need_write_ = false;
         LOG4CPLUS_DEBUG_LOG(logger_node, "set need_write_ false.");
-        for (uint32_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
-        {
-            if (!piece_nodes_[pidx])
-                continue;
 
-            piece_nodes_[pidx]->GetBufferForSave(buffer_set);
+        switch(node_state_)
+        {
+        case BlockNode::ALL:
+            node_state_ = BlockNode::DISK;
+            subpieces_.clear();
+            break;
+        case BlockNode::MEM:
+            node_state_ = SAVING;
+            for (uint32_t sidx = 0; sidx < subpieces_.size(); sidx++)
+            {
+                assert(subpieces_.find(sidx) != subpieces_.end());
+                buffer_set.insert(std::make_pair(protocol::SubPieceInfo(index_, sidx), subpieces_[sidx]));
+            }
+            break;
+        default:
+            break;
         }
     }
 
     bool BlockNode::IsSaving() const
     {
-        for (boost::uint16_t pidx = 0; pidx < piece_nodes_.size(); ++pidx)
-        {
-            if (piece_nodes_[pidx] && piece_nodes_[pidx]->IsSaving())
-                return true;
-        }
-        return false;
+        return node_state_ == SAVING;
+    }
+
+    bool BlockNode::IsPieceFull(uint32_t piece_index) const
+    {
+        assert(piece_index < piece_count_.size());
+        if (piece_index == piece_count_.size() - 1)
+            return piece_count_[piece_index] == last_piece_capacity_;
+        else
+            return piece_count_[piece_index] == subpiece_num_per_piece_g_;
     }
 
     std::ostream& operator << (std::ostream& os, const BlockNode& node)
     {
-        std::vector<PieceNode::p>::const_iterator iter = node.piece_nodes_.begin();
-        for (uint32_t pidx = 0; iter != node.piece_nodes_.end(); ++pidx, ++iter)
+        for (uint32_t pidx = 0; pidx < node.piece_count_.size(); pidx++)
         {
             os << std::setw(6) << pidx << " ";
-            if (node.piece_nodes_[pidx])
+            if (node.piece_count_[pidx] != 0)
             {
-                os << *(node.piece_nodes_[pidx]);
+                uint32_t start_postion = pidx * subpiece_num_per_piece_g_;
+                uint32_t end_position  = (pidx == node.piece_count_.size() - 1) ? node.last_piece_capacity_ : subpiece_num_per_piece_g_;
+                for (uint32_t sidx = start_postion; sidx < end_position; sidx++)
+                {
+                    if (node.subpieces_.find(sidx) != node.subpieces_.end())
+                    {
+                        os << "1";
+                    }
+                    else
+                    {
+                        os << "0";
+                    }
+                }
             }
+
             os << std::endl;
         }
+        
         return os;
     }
 }

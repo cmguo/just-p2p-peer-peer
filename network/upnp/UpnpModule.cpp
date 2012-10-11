@@ -10,6 +10,10 @@
 #include "network/upnp/miniupnpc/miniupnpc.h"
 #include "network/upnp/miniupnpc/upnpcommands.h"
 #include "network/upnp/miniupnpc/upnperrors.h"
+#include "network/upnp/miniupnpc/miniwget.h"
+
+#include "p2sp/stun/StunModule.h"
+
 #include <algorithm>
 using namespace std;
 using namespace boost;
@@ -66,12 +70,18 @@ namespace p2sp
     {
         tcpPorts_.insert(tcpPorts.begin(),tcpPorts.end());
         udpPorts_.insert(udpPorts.begin(),udpPorts.end());
-        UpnpThread::IOS().post(boost::bind(&UpnpModule::MapPort, UpnpModule::Inst(), tcpPorts_,udpPorts_));        
+
+        UpnpThread::Inst().Post(boost::bind(&UpnpModule::MapPort, UpnpModule::Inst(), tcpPorts_,udpPorts_));        
     }
 
     void UpnpModule::OnTimerElapsed(framework::timer::Timer * pointer)
     {
-        UpnpThread::IOS().post(boost::bind(&UpnpModule::MapPort, UpnpModule::Inst(), tcpPorts_,udpPorts_));
+        if(isInMapping_)
+        {
+            //正在映射中，不映射了。定时器的时间到了，但是上次映射还没有完成就会走到这里
+            return;
+        }
+        UpnpThread::Inst().Post(boost::bind(&UpnpModule::MapPort, UpnpModule::Inst(), tcpPorts_,udpPorts_));
     }
 
     boost::uint16_t UpnpModule::GetUpnpExternalTcpPort(boost::uint16_t inPort)
@@ -97,15 +107,18 @@ namespace p2sp
         }
         else
         {
+            LOG4CPLUS_DEBUG_LOG(logger_upnp, "don't need to GetValidIGD,time not enough");
             return;
         }
 
-        UPNPDev* structDeviceList= upnpDiscover(5000, NULL, NULL, 0);
+        int error = 0;
+
+        UPNPDev* structDeviceList= upnpDiscover(2000, NULL, NULL, 0,0,&error);
         if (NULL == structDeviceList)
         {
             statistic::DACStatisticModule::Inst()->SubmitUpnpStat(STAT_DISCOVER_FAIL);
 
-            LOG4CPLUS_INFO_LOG(logger_upnp, "upnpDiscover failed");
+            LOG4CPLUS_INFO_LOG(logger_upnp, "upnpDiscover failed,error:"<<error);
             //没有UPnP设备发现
             return;
         }
@@ -118,42 +131,37 @@ namespace p2sp
 
         UPNPUrls upnpUrls;
         IGDdatas igdData;
-        //遍历upnp设备，找到IGD
-        UPNPDev* pDevice = NULL;
-        for(pDevice = structDeviceList; pDevice != NULL; pDevice = pDevice->pNext)
-        {               
-            memset(&upnpUrls,0,sizeof(UPNPUrls));            
-            memset(&igdData,0,sizeof(IGDdatas));
-            char	lanaddr[16]={0};
-            //     1 = A valid connected IGD has been found
-            //     2 = A valid IGD has been found but it reported as not connected
+          
+        memset(&upnpUrls,0,sizeof(UPNPUrls));            
+        memset(&igdData,0,sizeof(IGDdatas));
+        char	lanaddr[16]={0};
+        //     1 = A valid connected IGD has been found
+        //     2 = A valid IGD has been found but it reported as not connected
 
-            //底层是通过getsockname获取到的lanaddr
-            int iResult = UPNP_GetValidIGD(structDeviceList, &upnpUrls, &igdData, lanaddr, sizeof(lanaddr));
-            if(iResult == 1)
-            {
-                //找到IGD设备了
-                controlUrl_ = upnpUrls.controlURL;
-                serviceType_ =  igdData.servicetype;
-                landAddr_ = lanaddr;
-                break;
-            }
-        }
-        if(pDevice != NULL)
+        //底层是通过getsockname获取到的lanaddr
+        int iResult = UPNP_GetValidIGD(structDeviceList, &upnpUrls, &igdData, lanaddr, sizeof(lanaddr));
+        if(1 == iResult)
         {
-            //找到了设备
-            LOG4CPLUS_DEBUG_LOG(logger_upnp, "UPNP_GetValidIGD success");
+            //找到IGD设备了
+            controlUrl_ = upnpUrls.controlURL;
+            serviceType_ =  igdData.first.servicetype;
+            landAddr_ = lanaddr;
+            descUrl_ = upnpUrls.rootdescURL;
+            LOG4CPLUS_INFO_LOG(logger_upnp, "find igd:controlurl:"<<controlUrl_<<" serviceType:"<<serviceType_<<
+                " landAddr_:"<<landAddr_);           
         }
         else
         {
             //没有找到设备       
             statistic::DACStatisticModule::Inst()->SubmitUpnpStat(STAT_DISCOVER_FAIL);
-            LOG4CPLUS_INFO_LOG(logger_upnp, "UPNP_GetValidIGD failed");
-        }
+            LOG4CPLUS_INFO_LOG(logger_upnp,"UPNP_GetValidIGD failed return:"<<iResult);
+        }      
 
         //释放内存
         freeUPNPDevlist(structDeviceList);     
         FreeUPNPUrls(&upnpUrls);      
+
+        GetManufacturer();
     }
 
     void UpnpModule::MapPort(const std::map<boost::uint16_t,boost::uint16_t>& tcpPorts,
@@ -163,12 +171,7 @@ namespace p2sp
         {
             LOG4CPLUS_INFO_LOG(logger_upnp, "don't need to map");
             return;
-        }
-        if(isInMapping_)
-        {
-            //正在映射中，不映射了。定时器的时间到了，但是上次映射还没有完成就会走到这里
-            return;
-        }
+        }        
 
         isInMapping_ = true;
         GetValidIGD();        
@@ -202,6 +205,15 @@ namespace p2sp
             DoDelPortMapping(it->first,it->second,"UDP");
         } 
 
+        if(toDelUdpPorts.empty())
+        {
+            //走到这里说明没有需要删除的udp端口，也就是说udp端口或者没有映射，或者只有一个映射。由于不会删除，就可以检测upnp了。
+            for(std::multimap<uint16_t,uint16_t>::const_iterator it = mappedUdpPort_.begin();it!=mappedUdpPort_.end();++it)
+            {
+                EvokeNatcheck(it->first,it->second);
+            }
+        }
+
         //上面的两个DoDel如果都成功的话，那么mappedTcpPort_和mappedUdpPort_的key就不会有重复的了。multimap实际上就是map了。
 
         for(std::map<boost::uint16_t,boost::uint16_t>::const_iterator it =  toAddTcpPorts.begin(); it != toAddTcpPorts.end();++it)
@@ -211,7 +223,12 @@ namespace p2sp
 
         for(std::map<boost::uint16_t,boost::uint16_t>::const_iterator it =  toAddUdpPorts.begin(); it != toAddUdpPorts.end();++it)
         {
-            DoAddPortMapping(it->first,it->second,"PPLive","UDP");
+            boost::uint16_t exUpnpPort=DoAddPortMapping(it->first,it->second,"PPLive","UDP");
+            if(exUpnpPort != 0)
+            {
+                //如果映射成功了，就促发一次upnp的nat类型的检查
+                EvokeNatcheck(it->first,exUpnpPort);
+            }
         } 
         
         isInMapping_ = false;   
@@ -271,6 +288,26 @@ namespace p2sp
             }
         }
 
+         for(std::map<uint16_t,uint16_t>::const_iterator it = requirePorts.begin();it!=requirePorts.end();++it)
+         {
+             LOG4CPLUS_INFO_LOG(logger_upnp,"require map:"<<it->first<<"--"<<it->second);
+         }
+
+         for(std::multimap<uint16_t,uint16_t>::const_iterator it = mappedPorts.begin();it!=mappedPorts.end();++it)
+         {
+             LOG4CPLUS_INFO_LOG(logger_upnp,"mappedPorts:"<<it->first<<"--"<<it->second);
+         }
+
+         for(std::multimap<uint16_t,uint16_t>::const_iterator it = toDelPorts.begin();it!=toDelPorts.end();++it)
+         {
+             LOG4CPLUS_INFO_LOG(logger_upnp,"toDelPorts:"<<it->first<<"--"<<it->second);
+         }
+
+         for(std::map<uint16_t,uint16_t>::const_iterator it = toAddPorts.begin();it!=toAddPorts.end();++it)
+         {
+             LOG4CPLUS_INFO_LOG(logger_upnp,"toAddPorts:"<<it->first<<"--"<<it->second);
+         }
+
     }
 
     void UpnpModule::SetDelAddStat(const std::multimap<boost::uint16_t,boost::uint16_t>& toDelTcpPorts,
@@ -305,12 +342,10 @@ namespace p2sp
     void UpnpModule::GetMappedPort()
     {
         //获得已经映射过的port
-        //有这个函数，UPNP_GetPortMappingNumberOfEntries，可以获取映射的port的个数，但是不是所有的路由器都支持
+
+
+        //假设最多映射1024个端口
         unsigned maxindex = 1024;
-        if(UPNPCOMMAND_SUCCESS != UPNP_GetPortMappingNumberOfEntries(controlUrl_.c_str(),serviceType_.c_str(),&maxindex))
-        {
-            maxindex = 1024;
-        }
 
         unsigned index = 0;
 
@@ -331,6 +366,7 @@ namespace p2sp
             char enable[10]={0};
             char inclient[20]={0};
 
+
             int ret = UPNP_GetGenericPortMappingEntry(controlUrl_.c_str(),serviceType_.c_str(),
                 cIndex,exPort,inclient,inport,protocol,NULL,enable,NULL,NULL);
             if( UPNPCOMMAND_SUCCESS == ret)
@@ -345,12 +381,10 @@ namespace p2sp
 
                 if(strcmp(protocol,"TCP") == 0)
                 {
-                    //mappedTcpPort_[atoi(inport)] = atoi(exPort);
                     mappedTcpPort_.insert(std::make_pair(atoi(inport),atoi(exPort)));
                 }
                 else if(strcmp(protocol,"UDP") == 0)
                 {
-                    //mappedUdpPort_[atoi(inport)] = atoi(exPort);
                     mappedUdpPort_.insert(std::make_pair(atoi(inport),atoi(exPort)));
                 }
                 else
@@ -383,7 +417,7 @@ namespace p2sp
 
     void UpnpModule::DoDelPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * proto)
     {
-        LOG4CPLUS_DEBUG_LOG(logger_upnp, "to delete  inport:"<<inPort<<"export:"<<exPort<<" proto:"<<proto);
+        LOG4CPLUS_INFO_LOG(logger_upnp, "to delete  inport:"<<inPort<<"export:"<<exPort<<" proto:"<<proto);
 
         char cExPort[10]={0};
         sprintf(cExPort, "%u", exPort);
@@ -409,26 +443,35 @@ namespace p2sp
         }       
     }
 
-    void UpnpModule::DoAddPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * desc,const char * proto)
+    boost::uint16_t UpnpModule::DoAddPortMapping(boost::uint16_t inPort,boost::uint16_t exPort,const char * desc,const char * proto)
     {
-        LOG4CPLUS_DEBUG_LOG(logger_upnp, "to add inport:"<<inPort<<"export:"<<exPort<<"desc:"<< desc <<" proto:"<<proto);
+        LOG4CPLUS_INFO_LOG(logger_upnp, "to add inport:"<<inPort<<"export:"<<exPort<<"desc:"<< desc <<" proto:"<<proto);
         
         char cInPort[10]={0};
         sprintf(cInPort, "%u", inPort);
 
         int ret = -1;
         int retryTimes = 0;
+        boost::uint16_t toMapPort = 0;
         while(ret != 0 && retryTimes++<5)
         {
-            srand(time(NULL) + retryTimes);
+            
+            char cExPort[10]={0};
             if(0 == exPort)
             {
+                srand(time(NULL) + retryTimes + inPort);
                 //没有指定要映射的port，就随机生成一个
-                exPort = rand() % 30000 + 2000;
+                toMapPort = rand() % 30000 + 2000;                
             }
-            char cExPort[10]={0};
-            sprintf(cExPort, "%u", exPort);
-            ret = UPNP_AddPortMapping(controlUrl_.c_str(),serviceType_.c_str(),cExPort,cInPort,landAddr_.c_str(),desc,proto,NULL);
+            else
+            {
+                toMapPort = exPort;
+            }
+
+            sprintf(cExPort, "%u", toMapPort);
+            
+            //r = UPNP_AddPortMapping(urls->controlURL, data->first.servicetype,eport, iport, iaddr, 0, proto, 0, leaseDuration);
+            ret = UPNP_AddPortMapping(controlUrl_.c_str(),serviceType_.c_str(),cExPort,cInPort,landAddr_.c_str(),desc,proto,NULL,NULL);
             if(ret != 0)
             {
                 LOG4CPLUS_INFO_LOG(logger_upnp, "UPNP_AddPortMapping failed ,return:"<<ret);
@@ -437,17 +480,77 @@ namespace p2sp
             {
                 if(strcmp("UDP",proto)==0)
                 {
-                    //mappedUdpPort_[inPort] = exPort;
-                    mappedUdpPort_.insert(std::make_pair(inPort,exPort));
+                   mappedUdpPort_.insert(std::make_pair(inPort,exPort));
                 }
                 else
                 {
                     mappedTcpPort_.insert(std::make_pair(inPort,exPort));
-                    //mappedTcpPort_[inPort] = exPort;
                 }
             }
         }
 
         statistic::DACStatisticModule::Inst()->SubmitUpnpPortMapping(strcmp("TCP",proto)==0,ret == 0);         
+
+        return ret == 0 ? toMapPort:0;
+    }
+
+    void UpnpModule::GetManufacturer()
+    {
+        if(descUrl_.empty())
+        {
+            return;
+        }
+        void* cXml = NULL;
+        int xmlSize = 0;
+        char	lanaddr[16]={0};
+        if( (cXml = miniwget_getaddr(descUrl_.c_str(), &(xmlSize),lanaddr, sizeof(lanaddr))) != NULL)
+        {
+            std::string xml = string((char*)cXml,xmlSize);
+            std::string::size_type start = xml.find("<modelName>");
+            std::string::size_type end = xml.find("</modelName>");
+            if( start!= std::string::npos && end != std::string::npos)
+            {
+                assert(start<xmlSize);
+                assert(end<xmlSize);
+                if(end >= strlen("<modelName>") + start)
+                {
+                    idgModName_ = std::string(xml.c_str() + start + strlen("<modelName>"),end - start - strlen("<modelName>"));
+                    LOG4CPLUS_INFO_LOG(logger_upnp, "idgModName_:"<<idgModName_);
+                    statistic::DACStatisticModule::Inst()->SetNatName(idgModName_);
+                }
+            }            
+            free(cXml);
+        }
+    }
+
+    void UpnpModule::EvokeNatcheck(boost::uint16_t innerUdpPort,boost::uint16_t exUdpPort)
+    {
+        //innerUdpPort 必须是 peer绑定的收发包端口，才有必要natcheck检测。这个端口一般是5041
+        if(innerUdpPort != AppModule::Inst()->GetLocalUdpPort())
+        {
+            LOG4CPLUS_INFO_LOG(logger_upnp,"not local udp port:"<<innerUdpPort<<":"<<exUdpPort);
+            return;
+        }
+
+        static pair<boost::uint16_t,boost::uint16_t> natcheck_pair = make_pair(0,0);
+
+        if(make_pair(innerUdpPort,exUdpPort) == natcheck_pair)
+        {
+            //已经处理过的映射，不管了
+            LOG4CPLUS_INFO_LOG(logger_upnp,"not process again local udp port:"<<innerUdpPort<<":"<<exUdpPort);
+            return;
+        }
+
+        if(StunModule::Inst()->GetNatCheckState() == -1)
+        {
+            //natcheck还没有完成，等它完成了再考虑重新检测upnp
+            LOG4CPLUS_INFO_LOG(logger_upnp,"nat check is still on,check upnp next time");
+            return;
+        }
+
+        //没有处理过的映射
+        natcheck_pair = make_pair(innerUdpPort,exUdpPort);
+        StunModule::Inst()->CheckForUpnp(innerUdpPort,exUdpPort);
+
     }
 }

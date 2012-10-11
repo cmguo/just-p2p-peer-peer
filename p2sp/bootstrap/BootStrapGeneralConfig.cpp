@@ -169,6 +169,10 @@ namespace p2sp
         , factor_used_on_cdn_sn_speed_(2)
         , need_protect_cdn_sn_(false)
         , second_delay_for_check_sn_speed_(8)
+        , http_protect_time2_when_start_(3000)
+        , http_protect_time2_when_start_in_saving_mode_(3000)
+        , http_download_bytes_delim_when_start_(0)
+        , http_download_bytes_delim_when_start_in_saving_mode_(0)
     {
     }
 
@@ -372,6 +376,10 @@ namespace p2sp
                 ("config.fcss", po::value<uint32_t>()->default_value(factor_used_on_cdn_sn_speed_))
                 ("config.npcs", po::value<bool>()->default_value(need_protect_cdn_sn_))
                 ("config.sdss", po::value<uint32_t>()->default_value(second_delay_for_check_sn_speed_))
+                ("config.hpt2", po::value<uint32_t>()->default_value(http_protect_time2_when_start_))
+                ("config.hpt2save", po::value<uint32_t>()->default_value(http_protect_time2_when_start_in_saving_mode_))
+                ("config.hdbd", po::value<uint32_t>()->default_value(http_download_bytes_delim_when_start_))
+                ("config.hdbdsave", po::value<uint32_t>()->default_value(http_download_bytes_delim_when_start_in_saving_mode_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -531,6 +539,10 @@ namespace p2sp
             factor_used_on_cdn_sn_speed_ = vm["config.fcss"].as<uint32_t>();
             need_protect_cdn_sn_ = vm["config.npcs"].as<bool>();
             second_delay_for_check_sn_speed_ = vm["config.sdss"].as<uint32_t>();
+            http_protect_time2_when_start_ = vm["config.hpt2"].as<uint32_t>();
+            http_protect_time2_when_start_in_saving_mode_ = vm["config.hpt2save"].as<uint32_t>();
+            http_download_bytes_delim_when_start_ = vm["config.hdbd"].as<uint32_t>();
+            http_download_bytes_delim_when_start_in_saving_mode_ = vm["config.hdbdsave"].as<uint32_t>();
 
             if (save_to_disk)
             {

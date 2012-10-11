@@ -1,8 +1,8 @@
-/* $Id: miniupnpcmodule.c,v 1.14 2009/10/16 09:02:47 nanard Exp $*/
+/* $Id: miniupnpcmodule.c,v 1.19 2012/01/21 13:30:32 nanard Exp $*/
 /* Project : miniupnp
  * Author : Thomas BERNARD
  * website : http://miniupnp.tuxfamily.org/
- * copyright (c) 2007-2009 Thomas Bernard
+ * copyright (c) 2007-2012 Thomas Bernard
  * This software is subjet to the conditions detailed in the
  * provided LICENCE file. */
 #include <Python.h>
@@ -32,7 +32,7 @@ typedef struct {
 	struct UPNPUrls urls;
 	struct IGDdatas data;
 	unsigned int discoverdelay;	/* value passed to upnpDiscover() */
-	char lanaddr[16];	/* our ip address on the LAN */
+	char lanaddr[40];	/* our ip address on the LAN */
 	char * multicastif;
 	char * minissdpdsocket;
 } UPnPObject;
@@ -77,7 +77,9 @@ UPnP_discover(UPnPObject *self)
 	self->devlist = upnpDiscover((int)self->discoverdelay/*timeout in ms*/,
 	                             0/* multicast if*/,
 	                             0/*minissdpd socket*/,
-								 0/*sameport flag*/);
+								 0/*sameport flag*/,
+	                             0/*ip v6*/,
+	                             0/*error */);
 	Py_END_ALLOW_THREADS
 	/* Py_RETURN_NONE ??? */
 	for(dev = self->devlist, i = 0; dev; dev = dev->pNext)
@@ -112,7 +114,7 @@ UPnP_totalbytesent(UPnPObject *self)
 	UNSIGNED_INTEGER i;
 Py_BEGIN_ALLOW_THREADS
 	i = UPNP_GetTotalBytesSent(self->urls.controlURL_CIF,
-	                           self->data.servicetype_CIF);
+	                           self->data.CIF.servicetype);
 Py_END_ALLOW_THREADS
 	return Py_BuildValue("I", i);
 }
@@ -123,7 +125,7 @@ UPnP_totalbytereceived(UPnPObject *self)
 	UNSIGNED_INTEGER i;
 Py_BEGIN_ALLOW_THREADS
 	i = UPNP_GetTotalBytesReceived(self->urls.controlURL_CIF,
-		                           self->data.servicetype_CIF);
+		                           self->data.CIF.servicetype);
 Py_END_ALLOW_THREADS
 	return Py_BuildValue("I", i);
 }
@@ -134,7 +136,7 @@ UPnP_totalpacketsent(UPnPObject *self)
 	UNSIGNED_INTEGER i;
 Py_BEGIN_ALLOW_THREADS
 	i = UPNP_GetTotalPacketsSent(self->urls.controlURL_CIF,
-		                         self->data.servicetype_CIF);
+		                         self->data.CIF.servicetype);
 Py_END_ALLOW_THREADS
 	return Py_BuildValue("I", i);
 }
@@ -145,7 +147,7 @@ UPnP_totalpacketreceived(UPnPObject *self)
 	UNSIGNED_INTEGER i;
 Py_BEGIN_ALLOW_THREADS
 	i = UPNP_GetTotalPacketsReceived(self->urls.controlURL_CIF,
-		                          self->data.servicetype_CIF);
+		                          self->data.CIF.servicetype);
 Py_END_ALLOW_THREADS
 	return Py_BuildValue("I", i);
 }
@@ -160,7 +162,7 @@ UPnP_statusinfo(UPnPObject *self)
 	status[0] = '\0';
 	lastconnerror[0] = '\0';
 Py_BEGIN_ALLOW_THREADS
-	r = UPNP_GetStatusInfo(self->urls.controlURL, self->data.servicetype,
+	r = UPNP_GetStatusInfo(self->urls.controlURL, self->data.first.servicetype,
 	                   status, &uptime, lastconnerror);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS) {
@@ -180,7 +182,7 @@ UPnP_connectiontype(UPnPObject *self)
 	connectionType[0] = '\0';
 Py_BEGIN_ALLOW_THREADS
 	r = UPNP_GetConnectionTypeInfo(self->urls.controlURL,
-	                               self->data.servicetype,
+	                               self->data.first.servicetype,
 	                               connectionType);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS) {
@@ -195,12 +197,12 @@ Py_END_ALLOW_THREADS
 static PyObject *
 UPnP_externalipaddress(UPnPObject *self)
 {
-	char externalIPAddress[16];
+	char externalIPAddress[40];
 	int r;
 	externalIPAddress[0] = '\0';
 Py_BEGIN_ALLOW_THREADS
 	r = UPNP_GetExternalIPAddress(self->urls.controlURL,
-	                              self->data.servicetype,
+	                              self->data.first.servicetype,
 	                              externalIPAddress);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS) {
@@ -226,6 +228,7 @@ UPnP_addportmapping(UPnPObject *self, PyObject *args)
 	const char * host;
 	const char * desc;
 	const char * remoteHost;
+	const char * leaseDuration = "0";
 	int r;
 	if (!PyArg_ParseTuple(args, "HssHss", &ePort, &proto,
 	                                     &host, &iPort, &desc, &remoteHost))
@@ -233,8 +236,9 @@ UPnP_addportmapping(UPnPObject *self, PyObject *args)
 Py_BEGIN_ALLOW_THREADS
 	sprintf(extPort, "%hu", ePort);
 	sprintf(inPort, "%hu", iPort);
-	r = UPNP_AddPortMapping(self->urls.controlURL, self->data.servicetype,
-	                        extPort, inPort, host, desc, proto, remoteHost);
+	r = UPNP_AddPortMapping(self->urls.controlURL, self->data.first.servicetype,
+	                        extPort, inPort, host, desc, proto,
+	                        remoteHost, leaseDuration);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS)
 	{
@@ -265,7 +269,7 @@ UPnP_deleteportmapping(UPnPObject *self, PyObject *args)
 		return NULL;
 Py_BEGIN_ALLOW_THREADS
 	sprintf(extPort, "%hu", ePort);
-	r = UPNP_DeletePortMapping(self->urls.controlURL, self->data.servicetype,
+	r = UPNP_DeletePortMapping(self->urls.controlURL, self->data.first.servicetype,
 	                           extPort, proto, remoteHost);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS) {
@@ -284,7 +288,7 @@ UPnP_getportmappingnumberofentries(UPnPObject *self)
 	int r;
 Py_BEGIN_ALLOW_THREADS
 	r = UPNP_GetPortMappingNumberOfEntries(self->urls.controlURL,
-	                                   self->data.servicetype,
+	                                   self->data.first.servicetype,
 									   &n);
 Py_END_ALLOW_THREADS
 	if(r==UPNPCOMMAND_SUCCESS) {
@@ -304,22 +308,31 @@ UPnP_getspecificportmapping(UPnPObject *self, PyObject *args)
 	char extPort[6];
 	unsigned short ePort;
 	const char * proto;
-	char intClient[16];
+	char intClient[40];
 	char intPort[6];
 	unsigned short iPort;
+	char desc[80];
+	char enabled[4];
+	char leaseDuration[16];
 	if(!PyArg_ParseTuple(args, "Hs", &ePort, &proto))
 		return NULL;
+	extPort[0] = '\0'; intClient[0] = '\0'; intPort[0] = '\0';
+	desc[0] = '\0'; enabled[0] = '\0'; leaseDuration[0] = '\0';
 Py_BEGIN_ALLOW_THREADS
 	sprintf(extPort, "%hu", ePort);
 	UPNP_GetSpecificPortMappingEntry(self->urls.controlURL,
-	                                 self->data.servicetype,
+	                                 self->data.first.servicetype,
 									 extPort, proto,
-									 intClient, intPort);
+									 intClient, intPort,
+	                                 desc, enabled, leaseDuration);
 Py_END_ALLOW_THREADS
 	if(intClient[0])
 	{
 		iPort = (unsigned short)atoi(intPort);
-		return Py_BuildValue("(s,H)", intClient, iPort);
+		return Py_BuildValue("(s,H,s,O,i)",
+		                     intClient, iPort, desc,
+		                     PyBool_FromLong(atoi(enabled)),
+		                     atoi(leaseDuration));
 	}
 	else
 	{
@@ -333,7 +346,7 @@ UPnP_getgenericportmapping(UPnPObject *self, PyObject *args)
 {
 	int i, r;
 	char index[8];
-	char intClient[16];
+	char intClient[40];
 	char intPort[6];
 	unsigned short iPort;
 	char extPort[6];
@@ -352,7 +365,7 @@ Py_BEGIN_ALLOW_THREADS
 	duration[0] = '\0'; desc[0] = '\0';
 	extPort[0] = '\0'; intPort[0] = '\0'; intClient[0] = '\0';
 	r = UPNP_GetGenericPortMappingEntry(self->urls.controlURL,
-	                                    self->data.servicetype,
+	                                    self->data.first.servicetype,
 										index,
 										extPort, intClient, intPort,
 										protocol, desc, enabled, rHost,
@@ -459,7 +472,7 @@ static PyTypeObject UPnPType = {
     0,                         /* tp_dictoffset */
     0,/*(initproc)UPnP_init,*/      /* tp_init */
     0,                         /* tp_alloc */
-#ifndef WIN32
+#ifndef _WIN32
     PyType_GenericNew,/*UPnP_new,*/      /* tp_new */
 #else
     0,
@@ -479,7 +492,7 @@ initminiupnpc(void)
 {
     PyObject* m;
 
-#ifdef WIN32
+#ifdef _WIN32
     UPnPType.tp_new = PyType_GenericNew;
 #endif
     if (PyType_Ready(&UPnPType) < 0)

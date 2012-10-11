@@ -350,6 +350,14 @@ namespace p2sp
                 return true;
             }
 
+            if (time_counter_2300_.elapsed() >= BootStrapGeneralConfig::Inst()->GetHttpProtectTime2WhenStart(is_saving_mode_) &&
+                GetHTTPControlTarget()->GetSpeedInfo().TotalDownloadBytes <= BootStrapGeneralConfig::Inst()->GetHttpDownloadBytesDelimWhenStart(is_saving_mode_))
+            {
+                live_download_driver_->SubmitChangedToP2PCondition(BLOCK);
+                reason_of_stoping_http_ = BLOCK;
+                return true;
+            }
+
             if (rest_play_time_in_second == 0 &&
                 time_counter_2300_.elapsed() >= BootStrapGeneralConfig::Inst()->GetHttpProtectTimeWhenStart(is_saving_mode_))
             {
