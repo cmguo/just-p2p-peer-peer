@@ -7,10 +7,10 @@
 #include "network/upnp/UpnpThread.h"
 
 #include "statistic/DACStatisticModule.h"
-#include "network/upnp/miniupnpc/miniupnpc.h"
-#include "network/upnp/miniupnpc/upnpcommands.h"
-#include "network/upnp/miniupnpc/upnperrors.h"
-#include "network/upnp/miniupnpc/miniwget.h"
+#include "miniupnpc.h"
+#include "upnpcommands.h"
+#include "upnperrors.h"
+#include "miniwget.h"
 
 #include "p2sp/stun/StunModule.h"
 
