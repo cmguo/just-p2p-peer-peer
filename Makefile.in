@@ -42,7 +42,7 @@ PROJECT_HEADER_DIRECTORY	:=
 
 PROJECT_COMMON_HEADERS  	:=
 
-PROJECT_INTERNAL_INCLUDES	:= protocol protocol/include
+PROJECT_INTERNAL_INCLUDES	:= protocol protocol/include miniupnpc
 
 ## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
 
@@ -70,6 +70,7 @@ PROJECT_DEPENDS			:= \
 				/base/zlib \
 				../tinyxml \
 				../log4cplus \
+				../miniupnpc \
 				../protocol/udpserver_mod \
 
 ## 该项目特定的引用库
