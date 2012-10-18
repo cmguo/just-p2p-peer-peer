@@ -12,8 +12,6 @@
 
 namespace storage
 {
-    using protocol::SubPieceBuffer;
-    using protocol::SubPieceContent;
     using base::util::memcpy2;
 #ifdef LOG_ENABLE
     static log4cplus::Logger logger_node = log4cplus::Logger::getInstance("[block_node]");

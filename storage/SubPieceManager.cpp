@@ -13,8 +13,6 @@
 
 namespace storage
 {
-    using protocol::SubPieceBuffer;
-    using protocol::SubPieceContent;
     using base::util::memcpy2;
 #ifdef LOG_ENABLE
     static log4cplus::Logger logger_subpiecemanager = log4cplus::Logger::getInstance("[subpiece_manager]");
@@ -320,7 +318,7 @@ namespace storage
             assert(node->IsFull());
             assert(block_bit_map_->HasBlock(block_index));
             // block is full, include data in memory and disk @herain
-            std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, SubPieceBuffer>();
+            std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>();
             node->GetBufferForSave(*buffer_set_p);
             if (buffer_set_p->empty())
             {
