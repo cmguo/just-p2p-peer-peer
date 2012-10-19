@@ -136,7 +136,7 @@ bool IsProxyModuleStarted()
 #ifdef PEER_PC_CLIENT
 void PEER_API Startup(LPWSTARTPARAM lpParam)
 #else
-void PEER_API Startup(LPSTARTPARAM lpParam)
+boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
 #endif
 {
     boost::unique_lock<boost::mutex> ul(peer_mu_);
@@ -187,6 +187,9 @@ void PEER_API Startup(LPSTARTPARAM lpParam)
     MainThread::Start();
 
     event_wait->Wait();
+#ifndef PEER_PC_CLIENT
+    return local_http_port;
+#endif
 }
 
 void PEER_API Clearup()
