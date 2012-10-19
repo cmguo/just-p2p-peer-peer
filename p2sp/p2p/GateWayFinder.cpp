@@ -40,6 +40,7 @@ namespace p2sp
         }
 
         is_running_ = true;
+#ifdef PEER_PC_CLIENT
         if (!ping_client_)
         {
             ping_client_ = network::PingClientBase::create(io_svc_);
@@ -57,6 +58,7 @@ namespace p2sp
             Reset();
             StartSend();
         }
+#endif
     }
 
     void GateWayFinder::Stop()
