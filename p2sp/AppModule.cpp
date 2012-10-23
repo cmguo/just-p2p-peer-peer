@@ -234,12 +234,12 @@ namespace p2sp
                 break;
             }
         }
-
+#ifdef PEER_PC_CLIENT
         // 监听843端口，为flash p2p提供socket master policy file.
         // 参考http://macromedia.com/cn/devnet/flashplayer/articles/fplayer9_security.html
         tcp_server_843_.reset(new network::TcpServer(global_io_svc()));
         tcp_server_843_->Start(843);
-
+#endif
         //绑定的端口都知道了，可以开始映射了
         map<uint16_t,uint16_t> tcpport,udpport;
         tcpport[tcp_server_->GetTcpPort()] = 0;
