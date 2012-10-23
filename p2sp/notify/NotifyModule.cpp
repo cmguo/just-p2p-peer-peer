@@ -32,7 +32,7 @@ namespace p2sp
 #ifdef LOG_ENABLE
     static log4cplus::Logger logger_notify = log4cplus::Logger::getInstance("[notify]");
 #endif
-    NotifyModule::p NotifyModule::inst_(new NotifyModule());
+    NotifyModule::p NotifyModule::inst_;
 
     void NotifyModule::Start()
     {

@@ -169,7 +169,14 @@ namespace p2sp
         {};
         double mylog(double a, double b);
     public:
-        static NotifyModule::p Inst() { return inst_; }
+        static NotifyModule::p Inst() 
+        {
+            if (!inst_)
+            {
+                inst_.reset(new NotifyModule());
+            }
+            return inst_; 
+        }
     };
 }
 #endif
