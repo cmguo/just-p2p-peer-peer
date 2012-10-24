@@ -239,7 +239,7 @@ namespace p2sp
         // 参考http://macromedia.com/cn/devnet/flashplayer/articles/fplayer9_security.html
         tcp_server_843_.reset(new network::TcpServer(global_io_svc()));
         tcp_server_843_->Start(843);
-#endif
+
         //绑定的端口都知道了，可以开始映射了
         map<uint16_t,uint16_t> tcpport,udpport;
         tcpport[tcp_server_->GetTcpPort()] = 0;
@@ -248,7 +248,7 @@ namespace p2sp
         UpnpModule::Inst()->Start();   
 
         UpnpModule::Inst()->AddUpnpPort(tcpport,udpport);
-
+#endif
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
         StatisticModule::Inst()->SetLocalPeerUdpPort(local_udp_port);
