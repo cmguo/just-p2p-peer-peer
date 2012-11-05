@@ -57,6 +57,7 @@
 #include <log4cplus/logger.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/configurator.h>
+#include <log4cplus/loggingmacros.h>
 #define LOG_ENABLE
 using namespace log4cplus;
 #endif
