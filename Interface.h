@@ -117,9 +117,9 @@ typedef
 void        (PEER_API    *LPSTARTUP)(LPWSTARTPARAM lpParam);
 #else
 // PPBOX兼容Startup接口
-void        PEER_API    Startup(LPSTARTPARAM lpParam);
+boost::uint32_t        PEER_API    Startup(LPSTARTPARAM lpParam);
 typedef
-void        (PEER_API    *LPSTARTUP)(LPSTARTPARAM lpParam);
+boost::uint32_t        (PEER_API    *LPSTARTUP)(LPSTARTPARAM lpParam);
 #endif
 
 // 系统清除
