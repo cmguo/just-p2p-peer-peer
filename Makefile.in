@@ -42,7 +42,7 @@ PROJECT_HEADER_DIRECTORY	:=
 
 PROJECT_COMMON_HEADERS  	:=
 
-PROJECT_INTERNAL_INCLUDES	:= protocol protocol/include miniupnpc
+PROJECT_INTERNAL_INCLUDES	:= protocol protocol/include miniupnpc log4cplus
 
 ## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
 
