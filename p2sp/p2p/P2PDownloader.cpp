@@ -1501,7 +1501,12 @@ namespace p2sp
         // herain:2011-3-8:已经不在下载队列中的subpiece到达，可能有数据，也可能没有数据
         // 如果Piece是正常下载完成，那么这片subpiece是晚到达的冗余报文，如果是Piece超时后
         // 到达的正常报文，那么这片subpiece是本地没有的。
-        return instance_->HasSubPiece(sub_piece);
+		if (instance_)
+		{
+		    return instance_->HasSubPiece(sub_piece);
+		}
+		
+		return false;
     }
 
     void P2PDownloader::KeepConnectionAlive()
