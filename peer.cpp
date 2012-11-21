@@ -439,6 +439,7 @@ boost::int32_t PEER_API QueryDownloadProgress(wchar_t const * lpszRID, boost::ui
         ", total_size = " << pTotalSize);
     return download_progress;
 #endif
+    return 0;
 }
 
 /**
@@ -488,6 +489,7 @@ boost::int32_t PEER_API QueryDownloadSpeed(wchar_t const * lpszRID, boost::uint3
 
     return download_speed;
 #endif
+    return 0;
 }
 
 boost::int32_t PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszURL, boost::uint32_t nURLLength, boost::int32_t *pTotalSize)
@@ -523,6 +525,7 @@ boost::int32_t PEER_API QueryDownloadProgressByUrl(wchar_t const * lpszURL, boos
 
     return download_progress;
 #endif
+    return 0;
 }
 
 boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::uint32_t nURLLength)
@@ -561,6 +564,7 @@ boost::int32_t PEER_API QueryDownloadSpeedByUrl(wchar_t const * lpszURL, boost::
 
     return download_speed;
 #endif
+    return 0;
 }
 
 void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * web_url, boost::uint32_t weburl_len)
@@ -570,12 +574,12 @@ void PEER_API SetWebUrl(const char * url, boost::uint32_t url_len, const char * 
 
 PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost::uint32_t nRIDLength)
 {
-#ifdef PEER_PC_CLIENT
     PEERSTATEMACHINE peer_state;
     peer_state.state_machine_ = -1;
     peer_state.http_speed_ = 0;
     peer_state.p2p_speed_ = 0;
 
+#ifdef PEER_PC_CLIENT
     if (!IsProxyModuleStarted())
     {
         return peer_state;
@@ -614,6 +618,7 @@ PEERSTATEMACHINE PEER_API QueryPeerStateMachine(wchar_t const * lpwszRID, boost:
         " http_speed = " << peer_state.http_speed_ << " p2p_speed = " << peer_state.p2p_speed_);
     return peer_state;
 #endif
+    return peer_state;
 }
 
 void PEER_API NotifyTaskStatusChange(boost::uint32_t task_id, boost::uint32_t task_status)
@@ -862,6 +867,7 @@ boost::int32_t PEER_API GetBasicPeerInfo(
 
     return 2;
 #endif
+    return 0;
 }
 
 // start = 1表示开始下载
@@ -931,6 +937,7 @@ boost::int32_t PEER_API GetPeerInfo(boost::int32_t start, boost::int32_t *ilistC
 
     return 0;
 #endif
+    return 0;
 }
 
 /*

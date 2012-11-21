@@ -1309,9 +1309,7 @@ namespace storage
         {
             return;
         }
-
 #ifdef DISK_MODE
-
         if (STORAGE_MODE_READONLY == GetStorageMode())
         {
             LOG4CPLUS_DEBUG_LOG(logger_storage, "[DENY] Try to Attach filename in the Storage ReadOnlyMode");
@@ -1322,7 +1320,7 @@ namespace storage
         {
             return;
         }
-
+#endif
         string file_name = filename;
         string file_ext = fs::path(file_name).extension();
         if (file_ext.empty() || file_ext == ".com")
@@ -1352,7 +1350,7 @@ namespace storage
 
         // notify download driver
         inst->NotifyGetFileName(filename);
-
+#ifdef DISK_MODE
         string full_name = GetFullName(file_name);
         if (false == inst->IsComplete())
         {
@@ -1386,9 +1384,7 @@ namespace storage
                 // url_filename_map_.insert(make_pair(url, file_name));
             }
         }
-
-#endif  // #ifdef DISK_MODE
-
+#endif
     }
 
 #ifdef DISK_MODE
