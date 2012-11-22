@@ -281,6 +281,8 @@ namespace p2sp
 
         statistics_collection_controller_->Start();
 
+        submit_stop_log_ = appmodule_start_interface->submit_stop_log_;
+
         //读取crossdomain配置文件
         network::CrossDomainConfig::GetInstance()->LoadConfig();
 
