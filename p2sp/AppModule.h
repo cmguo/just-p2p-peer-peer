@@ -37,6 +37,12 @@ namespace statistic
     class BufferringMonitor;
 }
 
+#ifndef PEER_PC_CLIENT
+void SubmitStopLog(string dac);
+typedef
+void (*LPSUBMITSTOPLOG)(string dac);
+#endif
+
 namespace p2sp
 {
 class AppModuleStartInterface
@@ -51,7 +57,10 @@ class AppModuleStartInterface
         string url,  // IndexServer
         boost::uint16_t port, bool bUseDisk, boost::uint64_t ullDiskLimit, string disk_path, 
         string guid_str, string config_path, bool use_push, bool disk_read_only,
-        bool http_proxy_enabled,
+        bool http_proxy_enabled, 
+#ifndef PEER_PC_CLIENT
+        LPSUBMITSTOPLOG submit_stop_log,
+#endif
         boost::uint8_t memory_pool_size_in_MB)
     {
         Guid peer_guid(guid_str);
@@ -59,7 +68,11 @@ class AppModuleStartInterface
 
         return p(new AppModuleStartInterface(local_udp_port, local_http_procy_port, url, port, bUseDisk, ullDiskLimit,
             disk_path, peer_guid, config_path, use_push, disk_read_only,
-            http_proxy_enabled, memory_pool_size_in_MB));
+            http_proxy_enabled,
+#ifndef PEER_PC_CLIENT
+            submit_stop_log,
+#endif
+            memory_pool_size_in_MB));
     }
     public:
     boost::uint16_t local_udp_port_;
@@ -74,6 +87,7 @@ class AppModuleStartInterface
     bool use_push_;
     bool disk_read_only_;
     bool http_proxy_enabled_;
+    LPSUBMITSTOPLOG submit_stop_log_;
     boost::uint8_t memory_pool_size_in_MB_;
 
     private:
@@ -90,6 +104,9 @@ class AppModuleStartInterface
         bool use_push,
         bool disk_read_only,
         bool http_proxy_enabled,
+#ifndef PEER_PC_CLIENT
+        LPSUBMITSTOPLOG submit_stop_log,
+#endif
         boost::uint8_t memory_pool_size_in_MB
         )
         : local_udp_port_(local_udp_port)
@@ -104,6 +121,9 @@ class AppModuleStartInterface
         , use_push_(use_push)
         , disk_read_only_(disk_read_only)
         , http_proxy_enabled_(http_proxy_enabled)
+#ifndef PEER_PC_CLIENT
+        , submit_stop_log_(submit_stop_log)
+#endif
         , memory_pool_size_in_MB_(memory_pool_size_in_MB)
     {
     }
@@ -243,6 +263,10 @@ public:
     {
         udp_server_->ClearInvalidIpCountMap();
     }
+
+#ifndef PEER_PC_CLIENT
+    LPSUBMITSTOPLOG submit_stop_log_;
+#endif
 
     private:
     boost::shared_ptr<protocol::UdpServer> udp_server_;

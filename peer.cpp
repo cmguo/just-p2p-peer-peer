@@ -173,6 +173,9 @@ boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
         lpParam->bUsePush != 0,
         lpParam->bReadOnly != 0,
         lpParam->bHttpProxyEnabled != 0,
+#ifndef PEER_PC_CLIENT
+        lpParam->submit_stop_log,
+#endif
         lpParam->memory_pool_size_in_MB
         );
 

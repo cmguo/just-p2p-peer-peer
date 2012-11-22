@@ -626,10 +626,7 @@ namespace p2sp
             http_download_reason_ = INVALID;
         }
 
-
-#ifdef NEED_TO_POST_MESSAGE
         SendDacStopData();
-#endif
 
         LOG4CPLUS_INFO_LOG(logger_download_driver, "Downloader Driver Stop" << shared_from_this());
 
@@ -711,7 +708,6 @@ namespace p2sp
 
     void DownloadDriver::SendDacStopData()
     {
-#ifdef NEED_TO_POST_MESSAGE
         // 内核提交数据（每次加速完毕后提交）
         // A：接口类别，固定为9
         // B：用户的ID
@@ -1178,6 +1174,14 @@ namespace p2sp
 
         string log = log_stream.str();
 
+#ifndef PEER_PC_CLIENT
+        if (p2sp::AppModule::Inst()->submit_stop_log_)
+        {
+            p2sp::AppModule::Inst()->submit_stop_log_(log);
+        }
+        return;
+#endif
+
         LOG4CPLUS_DEBUG_LOG(logger_download_driver, "+-----------------DOWNLOADDRIVER_STOP_DAC_DATA-----------------+");
         LOG4CPLUS_DEBUG_LOG(logger_download_driver, "| " << log);
 
@@ -1189,7 +1193,7 @@ namespace p2sp
         dac_data->uSize = sizeof(DOWNLOADDRIVER_STOP_DAC_DATA);
         dac_data->uSourceType = source_type_;
         strncpy(dac_data->szLog, log.c_str(), sizeof(dac_data->szLog)-1);
-
+#ifdef NEED_TO_POST_MESSAGE
         WindowsMessage::Inst().PostWindowsMessage(UM_DAC_STATISTIC_V1, (WPARAM)id_, (LPARAM)dac_data);
 #endif
     }

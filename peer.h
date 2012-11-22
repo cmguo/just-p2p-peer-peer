@@ -16,6 +16,8 @@
 #define PEER_API
 #endif  // BOOST_WINDOWS_API
 
+#include "p2sp/AppModule.h"
+
 #ifdef BOOST_HAS_DECLSPEC
 
 #ifdef PEER_SOURCE
@@ -70,10 +72,11 @@ typedef struct _STRATPARAM{
     boost::uint64_t            ullDiskLimit;             // 使用磁盘上限
 #ifdef PEER_PC_CLIENT
     wchar_t                    wszDiskPath[256];         // 磁盘使用路径
+    boost::int32_t             reserve1;
 #else
     char                       szDiskPath[512];         // 磁盘使用路径
+    LPSUBMITSTOPLOG            submit_stop_log;
 #endif
-    boost::int32_t             reserve1;
     char                       reserve2[64];
     char                       szPeerGuid[32];           // Peer的GUID, 机器唯一 (16进制形式)
     // extend
