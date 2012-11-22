@@ -559,6 +559,10 @@ void PEER_API SetRestPlayTimeByUrl(const char * url, boost::uint32_t rest_play_t
 typedef
 void (PEER_API * LPSETRESTPLAYTIMEBYURL)(const char * url, boost::uint32_t rest_play_time);
 
+//设置VIP_LEVEL
+void PEER_API SetVipLevelByUrl(const char * url, boost::uint32_t url_len, boost::uint32_t vip_level);
+typedef
+void (PEER_API * LPSETVIPLEVELBYURL)(const char * url, boost::uint32_t url_len, boost::uint32_t vip_level);
 void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state);
 typedef
 void (PEER_API * LPQUERYDRAGPEERSTATEBYURL)(const char * url, boost::int32_t * state);
