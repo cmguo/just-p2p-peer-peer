@@ -753,7 +753,6 @@ namespace p2sp
 		// R1: 是否是push任务
 
         DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
-        memset(&info, 0, sizeof(DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT));
 
         // C: ResourceID
         info.gResourceID = statistic_->GetResourceID();
@@ -765,7 +764,6 @@ namespace p2sp
         info.aPeerVersion[3] = AppModule::GetKernelVersionInfo().Extra;
 
         // E: 视频名称(VideoName)
-#ifdef PEER_PC_CLIENT
         if (is_open_service_) 
         {
             strcpy(info.szVideoName, openservice_file_name_.c_str());
@@ -774,7 +772,6 @@ namespace p2sp
         {
             strcpy(info.szVideoName, statistic_->GetFileName().c_str());
         }
-#endif
 
         // F: OriginalUrl(原始URL)
         string originalUrl(original_url_info_.url_);
