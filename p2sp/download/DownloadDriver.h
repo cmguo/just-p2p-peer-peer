@@ -28,8 +28,75 @@ namespace statistic
 
 namespace p2sp
 {
-    typedef struct _DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
+    struct DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT
     {
+        DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT()
+        {
+            gPeerID = RID();
+            gResourceID = RID();
+            memset(aPeerVersion, 0, sizeof(aPeerVersion));
+            memset(szVideoName, 0, sizeof(szVideoName));
+            memset(szOriginalUrl, 0, sizeof(szOriginalUrl));
+            memset(szOriginalReferUrl, 0, sizeof(szOriginalReferUrl));
+            uDiskBytes = 0;
+            uVideoBytes = 0;
+            peer_downloadbytes_without_redundance = 0;
+            http_downloadbytes_without_redundance = 0;
+            uAvgDownloadSpeed = 0;
+            bIsSaveMode = 0;
+            MaxHistoryDownloadSpeed = 0;
+            uAvgP2PDownloadSpeed = 0;
+            uMaxHttpDownloadSpeed = 0;
+            uConnectedPeerCount = 0;
+            uFullPeerCount = 0;
+            uBakHostStatus = 0;
+            uQueriedPeerCount = 0;
+            uSourceType = 0;
+            uDataRate = 0;
+            avg_http_download_speed_in2300 = 0;
+            avg_download_speed_before_limit = 0;
+            http_downloadbytes_with_redundance = 0;
+            peer_downloadbytes_with_redundance = 0;
+            download_time = 0;
+            tiny_drag_result = 0;
+            is_got_rid = 0;
+            sn_downloadbytes_with_redundance = 0;
+            bwtype = 0;
+            http_avg_speed_in_KBps = 0;
+            p2p_avg_speed_in_KBps = 0;
+            connect_full_time_in_seconds = 0;
+            is_head_only = 0;
+            avg_connect_rtt = 0;
+            avg_lost_rate = 0;
+            avg_http_download_byte = 0;
+            retry_rate = 0;
+            tiny_drag_http_status = 0;
+            sn_downloadbytes_without_redundance = 0;
+            is_push = false;
+            instance_is_push = false;
+            vip = 0;
+            total_http_start_download_bytes = 0;
+            http_start_download_reason = 0;
+            preroll = false;
+            p2p_download_max_connect_count = 0;
+            p2p_download_min_connect_count = 0;
+            uUsedDiskSizeInMB = 0;
+            uTotalDiskSizeInMB = 0;
+            http_port = 0;
+            total_list_request_packet_count = 0;
+            total_list_response_packet_count = 0;
+            is_fetch_tinydrag_success = 0;
+            is_fetch_tinydrag_from_udp = 0;
+            is_parse_tinydrag_success = 0;
+            fetch_tinydrag_count = 0;
+            fetch_tinydrag_time = 0;
+            channel_name = "";
+            tracker_respons_info = "";
+            peer_connect_request_sucess_count = "";
+            nat_type = 0;
+            nat_check_state = 0;
+        }
+
         Guid                  gPeerID;                              // B: 华哥ID
         Guid                  gResourceID;                          // C: ResourceID
         boost::uint16_t       aPeerVersion[4];                      // D: 内核版本：major, minor, micro, extra
@@ -93,7 +160,7 @@ namespace p2sp
         string                peer_connect_request_sucess_count;    // L2: 每种nat类型连接请求数以及成功数
         boost::uint32_t       nat_type;                             // M2: 获取NAT类型
         int                   nat_check_state;                      // N2: 当前nat检测状态
-    } DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT, *LPDOWNLOADDRIVER_STOP_DAC_DATA_STRUCT;
+    };
 
     class VodDownloader;
     typedef boost::shared_ptr<VodDownloader> VodDownloader__p;
