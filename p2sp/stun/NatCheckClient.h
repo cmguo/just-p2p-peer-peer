@@ -38,7 +38,7 @@ namespace p2sp
         void CheckForUpnp(boost::uint16_t innerUdpPort,boost::uint16_t exUdpPort);
 
     private:
-        void StartCheck(const string& config_path);
+        void StartCheck(const string config_path);
         void OnReceiveNatCheckSameRoutePacket(protocol::NatCheckSameRoutePacket const & packet);
         void OnReceiveNatCheckDiffPortPacket(protocol::NatCheckDiffPortPacket const &packet);
         void OnReceiveNatCheckDiffIpPacket(protocol::NatCheckDiffIpPacket const &packet);

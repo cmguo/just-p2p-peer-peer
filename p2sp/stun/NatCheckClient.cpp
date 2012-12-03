@@ -25,7 +25,7 @@ namespace p2sp
 
     }
 
-    void NatCheckClient::StartCheck(const string& config_path)
+    void NatCheckClient::StartCheck(const string config_path)
     {
         protocol::MY_STUN_NAT_TYPE nat_type = protocol::TYPE_ERROR;
 
