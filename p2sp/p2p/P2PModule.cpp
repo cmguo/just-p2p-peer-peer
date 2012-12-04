@@ -121,7 +121,19 @@ namespace p2sp
         // 如果 在 rid_indexer_ 中找到了 这个 P2PDownloader, 就是用这个 P2PDownloader
         if (rid_indexer_.find(rid) != rid_indexer_.end())
         {
-            return rid_indexer_[rid];
+            P2PDownloader::p downloader = rid_indexer_[rid];
+            storage::IStorage::p storage = storage::Storage::Inst();
+            storage::Instance::p instance = boost::static_pointer_cast<storage::Instance>(storage->GetInstanceByRID(rid));
+            assert(instance);
+            assert(false == instance->GetRID().is_empty());
+
+            // ! 有问题
+            if (downloader->GetInstance() != instance) {
+                LOG4CPLUS_DEBUG_LOG(logger_p2p, __FUNCTION__ << " downloader->instance_ != instance, change from " 
+                    << downloader->GetInstance() << " to " << instance);
+                downloader->SetInstance(instance);
+            }
+            return downloader;
         }
 
         // 如果 在 rid_indexer_ 没有找到 这个 P2P 创建RID对应的 P2PDownloader
