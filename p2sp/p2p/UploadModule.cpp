@@ -51,6 +51,7 @@ namespace p2sp
         network_quality_monitor_->Stop();
         network_quality_monitor_.reset();
 
+        BootStrapGeneralConfig::Inst()->RemoveUpdateListener(shared_from_this());
         inst_.reset();
     }
 
