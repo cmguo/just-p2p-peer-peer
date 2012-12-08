@@ -143,7 +143,14 @@ boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
  
 #ifdef LOG_ENABLE
     log4cplus::Logger root=log4cplus::Logger::getRoot();
+#ifdef PEER_PC_CLIENT
     PropertyConfigurator::doConfigure("C:\\Program Files\\Common Files\\PPLiveNetwork\\peer.config");
+#else
+    boost::filesystem::path temp_path = framework::filesystem::temp_path();
+    string peer_config_path = (temp_path / "peer.config").file_string();
+
+    PropertyConfigurator::doConfigure(peer_config_path);
+#endif
 #endif
     LOG4CPLUS_DEBUG_LOG(logger_peer, "StartKernel");
 

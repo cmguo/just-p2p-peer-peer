@@ -53,7 +53,7 @@
 #undef min
 #endif
 
-#if (defined _DEBUG || defined DEBUG)
+#if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
 #include <log4cplus/logger.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/configurator.h>
@@ -65,7 +65,7 @@ using namespace log4cplus;
 #define  STRINGIFY(x) #x
 #define  TOSTRING(x) STRINGIFY(x)
 
-#if (defined _DEBUG || defined DEBUG)
+#if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
 #define LOG4CPLUS_DEBUG_LOG(logger,msg) LOG4CPLUS_DEBUG(logger,msg)
 #define LOG4CPLUS_INFO_LOG(logger,msg) LOG4CPLUS_INFO(logger,msg)
 #define LOG4CPLUS_WARN_LOG(logger,msg) LOG4CPLUS_WARN(logger,msg)
