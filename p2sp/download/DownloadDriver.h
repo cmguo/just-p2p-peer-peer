@@ -95,6 +95,7 @@ namespace p2sp
             peer_connect_request_sucess_count = "";
             nat_type = 0;
             nat_check_state = 0;
+            more_than_one_proxyconnections = false;
         }
 
         Guid                  gPeerID;                              // B: 华哥ID
@@ -160,6 +161,7 @@ namespace p2sp
         string                peer_connect_request_sucess_count;    // L2: 每种nat类型连接请求数以及成功数
         boost::uint32_t       nat_type;                             // M2: 获取NAT类型
         int                   nat_check_state;                      // N2: 当前nat检测状态
+        bool                  more_than_one_proxyconnections;       // O2: 是否某一个时段有多个proxyconnections在请求内容
     };
 
     class VodDownloader;
@@ -548,6 +550,7 @@ namespace p2sp
         boost::uint32_t position_after_drag_;                       //接收起始播放位置，用于判断实际拖动
         boost::int32_t total_download_byte_2000_;                  //http启动下载阶段2000状态下载数据总量
         boost::int32_t total_download_byte_2300_;                  //http启动下载阶段2300状态下载数据总量
+        bool has_effected_by_other_proxyconnections_;              // 某一时段有多个proxyconnection存在
 
     private:
         DownloadDriver(

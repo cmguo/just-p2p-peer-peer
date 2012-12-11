@@ -18,15 +18,39 @@ namespace p2sp
 
     void NatCheckClient::Start(const string& config_path)
     {
+        config_path_ = config_path;
         //等待BS返回，所有操作等待5s后，
         //原有stunmodule中is_running_为false导致nat_type无法设置的bug也可以直接得到修复
-        timer_.expires_from_now(boost::posix_time::seconds(5));
-        timer_.async_wait(boost::bind(&NatCheckClient::StartCheck, this, config_path));
+        nat_timer_.start();
 
     }
 
-    void NatCheckClient::StartCheck(const string config_path)
+    void NatCheckClient::Stop()
     {
+        nat_timer_.stop();
+        timer_.stop();
+    }
+
+    void NatCheckClient::OnTimerElapsed(framework::timer::Timer *timer)
+    {
+        if (timer == &nat_timer_)
+        {
+            StartCheck();
+        }
+        else if (timer == &timer_)
+        {
+            OnHandleTimeOut();
+        }
+        else
+        {
+            assert(false);
+        }
+    }
+
+    void NatCheckClient::StartCheck()
+    {
+        nat_timer_.stop();
+
         protocol::MY_STUN_NAT_TYPE nat_type = protocol::TYPE_ERROR;
 
         //这些信息，是netcheck检查相关的，但是由于有些情况不用检查natcheck，但是需要检测upnp，所以这里提取出来。
@@ -59,7 +83,7 @@ namespace p2sp
             local_port_ = AppModule::Inst()->GetLocalUdpPort();
         }
 
-        if (IsNeedToUpdateNat(nat_type, config_path))
+        if (IsNeedToUpdateNat(nat_type, config_path_))
         {
             check_state_ = ISNATCHECKING;
             DoSendNatCheckpacket();
@@ -72,7 +96,7 @@ namespace p2sp
 
     void NatCheckClient::OnUdpReceive(protocol::ServerPacket const &packet)
     {
-        timer_.cancel();
+        timer_.stop();
         times_ = 0;
 
         switch (packet.PacketAction)
@@ -270,16 +294,12 @@ namespace p2sp
             break;
         }
 
-        timer_.expires_from_now(boost::posix_time::seconds(5));
-        timer_.async_wait(boost::bind(&NatCheckClient::OnHandleTimeOut, this, boost::asio::placeholders::error));
+        timer_.start();
     }
 
-    void NatCheckClient::OnHandleTimeOut(const boost::system::error_code& er)
+    void NatCheckClient::OnHandleTimeOut()
     {
-        if (er == boost::asio::error::operation_aborted)
-        {
-            return;
-        }
+        timer_.stop();
 
         if (times_ < 3)
         {

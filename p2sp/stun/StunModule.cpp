@@ -70,6 +70,7 @@ namespace p2sp
         // 停止 Stun 脉冲定时器
 
         stun_timer_.stop();
+        nat_check_client_.Stop();
 
         is_running_ = false;
         inst_.reset();

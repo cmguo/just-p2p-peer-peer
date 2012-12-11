@@ -143,6 +143,7 @@ namespace p2sp
         ,total_download_byte_2000_(-1)
         ,total_download_byte_2300_(-1)
         ,position_after_drag_(0)
+        , has_effected_by_other_proxyconnections_(false)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -1096,6 +1097,9 @@ namespace p2sp
 
         info.nat_check_state = p2sp::StunModule::Inst()->GetNatCheckState();
 
+        // O2: 是否某一个时段有多个proxyconnections在请求内容
+        info.more_than_one_proxyconnections = has_effected_by_other_proxyconnections_;
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1168,6 +1172,7 @@ namespace p2sp
         log_stream << "&_L2=" << info.peer_connect_request_sucess_count;
         log_stream << "&M2=" << info.nat_type;
         log_stream << "&N2=" << info.nat_check_state;
+        log_stream << "&O2=" << (uint32_t)info.more_than_one_proxyconnections;
 
         string log = log_stream.str();
 
@@ -2546,6 +2551,11 @@ namespace p2sp
             uint32_t pp =   proxy_connection_->GetPlayingPosition();
             instance_->GetSubPieceForPlay(shared_from_this(), pp ,buffers);
             RestrictSendListLength(pp,buffers);
+
+            if (ProxyModule::Inst()->GetProxyConnectionSize() > 1)
+            {
+                has_effected_by_other_proxyconnections_ = true;
+            }
           }
   
     }
