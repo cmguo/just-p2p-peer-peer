@@ -6,4 +6,10 @@ file_prefix=autopeerversion
 build_version=`LANG=C svn info ${version_dir} | awk -F : '$1 == "Revision" { print $2}'`
 build_version=`echo ${build_version}`
 cp ${src_dir}/${file_prefix}.hpp ${src_dir}/${file_prefix}.h
-sed -i "s/\\\$WCREV\\\$/${build_version}/g" ${src_dir}/${file_prefix}.h
+
+if [ `uname` = 'Darwin' ]; then
+    sed -i '' "s/\\\$WCREV\\\$/${build_version}/g" ${src_dir}/${file_prefix}.h
+else
+    sed -i "s/\\\$WCREV\\\$/${build_version}/g" ${src_dir}/${file_prefix}.h
+fi
+
