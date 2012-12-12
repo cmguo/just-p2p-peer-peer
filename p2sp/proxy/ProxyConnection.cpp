@@ -27,12 +27,8 @@
 #include "p2sp/proxy/LiveProxySender.h"
 #include "p2sp/download/LiveDownloadDriver.h"
 #include "p2sp/push/PushModule.h"
+#include "autopeerversion.h"
 
-#ifdef AUTO_SVN_VERSION
-#include "autopeerversion.hpp"
-#else
-#include "PeerVersion.h"
-#endif
 #ifdef BOOST_WINDOWS_API
 #include "WindowsMessage.h"
 #endif

@@ -2,7 +2,7 @@
 //     Copyright (c)2005-2010 PPLive Corporation.  All rights reserved.
 //------------------------------------------------------------------------------------------
 
-#include "autopeerversion.hpp"
+#include "autopeerversion.h"
 
 // {{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.

@@ -26,11 +26,7 @@
 #include "statistic/StatisticsReporter.h"
 #include "network/tcp/CrossDomainConfig.h"
 #include "network/upnp/UpnpModule.h"
-#ifdef AUTO_SVN_VERSION
-#include "autopeerversion.hpp"
-#else
-#include "PeerVersion.h"
-#endif
+#include "autopeerversion.h"
 
 #include <boost/algorithm/string/replace.hpp>
 

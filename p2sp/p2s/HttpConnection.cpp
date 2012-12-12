@@ -10,11 +10,6 @@
 #include "p2sp/download/DownloadDriver.h"
 #include "p2sp/p2s/HttpDownloader.h"
 #include "storage/Instance.h"
-#ifdef AUTO_SVN_VERSION
-#include "autopeerversion.hpp"
-#else
-#include "PeerVersion.h"
-#endif
 
 #include "network/Uri.h"
 
