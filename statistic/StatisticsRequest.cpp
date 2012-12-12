@@ -69,6 +69,7 @@ namespace statistic
 
         storage::Instance::p instance = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
         string resource_name = "<unknown resource>";
+        string type;
         if (instance)
         {
             string ascii_resource_name = instance->GetFileName();
@@ -78,9 +79,13 @@ namespace statistic
             boost::system::error_code convert_error = convert.convert(ascii_resource_name, utf8_resource_name);
 
             resource_name = convert_error ? ascii_resource_name : utf8_resource_name;
+
+            network::Uri uri(instance->GetOriginalUrl().url_);
+            type = uri.getparameter("type");
         }
 
         stream << "&resourceName=" << network::UrlCodec::Encode(resource_name);
+        stream << "&type=" << type;
 
         return stream.str();
     }
