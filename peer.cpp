@@ -30,6 +30,7 @@
 
 #include <framework/memory/MemoryPoolObject.h>
 #include <framework/timer/AsioTimerManager.h>
+#include <framework/filesystem/Path.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/thread.hpp>
