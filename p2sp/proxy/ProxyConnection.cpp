@@ -1636,6 +1636,10 @@ namespace p2sp
     // 直播收到数据
     bool ProxyConnection::OnRecvLivePiece(uint32_t block_id, std::vector<base::AppBuffer> const & buffers)
     {
+        if (!is_running_)
+        {
+            return false;
+        }
         // TODO: proxy_sender_->OnRecvLivePiece(block_id, buffers);
         // 这里我打算把直播和点播的收数据统一起来，所以暂时先没写
         proxy_sender_->OnRecvSubPiece(block_id, buffers);
