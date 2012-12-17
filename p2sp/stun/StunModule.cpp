@@ -205,7 +205,7 @@ namespace p2sp
         // random shuffle
         std::random_shuffle(stun_servers.begin(), stun_servers.end());
 
-        if (is_select_stunserver_)
+        if (is_select_stunserver_ && stun_server_index_ < stun_server_info_.size())
         {
             for (uint32_t i = 0; i < stun_servers.size(); ++i)
             {
