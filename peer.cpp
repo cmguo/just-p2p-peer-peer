@@ -149,8 +149,8 @@ boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
 #else
     boost::filesystem::path peer_log_path = boost::filesystem::current_path() / "PeerLog";
     SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 200 * 1024 *1024, 20));
-    std::auto_ptr<Layout> PatternLayout(new PatternLayout("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p%c - %m%n"));
-    pFileAppender->setLayout(PatternLayout);
+    std::auto_ptr<Layout> pattern_layout(new PatternLayout("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p%c - %m%n"));
+    pFileAppender->setLayout(pattern_layout);
     root.addAppender(pFileAppender);
     root.setLogLevel(ALL_LOG_LEVEL);
 #endif
