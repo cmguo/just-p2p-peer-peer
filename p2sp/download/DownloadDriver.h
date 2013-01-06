@@ -96,6 +96,7 @@ namespace p2sp
             nat_type = 0;
             nat_check_state = 0;
             more_than_one_proxyconnections = false;
+            bak_host_string = "";
         }
 
         Guid                  gPeerID;                              // B: 华哥ID
@@ -162,6 +163,7 @@ namespace p2sp
         boost::uint32_t       nat_type;                             // M2: 获取NAT类型
         int                   nat_check_state;                      // N2: 当前nat检测状态
         bool                  more_than_one_proxyconnections;       // O2: 是否某一个时段有多个proxyconnections在请求内容
+        string                bak_host_string;                       // P2: bak_host
     };
 
     class VodDownloader;
@@ -387,6 +389,8 @@ namespace p2sp
         void LoadSnOnCDN();
 
         void GetSnListOnCDN(std::list<boost::asio::ip::udp::endpoint> &sn_list);
+
+        string GetBakHostString();
 
     protected:
         // IDownloadDriver 接口消息

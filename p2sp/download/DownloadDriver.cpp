@@ -775,21 +775,7 @@ namespace p2sp
         }
 
         // F: OriginalUrl(原始URL)
-        string originalUrl(original_url_info_.url_);
-        u_int pos = originalUrl.find_first_of('/');
-        pos = originalUrl.find_first_of('/', pos + 1);
-        pos = originalUrl.find_first_of('/', pos + 1);
-
-        if (is_open_service_)
-        {
-            // 开放服务
-            strncpy(info.szOriginalUrl, string(originalUrl, 0, pos).c_str(), sizeof(info.szOriginalUrl)-1);
-        }
-        else
-        {
-            // 加速
-            strncpy(info.szOriginalUrl, originalUrl.c_str(), sizeof(info.szOriginalUrl));
-        }
+        strncpy(info.szOriginalUrl, original_url_info_.url_.c_str(), sizeof(info.szOriginalUrl));
 
         // G: OriginalReferUrl
         strncpy(info.szOriginalReferUrl, original_url_info_.refer_url_.c_str(), sizeof(info.szOriginalReferUrl));
@@ -1100,6 +1086,9 @@ namespace p2sp
         // O2: 是否某一个时段有多个proxyconnections在请求内容
         info.more_than_one_proxyconnections = has_effected_by_other_proxyconnections_;
 
+        // P2: bak_host
+        info.bak_host_string = GetBakHostString();
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1173,6 +1162,7 @@ namespace p2sp
         log_stream << "&M2=" << info.nat_type;
         log_stream << "&N2=" << info.nat_check_state;
         log_stream << "&O2=" << (uint32_t)info.more_than_one_proxyconnections;
+        log_stream << "&P2=" << info.bak_host_string;
 
         string log = log_stream.str();
 
@@ -2942,5 +2932,25 @@ namespace p2sp
         assert(GetBWType() != JBW_HTTP_ONLY);
 
         total_download_byte_2000_ = GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy();
+    }
+
+    string DownloadDriver::GetBakHostString()
+    {
+        if (bak_hosts_.size() == 0)
+        {
+            return "";
+        }
+
+        std::ostringstream os;
+        for(int i = 0; i < bak_hosts_.size(); i++)
+        {
+            os << bak_hosts_[i];
+            if (i != bak_hosts_.size() - 1)
+            {
+                os << ",";
+            }
+        }
+
+        return os.str();
     }
 }
