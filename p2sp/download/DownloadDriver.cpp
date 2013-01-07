@@ -36,6 +36,7 @@
 #include "message.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include "network/UrlCodec.h"
 
 const int MAX_SEND_LIST_LENGTH = 1024;
 
@@ -775,7 +776,8 @@ namespace p2sp
         }
 
         // F: OriginalUrl(原始URL)
-        strncpy(info.szOriginalUrl, original_url_info_.url_.c_str(), sizeof(info.szOriginalUrl));
+        string original_url_string = network::UrlCodec::Encode(original_url_info_.url_);        
+        strncpy(info.szOriginalUrl, original_url_string.c_str(), sizeof(info.szOriginalUrl));
 
         // G: OriginalReferUrl
         strncpy(info.szOriginalReferUrl, original_url_info_.refer_url_.c_str(), sizeof(info.szOriginalReferUrl));
