@@ -25,13 +25,13 @@ namespace statistic
         void Start();
         void Stop();
 
-        void OnShareMemoryTimer(uint32_t times);
+        void OnShareMemoryTimer(boost::uint32_t times);
         bool CreateSharedMemory();
         string GetSharedMemoryName();
-        uint32_t GetSharedMemorySize();
+        boost::uint32_t GetSharedMemorySize();
 
-        void SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_);
-        void SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size);
+        void SubmitUploadInfo(boost::uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_);
+        void SubmitUploadSpeedInfo(boost::asio::ip::address address, boost::uint32_t size);
         void SubmitUploadPeerInfo(const boost::asio::ip::address & address, const statistic::PEER_INFO & peer_info);
 
         static UploadStatisticModule::p Inst()

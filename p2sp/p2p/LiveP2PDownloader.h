@@ -110,8 +110,8 @@ namespace p2sp
 
         virtual boost::uint32_t GetSecondDownloadSpeed();
         virtual boost::uint32_t GetCurrentDownloadSpeed();
-        virtual uint32_t GetMinuteDownloadSpeed();
-        virtual uint32_t GetRecentDownloadSpeed(); // 20s
+        virtual boost::uint32_t GetMinuteDownloadSpeed();
+        virtual boost::uint32_t GetRecentDownloadSpeed(); // 20s
         virtual void SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
 
         // Downloader
@@ -128,15 +128,15 @@ namespace p2sp
         virtual void SetDownloadMode(P2PDwonloadMode mode);
         virtual void SetMaxConnectCount(boost::int32_t max_connect_count);
 
-        virtual uint32_t GetPooledPeersCount();
-        virtual uint32_t GetConnectedPeersCount();
-        virtual uint32_t GetFullBlockPeersCount();
-        virtual uint32_t GetActivePeersCount();
-        virtual uint32_t GetAvailableBlockPeerCount();
+        virtual boost::uint32_t GetPooledPeersCount();
+        virtual boost::uint32_t GetConnectedPeersCount();
+        virtual boost::uint32_t GetFullBlockPeersCount();
+        virtual boost::uint32_t GetActivePeersCount();
+        virtual boost::uint32_t GetAvailableBlockPeerCount();
 
-        virtual uint16_t GetNonConsistentSize() {return 0;}
+        virtual boost::uint16_t GetNonConsistentSize() {return 0;}
         virtual void SetDownloadPriority(boost::int32_t) {}
-        virtual uint32_t GetMaxConnectCount();
+        virtual boost::uint32_t GetMaxConnectCount();
         virtual bool IsLive() {return true;}
 
         void OnConnectTimeout(const boost::asio::ip::udp::endpoint& end_point);
@@ -202,7 +202,7 @@ namespace p2sp
         bool IsRequesting(const protocol::LiveSubPieceInfo & subpiece_info);
         void AddRequestingSubpiece(const protocol::LiveSubPieceInfo & subpiece_info,
             boost::uint32_t timeout, LivePeerConnection__p peer_connection,
-            uint32_t transaction_id);
+            boost::uint32_t transaction_id);
 
         // for statistic
         void SubmitAllRequestSubPieceCount(boost::uint16_t request_sub_piece_count);
@@ -230,7 +230,7 @@ namespace p2sp
 
         boost::uint32_t GetTotalConnectPeersCount() const;
 
-        uint32_t GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info);
+        boost::uint32_t GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info);
 
         boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
         boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
@@ -262,7 +262,7 @@ namespace p2sp
         void SendPeerInfo();
         bool IsInUdpServerProtectTimeWhenStart();
 
-        uint32_t GetDownloadablePeersCount() const;
+        boost::uint32_t GetDownloadablePeersCount() const;
 
         void GetCandidatePeerInfosBasedOnUploadAbility(std::set<protocol::CandidatePeerInfo> & candidate_peers);
         void GetCandidatePeerInfosBasedOnUploadSpeed(std::set<protocol::CandidatePeerInfo> & candidate_peers);
@@ -350,8 +350,8 @@ namespace p2sp
 
         framework::timer::TickCounter live_exchange_tick_counter_;
 
-        uint32_t default_connection_limit_;
-        uint32_t live_extended_connections_;
+        boost::uint32_t default_connection_limit_;
+        boost::uint32_t live_extended_connections_;
         framework::timer::TickCounter urgent_tick_counter_;
         framework::timer::TickCounter safe_tick_counter_;
 
@@ -402,12 +402,12 @@ namespace p2sp
         return udp_server_subpiece_speed_info_.GetSpeedInfo();
     }
 
-    inline uint32_t LiveP2PDownloader::GetConnectedPeersCount()
+    inline boost::uint32_t LiveP2PDownloader::GetConnectedPeersCount()
     {
         return live_connection_manager_.GetConnectedPeersCount();
     }
 
-    inline uint32_t LiveP2PDownloader::GetPooledPeersCount()
+    inline boost::uint32_t LiveP2PDownloader::GetPooledPeersCount()
     {
         if (false == is_running_)
         {

@@ -27,9 +27,9 @@ namespace base
         protocol::SubPieceContent::pointer subpiece_;
         protocol::LiveSubPieceContent::pointer live_subpiece_;
 
-        uint32_t length_;
-        uint32_t offset_;       // 有效数据的起始偏移
-        uint32_t type_;
+        boost::uint32_t length_;
+        boost::uint32_t offset_;       // 有效数据的起始偏移
+        boost::uint32_t type_;
 
     public:
         AppBuffer() :
@@ -80,12 +80,12 @@ namespace base
             type_ = BUF_LIVESUBPIECE;
         }
 
-        explicit AppBuffer(uint32_t length) :
+        explicit AppBuffer(boost::uint32_t length) :
             data_(new byte[length]), length_(length), offset_(0), type_(BUF_NORMAL)
         {
         }
 
-        explicit AppBuffer(uint32_t length, int val) :
+        explicit AppBuffer(boost::uint32_t length, int val) :
         data_(new byte[length]), length_(length), offset_(0), type_(BUF_NORMAL)
         {
             memset((void*)data_.get(), val, length);
@@ -97,25 +97,25 @@ namespace base
             base::util::memcpy2(data_.get(), length_, str.c_str(), length_);
         }
 
-        AppBuffer(const char* data, uint32_t length) :
+        AppBuffer(const char* data, boost::uint32_t length) :
             data_(new byte[length]), length_(length), offset_(0), type_(BUF_NORMAL)
         {
             base::util::memcpy2(data_.get(), length, data, length);
         }
 
-        AppBuffer(const byte* data, uint32_t length) :
+        AppBuffer(const byte* data, boost::uint32_t length) :
             data_(new byte[length]), length_(length), offset_(0), type_(BUF_NORMAL)
         {
             base::util::memcpy2(data_.get(), length, data, length);
         }
 
-        AppBuffer(boost::shared_array<byte> data, uint32_t length) :
+        AppBuffer(boost::shared_array<byte> data, boost::uint32_t length) :
             data_(new byte[length]), length_(length), offset_(0), type_(BUF_NORMAL)
         {
             base::util::memcpy2(data_.get(), length, data.get(), length);
         }
 
-        bool Add(const byte* data, uint32_t length)
+        bool Add(const byte* data, boost::uint32_t length)
         {
             if (offset_ + length >= length_)
             {
@@ -125,11 +125,11 @@ namespace base
             return true;
         }
 
-        bool Extend(uint32_t length)
+        bool Extend(boost::uint32_t length)
         {
             if (type_ == BUF_NORMAL)
             {
-                uint32_t new_length = length + length_;
+                boost::uint32_t new_length = length + length_;
                 AppBuffer new_buf(new_length);
                 new_buf.Add(&data_[0], length_);
                 new_buf.Offset(offset_);
@@ -158,7 +158,7 @@ namespace base
             return NULL;
         }
 
-        inline byte* Data(uint32_t offset) const
+        inline byte* Data(boost::uint32_t offset) const
         {
             byte* base_ptr = Data();
             if (base_ptr != NULL) {
@@ -167,17 +167,17 @@ namespace base
             return NULL;
         }
 
-        inline uint32_t Length() const
+        inline boost::uint32_t Length() const
         {
             return length_;
         }
 
-        uint32_t Type() const
+        boost::uint32_t Type() const
         {
             return type_;
         }
 
-        uint32_t Offset() const
+        boost::uint32_t Offset() const
         {
             return offset_;
         }
@@ -188,17 +188,17 @@ namespace base
             type_ = BUF_NORMAL;
         }
 
-        void Length(uint32_t length)
+        void Length(boost::uint32_t length)
         {
             length_ = length;
         }
 
-        void Offset(uint32_t offset)
+        void Offset(boost::uint32_t offset)
         {
             offset_ = offset;
         }
 
-        AppBuffer SubBuffer(uint32_t offset) const
+        AppBuffer SubBuffer(boost::uint32_t offset) const
         {
             AppBuffer buffer;
             if (offset < length_)
@@ -213,7 +213,7 @@ namespace base
             return buffer;
         }
 
-        AppBuffer SubBuffer(uint32_t offset, uint32_t length) const
+        AppBuffer SubBuffer(boost::uint32_t offset, boost::uint32_t length) const
         {
             AppBuffer buffer;
             if (offset + length <= length_)
@@ -228,7 +228,7 @@ namespace base
             return buffer;
         }
 
-        void Malloc(uint32_t length)
+        void Malloc(boost::uint32_t length)
         {
             length_ = length;
             data_ = boost::shared_array<byte>(new byte[length_]);

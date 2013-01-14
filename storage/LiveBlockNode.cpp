@@ -13,7 +13,7 @@ namespace storage
     static log4cplus::Logger logger_live_block_node = log4cplus::Logger::getInstance("[live_block_node]");
 #endif
 
-    bool LiveBlockNode::AddSubPiece(uint16_t subpiece_index, const protocol::LiveSubPieceBuffer& subpiece_buffer)
+    bool LiveBlockNode::AddSubPiece(boost::uint16_t subpiece_index, const protocol::LiveSubPieceBuffer& subpiece_buffer)
     {
         if (subpiece_index < subpieces_.size() && subpieces_[subpiece_index])
         {
@@ -90,7 +90,7 @@ namespace storage
         }
 
         bool same = true;
-        for (uint32_t i=0; i<subpieces_[subpiece_index].Length(); ++i)
+        for (boost::uint32_t i=0; i<subpieces_[subpiece_index].Length(); ++i)
         {
             unsigned char c = *(subpieces_[subpiece_index].GetSubPieceBuffer()->get_buffer() + i);
 
@@ -109,7 +109,7 @@ namespace storage
         return true;
     }
 
-    bool LiveBlockNode::HasSubPiece(uint16_t index) const
+    bool LiveBlockNode::HasSubPiece(boost::uint16_t index) const
     {
         if (index >= subpieces_.size())
         {
@@ -127,24 +127,24 @@ namespace storage
 
         if (IsComplete())
         {
-            for (uint16_t i = 0; i < subpieces_.size(); ++i)
+            for (boost::uint16_t i = 0; i < subpieces_.size(); ++i)
             {
                 subpiece_buffers.push_back(subpieces_[i]);
             }
         }
     }
 
-    void LiveBlockNode::GetBuffer(uint16_t index, protocol::LiveSubPieceBuffer& subpiece_buffer) const
+    void LiveBlockNode::GetBuffer(boost::uint16_t index, protocol::LiveSubPieceBuffer& subpiece_buffer) const
     {
         assert(index < subpieces_.size());
         subpiece_buffer = subpieces_[index];
     }
 
-    uint16_t LiveBlockNode::GetNextMissingSubPiece() const
+    boost::uint16_t LiveBlockNode::GetNextMissingSubPiece() const
     {
         assert(!IsComplete());
         
-        uint16_t index;
+        boost::uint16_t index;
         for (index = 0; index < subpieces_.size(); ++index)
         {
             if (!subpieces_[index])
@@ -155,7 +155,7 @@ namespace storage
         return index;
     }
 
-    void LiveBlockNode::DropSubPiece(uint16_t subpiece_index)
+    void LiveBlockNode::DropSubPiece(boost::uint16_t subpiece_index)
     {
         if (subpiece_index < subpieces_.size())
         {
@@ -188,7 +188,7 @@ namespace storage
         }
 
         // 获得piece length之后计算出subpiece的真实数目
-        uint16_t real_subpieces_count = static_cast<uint16_t>( 1 + (header_subpiece_->GetDataLength() + LIVE_SUB_PIECE_SIZE - 1) / LIVE_SUB_PIECE_SIZE);
+        boost::uint16_t real_subpieces_count = static_cast<boost::uint16_t>( 1 + (header_subpiece_->GetDataLength() + LIVE_SUB_PIECE_SIZE - 1) / LIVE_SUB_PIECE_SIZE);
         LOG4CPLUS_DEBUG_LOG(logger_live_block_node, "data_length_=" << header_subpiece_->GetDataLength() << 
             ", real_subpieces_count=" << real_subpieces_count);
 
@@ -196,15 +196,15 @@ namespace storage
         subpieces_.resize(real_subpieces_count);
     }
 
-    void LiveBlockNode::DropDataIfNecessary(uint16_t new_arrival_subpiece_index)
+    void LiveBlockNode::DropDataIfNecessary(boost::uint16_t new_arrival_subpiece_index)
     {
         if (new_arrival_subpiece_index == 0)
         {
             //当刚下好header subpiece时，得检查看在此之前已经下好的pieces中是否有校验有误的。
             if (HasHeaderSubPiece() && IsHeaderValid())
             {
-                uint16_t pieces_count = GetPieceIndex(GetSubPiecesCount() -1) + 1;
-                for(uint16_t piece_index = 0; piece_index < pieces_count; ++piece_index)
+                boost::uint16_t pieces_count = GetPieceIndex(GetSubPiecesCount() -1) + 1;
+                for(boost::uint16_t piece_index = 0; piece_index < pieces_count; ++piece_index)
                 {
                     if (IsPieceComplete(piece_index) && !IsPieceValid(piece_index))
                     {
@@ -218,7 +218,7 @@ namespace storage
             if (HasHeaderSubPiece())
             {
                 //一旦新下的subpiece使得其所在piece变完整，进行数据校验，如有需要则丢掉整个piece。
-                uint16_t piece_index = GetPieceIndex(new_arrival_subpiece_index);
+                boost::uint16_t piece_index = GetPieceIndex(new_arrival_subpiece_index);
                 if (IsPieceComplete(piece_index) && !IsPieceValid(piece_index))
                 {
                     DropPiece(piece_index);
@@ -227,7 +227,7 @@ namespace storage
         }
     }
 
-    void LiveBlockNode::DropPiece(uint16_t piece_index)
+    void LiveBlockNode::DropPiece(boost::uint16_t piece_index)
     {
         if (piece_index >= HeaderSubPiece::Constants::MaximumPiecesPerBlock)
         {
@@ -235,7 +235,7 @@ namespace storage
             return;
         }
 
-        uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
+        boost::uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
         if (first_subpiece_index >= subpieces_.size())
         {
             //there's no point to drop a piece if it's not even in existence.
@@ -243,7 +243,7 @@ namespace storage
             return;
         }
 
-        for(uint16_t subpiece_index = static_cast<uint16_t>(first_subpiece_index);
+        for(boost::uint16_t subpiece_index = static_cast<boost::uint16_t>(first_subpiece_index);
             subpiece_index < first_subpiece_index + HeaderSubPiece::Constants::SubPiecesPerPiece;
             ++subpiece_index)
         {
@@ -256,7 +256,7 @@ namespace storage
         }
     }
 
-    bool LiveBlockNode::IsPieceComplete(uint16_t piece_index) const
+    bool LiveBlockNode::IsPieceComplete(boost::uint16_t piece_index) const
     {
         //check the hard limit
         if (piece_index >= HeaderSubPiece::Constants::MaximumPiecesPerBlock)
@@ -266,7 +266,7 @@ namespace storage
         }
 
         //subpiece[0] is excluded, as it does not belong to any piece.
-        uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
+        boost::uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
         if (first_subpiece_index >= subpieces_.size())
         {
             return false;
@@ -274,7 +274,7 @@ namespace storage
 
         //the actual last_subpiece_index for this piece *MIGHT* be smaller than the below value, 
         //in case the piece is the last piece of the block
-        uint32_t last_subpiece_index = first_subpiece_index + HeaderSubPiece::Constants::SubPiecesPerPiece - 1;
+        boost::uint32_t last_subpiece_index = first_subpiece_index + HeaderSubPiece::Constants::SubPiecesPerPiece - 1;
         if (last_subpiece_index >= subpieces_.size())
         {
             if (false == HasHeaderSubPiece())
@@ -287,7 +287,7 @@ namespace storage
             last_subpiece_index = subpieces_.size() - 1;
         }
         
-        for(uint32_t subpiece_index = first_subpiece_index; 
+        for(boost::uint32_t subpiece_index = first_subpiece_index; 
             subpiece_index <= last_subpiece_index; 
             ++subpiece_index)
         {
@@ -313,7 +313,7 @@ namespace storage
         return block_header_validated_;
     }
 
-    bool LiveBlockNode::IsPieceValid(uint16_t piece_index) const
+    bool LiveBlockNode::IsPieceValid(boost::uint16_t piece_index) const
     {
         if (piece_index >= HeaderSubPiece::Constants::MaximumPiecesPerBlock)
         {
@@ -336,10 +336,10 @@ namespace storage
             return false;
         }
 
-        uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
+        boost::uint32_t first_subpiece_index = LiveBlockNode::GetFirstSubPieceIndex(piece_index);
         assert(first_subpiece_index < subpieces_.size());
 
-        uint32_t last_subpiece_index = first_subpiece_index + HeaderSubPiece::Constants::SubPiecesPerPiece - 1;
+        boost::uint32_t last_subpiece_index = first_subpiece_index + HeaderSubPiece::Constants::SubPiecesPerPiece - 1;
         if (last_subpiece_index >= subpieces_.size())
         {
             last_subpiece_index = subpieces_.size() - 1;
@@ -348,10 +348,10 @@ namespace storage
         assert(last_subpiece_index >= first_subpiece_index);
 
         //memcpy的原因 - SubPieceContent::buffer_不是4字节对齐，不符合checksum算法的要求(checksum为了在box中也有好的性能而有此要求)。
-        uint8_t buffer[HeaderSubPiece::Constants::SubPiecesPerPiece*HeaderSubPiece::Constants::SubPieceSizeInBytes];
-        uint8_t* buffer_write_pos = buffer;
+        boost::uint8_t buffer[HeaderSubPiece::Constants::SubPiecesPerPiece*HeaderSubPiece::Constants::SubPieceSizeInBytes];
+        boost::uint8_t* buffer_write_pos = buffer;
 
-        for(uint32_t subpiece_index = first_subpiece_index;
+        for(boost::uint32_t subpiece_index = first_subpiece_index;
             subpiece_index <= last_subpiece_index;
             ++subpiece_index)
         {
@@ -366,8 +366,8 @@ namespace storage
             buffer_write_pos += subpieces_[subpiece_index].Length();
         }
 
-        uint32_t expected_checksum = header_subpiece_->GetPieceChecksum(piece_index);
-        uint32_t actual_checksum = check_sum_new(boost::asio::const_buffers_1(buffer, buffer_write_pos - buffer));
+        boost::uint32_t expected_checksum = header_subpiece_->GetPieceChecksum(piece_index);
+        boost::uint32_t actual_checksum = check_sum_new(boost::asio::const_buffers_1(buffer, buffer_write_pos - buffer));
 
         if (expected_checksum == actual_checksum)
         {

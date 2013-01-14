@@ -10,13 +10,13 @@ namespace storage
 {
     MemoryUsageDescription LiveInstanceMemoryConsumer::GetMemoryUsage() const
     {
-        std::map<uint32_t, size_t> blocks_importance_score;
+        std::map<boost::uint32_t, size_t> blocks_importance_score;
         BuildBlocksImportanceScore(blocks_importance_score);
 
         size_t min_blocks = 0;
         size_t desirable_blocks = 0;
 
-        for(std::map<uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
+        for(std::map<boost::uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
             iter != blocks_importance_score.end();
             ++iter)
         {
@@ -56,14 +56,14 @@ namespace storage
             return;
         }
 
-        std::map<uint32_t, size_t> blocks_importance_score;
+        std::map<boost::uint32_t, size_t> blocks_importance_score;
         BuildBlocksImportanceScore(blocks_importance_score);
 
-        for(uint32_t block_id = live_instance_->GetCacheFirstBlockId();
+        for(boost::uint32_t block_id = live_instance_->GetCacheFirstBlockId();
             block_id <= live_instance_->GetCacheLastBlockId();
             block_id += live_instance_->GetLiveInterval())
         {
-            std::map<uint32_t, size_t>::iterator iter = blocks_importance_score.find(block_id);
+            std::map<boost::uint32_t, size_t>::iterator iter = blocks_importance_score.find(block_id);
             if (iter != blocks_importance_score.end())
             {
                 //score
@@ -82,15 +82,15 @@ namespace storage
         if (live_instance_->cache_manager_.GetCacheSize() > blocks_quota)
         {
             size_t blocks_to_remove = live_instance_->cache_manager_.GetCacheSize() - blocks_quota;
-            std::multimap<size_t, uint32_t> score_to_block_id;
-            for(std::map<uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
+            std::multimap<size_t, boost::uint32_t> score_to_block_id;
+            for(std::map<boost::uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
                 iter != blocks_importance_score.end();
                 ++iter)
             {
                 score_to_block_id.insert(std::make_pair(iter->second, iter->first));
             }
 
-            for(std::multimap<size_t, uint32_t>::const_iterator iter = score_to_block_id.begin();
+            for(std::multimap<size_t, boost::uint32_t>::const_iterator iter = score_to_block_id.begin();
                 iter != score_to_block_id.end() && blocks_to_remove > 0;
                 ++iter)
             {
@@ -107,7 +107,7 @@ namespace storage
     // 目前认为分值>=MostWantedBlocksScoreBar(3)的block是不能淘汰的，
     // [1-2]的是尽可能保留，但不排除会被淘汰的，而分值为0的是随时可以淘汰的
     // 今后还有必要根据实际测试情况来对这些范围/阈值进行调整
-    void LiveInstanceMemoryConsumer::BuildBlocksImportanceScore(std::map<uint32_t, size_t>& blocks_importance_score) const
+    void LiveInstanceMemoryConsumer::BuildBlocksImportanceScore(std::map<boost::uint32_t, size_t>& blocks_importance_score) const
     {
         blocks_importance_score.clear();
 
@@ -118,13 +118,13 @@ namespace storage
 
         LivePosition last_block = LivePosition(live_instance_->GetCacheLastBlockId());
 
-        vector<uint32_t> sorted_play_points;
+        vector<boost::uint32_t> sorted_play_points;
         GetSortedPlayPoints(sorted_play_points);
 
         const int upload_score_base = 5;
         const int play_point_relevance_score_base = 10;
 
-        for(uint32_t block_id = live_instance_->GetCacheFirstBlockId();
+        for(boost::uint32_t block_id = live_instance_->GetCacheFirstBlockId();
             block_id <= live_instance_->GetCacheLastBlockId();
             block_id += live_instance_->GetLiveInterval())
         {
@@ -200,7 +200,7 @@ namespace storage
         size_t blocks = 0;
         size_t sum_of_blocks_size = 0;
 
-        for(uint32_t block_id = live_instance_->GetCacheFirstBlockId();
+        for(boost::uint32_t block_id = live_instance_->GetCacheFirstBlockId();
             block_id <= live_instance_->GetCacheLastBlockId();
             block_id += live_instance_->GetLiveInterval())
         {
@@ -215,7 +215,7 @@ namespace storage
         return blocks == 0 ? 0 : (sum_of_blocks_size/blocks);
     }
 
-    void LiveInstanceMemoryConsumer::GetSortedPlayPoints(std::vector<uint32_t>& sorted_play_points) const
+    void LiveInstanceMemoryConsumer::GetSortedPlayPoints(std::vector<boost::uint32_t>& sorted_play_points) const
     {
         std::vector<LivePosition> play_points;
         live_instance_->GetAllPlayPoints(play_points);

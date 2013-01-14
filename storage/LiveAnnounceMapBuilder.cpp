@@ -72,7 +72,7 @@ namespace storage
         return;
     }
 
-    uint32_t LiveAnnouceMapBuilder::MaximumPacketSizeAllowed() const
+    boost::uint32_t LiveAnnouceMapBuilder::MaximumPacketSizeAllowed() const
     {
         if (additional_bits_beyond_the_last_byte_ > 0)
         {
@@ -109,7 +109,7 @@ namespace storage
             bit_set.push_back(eligible_for_upload ? 1 : 0);
         }
 
-        uint32_t new_packet_size = accumulated_packet_size_;
+        boost::uint32_t new_packet_size = accumulated_packet_size_;
         new_packet_size += 2;
         new_packet_size += (subpieces_count + additional_bits_beyond_the_last_byte_) / 8;
         additional_bits_beyond_the_last_byte_ = (subpieces_count + additional_bits_beyond_the_last_byte_) % 8;

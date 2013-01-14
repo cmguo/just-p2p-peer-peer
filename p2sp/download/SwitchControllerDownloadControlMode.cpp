@@ -62,10 +62,10 @@ namespace p2sp
         assert(state_.p2p_ == State::P2P_DOWNLOADING);
         assert(GetP2PControlTarget());
 
-        // uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
-        // uint32_t active_peers_count = GetP2PControlTarget()->GetActivePeersCount();
-        uint32_t full_block_peers_count = GetP2PControlTarget()->GetFullBlockPeersCount();
-        uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+        // boost::uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
+        // boost::uint32_t active_peers_count = GetP2PControlTarget()->GetActivePeersCount();
+        boost::uint32_t full_block_peers_count = GetP2PControlTarget()->GetFullBlockPeersCount();
+        boost::uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
 
         if (now_speed >= 8 * 1024 && full_block_peers_count >= 1)
         {
@@ -83,8 +83,8 @@ namespace p2sp
         assert(state_.timer_ == State::TIMER_NONE);
         assert(GetP2PControlTarget());
 
-        uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
-        uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+        boost::uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
+        boost::uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
 
          if (GetGlobalDataProvider()->GetVipLevel() == p2sp::VIP)
         {
@@ -99,7 +99,7 @@ namespace p2sp
         return false;
     }
 
-    void SwitchController::DownloadControlMode::OnControlTimer(uint32_t times)
+    void SwitchController::DownloadControlMode::OnControlTimer(boost::uint32_t times)
     {
         if (false == IsRunning())
             return;

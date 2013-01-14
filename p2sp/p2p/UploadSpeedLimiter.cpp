@@ -35,7 +35,7 @@ namespace p2sp
     {
         if (pointer == &tick_timer_)
         {
-            uint32_t times = pointer->times();
+            boost::uint32_t times = pointer->times();
             if (times % 4 == 0)
             {
                 packet_number_make_up_ = packet_number_make_up_per_second_;
@@ -76,25 +76,25 @@ namespace p2sp
     }
 
     void UploadSpeedLimiter::SendPacket(const protocol::SubPiecePacket & packet, bool ignoreUploadSpeedLimit,
-        uint16_t priority, uint16_t dest_protocol_version)
+        boost::uint16_t priority, boost::uint16_t dest_protocol_version)
     {
         DoSendPacket(boost::shared_ptr<VodPacket>(new VodPacket(packet)), ignoreUploadSpeedLimit, priority, dest_protocol_version);
     }
 
     void UploadSpeedLimiter::SendPacket(const protocol::LiveSubPiecePacket & packet, bool ignoreUploadSpeedLimit,
-        uint16_t priority, uint16_t dest_protocol_version)
+        boost::uint16_t priority, boost::uint16_t dest_protocol_version)
     {
         DoSendPacket(boost::shared_ptr<LivePacket>(new LivePacket(packet)), ignoreUploadSpeedLimit, priority, dest_protocol_version);
     }
 
     void UploadSpeedLimiter::SendPacket(const protocol::TcpSubPieceResponsePacket & packet, bool ignoreUploadSpeedLimit,
-        uint16_t priority, uint16_t dest_protocol_viersion)
+        boost::uint16_t priority, boost::uint16_t dest_protocol_viersion)
     {
         DoSendPacket(boost::shared_ptr<TcpPacket>(new TcpPacket(packet)), ignoreUploadSpeedLimit, priority, dest_protocol_viersion);
     }
 
     void UploadSpeedLimiter::DoSendPacket(boost::shared_ptr<PacketBase> packet, bool ignoreUploadSpeedLimit,
-        uint16_t priority, uint16_t dest_protocol_version)
+        boost::uint16_t priority, boost::uint16_t dest_protocol_version)
     {
         // 不限速
         if (ignoreUploadSpeedLimit || static_cast<boost::int32_t>(GetSpeedLimitInKBps()) < 0)
@@ -134,7 +134,7 @@ namespace p2sp
         }
     }
 
-    void UploadSpeedLimiter::SetSpeedLimitInKBps(uint32_t speed_limit_in_KBps)
+    void UploadSpeedLimiter::SetSpeedLimitInKBps(boost::uint32_t speed_limit_in_KBps)
     {
         if (speed_limit_in_KBps_ == speed_limit_in_KBps)
         {
@@ -159,7 +159,7 @@ namespace p2sp
             " packet_number_per_tick_=" << packet_number_per_tick_);
     }
 
-    uint32_t UploadSpeedLimiter::GetSpeedLimitInKBps() const
+    boost::uint32_t UploadSpeedLimiter::GetSpeedLimitInKBps() const
     {
         return speed_limit_in_KBps_;
     }

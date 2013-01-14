@@ -67,23 +67,23 @@ namespace p2sp
         statistic::PeerConnectionStatistic::p GetStatistic() const;
 
         bool AddAssignedSubPiece(const protocol::SubPieceInfo & subpiece_info);
-        uint32_t GetTaskQueueSize() const;
+        boost::uint32_t GetTaskQueueSize() const;
         void ClearTaskQueue();
 
-        void OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length);
+        void OnSubPiece(boost::uint32_t subpiece_rtt, boost::uint32_t buffer_length);
         void OnTimeOut();
 
-        uint32_t GetConnectedTime() const;
+        boost::uint32_t GetConnectedTime() const;
         boost::uint32_t GetSentCount() const;
         boost::uint32_t GetReceivedCount() const;
 
-        uint32_t GetWindowSize() const;
-        uint32_t GetLongestRtt() const;
-        uint32_t GetAvgDeltaTime() const;
+        boost::uint32_t GetWindowSize() const;
+        boost::uint32_t GetLongestRtt() const;
+        boost::uint32_t GetAvgDeltaTime() const;
 
         const protocol::CandidatePeerInfo & GetCandidatePeerInfo() const;
 
-        void RequestSubPieces(uint32_t subpiece_count, uint32_t copy_count, bool need_check);
+        void RequestSubPieces(boost::uint32_t subpiece_count, boost::uint32_t copy_count, bool need_check);
         void RecordStatisticInfo();
 
     private:
@@ -92,8 +92,8 @@ namespace p2sp
     protected:
         bool is_running_;
 
-        uint32_t sent_count_;
-        uint32_t received_count_;
+        boost::uint32_t sent_count_;
+        boost::uint32_t received_count_;
 
         framework::timer::TickCounter last_live_response_time_;
         framework::timer::TickCounter last_receive_time_;

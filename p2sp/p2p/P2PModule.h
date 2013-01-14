@@ -52,7 +52,7 @@ namespace p2sp
 
         void OnUdpRecv(protocol::Packet const & packet);
         void OnTimerElapsed(framework::timer::Timer * pointer);
-        void OnP2PTimer(uint32_t times);
+        void OnP2PTimer(boost::uint32_t times);
 
         void AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver);
 
@@ -89,7 +89,7 @@ namespace p2sp
         // 状态
         volatile bool is_running_;
 
-        uint32_t max_download_speed_;
+        boost::uint32_t max_download_speed_;
 
         // 直播索引，直播的LiveP2PDownloader集合
         std::multimap<RID, LiveP2PDownloader__p> live_rid_index_;

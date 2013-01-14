@@ -14,7 +14,7 @@
 
 namespace p2sp
 {
-    extern void LoadLocalIPs(std::vector<uint32_t>& ipArray);
+    extern void LoadLocalIPs(std::vector<boost::uint32_t>& ipArray);
 
     void NatCheckClient::Start(const string& config_path)
     {
@@ -74,7 +74,7 @@ namespace p2sp
 
             LoadLocalIPs(local_ips_);
             //这里利用Windows Api取到的是网络序，发到服务器的地址需要转成主机序方便统计
-            uint32_t tmp_ip = base::util::GetLocalFirstIP();
+            boost::uint32_t tmp_ip = base::util::GetLocalFirstIP();
 #ifdef BOOST_WINDOWS_API
             local_first_ip_ = ntohl(tmp_ip); 
 #else
@@ -432,7 +432,7 @@ namespace p2sp
             m_strConfig = filename;
 
             int LastTime = 0;
-            uint32_t LastLocalIP = 0;
+            boost::uint32_t LastLocalIP = 0;
 
             ppva_conf(CONFIG_PARAM_NAME_RDONLY("NTYPE", snt_result));
             if (snt_result < protocol::TYPE_FULLCONENAT || snt_result > protocol::TYPE_PUBLIC)
@@ -469,7 +469,7 @@ namespace p2sp
         boost::filesystem::path configpath(m_strConfig);
         string filename = configpath.file_string();
         int LastTime = 0;
-        uint32_t LastLocalIP = 0;
+        boost::uint32_t LastLocalIP = 0;
         protocol::MY_STUN_NAT_TYPE nat_result;
         string nat_string;
 

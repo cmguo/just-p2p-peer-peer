@@ -27,7 +27,7 @@ namespace storage
         void SetMemoryQuota(const MemoryQuota & quota);
 
         //前提是所传入的sorted_play_points已经由小到大进行排序
-        static int FindMostRelevantPlayPointIndex(const std::vector<uint32_t>& sorted_play_points, uint32_t block_id)
+        static int FindMostRelevantPlayPointIndex(const std::vector<boost::uint32_t>& sorted_play_points, boost::uint32_t block_id)
         {
             for(int i = 0; i < static_cast<int>(sorted_play_points.size()); ++i)
             {
@@ -41,10 +41,10 @@ namespace storage
         }
 		
     private:
-        void BuildBlocksImportanceScore(std::map<uint32_t, size_t>& blocks_importance_score) const;
+        void BuildBlocksImportanceScore(std::map<boost::uint32_t, size_t>& blocks_importance_score) const;
         size_t GetBlocksQuota(const MemoryQuota& quota) const;
         size_t GetAverageBlockSize() const;
-        void GetSortedPlayPoints(std::vector<uint32_t>& sorted_play_points) const;
+        void GetSortedPlayPoints(std::vector<boost::uint32_t>& sorted_play_points) const;
 
         //目前是线性地计算距离度，如有必要可以考虑更复杂的算法
         static size_t GetDistanceScore(size_t distance, size_t effective_range, size_t score_base)

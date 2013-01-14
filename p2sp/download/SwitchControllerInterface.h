@@ -44,9 +44,9 @@ namespace p2sp
         virtual boost::uint32_t GetSecondDownloadSpeed() = 0;
         virtual boost::uint32_t GetCurrentDownloadSpeed() = 0;
 
-        virtual uint32_t GetMinuteDownloadSpeed() = 0;
+        virtual boost::uint32_t GetMinuteDownloadSpeed() = 0;
 
-        virtual uint32_t GetRecentDownloadSpeed() = 0;  // 20s
+        virtual boost::uint32_t GetRecentDownloadSpeed() = 0;  // 20s
 
         virtual void SetSpeedLimitInKBps(boost::int32_t speed_in_KBps) = 0;
     };
@@ -86,19 +86,19 @@ namespace p2sp
 
         // Data
 
-        virtual uint32_t GetPooledPeersCount() = 0;
+        virtual boost::uint32_t GetPooledPeersCount() = 0;
 
-        virtual uint32_t GetConnectedPeersCount() = 0;
+        virtual boost::uint32_t GetConnectedPeersCount() = 0;
 
-        virtual uint32_t GetFullBlockPeersCount() = 0;
+        virtual boost::uint32_t GetFullBlockPeersCount() = 0;
 
-        virtual uint32_t GetActivePeersCount() = 0;
+        virtual boost::uint32_t GetActivePeersCount() = 0;
 
-        virtual uint32_t GetAvailableBlockPeerCount() = 0;
+        virtual boost::uint32_t GetAvailableBlockPeerCount() = 0;
 
-        virtual uint16_t GetNonConsistentSize() = 0;
+        virtual boost::uint16_t GetNonConsistentSize() = 0;
 
-        virtual uint32_t GetMaxConnectCount() = 0;
+        virtual boost::uint32_t GetMaxConnectCount() = 0;
 
         virtual RID GetRid() = 0;
 
@@ -127,21 +127,21 @@ namespace p2sp
 
     public:
 
-        virtual uint32_t GetBandWidth() = 0;
+        virtual boost::uint32_t GetBandWidth() = 0;
 
-        virtual uint32_t GetVipLevel() = 0;
+        virtual boost::uint32_t GetVipLevel() = 0;
 
-        virtual uint32_t GetFileLength() = 0;
+        virtual boost::uint32_t GetFileLength() = 0;
 
-        virtual uint32_t GetDataRate() = 0;
+        virtual boost::uint32_t GetDataRate() = 0;
 
-        virtual uint32_t GetPlayElapsedTimeInMilliSec() = 0;
+        virtual boost::uint32_t GetPlayElapsedTimeInMilliSec() = 0;
 
-        virtual uint32_t GetDownloadingPosition() = 0;
+        virtual boost::uint32_t GetDownloadingPosition() = 0;
 
-        virtual uint32_t GetDownloadedBytes() = 0;
+        virtual boost::uint32_t GetDownloadedBytes() = 0;
 
-        virtual uint32_t GetDataDownloadSpeed() = 0;
+        virtual boost::uint32_t GetDataDownloadSpeed() = 0;
 
         virtual bool IsStartFromNonZero() = 0;
 
@@ -155,7 +155,7 @@ namespace p2sp
 
         virtual IP2PControlTarget::p GetP2PControlTarget() = 0;
 
-        virtual void OnStateMachineType(uint32_t state_machine_type) = 0;
+        virtual void OnStateMachineType(boost::uint32_t state_machine_type) = 0;
 
         virtual void OnStateMachineState(const string& state_machine_state) = 0;
 
@@ -176,7 +176,7 @@ namespace p2sp
         virtual JumpBWType GetBWType() = 0;
         virtual void NoticeLeave2300() = 0;
         virtual void NoticeLeave2000() = 0;
-        virtual void SetDragHttpStatus(int32_t status) = 0;
+        virtual void SetDragHttpStatus(boost::int32_t status) = 0;
 
         virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets() = 0;
         virtual void ReportUseBakHost() = 0;

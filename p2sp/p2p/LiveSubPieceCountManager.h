@@ -13,7 +13,7 @@ namespace p2sp
         boost::uint16_t GetSubPieceCount(boost::uint32_t block_id) const;
 
     private:
-        map<uint32_t, uint16_t> subpiece_count_map_;
+        map<boost::uint32_t, boost::uint16_t> subpiece_count_map_;
         boost::uint32_t live_interval_;
     };
 }

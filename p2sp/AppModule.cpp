@@ -114,7 +114,7 @@ namespace p2sp
 
         // local ips
 
-        std::vector<uint32_t> local_ips;
+        std::vector<boost::uint32_t> local_ips;
         if (appmodule_start_interface->bUseDisk_ == true)
         {
             // LoadLocalIPs(local_ips);
@@ -184,7 +184,7 @@ namespace p2sp
 
         // StorageModule
         LOG4CPLUS_DEBUG_LOG(logger_appmodule, "Begin to Start Storage Module.");
-        uint32_t storage_mode =
+        boost::uint32_t storage_mode =
             (appmodule_start_interface->disk_read_only_ ? STORAGE_MODE_READONLY : STORAGE_MODE_NORMAL);
 
         Storage::CreateInst(io_svc)->Start(
@@ -237,13 +237,15 @@ namespace p2sp
         tcp_server_843_->Start(843);
 
         //绑定的端口都知道了，可以开始映射了
-        map<uint16_t,uint16_t> tcpport,udpport;
+        map<boost::uint16_t,boost::uint16_t> tcpport,udpport;
         tcpport[tcp_server_->GetTcpPort()] = 0;
         tcpport[tcp_server_843_->GetTcpPort()] = tcp_server_843_->GetTcpPort();
         udpport[local_udp_port] = 0;
-        UpnpModule::Inst()->Start();   
+#ifndef WINRT
+        UpnpModule::Inst()->Start();
 
         UpnpModule::Inst()->AddUpnpPort(tcpport,udpport);
+#endif
 #endif
         TrackerModule::Inst()->Start(appmodule_start_interface->config_path_);
 
@@ -251,7 +253,7 @@ namespace p2sp
         StatisticModule::Inst()->SetLocalPeerVersion(protocol::PEER_VERSION);
 
 #ifdef NEED_TO_POST_MESSAGE
-        uint32_t port = MAKELONG(local_udp_port, 0);
+        boost::uint32_t port = MAKELONG(local_udp_port, 0);
         WindowsMessage::Inst().PostWindowsMessage(UM_STARTUP_SUCCED, (WPARAM)ProxyModule::Inst()->GetHttpPort(), (LPARAM)port);
 #endif
 
@@ -354,9 +356,9 @@ namespace p2sp
         P2PModule::Inst()->Stop();
 
         StunModule::Inst()->Stop();
-
+#ifndef WINRT
         UpnpModule::Inst()->Stop();
-
+#endif
         StatisticModule::Inst()->Stop();
 
         // 启动UploadStatistic模块
@@ -481,7 +483,7 @@ namespace p2sp
         }
     }
 
-    std::set<RID> AppModule::GetVodResource(uint32_t mod_number, uint32_t group_count)
+    std::set<RID> AppModule::GetVodResource(boost::uint32_t mod_number, boost::uint32_t group_count)
     {
         std::set<RID> s;
         if (false == is_running_)
@@ -492,7 +494,7 @@ namespace p2sp
         return s;
     }
 
-    std::set<RID> AppModule::GetLiveResource(uint32_t mod_number, uint32_t group_count)
+    std::set<RID> AppModule::GetLiveResource(boost::uint32_t mod_number, boost::uint32_t group_count)
     {
         std::set<RID> s;
         if (false == is_running_)
@@ -563,7 +565,7 @@ namespace p2sp
 
         (void)used_disk_space;
         LOG4CPLUS_DEBUG_LOG(logger_appmodule, __FUNCTION__ << ":" << __LINE__ << " UploadPriority = " << 
-            (uint32_t)upload_priority << ", " << used_disk_space << " / " << max_store_size);
+            (boost::uint32_t)upload_priority << ", " << used_disk_space << " / " << max_store_size);
 
         return upload_priority;
     }
@@ -580,7 +582,7 @@ namespace p2sp
         if (DT_WINLOGON == dtype && Performance::Inst()->IsIdle(1)) {
             return (boost::uint8_t)0xFFu;
         }
-        uint32_t idleTimeInMins = static_cast<uint32_t>(Performance::Inst()->GetIdleInSeconds()/60.0 + 0.5);
+        boost::uint32_t idleTimeInMins = static_cast<boost::uint32_t>(Performance::Inst()->GetIdleInSeconds()/60.0 + 0.5);
         LIMIT_MAX(idleTimeInMins, 0xFEu);
         return (boost::uint8_t)idleTimeInMins;
     }

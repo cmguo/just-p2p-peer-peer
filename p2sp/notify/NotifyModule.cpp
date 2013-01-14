@@ -20,12 +20,12 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/lexical_cast.hpp"
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "WindowsMessage.h"
 #endif
 
 // 对数函数的底数，数字越小，分布越靠前
-const uint32_t PARAM = 15;
+const boost::uint32_t PARAM = 15;
 
 namespace p2sp
 {
@@ -91,7 +91,7 @@ namespace p2sp
                 boost::algorithm::trim(line);
                 if (line.empty() || line[0] == '#')
                     continue;
-                uint32_t index = line.find_first_of('=');
+                boost::uint32_t index = line.find_first_of('=');
                 if (index != string::npos)
                 {
                     string key = boost::algorithm::trim_copy(line.substr(0, index));
@@ -99,17 +99,17 @@ namespace p2sp
 
                     if (key == "MAX_PEER_NODE")
                     {
-                        max_peer_node = boost::lexical_cast<uint32_t>(value);
+                        max_peer_node = boost::lexical_cast<boost::uint32_t>(value);
                         LOG4CPLUS_DEBUG_LOG(logger_notify, "max_peer_node = " << max_peer_node);
                     }
                     else if (key == "MAX_PEER_RETURN")
                     {
-                        max_peer_return = boost::lexical_cast<uint32_t>(value);
+                        max_peer_return = boost::lexical_cast<boost::uint32_t>(value);
                         LOG4CPLUS_DEBUG_LOG(logger_notify, "max_peer_return = " << max_peer_return);
                     }
                     else if (key == "START_TIME")
                     {
-                        start_time = boost::lexical_cast<uint32_t>(value);
+                        start_time = boost::lexical_cast<boost::uint32_t>(value);
                         LOG4CPLUS_DEBUG_LOG(logger_notify, "start_time = " << start_time);
                     }
                 }
@@ -224,8 +224,8 @@ namespace p2sp
                     }
 
                     // 随机返回部分节点
-                    uint32_t max_return = (std::min)((uint32_t)max_peer_return, (uint32_t)peer_node_map_.size());
-                    uint32_t pos = peer_node_retun_number_ % max_return;
+                    boost::uint32_t max_return = (std::min)((boost::uint32_t)max_peer_return, (boost::uint32_t)peer_node_map_.size());
+                    boost::uint32_t pos = peer_node_retun_number_ % max_return;
 
                     std::map<Guid, PEER_NODE_STATUS>::const_iterator peer_map_iter_ = peer_node_map_.begin();
                     while (pos != 0)
@@ -235,7 +235,7 @@ namespace p2sp
                     }
 
                     // 从pos开始，连续返回max_return个节点
-                    for (uint32_t i = 0; i<max_return; i++)
+                    for (boost::uint32_t i = 0; i<max_return; i++)
                     {
                         if (peer_map_iter_ == peer_node_map_.end())
                         {

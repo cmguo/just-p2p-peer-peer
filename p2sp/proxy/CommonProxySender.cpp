@@ -28,9 +28,9 @@ namespace p2sp
         assert(!"CommonProxySender::Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection)");
     }
 
-    void CommonProxySender::Start(uint32_t start_possition)
+    void CommonProxySender::Start(boost::uint32_t start_possition)
     {
-        assert(!"CommonProxySender::Start(uint32_t start_possition)");
+        assert(!"CommonProxySender::Start(boost::uint32_t start_possition)");
     }
 
     void CommonProxySender::Stop()
@@ -53,7 +53,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void CommonProxySender::OnRecvSubPiece(uint32_t start_position, std::vector<base::AppBuffer> const & buffers)
+    void CommonProxySender::OnRecvSubPiece(boost::uint32_t start_position, std::vector<base::AppBuffer> const & buffers)
     {
         if (is_running_ == false) return;
         // assert(file_length_ > 0);
@@ -65,7 +65,7 @@ namespace p2sp
         LOG4CPLUS_DEBUG_LOG(logger_proxy, ">> playing_position_ = " << playing_position_ << ", file_length_ = " 
             << file_length_ << ", buffers.count = " << buffers.size());
 
-        for (uint32_t i = 0; i < buffers.size(); ++i) {
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i) {
             // if (fp_) {
             //    fwrite(buffers[i].Data(), sizeof(boost::uint8_t), buffers[i].Length(), fp_);
             // }
@@ -83,7 +83,7 @@ namespace p2sp
         }
     }
 
-    void CommonProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void CommonProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false) return;
         // ???Http???
@@ -126,7 +126,7 @@ namespace p2sp
         //        timer_->Start();
     }
 
-    void CommonProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void CommonProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;

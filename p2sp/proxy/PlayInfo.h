@@ -87,13 +87,13 @@ namespace p2sp
 
         protocol::RidInfo GetRidInfo() const { return rid_info_; }
 
-        uint32_t GetStartPosition() const { return start_position_; }
+        boost::uint32_t GetStartPosition() const { return start_position_; }
 
         PlayType GetPlayType() const { return play_type_; }
 
         boost::int32_t GetSpeedLimit() const { return speed_limit_; }
 
-        uint32_t GetHeadLength() const { return head_length_; }
+        boost::uint32_t GetHeadLength() const { return head_length_; }
 
         SourceType GetSourceType() const { return source_type_; }
 
@@ -126,9 +126,9 @@ namespace p2sp
 
         vector<RID> GetLiveRIDs() const {return live_rid_s_;}
 
-        uint32_t GetLiveStart() const {return live_start_;}
+        boost::uint32_t GetLiveStart() const {return live_start_;}
 
-        uint32_t GetLiveInterval() const { return live_interval_; }
+        boost::uint32_t GetLiveInterval() const { return live_interval_; }
 
         bool IsLiveReplay() const { return live_replay_; }
 
@@ -165,7 +165,7 @@ namespace p2sp
 
         static bool ParseBakHosts(const network::Uri& uri, std::vector<std::string>& bak_hosts);
 
-        static bool ParseUint32Value(const network::Uri& uri, uint32_t &value, string key);
+        static bool ParseUint32Value(const network::Uri& uri, boost::uint32_t &value, string key);
 
         static bool ParseDownloadLevel(const network::Uri& uri, DownloadLevel& level);
 
@@ -180,7 +180,7 @@ namespace p2sp
         // flash p2p的range
         static boost::shared_ptr<RangeInfo> ParseRangeInfo(const network::Uri & uri);
 
-        static bool GetValueFromUri(const network::Uri & uri, const string & key, uint32_t & value);
+        static bool GetValueFromUri(const network::Uri & uri, const string & key, boost::uint32_t & value);
 
     private:
 
@@ -206,7 +206,7 @@ namespace p2sp
     private:
         protocol::UrlInfo url_info_;
         protocol::RidInfo rid_info_;
-        uint32_t start_position_;
+        boost::uint32_t start_position_;
         bool has_url_info_;
         bool has_rid_info_;
         PlayType play_type_;
@@ -214,7 +214,7 @@ namespace p2sp
         bool has_player_id_;
         string player_id_;
         bool has_start_;
-        uint32_t head_length_;
+        boost::uint32_t head_length_;
         SourceType source_type_;
         boost::int32_t is_drag_;
         bool head_only_;
@@ -233,8 +233,8 @@ namespace p2sp
         // 二代直播请求参数
         vector<RID> live_rid_s_;              // 频道rid
         vector<boost::uint32_t> data_rate_s_; // 码流率
-        uint32_t live_start_;                 // 请求的播放点
-        uint32_t live_interval_;              // 直播文件名的间隔
+        boost::uint32_t live_start_;                 // 请求的播放点
+        boost::uint32_t live_interval_;              // 直播文件名的间隔
         bool live_replay_;                    // 是否回拖
         RID channel_id_;                      // 频道ID
         bool live_pause_;                     // 是否暂停

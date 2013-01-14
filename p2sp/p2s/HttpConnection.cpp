@@ -18,9 +18,9 @@ namespace p2sp
 #ifdef LOG_ENABLE
     static log4cplus::Logger logger_http_connection = log4cplus::Logger::getInstance("[http_connection]");
 #endif
-    uint32_t DELAY_CONNECT_TIME = 1000;
-    const uint32_t HTTP_SLEEP_TIME = 1*1000;
-    const uint32_t HTTP_PAUSING_SLEEP_TIME = 8*1000;
+    boost::uint32_t DELAY_CONNECT_TIME = 1000;
+    const boost::uint32_t HTTP_SLEEP_TIME = 1*1000;
+    const boost::uint32_t HTTP_PAUSING_SLEEP_TIME = 8*1000;
 
     HttpConnection::HttpConnection(
         boost::asio::io_service & io_svc,
@@ -77,7 +77,7 @@ namespace p2sp
         , is_head_only_(is_head_only)
     {}
 
-    void HttpConnection::Start(bool is_support_start, bool is_open_service, uint32_t head_length)
+    void HttpConnection::Start(bool is_support_start, bool is_open_service, boost::uint32_t head_length)
     {
         if (is_running_ == true)
             return;
@@ -215,7 +215,7 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpConnection::SleepForConnect ");
 
-        for (uint32_t i = 0; i < piece_task.size(); ++i)
+        for (boost::uint32_t i = 0; i < piece_task.size(); ++i)
         {
             downloader_->GetDownloadDriver()->OnPieceFaild(piece_task[i].GetPieceInfo(), downloader_);
         }
@@ -301,15 +301,15 @@ namespace p2sp
         }
         else if (status == PIECED && have_piece_ == false && is_support_range_  == true)
         {
-            uint32_t block_size_ = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
-            uint32_t current_position = piece_info_ex.GetPosition(block_size_);
+            boost::uint32_t block_size_ = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
+            boost::uint32_t current_position = piece_info_ex.GetPosition(block_size_);
 
             // 开放服务
             if (true == is_open_service_)
             {
                 if (piece_info_ex_.GetEndPosition(block_size_) == current_position ||
                     // head length 未获得
-                    head_length_ == (uint32_t)-1 ||
+                    head_length_ == (boost::uint32_t)-1 ||
 
                     current_position < head_length_)
                 {
@@ -501,7 +501,7 @@ namespace p2sp
         else if (status == CONNECTED && have_piece_ == true && is_support_range_  == true && false == is_open_service_)
         {
             status = HEADERING;
-            uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
+            boost::uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
             LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ << 
                 " protocol::PieceInfo: " << piece_info_ex_ << " block_size_: " << block_size);
             LOG4CPLUS_DEBUG_LOG(logger_http_connection, __FUNCTION__ << ":" << __LINE__ << " ");
@@ -530,13 +530,13 @@ namespace p2sp
         }
         else if (status == CONNECTED && have_piece_ == true && (is_support_range_  == true || true == is_open_service_))
         {
-            uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
-            uint32_t piece_position = piece_info_ex_.GetPosition(block_size);
+            boost::uint32_t block_size = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
+            boost::uint32_t piece_position = piece_info_ex_.GetPosition(block_size);
 
             LOG4CPLUS_INFO_LOG(logger_http_connection, "block size = " << block_size << " piece_position = " 
                 << piece_position << " head length = " << head_length_);
 
-            if ((head_length_ != (uint32_t)-1 && piece_position > head_length_) || piece_position >= 2*1024*1024)
+            if ((head_length_ != (boost::uint32_t)-1 && piece_position > head_length_) || piece_position >= 2*1024*1024)
             {
                 status = HEADERING;
                 LOG4CPLUS_INFO_LOG(logger_http_connection, "HttpGet: downloader:" << downloader_ 
@@ -600,7 +600,7 @@ namespace p2sp
         }
     }
 
-    void HttpConnection::OnConnectFailed(uint32_t error_code)
+    void HttpConnection::OnConnectFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         LOG4CPLUS_ERROR_LOG(logger_http_connection, "HttpConnection::OnConnectFailed " << url_info_ << 
@@ -853,7 +853,7 @@ namespace p2sp
 
     }
 
-    void HttpConnection::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void HttpConnection::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnRecvHttpHeaderFailed downloader:" << downloader_ 
@@ -903,7 +903,7 @@ namespace p2sp
         }
     }
 
-    void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
+    void HttpConnection::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip)
     {
         LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvHttpDataSucced " << url_info_ << " file_offset=" 
             << file_offset << " content_offset=" << content_offset);
@@ -930,7 +930,7 @@ namespace p2sp
             return;
         }
 
-        uint32_t block_size_ = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
+        boost::uint32_t block_size_ = downloader_->GetDownloadDriver()->GetInstance()->GetBlockSize();
         protocol::SubPieceInfo sub_piece_info_;
         protocol::SubPieceInfo::MakeByPosition(file_offset, block_size_, sub_piece_info_);
             
@@ -1207,15 +1207,15 @@ namespace p2sp
 
     void HttpConnection::OnRecvHttpDataPartial(
         protocol::SubPieceBuffer const & buffer,
-        uint32_t file_offset,
-        uint32_t content_offset)
+        boost::uint32_t file_offset,
+        boost::uint32_t content_offset)
     {
         LOG4CPLUS_INFO_LOG(logger_http_connection, "OnRecvHttpDataPartial " << url_info_ << 
             " Length=" << buffer.Length());
         if (is_running_ == false) return;
     }
 
-    void HttpConnection::OnRecvHttpDataFailed(uint32_t error_code)
+    void HttpConnection::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         LOG4CPLUS_ERROR_LOG(logger_http_connection, "OnRecvHttpDataFailed " << url_info_ << " ErrorCode=" << error_code);
         if (is_running_ == false) return;

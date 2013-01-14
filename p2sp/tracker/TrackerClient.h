@@ -41,9 +41,9 @@ namespace p2sp
         /**
          * @brief 返回值为TransationID
          */
-        uint32_t DoSubmit();
+        boost::uint32_t DoSubmit();
 
-        void SetRidCount(uint32_t rid_count);
+        void SetRidCount(boost::uint32_t rid_count);
 
         void PPLeave();
 
@@ -53,13 +53,13 @@ namespace p2sp
 
         const protocol::TRACKER_INFO& GetTrackerInfo() const;
 
-        void SetGroupCount(uint32_t group_count);
+        void SetGroupCount(boost::uint32_t group_count);
 
-        uint32_t GetGroupCount() const;
+        boost::uint32_t GetGroupCount() const;
 
         std::set<RID> GetClientResource() const;
 
-        uint32_t DoReport();
+        boost::uint32_t DoReport();
 
         bool IsTrackerForLiveUdpServer() const;
 
@@ -84,12 +84,12 @@ namespace p2sp
         /**
          * @brief 记录上次收到的Tracker返回的上报资源情况
          */
-        uint32_t last_response_rid_count_;
+        boost::uint32_t last_response_rid_count_;
 
         /**
          * @brief
          */
-        uint32_t last_transaction_id_;
+        boost::uint32_t last_transaction_id_;
 
         /**
          * @brief 本地认为的服务器资源集合
@@ -102,7 +102,7 @@ namespace p2sp
          */
         protocol::TRACKER_INFO tracker_info_;
 
-        uint32_t group_count_;
+        boost::uint32_t group_count_;
 
         /**
          * @brief 上次report的内容
@@ -119,11 +119,11 @@ namespace p2sp
          */
         static const boost::uint16_t MAX_REQUEST_PEER_COUNT_ = 50;
 
-        static const uint32_t MAX_UINT = 0xFFFFFFFFU;
+        static const boost::uint32_t MAX_UINT = 0xFFFFFFFFU;
 
         /**
          * 每次最多Report的RID数
          */
-        static const uint32_t MAX_REPORT_RID_COUNT = 50;
+        static const boost::uint32_t MAX_REPORT_RID_COUNT = 50;
     };
 }

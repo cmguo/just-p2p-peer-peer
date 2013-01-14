@@ -12,7 +12,7 @@ namespace p2sp
     static log4cplus::Logger logger_httpspeed_limiter = log4cplus::Logger::getInstance("[http_download_speed_limiter]");
 #endif
 
-    const uint32_t DOWNLIMIT_MIN_INTERVAL_IN_MS = 1000;
+    const boost::uint32_t DOWNLIMIT_MIN_INTERVAL_IN_MS = 1000;
 
     HttpDownloadSpeedLimiter::HttpDownloadSpeedLimiter(boost::uint32_t max_data_queue_length)
         : max_data_queue_length_(max_data_queue_length)

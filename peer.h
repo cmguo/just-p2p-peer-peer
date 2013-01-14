@@ -5,7 +5,7 @@
 #ifndef PEER_H
 #define PEER_H
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #  include <windows.h>
 #  ifndef __MINGW32__
 #    define PEER_API WINAPI
@@ -14,7 +14,7 @@
 #  endif
 #else
 #define PEER_API
-#endif  // BOOST_WINDOWS_API
+#endif  // PEER_PC_CLIENT
 
 #include "p2sp/AppModule.h"
 
@@ -31,7 +31,7 @@
 #endif
 
 // 内核启动参数结构体
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(push, 1)
 #endif
 
@@ -44,7 +44,7 @@ namespace boost
     typedef short               int16_t;
     typedef unsigned short      uint16_t;
     typedef long                int32_t;
-    typedef unsigned long       uint32_t;
+    typedef unsigned long       boost::uint32_t;
     typedef __int64             int64_t;
     typedef unsigned __int64    uint64_t;
 };
@@ -565,7 +565,7 @@ typedef struct _NETINTERFACE{
     LPSETVIPLEVELBYURL SetVipLevelByUrl;
     boost::uint32_t                Reserved4[35];
 } NETINTERFACE, *LPNETINTERFACE;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(pop)
 #endif
 

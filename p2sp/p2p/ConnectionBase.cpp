@@ -35,7 +35,7 @@ namespace p2sp
         return true;
     }
 
-    uint32_t ConnectionBase::GetTaskQueueSize() const
+    boost::uint32_t ConnectionBase::GetTaskQueueSize() const
     {
         if (is_running_ == false)
         {
@@ -54,7 +54,7 @@ namespace p2sp
         task_queue_.clear();
     }
 
-    uint32_t ConnectionBase::GetConnectedTime() const
+    boost::uint32_t ConnectionBase::GetConnectedTime() const
     {
         return connected_time_.elapsed();
     }
@@ -69,7 +69,7 @@ namespace p2sp
         return received_count_;
     }
 
-    void ConnectionBase::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
+    void ConnectionBase::OnSubPiece(boost::uint32_t subpiece_rtt, boost::uint32_t buffer_length)
     {
         if (is_running_ == false)
         {
@@ -81,7 +81,7 @@ namespace p2sp
         statistic_->SubmitDownloadedBytes(buffer_length);
 
         recent_avg_delt_times_.Push(last_receive_time_.elapsed());
-        avg_delta_time_ = (uint32_t)recent_avg_delt_times_.Average();
+        avg_delta_time_ = (boost::uint32_t)recent_avg_delt_times_.Average();
 
         LIMIT_MAX(avg_delta_time_, 1000);
         last_receive_time_.reset();
@@ -127,21 +127,21 @@ namespace p2sp
         RequestNextSubpiece();
     }
 
-    uint32_t ConnectionBase::GetWindowSize() const
+    boost::uint32_t ConnectionBase::GetWindowSize() const
     {
         if (is_running_ == false)
             return 0;
         return window_size_;
     }
 
-    uint32_t ConnectionBase::GetLongestRtt() const
+    boost::uint32_t ConnectionBase::GetLongestRtt() const
     {
         if (is_running_ == false)
             return 0;
         return longest_rtt_;
     }
 
-    uint32_t ConnectionBase::GetAvgDeltaTime() const
+    boost::uint32_t ConnectionBase::GetAvgDeltaTime() const
     {
         if (is_running_ == false)
             return 0;
@@ -153,7 +153,7 @@ namespace p2sp
         return candidate_peer_info_;
     }
 
-    void ConnectionBase::RequestSubPieces(uint32_t subpiece_count, uint32_t copy_count, bool need_check)
+    void ConnectionBase::RequestSubPieces(boost::uint32_t subpiece_count, boost::uint32_t copy_count, bool need_check)
     {
         if (false == is_running_)
         {
@@ -171,7 +171,7 @@ namespace p2sp
         }
 
         std::vector<protocol::SubPieceInfo> subpieces;
-        for (uint32_t i = 0; i < subpiece_count; ++i)
+        for (boost::uint32_t i = 0; i < subpiece_count; ++i)
         {
             if (task_queue_.empty())
             {

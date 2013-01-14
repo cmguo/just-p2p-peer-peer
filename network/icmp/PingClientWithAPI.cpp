@@ -13,7 +13,7 @@
 
 namespace network
 {
-    uint16_t PingClientWithAPI::sequence_num_ = 0;
+    boost::uint16_t PingClientWithAPI::sequence_num_ = 0;
     string PingClientWithAPI::ping_body_ = "Hello PPLive";
 
     PingClientWithAPI::p PingClientWithAPI::Create()
@@ -37,7 +37,7 @@ namespace network
         free(reply_buffer_);
     }
 
-    uint16_t PingClientWithAPI::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
+    boost::uint16_t PingClientWithAPI::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         sequence_num_++;
         assert(ping_body_.length() >= 12);
@@ -131,7 +131,7 @@ namespace network
         return true;
     }
 
-    bool PingClientWithAPI::SetTtl(int32_t ttl)
+    bool PingClientWithAPI::SetTtl(boost::int32_t ttl)
     {
         ip_option_.Ttl = ttl;
         return true;

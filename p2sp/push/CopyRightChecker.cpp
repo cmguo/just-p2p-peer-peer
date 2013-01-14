@@ -11,7 +11,7 @@ namespace p2sp
 {
 #ifdef DISK_MODE
 
-    static const uint32_t MAX_COPYRIGHT_CACHE_SIZE = 100;
+    static const boost::uint32_t MAX_COPYRIGHT_CACHE_SIZE = 100;
     static const std::string COPYRIGHT_INFO_URL = "http://client-play.pplive.cn/chplay-0-";
 
     std::map<std::string, bool> CopyrightChecker::channel_id2_copyright_map_;

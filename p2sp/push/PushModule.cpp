@@ -18,7 +18,7 @@
 
 #include <cmath>
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include <tlhelp32.h>
 #endif
 
@@ -68,14 +68,14 @@ namespace p2sp
     //////////////////////////////////////////////////////////////////////////
     // Static
     PushModule::p PushModule::inst_(new PushModule());
-    static const int32_t QueryPushTaskTimeOutInMs = 5000;
-    static const int32_t QueryPushTaskRetryMaxIntervalInSec = 3600;
-    static const int32_t QueryPushTaskWaitIntervalInSec = 3600; //60 minutes
-    static const int32_t FirstTimeQueryPushTaskWaitIntervalInSec = 60;//1 minute
+    static const boost::int32_t QueryPushTaskTimeOutInMs = 5000;
+    static const boost::int32_t QueryPushTaskRetryMaxIntervalInSec = 3600;
+    static const boost::int32_t QueryPushTaskWaitIntervalInSec = 3600; //60 minutes
+    static const boost::int32_t FirstTimeQueryPushTaskWaitIntervalInSec = 60;//1 minute
 
-    static const int32_t ReportPushTaskCompeteTimeOutInMs = 5000;
-    static const int32_t MaxDownloadSpeedInKBS = 40;//40K
-    static const int32_t MaxPlayHistoryNum = 16;
+    static const boost::int32_t ReportPushTaskCompeteTimeOutInMs = 5000;
+    static const boost::int32_t MaxDownloadSpeedInKBS = 40;//40K
+    static const boost::int32_t MaxPlayHistoryNum = 16;
     //////////////////////////////////////////////////////////////////////////
     // Methods
     PushModule::State::State()
@@ -148,7 +148,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void PushModule::OnResolverSucced(uint32_t ip, uint16_t port)
+    void PushModule::OnResolverSucced(boost::uint32_t ip, boost::uint16_t port)
     {
         if (false == is_running_) {
             return;
@@ -192,7 +192,7 @@ namespace p2sp
             return last_query_timer_.elapsed() > FirstTimeQueryPushTaskWaitIntervalInSec * 1000;
         }
         else {
-            return last_query_timer_.elapsed() > (uint32_t)push_wait_interval_in_sec_ * 1000;
+            return last_query_timer_.elapsed() > (boost::uint32_t)push_wait_interval_in_sec_ * 1000;
         }
     }
 
@@ -366,7 +366,7 @@ namespace p2sp
             return;
         }
 
-        uint32_t bandwidth = std::max(statistic::StatisticModule::Inst()->GetBandWidth(), (uint32_t)64 * 1024);
+        boost::uint32_t bandwidth = std::max(statistic::StatisticModule::Inst()->GetBandWidth(), (boost::uint32_t)64 * 1024);
         int speed_limit;
 
         BOOST_ASSERT(push::USER_NONE == state_.user_);

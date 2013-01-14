@@ -206,7 +206,7 @@ namespace p2sp
 
     boost::uint32_t LiveConnectionManger::GetMinFirstBlockID() const
     {
-        boost::uint32_t min_first_block_id = std::numeric_limits<uint32_t>::max();
+        boost::uint32_t min_first_block_id = std::numeric_limits<boost::uint32_t>::max();
 
         for (std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p>::const_iterator iter = peers_.begin();
             iter != peers_.end(); ++iter)
@@ -218,7 +218,7 @@ namespace p2sp
             }
         }
 
-        if (min_first_block_id == std::numeric_limits<uint32_t>::max())
+        if (min_first_block_id == std::numeric_limits<boost::uint32_t>::max())
         {
             min_first_block_id = 0;
         }

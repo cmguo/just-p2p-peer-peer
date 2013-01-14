@@ -103,7 +103,7 @@ namespace network
             ;
     }
 
-    void CrossDomainConfig::OnConnectFailed(uint32_t error_code)
+    void CrossDomainConfig::OnConnectFailed(boost::uint32_t error_code)
     {
         client_->Close();
         NeedReload();
@@ -120,18 +120,18 @@ namespace network
         NeedReload();
     }
 
-    void CrossDomainConfig::OnRecvHttpDataFailed(uint32_t error_code)
+    void CrossDomainConfig::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         client_->Close();
         NeedReload();
     }
 
-    void CrossDomainConfig::OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void CrossDomainConfig::OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         client_->Close();
     }
 
-    void CrossDomainConfig::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
+    void CrossDomainConfig::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip)
     {
         //目前仅仅处理crossdomain.xml文件小于1K的情况，在大于1K时将会出错
         //TODO: 处理crossdomain.xml > 1k时的逻辑
@@ -141,7 +141,7 @@ namespace network
         SetCrossDomainString(cross_domain_string);
     }
 
-    void CrossDomainConfig::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void CrossDomainConfig::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         client_->Close();
         NeedReload();

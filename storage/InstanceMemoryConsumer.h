@@ -23,11 +23,11 @@ namespace storage
         void SetMemoryQuota(const MemoryQuota & quota);
 
     private:
-        void BuildBlocksImportanceScore(std::map<uint32_t, size_t>& blocks_importance_score) const;
-        void GetSortedPlayPoints(std::vector<uint32_t>& sorted_play_points) const;
+        void BuildBlocksImportanceScore(std::map<boost::uint32_t, size_t>& blocks_importance_score) const;
+        void GetSortedPlayPoints(std::vector<boost::uint32_t>& sorted_play_points) const;
         size_t GetBlocksQuota(const MemoryQuota& quota) const;
-        size_t GetPlayPointsRelevanceScore(uint32_t block_id, const std::vector<uint32_t>& sorted_play_points) const;
-        size_t GetPotentialDiskWriteScore(uint32_t block_id) const;
+        size_t GetPlayPointsRelevanceScore(boost::uint32_t block_id, const std::vector<boost::uint32_t>& sorted_play_points) const;
+        size_t GetPotentialDiskWriteScore(boost::uint32_t block_id) const;
 
         static size_t GetDistanceScore(size_t distance, size_t effective_range, size_t score_base)
         {

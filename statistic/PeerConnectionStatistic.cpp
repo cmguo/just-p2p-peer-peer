@@ -82,7 +82,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Speed Info
 
-    void PeerConnectionStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    void PeerConnectionStatistic::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         if (false == is_running_)
             return;
@@ -90,7 +90,7 @@ namespace statistic
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
     }
 
-    void PeerConnectionStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    void PeerConnectionStatistic::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         if (false == is_running_)
             return;
@@ -123,7 +123,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Misc
 
-    void PeerConnectionStatistic::SetPeerVersion(uint32_t peer_version)
+    void PeerConnectionStatistic::SetPeerVersion(boost::uint32_t peer_version)
     {
         if (false == is_running_)
             return;
@@ -149,7 +149,7 @@ namespace statistic
         if (false == is_running_)
             return;
         assert(bitmap.Length() <= BITMAP_SIZE);
-        base::util::memcpy2(peer_connection_info_.BitMap, sizeof(peer_connection_info_.BitMap), bitmap.Data(), (std::min)(BITMAP_SIZE, (uint32_t)bitmap.Length()));
+        base::util::memcpy2(peer_connection_info_.BitMap, sizeof(peer_connection_info_.BitMap), bitmap.Data(), (std::min)(BITMAP_SIZE, (boost::uint32_t)bitmap.Length()));
     }
 
     void PeerConnectionStatistic::SetBitmap(protocol::BlockMap block_map)
@@ -213,50 +213,50 @@ namespace statistic
         return 0 != peer_connection_info_.IsRidInfoValid;
     }
 
-    void PeerConnectionStatistic::SetSentCount(uint32_t sent_count)
+    void PeerConnectionStatistic::SetSentCount(boost::uint32_t sent_count)
     {
         if (false == is_running_)
             return;
         peer_connection_info_.Sent_Count = sent_count;
     }
 
-    uint32_t PeerConnectionStatistic::GetSentCount()
+    boost::uint32_t PeerConnectionStatistic::GetSentCount()
     {
         return peer_connection_info_.Sent_Count;
     }
 
-    void PeerConnectionStatistic::SetRequestingCount(uint32_t requesting_count)
+    void PeerConnectionStatistic::SetRequestingCount(boost::uint32_t requesting_count)
     {
         if (false == is_running_)
             return;
         peer_connection_info_.Requesting_Count = requesting_count;
     }
 
-    uint32_t PeerConnectionStatistic::GetRequestingCount()
+    boost::uint32_t PeerConnectionStatistic::GetRequestingCount()
     {
         return peer_connection_info_.Requesting_Count;
     }
 
-    void PeerConnectionStatistic::SetReceivedCount(uint32_t received_count)
+    void PeerConnectionStatistic::SetReceivedCount(boost::uint32_t received_count)
     {
         if (false == is_running_)
             return;
         peer_connection_info_.Received_Count = received_count;
     }
 
-    uint32_t PeerConnectionStatistic::GetReceivedCount()
+    boost::uint32_t PeerConnectionStatistic::GetReceivedCount()
     {
         return peer_connection_info_.Received_Count;
     }
 
-    void PeerConnectionStatistic::SetAssignedLeftSubPieceCount(uint32_t assigned_left_subpiece_count)
+    void PeerConnectionStatistic::SetAssignedLeftSubPieceCount(boost::uint32_t assigned_left_subpiece_count)
     {
         if (false == is_running_)
             return;
         peer_connection_info_.AssignedLeftSubPieceCount = assigned_left_subpiece_count;
     }
 
-    uint16_t PeerConnectionStatistic::GetAssignedLeftSubPieceCount()
+    boost::uint16_t PeerConnectionStatistic::GetAssignedLeftSubPieceCount()
     {
         return peer_connection_info_.AssignedLeftSubPieceCount;
     }

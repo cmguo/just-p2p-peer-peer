@@ -42,7 +42,7 @@ namespace p2sp
     }
 
     void UploadCacheModule::OnAsyncGetBlockSucced(const RID& rid, 
-        uint32_t block_index, base::AppBuffer const & buffer)
+        boost::uint32_t block_index, base::AppBuffer const & buffer)
     {
         // 遍历RBIndex所对应的需要获取的subpiece，发送SubPiece报文
         RBIndex rb_index(rid, block_index);
@@ -78,7 +78,7 @@ namespace p2sp
     }
 
     void UploadCacheModule::OnAsyncGetBlockFailed(const RID& rid,
-        uint32_t block_index, int failed_code)
+        boost::uint32_t block_index, int failed_code)
     {
         // 遍历RBIndex所对应的需要获取的subpiece，发送SubPiece报文
         RBIndex rb_index(rid, block_index);

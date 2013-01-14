@@ -76,7 +76,7 @@ namespace p2sp
             return accept_connecting_peers_[peer_endpoint];
         }
 
-        bool TryAddUniqueTransactionId(const boost::asio::ip::udp::endpoint & peer_endpoint, uint32_t transaction_id)
+        bool TryAddUniqueTransactionId(const boost::asio::ip::udp::endpoint & peer_endpoint, boost::uint32_t transaction_id)
         {
             if (GetPeerUploadInfo(peer_endpoint).IsInLastDataTransIDs(transaction_id))
             {

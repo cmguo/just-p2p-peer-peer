@@ -208,7 +208,7 @@ namespace p2sp
         if(toDelUdpPorts.empty())
         {
             //走到这里说明没有需要删除的udp端口，也就是说udp端口或者没有映射，或者只有一个映射。由于不会删除，就可以检测upnp了。
-            for(std::multimap<uint16_t,uint16_t>::const_iterator it = mappedUdpPort_.begin();it!=mappedUdpPort_.end();++it)
+            for(std::multimap<boost::uint16_t,boost::uint16_t>::const_iterator it = mappedUdpPort_.begin();it!=mappedUdpPort_.end();++it)
             {
                 EvokeNatcheck(it->first,it->second);
             }
@@ -245,12 +245,12 @@ namespace p2sp
     {
         //找到需要添加和需要删除的集合,规则：1.如果要求映射的export不为0，那么把export不正确的都删掉
         //2,如果要求映射的export为0，那么：A原来已经映射大于1个，都删掉，重新映射，B原来已经映射等于1个，ok了，不删也不加
-        for(std::map<uint16_t,uint16_t>::const_iterator it = requirePorts.begin();it!=requirePorts.end();++it)
+        for(std::map<boost::uint16_t,boost::uint16_t>::const_iterator it = requirePorts.begin();it!=requirePorts.end();++it)
         {
             if(it->second != 0)
             {
                 //指定了要映射的export
-                for(multimap<uint16_t,uint16_t>::const_iterator itdel = mappedPorts.lower_bound(it->first);
+                for(multimap<boost::uint16_t,boost::uint16_t>::const_iterator itdel = mappedPorts.lower_bound(it->first);
                     itdel != mappedPorts.upper_bound(it->first);++itdel)
                 {
                     if(itdel->second != it->second)
@@ -288,22 +288,22 @@ namespace p2sp
             }
         }
 
-         for(std::map<uint16_t,uint16_t>::const_iterator it = requirePorts.begin();it!=requirePorts.end();++it)
+         for(std::map<boost::uint16_t,boost::uint16_t>::const_iterator it = requirePorts.begin();it!=requirePorts.end();++it)
          {
              LOG4CPLUS_INFO_LOG(logger_upnp,"require map:"<<it->first<<"--"<<it->second);
          }
 
-         for(std::multimap<uint16_t,uint16_t>::const_iterator it = mappedPorts.begin();it!=mappedPorts.end();++it)
+         for(std::multimap<boost::uint16_t,boost::uint16_t>::const_iterator it = mappedPorts.begin();it!=mappedPorts.end();++it)
          {
              LOG4CPLUS_INFO_LOG(logger_upnp,"mappedPorts:"<<it->first<<"--"<<it->second);
          }
 
-         for(std::multimap<uint16_t,uint16_t>::const_iterator it = toDelPorts.begin();it!=toDelPorts.end();++it)
+         for(std::multimap<boost::uint16_t,boost::uint16_t>::const_iterator it = toDelPorts.begin();it!=toDelPorts.end();++it)
          {
              LOG4CPLUS_INFO_LOG(logger_upnp,"toDelPorts:"<<it->first<<"--"<<it->second);
          }
 
-         for(std::map<uint16_t,uint16_t>::const_iterator it = toAddPorts.begin();it!=toAddPorts.end();++it)
+         for(std::map<boost::uint16_t,boost::uint16_t>::const_iterator it = toAddPorts.begin();it!=toAddPorts.end();++it)
          {
              LOG4CPLUS_INFO_LOG(logger_upnp,"toAddPorts:"<<it->first<<"--"<<it->second);
          }

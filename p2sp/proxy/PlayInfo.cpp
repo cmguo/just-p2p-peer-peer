@@ -60,7 +60,7 @@ namespace p2sp
             return false;
         }
         // simple check
-        for (uint32_t i = 0; i < domain.length(); ++i) {
+        for (boost::uint32_t i = 0; i < domain.length(); ++i) {
             bool ok = ((domain[i] >= '0' && domain[i] <= '9') || domain[i] == '.');
             if (!ok) {
                 return false;
@@ -91,9 +91,9 @@ namespace p2sp
         boost::asio::ip::address_v4 addr = boost::asio::ip::address_v4::from_string(domain, error);
         if (!error)
         {
-            std::vector<uint32_t> local_ips;
+            std::vector<boost::uint32_t> local_ips;
             statistic::StatisticModule::Inst()->GetLocalIPs(local_ips);
-            for (uint32_t i = 0; i < local_ips.size(); ++i) {
+            for (boost::uint32_t i = 0; i < local_ips.size(); ++i) {
                 if (local_ips[i] == addr.to_ulong()) {
                     return true;
                 }
@@ -140,9 +140,9 @@ namespace p2sp
             return false;
         }
 
-        // rid_info_local.GetFileLength() = boost::lexical_cast<uint32_t> (uri.getparameter("filelength"));
-        // rid_info_local.GetBlockSize() = boost::lexical_cast<uint32_t> (uri.getparameter("blocksize"));
-        // rid_info_local.GetBlockCount() = boost::lexical_cast<uint32_t> (uri.getparameter("blocknum"));
+        // rid_info_local.GetFileLength() = boost::lexical_cast<boost::uint32_t> (uri.getparameter("filelength"));
+        // rid_info_local.GetBlockSize() = boost::lexical_cast<boost::uint32_t> (uri.getparameter("blocksize"));
+        // rid_info_local.GetBlockCount() = boost::lexical_cast<boost::uint32_t> (uri.getparameter("blocknum"));
         boost::system::error_code ec;
         ec = framework::string::parse2(uri.getparameter("filelength"), rid_info_local.file_length_);
         if (ec) return false;
@@ -163,7 +163,7 @@ namespace p2sp
             return false;
         }
 
-        for (uint32_t i = 0; i < rid_info_local.GetBlockCount(); i ++)
+        for (boost::uint32_t i = 0; i < rid_info_local.GetBlockCount(); i ++)
         {
             RID block_md5_i;
             if (block_md5_i.from_string(v[i]) || block_md5_i.is_empty())
@@ -216,7 +216,7 @@ namespace p2sp
         string source_str = uri.getparameter("source");
         if (source_str.length() > 0)
         {
-            uint32_t type;
+            boost::uint32_t type;
             boost::system::error_code ec = framework::string::parse2(source_str, type);
             if (!ec)
             {
@@ -269,7 +269,7 @@ namespace p2sp
         return false;
     }
 
-    bool PlayInfo::ParseUint32Value(const network::Uri& uri, uint32_t& value, string key)
+    bool PlayInfo::ParseUint32Value(const network::Uri& uri, boost::uint32_t& value, string key)
     {
         string value_str = uri.getparameter(key);
 
@@ -318,7 +318,7 @@ namespace p2sp
         string level_str = uri.getparameter("level");
         if (level_str.length() > 0)
         {
-            uint32_t type;
+            boost::uint32_t type;
             boost::system::error_code ec = framework::string::parse2(level_str, type);
             if (!ec)
             {
@@ -563,14 +563,14 @@ namespace p2sp
         if (param_start.length() != 0)
         {
             play_info->has_start_ = true;
-            uint32_t start_position = 0;
+            boost::uint32_t start_position = 0;
 
             //    double position = boost::lexical_cast<double>(param_start);
             double position;
             boost::system::error_code ec = framework::string::parse2(param_start, position);
             if (!ec)
             {
-                start_position = (uint32_t)((position < 0 || position >= (1ULL << 32)) ? 0 : (position + 0.5));
+                start_position = (boost::uint32_t)((position < 0 || position >= (1ULL << 32)) ? 0 : (position + 0.5));
             }
             else
             {
@@ -636,7 +636,7 @@ namespace p2sp
     {
         // 
         string str_rids = uri.getparameter("rid");
-        int32_t pos = 0;
+        boost::int32_t pos = 0;
         RID rid;
 
         pos = str_rids.find("@");
@@ -667,8 +667,8 @@ namespace p2sp
     void PlayInfo::ParseLiveDataRates(const network::Uri& uri, vector<boost::uint32_t> & data_rate_s)
     {
         string str_datarates = uri.getparameter("datarate");
-        int32_t pos = 0;
-        int32_t data_rate = 0;
+        boost::int32_t pos = 0;
+        boost::int32_t data_rate = 0;
 
         pos = str_datarates.find("@");
 
@@ -711,8 +711,8 @@ namespace p2sp
 
     RangeInfo::p PlayInfo::ParseRangeInfo(const network::Uri & uri)
     {
-        uint32_t range_start;
-        uint32_t range_end;
+        boost::uint32_t range_start;
+        boost::uint32_t range_end;
         if (!GetValueFromUri(uri, "rangeStart", range_start))
         {
             return RangeInfo::p();
@@ -729,7 +729,7 @@ namespace p2sp
         return RangeInfo::p();
     }
 
-    bool PlayInfo::GetValueFromUri(const network::Uri & uri, const string & key, uint32_t & value)
+    bool PlayInfo::GetValueFromUri(const network::Uri & uri, const string & key, boost::uint32_t & value)
     {
         string str_value = uri.getparameter(key);
         if (!str_value.empty() && !framework::string::parse2(str_value, value))

@@ -10,7 +10,7 @@ namespace statistic
     BufferringReportCondition::BufferringReportCondition(
         const StatisticsConfiguration& bufferring_statistics_configuration, 
         size_t occurrences_to_trigger_condition, 
-        uint32_t time_window_to_ignore_repeated_occurrences)
+        boost::uint32_t time_window_to_ignore_repeated_occurrences)
         : ReportCondition(bufferring_statistics_configuration),
           occurrences_to_trigger_condition_(occurrences_to_trigger_condition),
           time_window_to_ignore_repeated_occurrences_(time_window_to_ignore_repeated_occurrences),
@@ -38,7 +38,7 @@ namespace statistic
         occurrence_count_ = 0;
     }
     
-    void BufferringReportCondition::BufferringOccurs(uint32_t bufferring_position_in_seconds)
+    void BufferringReportCondition::BufferringOccurs(boost::uint32_t bufferring_position_in_seconds)
     {
         if (ticks_since_last_bufferring_.running() && 
             ticks_since_last_bufferring_.elapsed() < time_window_to_ignore_repeated_occurrences_*1000)

@@ -136,7 +136,7 @@ namespace p2sp
             virtual ~ControlMode(){}
             virtual void Start();
             virtual void Stop();
-            virtual void OnControlTimer(uint32_t times) = 0;
+            virtual void OnControlTimer(boost::uint32_t times) = 0;
             bool IsRunning() const { return is_running_; }
             State GetState() const { return state_; }
 
@@ -187,7 +187,7 @@ namespace p2sp
         public:
             virtual void Start();
             virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
+            virtual void OnControlTimer(boost::uint32_t times);
         protected:
             bool CanP2PDownloadStably();
             bool IsP2PBad();
@@ -216,7 +216,7 @@ namespace p2sp
         public:
             virtual void Start();
             virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
+            virtual void OnControlTimer(boost::uint32_t times);
         protected:
             OpenServiceVideoControlMode(SwitchController::p controller)
                 : ControlMode(controller)
@@ -277,10 +277,10 @@ namespace p2sp
                 p2p_good
             } p2p_status_;
 
-            int32_t p2p_failed_times_;
+            boost::int32_t p2p_failed_times_;
 
-            uint32_t http_total;
-            uint32_t last_p2p_speed_;
+            boost::uint32_t http_total;
+            boost::uint32_t last_p2p_speed_;
 
             HttpTargetsManager http_target_manager_;
         };
@@ -298,7 +298,7 @@ namespace p2sp
         public:
             virtual void Start();
             virtual void Stop();
-            virtual void OnControlTimer(uint32_t times);
+            virtual void OnControlTimer(boost::uint32_t times);
         protected:
             OpenServicePushControlMode(SwitchController::p controller)
                 : ControlMode(controller)
@@ -308,9 +308,9 @@ namespace p2sp
             framework::timer::TickCounter time_counter_x_;
             framework::timer::TickCounter time_counter_y_;
             framework::timer::TickCounter time_counter_z_;
-            uint32_t x_;
-            uint32_t y_;
-            uint32_t z_;
+            boost::uint32_t x_;
+            boost::uint32_t y_;
+            boost::uint32_t z_;
         };
 
         //////////////////////////////////////////////////////////////////////////

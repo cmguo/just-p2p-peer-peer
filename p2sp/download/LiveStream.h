@@ -26,7 +26,7 @@ namespace p2sp
     public:
         virtual const storage::LivePosition & GetStartPosition() = 0;
         virtual storage::LivePosition & GetPlayingPosition() = 0;
-        virtual bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs, uint8_t progress_percentage) = 0;
+        virtual bool OnRecvLivePiece(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs, boost::uint8_t progress_percentage) = 0;
         virtual ~ILiveStream(){ }
     };
 
@@ -69,8 +69,8 @@ namespace p2sp
 
         bool RequestNextBlock(LiveDownloader__p downloader);
 
-        virtual bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
-            uint8_t progress_percentage);
+        virtual bool OnRecvLivePiece(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
+            boost::uint8_t progress_percentage);
 
         virtual const storage::LivePosition & GetStartPosition()
         {

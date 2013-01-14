@@ -31,7 +31,7 @@ namespace storage
 
         PriorityToConsumptionEntryMapping consumption_entries_;
         std::vector<ConsumerPointer>& memory_consumers_;
-        uint32_t quota_left_;
+        boost::uint32_t quota_left_;
 
     public:
         MemoryQuotaAssigner(std::vector<ConsumerPointer>& consumers)
@@ -39,7 +39,7 @@ namespace storage
         {
         }
 
-        void AssignQuota(uint32_t overall_bytes);
+        void AssignQuota(boost::uint32_t overall_bytes);
 
     private:
         //those whose usage priority == NONE are excluded

@@ -23,14 +23,14 @@ namespace network
         typedef boost::shared_ptr<IHttpClientListener<BufferType> > p;
 
         virtual void OnConnectSucced() = 0;
-        virtual void OnConnectFailed(uint32_t error_code) = 0;
+        virtual void OnConnectFailed(boost::uint32_t error_code) = 0;
         virtual void OnConnectTimeout() = 0;
 
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response) = 0;
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code) = 0;
-        virtual void OnRecvHttpDataSucced(BufferType const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip) = 0;
-        virtual void OnRecvHttpDataPartial(BufferType const & buffer, uint32_t file_offset, uint32_t content_offset) = 0;
-        virtual void OnRecvHttpDataFailed(uint32_t error_code) = 0;
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code) = 0;
+        virtual void OnRecvHttpDataSucced(BufferType const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip) = 0;
+        virtual void OnRecvHttpDataPartial(BufferType const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset) = 0;
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code) = 0;
         virtual void OnRecvTimeout() = 0;
 
         virtual void OnComplete() = 0;
@@ -53,8 +53,8 @@ namespace network
             network::HttpRequest::p http_request_demo,
             string url,
             string refer_url,
-            uint32_t range_begin,
-            uint32_t range_end,
+            boost::uint32_t range_begin,
+            boost::uint32_t range_end,
             bool is_accept_gzip,
             string user_agent = "");
 
@@ -62,8 +62,8 @@ namespace network
             boost::asio::io_service & io_svc,
             string url,
             string refer_url,
-            uint32_t range_begin,
-            uint32_t range_end,
+            boost::uint32_t range_begin,
+            boost::uint32_t range_end,
             bool is_accept_gzip,
             string user_agent = "");
 
@@ -73,8 +73,8 @@ namespace network
             boost::uint16_t port,
             string request,
             string refer_url,
-            uint32_t range_begin,
-            uint32_t range_end,
+            boost::uint32_t range_begin,
+            boost::uint32_t range_end,
             bool is_accept_gzip,
             string user_agent = "");
 
@@ -85,8 +85,8 @@ namespace network
             boost::uint16_t port,
             string request,
             string refer_url,
-            uint32_t range_begin,
-            uint32_t range_end,
+            boost::uint32_t range_begin,
+            boost::uint32_t range_end,
             bool is_accept_gzip,
             string user_agent = "");
 
@@ -97,15 +97,15 @@ namespace network
         // void SetHeader(const string& key, const string& value);
         void AddPragma(const string& key, const string& value);
         void HttpGet();
-        void HttpGet(uint32_t range_begin, uint32_t range_end = 0);
-        void HttpGet(string refer_url, uint32_t range_begin = 0, uint32_t range_end = 0);
-        void HttpGet(network::HttpRequest::p http_request_demo, uint32_t range_begin, uint32_t range_end = 0);
-        void HttpGet(network::HttpRequest::p http_request_demo, string refer_url, uint32_t range_begin = 0, uint32_t range_end = 0);
+        void HttpGet(boost::uint32_t range_begin, boost::uint32_t range_end = 0);
+        void HttpGet(string refer_url, boost::uint32_t range_begin = 0, boost::uint32_t range_end = 0);
+        void HttpGet(network::HttpRequest::p http_request_demo, boost::uint32_t range_begin, boost::uint32_t range_end = 0);
+        void HttpGet(network::HttpRequest::p http_request_demo, string refer_url, boost::uint32_t range_begin = 0, boost::uint32_t range_end = 0);
         void HttpGetByString(string request_string);
         void HttpRecvSubPiece();
-        void HttpRecv(uint32_t length);
+        void HttpRecv(boost::uint32_t length);
 
-        static const uint32_t MaxRecvLength;// = ContentType::sub_piece_size;
+        static const boost::uint32_t MaxRecvLength;// = ContentType::sub_piece_size;
         
         bool IsRequesting() const
         {
@@ -116,15 +116,15 @@ namespace network
         {
             handler_ = handler;
         }
-        void SetResolverTimeout(uint32_t resolver_timeout)
+        void SetResolverTimeout(boost::uint32_t resolver_timeout)
         {
             resolver_timeout_ = resolver_timeout;
         }
-        void SetConnectTimeout(uint32_t connect_timeout)
+        void SetConnectTimeout(boost::uint32_t connect_timeout)
         {
             connect_timeout_ = connect_timeout;
         }
-        void SetRecvTimeout(uint32_t recv_timeout)
+        void SetRecvTimeout(boost::uint32_t recv_timeout)
         {
             recv_timeout_ = recv_timeout;
         }
@@ -134,10 +134,10 @@ namespace network
             boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
         void HandleConnect(const boost::system::error_code& err,
             boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
-        void HandleWriteRequest(const boost::system::error_code& err, uint32_t bytes_transferred);
-        void HandleReadHttpHeader(const boost::system::error_code& err, uint32_t bytes_transferred);
-        void HandleReadHttp(const boost::system::error_code& err, uint32_t bytes_transferred, uint32_t buffer_length,
-            uint32_t file_offset, uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, uint32_t buffer_offset);
+        void HandleWriteRequest(const boost::system::error_code& err, boost::uint32_t bytes_transferred);
+        void HandleReadHttpHeader(const boost::system::error_code& err, boost::uint32_t bytes_transferred);
+        void HandleReadHttp(const boost::system::error_code& err, boost::uint32_t bytes_transferred, boost::uint32_t buffer_length,
+            boost::uint32_t file_offset, boost::uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, boost::uint32_t buffer_offset);
         void OnTimerElapsed(framework::timer::Timer * pointer);
         void HandleResolveTimeout();
         void HandleConnectTimeout();
@@ -151,15 +151,15 @@ namespace network
         boost::asio::streambuf response_;
         boost::asio::streambuf request_;
         string request_string_;
-        uint32_t content_length_;
-        uint32_t file_offset_;
-        uint32_t content_offset_;
+        boost::uint32_t content_length_;
+        boost::uint32_t file_offset_;
+        boost::uint32_t content_offset_;
         framework::timer::OnceTimer resolver_timer_;
-        uint32_t resolver_timeout_;
+        boost::uint32_t resolver_timeout_;
         framework::timer::OnceTimer connect_timer_;
-        uint32_t connect_timeout_;
+        boost::uint32_t connect_timeout_;
         framework::timer::PeriodicTimer recv_timer_;
-        uint32_t recv_timeout_;
+        boost::uint32_t recv_timeout_;
         typename IHttpClientListener<protocol::SubPieceBufferImp<ContentType> >::p handler_;
         bool is_connecting_;
         bool is_connected_;
@@ -167,8 +167,8 @@ namespace network
         bool is_bogus_accept_range_;
         bool is_chunked_;
 
-        uint32_t connect_count_;
-        uint32_t get_count_;
+        boost::uint32_t connect_count_;
+        boost::uint32_t get_count_;
 
         // target host
         string target_host_;
@@ -181,7 +181,7 @@ namespace network
     };
 
     template <typename ContentType>
-    const uint32_t HttpClient<ContentType>::MaxRecvLength = ContentType::sub_piece_size;
+    const boost::uint32_t HttpClient<ContentType>::MaxRecvLength = ContentType::sub_piece_size;
 }
 
 #include "HttpClient.hpp"

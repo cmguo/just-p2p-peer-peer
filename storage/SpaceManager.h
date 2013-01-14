@@ -5,7 +5,7 @@
 #ifndef STORAGE_SPACE_MANAGER_H
 #define STORAGE_SPACE_MANAGER_H
 
-#ifndef BOOST_WINDOWS_API
+#ifndef PEER_PC_CLIENT
 #pragma once
 #endif
 
@@ -47,16 +47,16 @@ class SpaceManager: public boost::noncopyable, public boost::enable_shared_from_
 
     // 磁盘空间管理策略
     void DiskSpaceMaintain();
-    void AddToRemoveResourceList(Resource::p resource_p, uint32_t disk_file_size);
+    void AddToRemoveResourceList(Resource::p resource_p, boost::uint32_t disk_file_size);
     bool CancelResourceRequest(Instance::p inst_p);
     void OnRemoveResourceFinish(Resource::p resource_p, bool need_remove_file);
-    void OnFreeDiskSpaceFinish(uint32_t filesize, Resource::p resource_p);
-    // void OnFreeDiskSpaceFinish(uint32_t filesize, Resource::p resource_p);
-#ifdef BOOST_WINDOWS_API
+    void OnFreeDiskSpaceFinish(boost::uint32_t filesize, Resource::p resource_p);
+    // void OnFreeDiskSpaceFinish(boost::uint32_t filesize, Resource::p resource_p);
+#ifdef PEER_PC_CLIENT
     boost::int64_t GetDirectoryAvialbeSize(string DirPathName);
 #endif
-    void OnAllocDiskSpace(uint32_t alloc_space, unsigned char down_mode);
-    void OnReleaseDiskSpace(uint32_t alloc_space, unsigned char down_mode);
+    void OnAllocDiskSpace(boost::uint32_t alloc_space, unsigned char down_mode);
+    void OnReleaseDiskSpace(boost::uint32_t alloc_space, unsigned char down_mode);
 
     string GetStorePath() const { return store_path_;}
     boost::int64_t GetFreeSize() const { return free_size_;}
@@ -64,13 +64,13 @@ class SpaceManager: public boost::noncopyable, public boost::enable_shared_from_
     string GetHiddenSubPath() const { return hidden_sub_path_;}
 
     private:
-    bool OnCreateResource(Instance::p resource_inst, uint32_t init_size);
-    void TryCreateResourceFile(string filename, uint32_t file_size, Instance::p resource_inst);
+    bool OnCreateResource(Instance::p resource_inst, boost::uint32_t init_size);
+    void TryCreateResourceFile(string filename, boost::uint32_t file_size, Instance::p resource_inst);
     void GetDirFileNameList(std::set<string> &filename_list);
     bool OpenAndCreateStoreDir();
     bool GetDiskFreeSpace(string path, boost::uintmax_t &free_space_size);
     boost::uintmax_t GetMinDiskFreeSpace(const string& path);
-    FILE* TryCreateFile(string filename, string &last_filename, uint32_t file_size);
+    FILE* TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size);
 
     private:
     boost::asio::io_service & io_svc_;
@@ -88,8 +88,8 @@ class SpaceManager: public boost::noncopyable, public boost::enable_shared_from_
     boost::int64_t free_size_;
 
     // config
-    uint32_t file_size_min_;
-    uint32_t file_size_max_;
+    boost::uint32_t file_size_min_;
+    boost::uint32_t file_size_max_;
 
 };
 #endif  // DISK_MODE

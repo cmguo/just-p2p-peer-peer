@@ -16,7 +16,7 @@ namespace boost
 
 namespace storage
 {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     #pragma pack(push, 1)
 #endif
 
@@ -32,7 +32,7 @@ namespace storage
             boost::uint8_t TypeFlagsVideo : 1;
         };
 
-        uint32_t DataOffset;           // header length, for version 1, the value is 0x00000009
+        boost::uint32_t DataOffset;           // header length, for version 1, the value is 0x00000009
     };
 
     struct ScriptDataString
@@ -43,7 +43,7 @@ namespace storage
 
     struct ScriptDataLongString
     {
-        uint32_t Length;
+        boost::uint32_t Length;
         boost::uint8_t  Value[];
     };
 
@@ -86,7 +86,7 @@ namespace storage
         boost::uint8_t Type;
 
         // ScriptDataValue
-        // Type == 8:   uint32_t  ECMAArrayLength
+        // Type == 8:   boost::uint32_t  ECMAArrayLength
 
         // Value
         // Type == 0:   DOUBLE
@@ -152,11 +152,11 @@ namespace storage
 
     struct FLVFileBody
     {
-        uint32_t PreviousTagSize;
+        boost::uint32_t PreviousTagSize;
         FLVTag Tag;
     };
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     #pragma pack(pop)
 #endif
 
@@ -177,11 +177,11 @@ namespace storage
 
     private:
 
-        static uint32_t GetUINT16(const boost::uint8_t* buffer);
+        static boost::uint32_t GetUINT16(const boost::uint8_t* buffer);
 
-        static uint32_t GetUINT24(const boost::uint8_t* buffer);
+        static boost::uint32_t GetUINT24(const boost::uint8_t* buffer);
 
-        static uint32_t GetUINT32(const boost::uint8_t* buffer);
+        static boost::uint32_t GetUINT32(const boost::uint8_t* buffer);
 
         static double GetDouble(const boost::uint8_t* buffer);
 

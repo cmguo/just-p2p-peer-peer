@@ -24,10 +24,10 @@ namespace storage
     // 重点是要减小类的状态的复杂性
     Resource::Resource(
         boost::asio::io_service & io_svc,
-        uint32_t file_length,
+        boost::uint32_t file_length,
         string file_name,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t init_size)
+        boost::uint32_t init_size)
         : io_svc_(io_svc)
         , actual_size_(init_size)
         , instance_p_(inst_p)
@@ -50,7 +50,7 @@ namespace storage
         boost::shared_ptr<SubPieceManager> subpiece_manager,
         string file_name,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t actual_size)
+        boost::uint32_t actual_size)
         : io_svc_(io_svc)
         , actual_size_(actual_size)
         , instance_p_(inst_p)
@@ -138,7 +138,7 @@ namespace storage
 
 #ifdef DISK_MODE
 
-    void Resource::ThreadPendingWriteBlock(uint32_t block_i, const std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p)
+    void Resource::ThreadPendingWriteBlock(boost::uint32_t block_i, const std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p)
     {
         if (false == is_running_)
             return;
@@ -149,7 +149,7 @@ namespace storage
             return;
 
         protocol::SubPieceInfo first_subpiece = block_pending_buffer_set.begin()->first;
-        uint32_t startoffset, length;
+        boost::uint32_t startoffset, length;
         subpiece_manager_->GetSubPiecePosition(first_subpiece, startoffset, length);
 
         length = 0;
@@ -169,9 +169,9 @@ namespace storage
     }
 
     void Resource::ThreadPendingWriteBlockHelper(
-        uint32_t block_i,
-        uint32_t startpos,
-        uint32_t length)
+        boost::uint32_t block_i,
+        boost::uint32_t startpos,
+        boost::uint32_t length)
     {
         if (instance_p_)
         {
@@ -184,7 +184,7 @@ namespace storage
         }
     }
 
-    void Resource::ThreadPendingHashBlock(uint32_t block_index,
+    void Resource::ThreadPendingHashBlock(boost::uint32_t block_index,
         std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p)
     {
         if (is_running_ == false)
@@ -229,7 +229,7 @@ namespace storage
     void Resource::ThreadPendingHashBlockHelper(
         std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p,
         Instance::p instance_p,
-        uint32_t &block_index,
+        boost::uint32_t &block_index,
         MD5 &hash_val)
     {
         delete buffer_set_p;
@@ -268,10 +268,10 @@ namespace storage
             }
         }
 
-        uint32_t length;
+        boost::uint32_t length;
         if (tmp_is_max)
         {
-            uint32_t last_subpiece_off, last_subpiece_len;
+            boost::uint32_t last_subpiece_off, last_subpiece_len;
             subpiece_manager_->GetSubPiecePosition(tmp_subpiece_info, last_subpiece_off, last_subpiece_len);
             length = (buffs.size() - 1) * bytes_num_per_subpiece_g_ + last_subpiece_len;
         }
@@ -280,7 +280,7 @@ namespace storage
             length = buffs.size() * bytes_num_per_subpiece_g_;
         }
 
-        uint32_t start_offset = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
+        boost::uint32_t start_offset = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
         LOG4CPLUS_ERROR_LOG(logger_resource, "start:!" << subpiece_info << ", continue_len=" << buffs.size());
         LOG4CPLUS_DEBUG_LOG(logger_resource, "(start offset: " << start_offset << ", Length: " << length << ")");
 
@@ -305,7 +305,7 @@ namespace storage
         std::vector<protocol::SubPieceContent*> buffs)
     {
         protocol::SubPieceInfo tmp_subpiece_info(subpiece_info);
-        for (uint16_t i = 0; i < buffs.size(); ++i)
+        for (boost::uint16_t i = 0; i < buffs.size(); ++i)
         {
             subpiece_manager_p->LoadSubPiece(tmp_subpiece_info, protocol::SubPieceContent::pointer(buffs[i]));
             if (!subpiece_manager_p->IncSubPieceInfo(tmp_subpiece_info))
@@ -357,7 +357,7 @@ namespace storage
             return;
         }
 
-        uint32_t startoffset, length;
+        boost::uint32_t startoffset, length;
         subpiece_manager_->GetSubPiecePosition(subpiece_info, startoffset, length);
         std::vector<protocol::SubPieceContent*> buffs;
         buffs.push_back(buff);
@@ -380,7 +380,7 @@ namespace storage
         merge_instance_p->OnMergeSubPieceSuccess(subpiece_info, protocol::SubPieceBuffer(buffer));
     }
 
-    void Resource::ThreadReadBlockForUpload(const RID& rid, const uint32_t block_index, IUploadListener::p listener,
+    void Resource::ThreadReadBlockForUpload(const RID& rid, const boost::uint32_t block_index, IUploadListener::p listener,
         bool need_hash)
     {
         if (false == is_running_)
@@ -390,7 +390,7 @@ namespace storage
 
         LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         DebugLog("hash: ThreadReadBlockForUpload index:%d, need_hash:%d", block_index, need_hash);
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         std::ostringstream oss;
         oss << "read block" << block_index << " " << need_hash << std::endl;
         OutputDebugString(oss.str().c_str());
@@ -414,7 +414,7 @@ namespace storage
             return;
         }
 
-        uint32_t startoffset, length;
+        boost::uint32_t startoffset, length;
         subpiece_manager_->GetBlockPosition(block_index, startoffset, length);
         base::AppBuffer buff = ReadBuffer(startoffset, length);
         CloseFileHandle();
@@ -422,8 +422,8 @@ namespace storage
         if (need_hash)
         {
             framework::string::Md5 md5;
-            uint32_t subpiece_len = 0;
-            uint32_t offset = 0;
+            boost::uint32_t subpiece_len = 0;
+            boost::uint32_t offset = 0;
             while (offset < buff.Length())
             {
                 if (offset + bytes_num_per_piece_g_ <= buff.Length())
@@ -456,7 +456,7 @@ namespace storage
         return;
     }
 
-    void Resource::CheckFileDownComplete(uint32_t start_pos, uint32_t length)
+    void Resource::CheckFileDownComplete(boost::uint32_t start_pos, boost::uint32_t length)
     {
         // TODO(nightsuns): 这里采用临时的解决方案
         boost::shared_ptr<SubPieceManager> temp_subpiece_manager = subpiece_manager_;
@@ -501,7 +501,7 @@ namespace storage
 
 #endif  // #ifdef DISK_MODE
 
-    void Resource::ThreadRemoveBlock(uint32_t index)
+    void Resource::ThreadRemoveBlock(boost::uint32_t index)
     {
         if (is_running_ == false)
         {
@@ -514,8 +514,8 @@ namespace storage
             if_file_exist = false;
         }
 #endif  // #ifdef DISK_MODE
-        uint32_t offset = 0;
-        uint32_t length = 0;
+        boost::uint32_t offset = 0;
+        boost::uint32_t length = 0;
         if (TryRenameToTppFile() && true == if_file_exist)
         {
             if (instance_p_)

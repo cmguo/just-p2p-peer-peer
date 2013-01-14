@@ -40,7 +40,7 @@ namespace p2sp
         is_sync_ = false;
     }
 
-    void TrackerClient::SetRidCount(uint32_t rid_count)
+    void TrackerClient::SetRidCount(boost::uint32_t rid_count)
     {
         // 上次收到的keepalive或者commit中服务器的存储的本机的资源个数
         last_response_rid_count_ = rid_count;
@@ -74,7 +74,7 @@ namespace p2sp
         // 讲List到的peer加入ip pool
         // 将packet解析出 vector<PeerInfo::p> peers
         std::vector<protocol::CandidatePeerInfo> peers = packet.response.peer_infos_;
-        for (uint32_t i = 0; i < peers.size(); ++i) {
+        for (boost::uint32_t i = 0; i < peers.size(); ++i) {
             if (peers[i].UploadPriority < 255 && peers[i].UploadPriority > 0) {
                 peers[i].UploadPriority++;
             }
@@ -131,10 +131,10 @@ namespace p2sp
 
     boost::uint32_t TrackerClient::DoSubmit()
     {
-        LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoSubmit ModNO:" << (uint32_t)tracker_info_.ModNo
+        LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoSubmit ModNO:" << (boost::uint32_t)tracker_info_.ModNo
             << ", IP:" << framework::network::Endpoint(tracker_info_.IP, tracker_info_.Port).to_string());
 
-        uint32_t result = 0;
+        boost::uint32_t result = 0;
 
         /*
         // 首先在m_storage中查找本地资源  set<RID> now_resource_ = AppModule::Inst()->GetLocalResource();
@@ -182,7 +182,7 @@ namespace p2sp
         {
             is_sync_ = false;
             // 如果服务器资源太少，重新同步
-            if (last_response_rid_count_ <= (uint32_t)(local_resources_.size() * 0.7))
+            if (last_response_rid_count_ <= (boost::uint32_t)(local_resources_.size() * 0.7))
             {
                 local_resources_.clear();
             }
@@ -212,12 +212,12 @@ namespace p2sp
         // local_resource_ = now_resource_;
     }
 
-    extern void LoadLocalIPs(std::vector<uint32_t>& ipArray);
+    extern void LoadLocalIPs(std::vector<boost::uint32_t>& ipArray);
 
     /**
      * @return Transaction ID.
      */
-    uint32_t TrackerClient::DoReport()
+    boost::uint32_t TrackerClient::DoReport()
     {
         // 统计信息
         LOG4CPLUS_INFO_LOG(logger_tracker_client, "TrackerClient::DoReport ");
@@ -280,10 +280,10 @@ namespace p2sp
         }
 
         // ip
-        std::vector<uint32_t> real_ips;
+        std::vector<boost::uint32_t> real_ips;
 
         // stun info
-        uint32_t stun_ip;
+        boost::uint32_t stun_ip;
         boost::uint16_t stun_port;
         StunModule::Inst()->GetStunEndpoint(stun_ip, stun_port);
 
@@ -310,7 +310,7 @@ namespace p2sp
         //TODO:设置到tracker的路由ip。5个就够了。
         std::vector<boost::uint32_t> traceroute_ips;
 
-        boost::uint16_t upnp_tcp_port = UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
+        boost::uint16_t upnp_tcp_port = 0;//UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
 
         // request
         protocol::ReportPacket report_request(
@@ -355,12 +355,12 @@ namespace p2sp
         return tracker_info_;
     }
 
-    void TrackerClient::SetGroupCount(uint32_t group_count)
+    void TrackerClient::SetGroupCount(boost::uint32_t group_count)
     {
         group_count_ = group_count;
     }
 
-    uint32_t TrackerClient::GetGroupCount() const
+    boost::uint32_t TrackerClient::GetGroupCount() const
     {
         return group_count_;
     }
@@ -386,7 +386,7 @@ namespace p2sp
     // Update Ips
     void TrackerClient::UpdateIpStatistic(const protocol::SocketAddr& detected_addr)
     {
-        std::vector<uint32_t> local_ips;
+        std::vector<boost::uint32_t> local_ips;
 
         LoadLocalIPs(local_ips);
         statistic::StatisticModule::Inst()->SetLocalIPs(local_ips);

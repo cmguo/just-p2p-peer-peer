@@ -44,7 +44,7 @@ namespace p2sp
         assert(0);
     }
 
-    void NullProxySender::Start(uint32_t start_possition)
+    void NullProxySender::Start(boost::uint32_t start_possition)
     {
         assert(0);
     }
@@ -64,7 +64,7 @@ namespace p2sp
     }
 
     // 获得Contentlength
-    void NullProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void NullProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (false == is_running_) {
             return;
@@ -83,7 +83,7 @@ namespace p2sp
 
     }
 
-    void NullProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void NullProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_) {
             return;
@@ -91,7 +91,7 @@ namespace p2sp
 
     }
 
-    void NullProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
+    void NullProxySender::OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
         if (false == is_running_) {
             return;
@@ -99,7 +99,7 @@ namespace p2sp
         LOG4CPLUS_DEBUG_LOG(logger_null_proxy_sender, ">> playing_position_ = " << playing_position_ << 
             ", file_length_ = " << file_length_ << ", buffers.count = " << buffers.size());
 
-        for (uint32_t i = 0; i < buffers.size(); ++i) {
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i) {
             playing_position_ += buffers[i].Length();
         }
 

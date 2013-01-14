@@ -79,8 +79,8 @@ namespace network
                 handler_, ec.value()));
         }
 
-        int32_t local_udp_port = 15041;
-        int32_t try_count = 0;
+        boost::int32_t local_udp_port = 15041;
+        boost::int32_t try_count = 0;
         while (local_udp_port < 65534 && try_count < 1000)
         {
             boost::asio::ip::udp::endpoint ep(boost::asio::ip::udp::v4(), local_udp_port);
@@ -160,7 +160,7 @@ namespace network
 
             string response_header(response_string.begin(), delim_range.end());
 
-            uint32_t content_length = bytes_transferred - response_header.length();
+            boost::uint32_t content_length = bytes_transferred - response_header.length();
             if (content_length > 0 && content_length <= 1024)
             {
                 memcpy(content_buffer_.Data(), &response_string[response_header.length()], content_length);
@@ -178,7 +178,7 @@ namespace network
                 return;
             }
 
-            uint32_t header_length;
+            boost::uint32_t header_length;
             network::HttpResponse::p http_response = network::HttpResponse::ParseFromBuffer(
                 response_header, header_length);
             if (!http_response)

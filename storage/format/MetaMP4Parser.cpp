@@ -86,15 +86,15 @@ namespace storage
         offset += 4; if (offset >= length) return;
     }
 
-    uint32_t MetaMP4Parser::GetDurationInSeconds() const
+    boost::uint32_t MetaMP4Parser::GetDurationInSeconds() const
     {
         if (TimeScale == 0) return 0;
-        return (uint32_t)((0.0 + Duration) / TimeScale + 0.5);
+        return (boost::uint32_t)((0.0 + Duration) / TimeScale + 0.5);
     }
 
-    uint32_t MetaMP4Parser::GetUINT32(const boost::uint8_t* buffer)
+    boost::uint32_t MetaMP4Parser::GetUINT32(const boost::uint8_t* buffer)
     {
-        uint32_t value = 0;
+        boost::uint32_t value = 0;
         value = ((value << 8) | buffer[0]);
         value = ((value << 8) | buffer[1]);
         value = ((value << 8) | buffer[2]);

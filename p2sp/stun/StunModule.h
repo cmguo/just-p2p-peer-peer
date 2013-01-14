@@ -25,7 +25,7 @@ namespace p2sp
         void Stop();
         // 操作
 
-        void GetStunEndpoint(uint32_t &ip, boost::uint16_t &port);
+        void GetStunEndpoint(boost::uint32_t &ip, boost::uint16_t &port);
         // 消息
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
@@ -68,7 +68,7 @@ namespace p2sp
         boost::asio::ip::udp::endpoint stun_endpoint_;
         framework::timer::PeriodicTimer stun_timer_;
         std::vector<protocol::STUN_SERVER_INFO> stun_server_info_;
-        uint32_t stun_server_index_;
+        boost::uint32_t stun_server_index_;
         // 状态
         volatile bool is_running_;
         volatile bool is_select_stunserver_;

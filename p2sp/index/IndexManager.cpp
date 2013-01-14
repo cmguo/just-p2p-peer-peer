@@ -77,7 +77,7 @@ namespace p2sp
 
     }
 
-    void IndexManager::OnResolverSucced(uint32_t ip, boost::uint16_t port)
+    void IndexManager::OnResolverSucced(boost::uint32_t ip, boost::uint16_t port)
     {
         if (is_running_ == false)
             return;
@@ -130,7 +130,7 @@ namespace p2sp
         }
     }
 
-    void IndexManager::OnResolverFailed(uint32_t error_code)  // 1-Url锟斤拷锟斤拷锟斤拷 2-锟斤拷锟斤拷锟睫凤拷锟斤拷锟斤拷 3-锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷 4-锟斤拷锟绞э拷锟?
+    void IndexManager::OnResolverFailed(boost::uint32_t error_code)  // 1-Url锟斤拷锟斤拷锟斤拷 2-锟斤拷锟斤拷锟睫凤拷锟斤拷锟斤拷 3-锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷 4-锟斤拷锟绞э拷锟?
     {
         if (is_running_ == false) return;
 
@@ -313,7 +313,7 @@ namespace p2sp
 
         // 直接发送 QueryTrackerListRequestPacket 包
 
-        uint32_t transaction_id_ = protocol::Packet::NewTransactionID();
+        boost::uint32_t transaction_id_ = protocol::Packet::NewTransactionID();
 
         Guid unique_guid = AppModule::Inst()->GetUniqueGuid();
 
@@ -337,7 +337,7 @@ namespace p2sp
 
         // 直接发送 QueryTrackerListRequestPacket 包
 
-        uint32_t transaction_id_ = protocol::Packet::NewTransactionID();
+        boost::uint32_t transaction_id_ = protocol::Packet::NewTransactionID();
 
         protocol::QueryStunServerListPacket query_stun_server_list_request_packet(transaction_id_, protocol::PEER_VERSION, server_list_endpoint_);
         AppModule::Inst()->DoSendPacket(query_stun_server_list_request_packet);
@@ -427,7 +427,7 @@ namespace p2sp
             // 根据返回情况调用
             // 从packet中, 解出每个 TrackerInfo 到 tracker_vector
             // TrackerModule::Inst()->SetTrackerList(group_count, tracker_vector);
-            for (uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
+            for (boost::uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
             {
                 LOG4CPLUS_INFO_LOG(logger_index, "Tracker List :[" << i << "] ModNo:" << 
                     packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
@@ -465,7 +465,7 @@ namespace p2sp
             // 根据返回情况调用
             // 从packet中, 解出每个 TrackerInfo 到 tracker_vector
 
-            for (uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
+            for (boost::uint32_t i = 0; i < packet.response.tracker_info_.size(); i ++)
             {
                 LOG4CPLUS_INFO_LOG(logger_index, "Tracker List :[" << i << "] ModNo:" << 
                     packet.response.tracker_info_[i].ModNo << " IP: " << packet.response.tracker_info_[i].IP);
@@ -509,7 +509,7 @@ namespace p2sp
     void IndexManager::OnTimerElapsed(framework::timer::Timer * pointer)
     {
         if (is_running_ == false) return;
-        uint32_t times = pointer->times();
+        boost::uint32_t times = pointer->times();
         LOG4CPLUS_WARN_LOG(logger_index, "IndexManager::OnTimerElapsed");
 
         if (pointer == &query_vod_list_tracker_list_timer_)
@@ -630,7 +630,7 @@ namespace p2sp
 
     }
 
-    void IndexManager::OnQueryVodListTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryVodListTrackerListTimerElapsed(boost::uint32_t times)
     {
         if (false == is_running_)
         {
@@ -651,7 +651,7 @@ namespace p2sp
             last_query_vod_list_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
     }
 
-    void IndexManager::OnQueryVodReportTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryVodReportTrackerListTimerElapsed(boost::uint32_t times)
     {
         if (false == is_running_)
             return;
@@ -670,7 +670,7 @@ namespace p2sp
             last_query_vod_report_tracker_list_interval_ = DEFAULT_QUERY_INTERVAL;
     }
 
-    void IndexManager::OnQueryLiveListTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryLiveListTrackerListTimerElapsed(boost::uint32_t times)
     {
         if (false == is_running_)
         {
@@ -693,7 +693,7 @@ namespace p2sp
         }
     }
 
-    void IndexManager::OnQueryLiveReportTrackerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryLiveReportTrackerListTimerElapsed(boost::uint32_t times)
     {
         if (false == is_running_)
         {
@@ -720,7 +720,7 @@ namespace p2sp
         }
     }
 
-    void IndexManager::OnQueryStunServerListTimerElapsed(uint32_t times)
+    void IndexManager::OnQueryStunServerListTimerElapsed(boost::uint32_t times)
     {
         if (false == is_running_)
             return;
@@ -827,7 +827,7 @@ namespace p2sp
 
         // 直接发送 QueryIndexServerListRequestPacket 包
 
-        uint32_t transaction_id = protocol::Packet::NewTransactionID();
+        boost::uint32_t transaction_id = protocol::Packet::NewTransactionID();
 
         protocol::QueryLiveTrackerListPacket query_live_tracker_list_request_packet(transaction_id,
             protocol::PEER_VERSION, AppModule::Inst()->GetUniqueGuid(), server_list_endpoint_);

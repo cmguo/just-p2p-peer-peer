@@ -52,7 +52,7 @@ namespace p2sp
         void RemoveProxyConnection(boost::shared_ptr<ProxyConnection> server_socket);
         // 定时器
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
-        void OnProxyTimer(uint32_t times);
+        void OnProxyTimer(boost::uint32_t times);
         void OnUdpRecv(protocol::Packet const & packet);
 
         //
@@ -110,8 +110,8 @@ namespace p2sp
         void SetSegno(string sessionid, int segno);
         void ExpireSegno();
 
-        void SetLastDragPrecent(uint32_t drag_precent);
-        uint32_t GetDragPrecent();
+        void SetLastDragPrecent(boost::uint32_t drag_precent);
+        boost::uint32_t GetDragPrecent();
 
         boost::uint32_t GetHistoryMaxDwonloadSpeed() {return history_max_download_speed_ini_;}
         void LoadHistoricalMaxDownloadSpeed();
@@ -167,7 +167,7 @@ namespace p2sp
 
         std::map<string, std::pair<int, time_t> > drag_record_;
 
-        uint32_t last_drag_precent;
+        boost::uint32_t last_drag_precent;
 
         string ppva_config_path_;
         boost::uint32_t local_ip_from_ini_;

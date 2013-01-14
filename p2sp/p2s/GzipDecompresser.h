@@ -47,7 +47,7 @@ namespace p2sp
             assert(ret == Z_OK);
         }
 
-        bool OnRecvData(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
+        bool OnRecvData(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
 
         bool IsDecompressComplete()
         {

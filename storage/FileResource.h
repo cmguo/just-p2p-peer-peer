@@ -20,11 +20,11 @@ class FileResource: public Resource
     public:
     static p CreateResource(
         boost::asio::io_service & io_svc,
-        uint32_t file_length,
+        boost::uint32_t file_length,
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t init_size);
+        boost::uint32_t init_size);
 
     // 根据资源信息创建资源对象实例
     static p CreateResource(
@@ -37,16 +37,16 @@ class FileResource: public Resource
     static bool OpenResourceFile(
         const FileResourceInfo &resource_info,
         FILE* &resource_file_handle,
-        uint32_t &actual_size);
+        boost::uint32_t &actual_size);
 
     protected:
     FileResource(
         boost::asio::io_service & io_svc,
-        uint32_t file_length,
+        boost::uint32_t file_length,
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t init_size);
+        boost::uint32_t init_size);
 
     FileResource(
         boost::asio::io_service & io_svc,
@@ -54,11 +54,11 @@ class FileResource: public Resource
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t actual_size);
+        boost::uint32_t actual_size);
 
     protected:
 #ifdef DISK_MODE
-    virtual uint32_t GetLocalFileSize();
+    virtual boost::uint32_t GetLocalFileSize();
     virtual void FreeDiskSpace(bool need_remove_file);
     virtual bool IsFileOpen();
     virtual void CloseFileHandle();
@@ -69,11 +69,11 @@ class FileResource: public Resource
     virtual void CloseResource(bool need_remove_file);
 
     virtual void FlushStore();
-    virtual base::AppBuffer ReadBuffer(const uint32_t startpos, const uint32_t length);
-    virtual std::vector<base::AppBuffer> ReadBufferArray(const uint32_t startpos, const uint32_t length);
-    virtual bool ReadBufferArray(const uint32_t startpos, const uint32_t length, std::vector<protocol::SubPieceContent*> buffs);
-    virtual bool WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer);
-    virtual void Erase(const uint32_t startpos, const uint32_t length);
+    virtual base::AppBuffer ReadBuffer(const boost::uint32_t startpos, const boost::uint32_t length);
+    virtual std::vector<base::AppBuffer> ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length);
+    virtual bool ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length, std::vector<protocol::SubPieceContent*> buffs);
+    virtual bool WriteBufferArray(const boost::uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer);
+    virtual void Erase(const boost::uint32_t startpos, const boost::uint32_t length);
     virtual bool TryRenameToNormalFile();
     virtual bool TryRenameToTppFile();
     virtual boost::int64_t GetLastWriteTime();

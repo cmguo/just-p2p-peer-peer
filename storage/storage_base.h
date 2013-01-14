@@ -5,7 +5,7 @@
 #ifndef STORAGE_STORAGEBASE_H
 #define STORAGE_STORAGEBASE_H
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma once
 #endif
 
@@ -50,14 +50,14 @@ namespace storage
 
     namespace SecVerCtrl
     {
-        static const uint32_t sec_version1 = 0x00000001;
-        static const uint32_t sec_version2 = 0x00000002;
-        static const uint32_t sec_version3 = 0x00000003;
-        static const uint32_t sec_version4 = 0x00000004;
-        static const uint32_t sec_version5 = 0x00000005;
-        static const uint32_t sec_version6 = 0x00000006;
-        static const uint32_t sec_version7 = 0x00000007;
-        static const uint32_t sec_version8 = 0x00000008;
+        static const boost::uint32_t sec_version1 = 0x00000001;
+        static const boost::uint32_t sec_version2 = 0x00000002;
+        static const boost::uint32_t sec_version3 = 0x00000003;
+        static const boost::uint32_t sec_version4 = 0x00000004;
+        static const boost::uint32_t sec_version5 = 0x00000005;
+        static const boost::uint32_t sec_version6 = 0x00000006;
+        static const boost::uint32_t sec_version7 = 0x00000007;
+        static const boost::uint32_t sec_version8 = 0x00000008;
     }
 
     static const string tpp_extname(".tpp");
@@ -71,26 +71,26 @@ namespace storage
         boost::uint16_t bytes_num_per_subpiece_g_;
         boost::uint16_t subpiece_num_per_piece_g_;
         boost::uint16_t piece_num_per_block_g_;
-        uint32_t max_block_num_g_;
+        boost::uint32_t max_block_num_g_;
     };
 
-    static const uint32_t bytes_num_per_subpiece_g_ = SUB_PIECE_SIZE;
+    static const boost::uint32_t bytes_num_per_subpiece_g_ = SUB_PIECE_SIZE;
 
     // static StorageConfig storage_config;
     //    static const boost::uint16_t bytes_num_per_subpiece_g_ = boost::uint16_t(1) << 10;
     static const boost::uint16_t subpiece_num_per_piece_g_ = boost::uint16_t(1) << 7;
     static const boost::uint16_t piece_num_per_block_g_ = boost::uint16_t(1) << 4;
-    static const uint32_t bytes_num_per_piece_g_ = bytes_num_per_subpiece_g_ * subpiece_num_per_piece_g_;
+    static const boost::uint32_t bytes_num_per_piece_g_ = bytes_num_per_subpiece_g_ * subpiece_num_per_piece_g_;
     static const boost::uint16_t default_subpiece_num_per_block_g_ = subpiece_num_per_piece_g_ * piece_num_per_block_g_;  // boost::uint16_t(1) << 11;
-    static const uint32_t default_block_size_g_ = piece_num_per_block_g_ * subpiece_num_per_piece_g_
+    static const boost::uint32_t default_block_size_g_ = piece_num_per_block_g_ * subpiece_num_per_piece_g_
         * bytes_num_per_subpiece_g_;
-    static const uint32_t max_block_num_g_ = 50;
+    static const boost::uint32_t max_block_num_g_ = 50;
     static const string default_cfg_key_g_ = "123456";
-    static const uint32_t default_delay_tickcount_for_delete = 10 * 1000;
+    static const boost::uint32_t default_delay_tickcount_for_delete = 10 * 1000;
 
-    static const uint32_t TRAFFIC_UNIT_TIME = 6 * 60 * 60;
-    static const uint32_t TRAFFIC_T0 = 7;
-    static const uint32_t TRAFFIC_PROTECT_TIME = 2;
+    static const boost::uint32_t TRAFFIC_UNIT_TIME = 6 * 60 * 60;
+    static const boost::uint32_t TRAFFIC_T0 = 7;
+    static const boost::uint32_t TRAFFIC_PROTECT_TIME = 2;
 }
 
 #endif  // STORAGE_STORAGEBASE_H

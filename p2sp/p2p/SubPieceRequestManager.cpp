@@ -54,7 +54,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void SubPieceRequestManager::OnP2PTimer(uint32_t times)
+    void SubPieceRequestManager::OnP2PTimer(boost::uint32_t times)
     {
         if (is_running_ == false) return;
 
@@ -121,7 +121,7 @@ namespace p2sp
             boost::intrusive_ptr<ConnectionBase> peer_connection = sub_piece_request_task->peer_connection_;
             if (peer_connection->GetEndpoint() == packet.end_point)
             {
-                uint32_t response_time = sub_piece_request_task->request_time_elapse_;
+                boost::uint32_t response_time = sub_piece_request_task->request_time_elapse_;
 
                 LOG4CPLUS_INFO_LOG(logger_sub_piece_request_manager, "bingo SubpieceInfo = " << sub_piece << 
                     " RTT = " << response_time);
@@ -181,11 +181,11 @@ namespace p2sp
         }
     }
 
-    uint32_t SubPieceRequestManager::GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const
+    boost::uint32_t SubPieceRequestManager::GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const
     {
         if (false == is_running_) return false;
 
-        uint32_t count = 0;
+        boost::uint32_t count = 0;
 
         std::multimap<protocol::SubPieceInfo, SubPieceRequestTask *>::const_iterator it;
         for (it = request_tasks_.find(subpiece_info); it != request_tasks_.end() && it->first == subpiece_info; ++it)

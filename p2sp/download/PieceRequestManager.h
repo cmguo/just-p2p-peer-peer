@@ -34,7 +34,7 @@ namespace p2sp
         DownloadDriver__p download_driver_;
         VodDownloader__p downloader_;
         framework::timer::TickCounter start_time_;
-        uint32_t timeout_;
+        boost::uint32_t timeout_;
         bool bStartDownloading;
     public:
         bool IsTimeout() const;
@@ -68,8 +68,8 @@ namespace p2sp
         void ClearTasks();
         bool RemovePieceTask(const protocol::PieceInfo& piece_info, VodDownloader__p downloader);
         void CheckPieceTimeout();
-        bool HasNextPieceForDownload(uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader);
-        bool GetNextPieceForDownload(uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader);
+        bool HasNextPieceForDownload(boost::uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader);
+        bool GetNextPieceForDownload(boost::uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader);
         void NoticePieceTaskTimeOut(const protocol::PieceInfoEx& piece_info_ex, VodDownloader__p downloader);
         void OnPieceRequest(const protocol::PieceInfo & piece)
         {
@@ -79,13 +79,13 @@ namespace p2sp
         }
     public:
         void ClearTaskRangeMap();
-        void AddTaskRange(uint32_t start, uint32_t end);
+        void AddTaskRange(boost::uint32_t start, boost::uint32_t end);
     private:
 
         volatile bool is_running_;
         std::map<protocol::PieceInfo, PieceTask *> requesting_map_;
         DownloadDriver__p download_driver_;
-        std::map<uint32_t, uint32_t> task_range_map_;
+        std::map<boost::uint32_t, boost::uint32_t> task_range_map_;
 
     private:
         PieceRequestManager(DownloadDriver__p download_driver);

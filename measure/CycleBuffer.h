@@ -22,25 +22,25 @@ namespace measure
 #endif
     {
     public:
-        CycleBuffer(uint32_t capacity);
+        CycleBuffer(boost::uint32_t capacity);
 
-        void Push(uint32_t val);
+        void Push(boost::uint32_t val);
 
-        uint32_t Average() const;
+        boost::uint32_t Average() const;
 
-        uint32_t MaxValue() const;
+        boost::uint32_t MaxValue() const;
 
-        uint32_t MinValue() const;
+        boost::uint32_t MinValue() const;
 
-        uint32_t Count() const;
+        boost::uint32_t Count() const;
 
-        uint32_t Sum() const;
+        boost::uint32_t Sum() const;
 
         void Clear() {data_.clear();}
 
     private:
-        std::deque<uint32_t> data_;
-        uint32_t capacity_;
+        std::deque<boost::uint32_t> data_;
+        boost::uint32_t capacity_;
     };
 }
 

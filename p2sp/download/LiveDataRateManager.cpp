@@ -21,7 +21,7 @@ namespace p2sp
     }
 
     // TODO: 跳转中心拿到的播放点与PMS最前的播放点的差距是否能超过 16 + 4 * current_data_rate_pos_
-    bool LiveDataRateManager::SwitchToHigherDataRateIfNeeded(uint32_t rest_time_in_seconds)
+    bool LiveDataRateManager::SwitchToHigherDataRateIfNeeded(boost::uint32_t rest_time_in_seconds)
     {
         last_data_rate_pos_ = current_data_rate_pos_;
         if (timer_.elapsed() > 30*1000 && rest_time_in_seconds > 16 + 4 * current_data_rate_pos_)
@@ -42,7 +42,7 @@ namespace p2sp
         return false;
     }
 
-    bool LiveDataRateManager::SwitchToLowerDataRateIfNeeded(uint32_t rest_time_in_seconds)
+    bool LiveDataRateManager::SwitchToLowerDataRateIfNeeded(boost::uint32_t rest_time_in_seconds)
     {
         last_data_rate_pos_ = current_data_rate_pos_;
         if (timer_.elapsed() > 20*1000 && rest_time_in_seconds < 8 + 4 * current_data_rate_pos_)

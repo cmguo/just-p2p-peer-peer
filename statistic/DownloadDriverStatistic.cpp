@@ -20,7 +20,7 @@ namespace statistic
 #ifdef LOG_ENABLE
      static log4cplus::Logger logger_statistic = log4cplus::Logger::getInstance("[download_driver_statistic]");
 #endif
-    DownloadDriverStatistic::DownloadDriverStatistic(uint32_t id, bool is_create_share_memory)
+    DownloadDriverStatistic::DownloadDriverStatistic(boost::uint32_t id, bool is_create_share_memory)
         : is_running_(false)
         , download_driver_id_(id)
         , http_download_max_speed_(0)
@@ -116,7 +116,7 @@ namespace statistic
         return download_driver_statistic_info_;
     }
 
-    void DownloadDriverStatistic::OnShareMemoryTimer(uint32_t times)
+    void DownloadDriverStatistic::OnShareMemoryTimer(boost::uint32_t times)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "DownloadDriverStatistic::OnShareMemoryTimer [IN], times: " << times);
         if (is_running_ == false)
@@ -253,12 +253,12 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Misc
 
-    uint32_t DownloadDriverStatistic::GetDownloadDriverID() const
+    boost::uint32_t DownloadDriverStatistic::GetDownloadDriverID() const
     {
         return download_driver_id_;
     }
 
-    uint32_t DownloadDriverStatistic::GetMaxHttpDownloaderCount() const
+    boost::uint32_t DownloadDriverStatistic::GetMaxHttpDownloaderCount() const
     {
         return MAX_HTTP_DOWNLOADER_COUNT;
     }
@@ -276,22 +276,22 @@ namespace statistic
         return download_driver_statistic_info_.ResourceID;
     }
 
-    void DownloadDriverStatistic::SetFileLength(uint32_t file_length)
+    void DownloadDriverStatistic::SetFileLength(boost::uint32_t file_length)
     {
         download_driver_statistic_info_.FileLength = file_length;
     }
 
-    uint32_t DownloadDriverStatistic::GetFileLength()
+    boost::uint32_t DownloadDriverStatistic::GetFileLength()
     {
         return download_driver_statistic_info_.FileLength;
     }
 
-    void DownloadDriverStatistic::SetBlockSize(uint32_t block_size)
+    void DownloadDriverStatistic::SetBlockSize(boost::uint32_t block_size)
     {
         download_driver_statistic_info_.BlockSize = block_size;
     }
 
-    uint32_t DownloadDriverStatistic::GetBlockSize()
+    boost::uint32_t DownloadDriverStatistic::GetBlockSize()
     {
         return download_driver_statistic_info_.BlockSize;
     }
@@ -333,12 +333,12 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Speed Info & HTTP Downloader Info
 
-    void DownloadDriverStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    void DownloadDriverStatistic::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
     }
 
-    void DownloadDriverStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    void DownloadDriverStatistic::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }
@@ -379,7 +379,7 @@ namespace statistic
         assert(download_driver_statistic_info_.HttpDownloaderCount <= GetMaxHttpDownloaderCount());
 
         HttpDownloaderStatisticMap::iterator it = http_downloader_statistic_map_.begin();
-        for (uint32_t i = 0; it != http_downloader_statistic_map_.end(); it++, i++)
+        for (boost::uint32_t i = 0; it != http_downloader_statistic_map_.end(); it++, i++)
         {
             assert(it->second);
             download_driver_statistic_info_.HttpDownloaders[i] = it->second->GetHttpDownloaderInfo();
@@ -390,30 +390,30 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // HTTP Data Bytes
 
-    void DownloadDriverStatistic::SubmitHttpDataBytesWithRedundance(uint32_t http_data_bytes)
+    void DownloadDriverStatistic::SubmitHttpDataBytesWithRedundance(boost::uint32_t http_data_bytes)
     {
         download_driver_statistic_info_.TotalHttpDataBytesWithRedundance += http_data_bytes;
     }
 
-    void DownloadDriverStatistic::SubmitHttpDataBytesWithoutRedundance(uint32_t http_data_bytes)
+    void DownloadDriverStatistic::SubmitHttpDataBytesWithoutRedundance(boost::uint32_t http_data_bytes)
     {
         download_driver_statistic_info_.TotalHttpDataBytesWithoutRedundance += http_data_bytes;
     }
 
 
-    void DownloadDriverStatistic::SetLocalDataBytes(uint32_t local_data_bytes)
+    void DownloadDriverStatistic::SetLocalDataBytes(boost::uint32_t local_data_bytes)
     {
         download_driver_statistic_info_.TotalLocalDataBytes = local_data_bytes;
     }
     //////////////////////////////////////////////////////////////////////////
     // HTTP Max Download Speed
 
-    uint32_t DownloadDriverStatistic::GetHttpDownloadMaxSpeed()
+    boost::uint32_t DownloadDriverStatistic::GetHttpDownloadMaxSpeed()
     {
         STL_FOR_EACH_CONST(HttpDownloaderStatisticMap, http_downloader_statistic_map_, iter)
         {
             HttpDownloaderStatistic::p statistic = iter->second;
-            uint32_t now_speed = statistic->GetSpeedInfo().NowDownloadSpeed;
+            boost::uint32_t now_speed = statistic->GetSpeedInfo().NowDownloadSpeed;
             if (now_speed > http_download_max_speed_)
             {
                 http_download_max_speed_ = now_speed;
@@ -422,13 +422,13 @@ namespace statistic
         return http_download_max_speed_;
     }
 
-    uint32_t DownloadDriverStatistic::GetHttpDownloadAvgSpeed()
+    boost::uint32_t DownloadDriverStatistic::GetHttpDownloadAvgSpeed()
     {
-        uint32_t http_avg = 0;
+        boost::uint32_t http_avg = 0;
         STL_FOR_EACH_CONST(HttpDownloaderStatisticMap, http_downloader_statistic_map_, iter)
         {
             HttpDownloaderStatistic::p statistic = iter->second;
-            uint32_t avg_speed = statistic->GetSpeedInfo().AvgDownloadSpeed;
+            boost::uint32_t avg_speed = statistic->GetSpeedInfo().AvgDownloadSpeed;
             // !
             http_avg += avg_speed;
         }
@@ -451,7 +451,7 @@ namespace statistic
         return CreateDownloadDriverModuleSharedMemoryName(GetCurrentProcessID(), GetDownloadDriverID());
     }
 
-    uint32_t DownloadDriverStatistic::GetSharedMemorySize()
+    boost::uint32_t DownloadDriverStatistic::GetSharedMemorySize()
     {
         return sizeof(download_driver_statistic_info_);
     }
@@ -487,7 +487,7 @@ namespace statistic
 
     void DownloadDriverStatistic::SetStateMachineState(const string& state)
     {
-        assert(sizeof(download_driver_statistic_info_.StateMachineState) /sizeof(uint8_t) > state.length());
+        assert(sizeof(download_driver_statistic_info_.StateMachineState) /sizeof(boost::uint8_t) > state.length());
         strcpy((char*)download_driver_statistic_info_.StateMachineState, state.c_str());
     }
 
@@ -498,7 +498,7 @@ namespace statistic
 
     //////////////////////////////////////////////////////////////////////////
     // PlayingPosition
-    uint32_t DownloadDriverStatistic::GetPlayingPosition()
+    boost::uint32_t DownloadDriverStatistic::GetPlayingPosition()
     {
         return download_driver_statistic_info_.PlayingPosition;
     }
@@ -555,7 +555,7 @@ namespace statistic
         return peer_info_.uMaxActivePeerCount;
     }
 
-    void DownloadDriverStatistic::SetDataRate(uint32_t date_rate)
+    void DownloadDriverStatistic::SetDataRate(boost::uint32_t date_rate)
     {
         download_driver_statistic_info_.DataRate = date_rate;
     }

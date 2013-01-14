@@ -14,7 +14,7 @@
 namespace p2sp
 {
 
-    RangeInfo::RangeInfo(uint32_t range_begin, uint32_t range_end)
+    RangeInfo::RangeInfo(boost::uint32_t range_begin, boost::uint32_t range_end)
         : range_begin_(range_begin), range_end_(range_end)
     {
     }
@@ -47,8 +47,8 @@ namespace p2sp
             return RangeInfo::p();
         }
 
-        uint32_t range_begin;
-        uint32_t range_end;
+        boost::uint32_t range_begin;
+        boost::uint32_t range_end;
         boost::system::error_code ec = framework::string::parse2(ranges[0], range_begin);
         if (ec) return RangeInfo::p();
         if (ranges[1].length() != 0) {

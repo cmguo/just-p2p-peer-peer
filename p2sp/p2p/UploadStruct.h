@@ -7,13 +7,13 @@ namespace p2sp
 {
     struct PEER_UPLOAD_INFO
     {
-        static const uint32_t TRANS_ID_SIZE = 5;
+        static const boost::uint32_t TRANS_ID_SIZE = 5;
 
         framework::timer::TickCounter last_talk_time;
         framework::timer::TickCounter last_data_time;
-        uint32_t ip_pool_size;
-        // uint32_t last_data_trans_id;
-        uint32_t last_data_trans_ids[TRANS_ID_SIZE];
+        boost::uint32_t ip_pool_size;
+        // boost::uint32_t last_data_trans_id;
+        boost::uint32_t last_data_trans_ids[TRANS_ID_SIZE];
         Guid peer_guid;
         bool is_open_service;
         RID resource_id;
@@ -32,9 +32,9 @@ namespace p2sp
             memset(last_data_trans_ids, 0, sizeof(last_data_trans_ids));
         }
 
-        bool IsInLastDataTransIDs(uint32_t trans_id)
+        bool IsInLastDataTransIDs(boost::uint32_t trans_id)
         {
-            for (uint32_t i = 0; i < TRANS_ID_SIZE; ++i)
+            for (boost::uint32_t i = 0; i < TRANS_ID_SIZE; ++i)
             {
                 if (last_data_trans_ids[i] == trans_id)
                 {
@@ -44,10 +44,10 @@ namespace p2sp
             return false;
         }
 
-        bool UpdateLastDataTransID(uint32_t trans_id)
+        bool UpdateLastDataTransID(boost::uint32_t trans_id)
         {
-            uint32_t min_pos = 0;
-            for (uint32_t i = 0; i < TRANS_ID_SIZE; ++i)
+            boost::uint32_t min_pos = 0;
+            for (boost::uint32_t i = 0; i < TRANS_ID_SIZE; ++i)
             {
                 if (last_data_trans_ids[i] == trans_id)
                 {
@@ -70,14 +70,14 @@ namespace p2sp
 
     struct RBIndex
     {
-        RBIndex(const RID & rid, uint32_t block_index)
+        RBIndex(const RID & rid, boost::uint32_t block_index)
             : rid(rid)
             , block_index(block_index)
         {
 
         }
         RID rid;
-        uint32_t block_index;
+        boost::uint32_t block_index;
 
         bool operator == (const RBIndex& other) const
         {

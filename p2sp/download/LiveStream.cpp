@@ -147,8 +147,8 @@ namespace p2sp
         return false;
     }
 
-    bool LiveStream::OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
-        uint8_t progress_percentage)
+    bool LiveStream::OnRecvLivePiece(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
+        boost::uint8_t progress_percentage)
     {
         assert(is_running_);
 

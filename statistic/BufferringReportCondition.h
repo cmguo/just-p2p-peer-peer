@@ -14,8 +14,8 @@ namespace statistic
     {
         size_t occurrences_to_trigger_condition_;
         size_t occurrence_count_;
-        uint32_t time_window_to_ignore_repeated_occurrences_;
-        uint32_t last_bufferring_position_;
+        boost::uint32_t time_window_to_ignore_repeated_occurrences_;
+        boost::uint32_t last_bufferring_position_;
         framework::timer::TickCounter ticks_since_last_bufferring_;
         size_t remaining_reports_count_;
 
@@ -23,12 +23,12 @@ namespace statistic
         BufferringReportCondition(
             const StatisticsConfiguration& bufferring_statistics_configuration, 
             size_t occurrences_to_trigger_condition, 
-            uint32_t time_window_to_ignore_repeated_occurrences);
+            boost::uint32_t time_window_to_ignore_repeated_occurrences);
 
         bool IsTrue();
         void Reset();
         
-        void BufferringOccurs(uint32_t bufferring_position_in_seconds);
+        void BufferringOccurs(boost::uint32_t bufferring_position_in_seconds);
     };
 }
 

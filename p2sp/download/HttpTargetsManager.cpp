@@ -24,10 +24,10 @@ namespace p2sp
     void HttpTargetsManager::UpdateBestHttpTarget()
     {
         if (current_http_target_index_ == 0 ||
-            (int32_t)http_targets_[current_http_target_index_]->GetCurrentDownloadSpeed() > best_http_target_speed_)
+            (boost::int32_t)http_targets_[current_http_target_index_]->GetCurrentDownloadSpeed() > best_http_target_speed_)
         {
             best_http_target_index_ = current_http_target_index_;
-            best_http_target_speed_ = (int32_t)http_targets_[current_http_target_index_]->GetCurrentDownloadSpeed();
+            best_http_target_speed_ = (boost::int32_t)http_targets_[current_http_target_index_]->GetCurrentDownloadSpeed();
         }
     }
 

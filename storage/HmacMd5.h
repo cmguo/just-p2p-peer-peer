@@ -15,7 +15,7 @@ namespace storage
     {
         boost::uint8_t    n[16];
         boost::uint8_t    b[16];
-        uint32_t    w[4];
+        boost::uint32_t    w[4];
     } SMD4, SMD5;
 
     static boost::uint8_t KEY_G_[] = {0x01, 0x02, 0x03, 0x04};
@@ -41,7 +41,7 @@ namespace storage
         static bool        HashFromURN(const char* pszHash, SMD5* pMD5);
 
     public:
-        CHmacMD5(u_char *key = KEY_G_ , uint32_t keylen = sizeof(KEY_G_));
+        CHmacMD5(u_char *key = KEY_G_ , boost::uint32_t keylen = sizeof(KEY_G_));
 
     private:
         boost::uint8_t    m_key[64];
@@ -50,7 +50,7 @@ namespace storage
         // Operations
     public:
         virtual void    Reset();
-        virtual void    Add(void const * pData, uint32_t nLength);
+        virtual void    Add(void const * pData, boost::uint32_t nLength);
         virtual void    Finish();
 
     };

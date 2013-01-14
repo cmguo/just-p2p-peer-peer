@@ -20,7 +20,7 @@ namespace statistic
         delete[] output_buffer_;
     }
 
-    bool GZipCompressor::Compress(uint8_t* raw_data, int raw_data_size, std::ostream& result)
+    bool GZipCompressor::Compress(boost::uint8_t* raw_data, int raw_data_size, std::ostream& result)
     {
         std::vector<RawData> buffers;
         buffers.push_back(RawData(raw_data, raw_data_size));
@@ -32,7 +32,7 @@ namespace statistic
     {
         if (!output_buffer_)
         {
-            output_buffer_ = new uint8_t[GZipCompressor::OutputBufferSize];
+            output_buffer_ = new boost::uint8_t[GZipCompressor::OutputBufferSize];
         }
 
         compression_stream_.zalloc = (alloc_func)0;
@@ -49,7 +49,7 @@ namespace statistic
     {
         for(int n = 0; n < sizeof(value); n++)
         {
-            uint8_t byte_value = static_cast<uint8_t>(value & 0xFF);
+            boost::uint8_t byte_value = static_cast<boost::uint8_t>(value & 0xFF);
             result.write(reinterpret_cast<char*>(&byte_value),sizeof(byte_value));
             value >>= 8;
         }

@@ -9,7 +9,7 @@
 #include <network/Uri.h>
 #include "random.h"
 
-#ifdef BOOST_WINDOWS_API
+#if PEER_PC_CLIENT
 
 // #include <shlwapi.h>
 // #pragma comment(lib. "shlwapi.lib")
@@ -23,12 +23,12 @@ namespace base
 {
     namespace util
     {
-        inline uint32_t GuidMod(const Guid& guid, uint32_t mod)
+        inline boost::int32_t GuidMod(const Guid& guid, boost::int32_t mod)
         {
             boost::uint64_t buf[2];
             memcpy(&buf, &guid.data(), sizeof(guid.data()));
             buf[1] = framework::system::BytesOrder::little_endian_to_host_longlong(buf[1]);
-            return static_cast<uint32_t> (buf[1] % mod);
+            return static_cast<boost::int32_t> (buf[1] % mod);
         }
 
         inline string GetSegno(const network::Uri & uri)
@@ -49,7 +49,7 @@ namespace base
             return segno;
         }
 
-        inline void memcpy2(void *dest, uint32_t numberOfElements, const void *src, uint32_t count)
+        inline void memcpy2(void *dest, boost::int32_t numberOfElements, const void *src, boost::int32_t count)
         {
             if (count == 0)
             {
@@ -77,7 +77,7 @@ namespace base
             memcpy(dest, src, count);
         }
 
-        inline bool is_private_address(boost::uint32_t addr)
+        inline bool is_private_address(boost::int32_t addr)
         {
             boost::asio::ip::address_v4 address(addr);
             boost::asio::ip::address_v4::bytes_type address_bytes = address.to_bytes();
@@ -118,7 +118,7 @@ namespace base
             }
         }
 
-        inline void DoCrash(int32_t percentage)
+        inline void DoCrash(boost::int32_t percentage)
         {
             if (Random::GetGlobal().Next(100) < percentage)
             {
@@ -127,13 +127,13 @@ namespace base
             }
         }
 
-        inline uint32_t GetLocalFirstIP()
+        inline boost::int32_t GetLocalFirstIP()
         {
-#ifdef BOOST_WINDOWS_API
+#if PEER_PC_CLIENT
             // Ê¹ÓÃ ip helperº¯Êý
-            boost::uint32_t nip = 0;
+            boost::int32_t nip = 0;
             PMIB_IPADDRTABLE pIPAddrTable;
-            uint32_t dwSize = 0 , dwRetVal;
+            boost::int32_t dwSize = 0 , dwRetVal;
 
             pIPAddrTable = (MIB_IPADDRTABLE*) malloc(sizeof(MIB_IPADDRTABLE));
 
@@ -149,7 +149,7 @@ namespace base
             // actual data we want
             if ((dwRetVal = GetIpAddrTable(pIPAddrTable, &dwSize, 0)) == NO_ERROR)
             {
-                for (uint32_t i = 0; i < pIPAddrTable->dwNumEntries; i++)
+                for (boost::int32_t i = 0; i < pIPAddrTable->dwNumEntries; i++)
                 {
                     if (pIPAddrTable->table[i].dwAddr != inet_addr("127.0.0.1") && pIPAddrTable->table[i].dwAddr != 0)
                     {
@@ -168,8 +168,8 @@ namespace base
         if (::framework::network::enum_interface(interfaces))
             return 0;
 
-        uint32_t local_ip = 0;
-        for (uint32_t i = 0; i < interfaces.size(); ++i) {
+        boost::int32_t local_ip = 0;
+        for (boost::int32_t i = 0; i < interfaces.size(); ++i) {
             framework::network::Interface const & inf = interfaces[i];
             if (string(inf.name) != "lo" && inf.up && inf.addr.is_v4()) {
                 return inf.addr.to_v4().to_ulong();

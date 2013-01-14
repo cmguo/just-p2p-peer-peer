@@ -62,8 +62,8 @@ namespace p2sp
 
     public:
         // 接口
-        virtual void OnResolverSucced(uint32_t ip, boost::uint16_t port);
-        virtual void OnResolverFailed(uint32_t error_code);  // 1-Url有问题 2-域名无法解析 3-域名解析出错 4-连接失败
+        virtual void OnResolverSucced(boost::uint32_t ip, boost::uint16_t port);
+        virtual void OnResolverFailed(boost::uint32_t error_code);  // 1-Url有问题 2-域名无法解析 3-域名解析出错 4-连接失败
 
     protected:
         void OnQueryVodListTrackerListPacket(const protocol::QueryTrackerForListingPacket & packet);
@@ -89,15 +89,15 @@ namespace p2sp
         void OnTimerElapsed(
             framework::timer::Timer * pointer);
 
-        void OnQueryVodListTrackerListTimerElapsed(uint32_t times);
+        void OnQueryVodListTrackerListTimerElapsed(boost::uint32_t times);
 
-        void OnQueryVodReportTrackerListTimerElapsed(uint32_t times);
+        void OnQueryVodReportTrackerListTimerElapsed(boost::uint32_t times);
 
-        void OnQueryLiveListTrackerListTimerElapsed(uint32_t times);
+        void OnQueryLiveListTrackerListTimerElapsed(boost::uint32_t times);
 
-        void OnQueryLiveReportTrackerListTimerElapsed(uint32_t times);
+        void OnQueryLiveReportTrackerListTimerElapsed(boost::uint32_t times);
 
-        void OnQueryStunServerListTimerElapsed(uint32_t times);
+        void OnQueryStunServerListTimerElapsed(boost::uint32_t times);
 
 #ifdef NOTIFY_ON
         void OnQueryNotifyServerTimerElapsed(boost::uint32_t times);
@@ -149,19 +149,19 @@ namespace p2sp
 
         boost::asio::ip::udp::endpoint server_list_endpoint_;
 
-        uint32_t last_query_vod_list_tracker_list_interval_;
-        uint32_t last_query_vod_report_tracker_list_interval_;
-        uint32_t last_querystunlist_intervaltimes_;
-        uint32_t last_queryindexlist_intervaltimes_;
+        boost::uint32_t last_query_vod_list_tracker_list_interval_;
+        boost::uint32_t last_query_vod_report_tracker_list_interval_;
+        boost::uint32_t last_querystunlist_intervaltimes_;
+        boost::uint32_t last_queryindexlist_intervaltimes_;
 #ifdef NOTIFY_ON
-        uint32_t last_querynotifyserverlist_intervaltimes_;
+        boost::uint32_t last_querynotifyserverlist_intervaltimes_;
 #endif
-        uint32_t last_query_live_list_tracker_list_interval_;
-        uint32_t last_query_live_report_tracker_list_interval_;
-        uint32_t last_query_bootstrap_config_interval_times_;
-        uint32_t last_query_sn_list_interval_times_;
-        uint32_t last_query_vip_sn_list_interval_times_;
-        uint32_t last_query_udpserver_list_interval_times_;
+        boost::uint32_t last_query_live_list_tracker_list_interval_;
+        boost::uint32_t last_query_live_report_tracker_list_interval_;
+        boost::uint32_t last_query_bootstrap_config_interval_times_;
+        boost::uint32_t last_query_sn_list_interval_times_;
+        boost::uint32_t last_query_vip_sn_list_interval_times_;
+        boost::uint32_t last_query_udpserver_list_interval_times_;
 
         // Resolver
         network::Resolver::p resolver_;
@@ -180,9 +180,9 @@ namespace p2sp
             boost::asio::io_service & io_svc);
 
     private:
-        static const uint32_t INITIAL_QUERY_INTERVAL = 15*1000;
-        static const uint32_t DEFAULT_QUERY_INTERVAL = 4 * 60 * 60*1000U;
-        static const uint32_t DEFAULT_QUERY_BOOTSTRAP_CONFIG_INTERVAL = 60 * 60*1000U;
+        static const boost::uint32_t INITIAL_QUERY_INTERVAL = 15*1000;
+        static const boost::uint32_t DEFAULT_QUERY_INTERVAL = 4 * 60 * 60*1000U;
+        static const boost::uint32_t DEFAULT_QUERY_BOOTSTRAP_CONFIG_INTERVAL = 60 * 60*1000U;
 
     public:
         static IndexManager::p CreateInst(

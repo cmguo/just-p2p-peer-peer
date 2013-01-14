@@ -39,8 +39,8 @@ namespace p2sp
         void OnPushTaskResponse(protocol::QueryPushTaskPacketV3 const & packet);
         void OnTimerElapsed(framework::timer::Timer * timer_ptr);
 
-        virtual void OnResolverSucced(uint32_t ip, boost::uint16_t port);
-        virtual void OnResolverFailed(uint32_t error_code);
+        virtual void OnResolverSucced(boost::uint32_t ip, boost::uint16_t port);
+        virtual void OnResolverFailed(boost::uint32_t error_code);
 
         void SetGlobalSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
 
@@ -63,10 +63,10 @@ namespace p2sp
     private:
 
         struct State {
-            uint32_t user_;
-            uint32_t task_;
-            uint32_t disk_;
-            uint32_t domain_;
+            boost::uint32_t user_;
+            boost::uint32_t task_;
+            boost::uint32_t disk_;
+            boost::uint32_t domain_;
 
             State();
         } state_;
@@ -74,9 +74,9 @@ namespace p2sp
         volatile bool is_running_;
         volatile bool is_push_enabled_;
 
-        uint32_t last_transaction_id_;
+        boost::uint32_t last_transaction_id_;
         framework::timer::TickCounter last_query_timer_;
-        int32_t query_sum_num_;
+        boost::int32_t query_sum_num_;
 
         boost::asio::ip::udp::endpoint push_server_endpoint_;
 
@@ -85,10 +85,10 @@ namespace p2sp
 
         framework::timer::PeriodicTimer timer_;
         
-        int32_t task_complete_error_num_;
+        boost::int32_t task_complete_error_num_;
 
-        int32_t global_speed_limit_in_kbps_;
-        int32_t push_wait_interval_in_sec_;
+        boost::int32_t global_speed_limit_in_kbps_;
+        boost::int32_t push_wait_interval_in_sec_;
 
         boost::shared_ptr<PushDownloadTask> push_download_task_;
 

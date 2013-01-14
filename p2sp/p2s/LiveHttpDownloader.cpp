@@ -167,7 +167,7 @@ namespace p2sp
         }
     }
 
-    string LiveHttpDownloader::MakeRequstPath(uint32_t start_block_id)
+    string LiveHttpDownloader::MakeRequstPath(boost::uint32_t start_block_id)
     {
         // 拼接请求PMS的HTTP串
         using framework::string::format;
@@ -191,7 +191,7 @@ namespace p2sp
         status_ = sending_request_head;
     }
 
-    void LiveHttpDownloader::OnConnectFailed(uint32_t error_code)
+    void LiveHttpDownloader::OnConnectFailed(boost::uint32_t error_code)
     {
         if (!is_running_)
             return;
@@ -245,7 +245,7 @@ namespace p2sp
         }
     }
 
-    void LiveHttpDownloader::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void LiveHttpDownloader::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpHeaderFailed!");
 
@@ -258,7 +258,7 @@ namespace p2sp
         SleepForConnect();
     }
 
-    void LiveHttpDownloader::OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
+    void LiveHttpDownloader::OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip)
     {
         if (!is_running_)
         {
@@ -268,7 +268,7 @@ namespace p2sp
         LOG4CPLUS_DEBUG_LOG(logger_live_http_downloader, "OnRecvHttpDataSucced! content_offset:" << content_offset 
             << ", buff size=" << buffer.Length());
 
-        uint16_t subpiece_index = file_offset / LIVE_SUB_PIECE_SIZE;
+        boost::uint16_t subpiece_index = file_offset / LIVE_SUB_PIECE_SIZE;
 
         live_stream_->GetInstance()->AddSubPiece(protocol::LiveSubPieceInfo(block_tasks_.front().GetBlockId(), subpiece_index), buffer);
 
@@ -280,13 +280,13 @@ namespace p2sp
         RequestSubPiece();
     }
 
-    void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void LiveHttpDownloader::OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpDataPartial!");
         OnError();
     }
 
-    void LiveHttpDownloader::OnRecvHttpDataFailed(uint32_t error_code)
+    void LiveHttpDownloader::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         LOG4CPLUS_ERROR_LOG(logger_live_http_downloader, "OnRecvHttpDataFailed!");
         OnError();

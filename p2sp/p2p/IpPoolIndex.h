@@ -25,10 +25,10 @@ namespace p2sp
     struct ExchangeIndicator
     {
         protocol::SocketAddr key_;
-        uint32_t last_exchage_time_;
-        uint32_t exchange_times_;
+        boost::uint32_t last_exchage_time_;
+        boost::uint32_t exchange_times_;
 
-        ExchangeIndicator(const protocol::SocketAddr& key, uint32_t last_exchage_time, uint32_t exchange_times)
+        ExchangeIndicator(const protocol::SocketAddr& key, boost::uint32_t last_exchage_time, boost::uint32_t exchange_times)
             : key_(key), last_exchage_time_(last_exchage_time), exchange_times_(exchange_times)
         {
         }
@@ -43,13 +43,13 @@ namespace p2sp
     struct ConnectIndicator
     {
         std::string key_;
-        uint32_t next_time_to_connect_;
+        boost::uint32_t next_time_to_connect_;
         bool is_connecting_;
         bool is_connected_;
 
-        uint32_t tracker_priority_;
+        boost::uint32_t tracker_priority_;
 
-        uint32_t last_active_time_;
+        boost::uint32_t last_active_time_;
 
         bool should_use_firstly_;
 
@@ -111,9 +111,9 @@ namespace p2sp
     struct ActiveIndicator
     {
         protocol::SocketAddr key_;
-        uint32_t active_time_;
+        boost::uint32_t active_time_;
 
-        ActiveIndicator(const protocol::SocketAddr& key, uint32_t active_time)
+        ActiveIndicator(const protocol::SocketAddr& key, boost::uint32_t active_time)
             : key_(key), active_time_(active_time)
         {
         }
@@ -137,13 +137,13 @@ namespace p2sp
         }
     public:
         /// 上一次活跃时间
-        uint32_t last_active_time_;
+        boost::uint32_t last_active_time_;
 
         /// 上一次洪范的时间
-        uint32_t last_exchage_time_;
+        boost::uint32_t last_exchage_time_;
 
         /// 发出洪范的次数
-        uint32_t exchange_times_;
+        boost::uint32_t exchange_times_;
 
         /// 上一次 发出连接 的时间
         boost::uint32_t last_connect_time_;
@@ -155,9 +155,9 @@ namespace p2sp
         bool is_connected_;
 
         /// 连接包含时间
-        uint32_t connect_protect_time_;
-        uint32_t connect_protect_time_count_;
-        uint32_t connect_protect_time_index_;
+        boost::uint32_t connect_protect_time_;
+        boost::uint32_t connect_protect_time_count_;
+        boost::uint32_t connect_protect_time_index_;
 
         size_t connections_attempted_;
 
@@ -170,7 +170,7 @@ namespace p2sp
         // 属性
         protocol::SocketAddr GetKey() const
         {
-            uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
+            boost::uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
             return this->GetKeySocketAddr(local_detected_ip);
         }
         ExchangeIndicator GetExchangeIndicator() const { return ExchangeIndicator(this->GetKey(), last_exchage_time_, exchange_times_); }

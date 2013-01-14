@@ -68,7 +68,7 @@ namespace p2sp
             map_.erase(map_.begin());
         }
 
-        uint32_t size() const
+        boost::uint32_t size() const
         {
             return map_.size();
         }
@@ -79,7 +79,7 @@ namespace p2sp
         }
 
         // 返回当前的播放位置
-        int32_t GetPlayingPostion(boost::uint32_t position) const
+        boost::int32_t GetPlayingPostion(boost::uint32_t position) const
         {
             std::map<boost::uint32_t, base::AppBuffer>::const_iterator iter = map_.find(position);
             if (iter != map_.end())
@@ -138,21 +138,21 @@ namespace p2sp
         void Stop();
         void WillStop();
     public:
-        virtual uint32_t GetPlayingPosition() const;
+        virtual boost::uint32_t GetPlayingPosition() const;
         virtual void SendHttpRequest();
         virtual void ResetPlayingPostion();
         virtual bool IsWillStop() const { return will_stop_; }
         virtual bool IsWillStopDownload() const { return will_stop_download_; }
         virtual bool IsSaveMode() const { return save_mode_; }
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers);
     public:
         // network::HttpServer
         virtual void OnHttpRecvSucced(network::HttpRequest::p http_request);
-        virtual void OnHttpRecvFailed(uint32_t error_code);
+        virtual void OnHttpRecvFailed(boost::uint32_t error_code);
         virtual void OnTcpSendFailed();
         virtual void OnClose();
-        void OnProxyTimer(uint32_t times);
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
+        void OnProxyTimer(boost::uint32_t times);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
         virtual void OnNoticeDirectMode(DownloadDriver__p download_driver);
         virtual void OnNoticeDownloadMode(const string& url, const string& refer_url, const string& web_url, const string& qualifed_file_name);
 
@@ -160,8 +160,8 @@ namespace p2sp
 
         // IHttpFetchListener
         // virtual void OnFetchComplete(protocol::SubPieceContent buffer);
-        // virtual void OnFetchFailed(uint32_t error_code);
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+        // virtual void OnFetchFailed(boost::uint32_t error_code);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
 
         //
         virtual void OnNoticeChangeProxySender(ProxySender__p proxy_sender);
@@ -169,7 +169,7 @@ namespace p2sp
         virtual void OnNoticeStopDownloadDriver();
 
         // Header
-        virtual base::AppBuffer GetHeader(uint32_t& key_frame_position, base::AppBuffer const & header_buffer);
+        virtual base::AppBuffer GetHeader(boost::uint32_t& key_frame_position, base::AppBuffer const & header_buffer);
         // void NotifyFetchHeader();
         // bool IsHeaderPrepared() const { return is_header_prepared_; }
 
@@ -193,7 +193,7 @@ namespace p2sp
         bool IsHeaderResopnsed();
 
         // 直播收到数据
-        bool OnRecvLivePiece(uint32_t block_id, std::vector<base::AppBuffer> const & buffers);
+        bool OnRecvLivePiece(boost::uint32_t block_id, std::vector<base::AppBuffer> const & buffers);
 
         bool IsLiveConnection() const
         {
@@ -252,15 +252,15 @@ namespace p2sp
 
         protocol::UrlInfo url_info_;
 
-        uint32_t file_length_;
-        uint32_t openservice_head_length_;
+        boost::uint32_t file_length_;
+        boost::uint32_t openservice_head_length_;
 
         bool metadata_parsed_;
 
         framework::timer::TickCounter silent_time_counter_;
 
         base::AppBuffer header_buffer_;
-        uint32_t header_buffer_length_;
+        boost::uint32_t header_buffer_length_;
 
         bool will_stop_;
         bool will_stop_download_;
@@ -299,8 +299,8 @@ namespace p2sp
             boost::asio::io_service & io_svc);
 
     private:
-        static const uint32_t DEFAULT_SILENT_TIME_LIMIT = 300*1000;
-        static const uint32_t HEADER_LENGTH = 2048;
+        static const boost::uint32_t DEFAULT_SILENT_TIME_LIMIT = 300*1000;
+        static const boost::uint32_t HEADER_LENGTH = 2048;
     };
 }
 

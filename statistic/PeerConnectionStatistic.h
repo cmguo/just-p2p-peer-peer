@@ -38,9 +38,9 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
 
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
 
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
         SPEED_INFO GetSpeedInfo();
 
@@ -52,7 +52,7 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Misc
 
-        void SetPeerVersion(uint32_t peer_version);
+        void SetPeerVersion(boost::uint32_t peer_version);
 
         void SetCandidatePeerInfo(const protocol::CandidatePeerInfo& peer_info);
 
@@ -70,35 +70,35 @@ namespace statistic
 
         void SubmitRTT(boost::uint16_t rtt);
 
-        void SetAverageDeltaTime(uint32_t avg_delt_time);
+        void SetAverageDeltaTime(boost::uint32_t avg_delt_time);
 
-        void SetSortedValue(uint32_t sorted_value);
+        void SetSortedValue(boost::uint32_t sorted_value);
 
         boost::uint16_t GetAverageRTT();
 
         boost::uint16_t GetLongestRtt();
 
-        uint32_t GetTotalRTTCount();
+        boost::uint32_t GetTotalRTTCount();
 
         void SetIsRidInfoValid(bool is_ridinfo_valid);
 
         bool GetIsRidInfoValid() const;
 
-        void SetSentCount(uint32_t sent_count);
+        void SetSentCount(boost::uint32_t sent_count);
 
-        uint32_t GetSentCount();
+        boost::uint32_t GetSentCount();
 
-        void SetRequestingCount(uint32_t requesting_count);
+        void SetRequestingCount(boost::uint32_t requesting_count);
 
-        uint32_t GetRequestingCount();
+        boost::uint32_t GetRequestingCount();
 
-        void SetReceivedCount(uint32_t received_count);
+        void SetReceivedCount(boost::uint32_t received_count);
 
-        uint32_t GetReceivedCount();
+        boost::uint32_t GetReceivedCount();
 
-        void SetAssignedLeftSubPieceCount(uint32_t assigned_left_subpiece_count);
+        void SetAssignedLeftSubPieceCount(boost::uint32_t assigned_left_subpiece_count);
 
-        uint16_t GetAssignedLeftSubPieceCount();
+        boost::uint16_t GetAssignedLeftSubPieceCount();
 
 
         //////////////////////////////////////////////////////////////////////////
@@ -135,17 +135,17 @@ namespace statistic
         peer_connection_info_.AssignedSubPieceCount = assigned_subpiece_count;
     }
 
-   inline void PeerConnectionStatistic::SetAverageDeltaTime(uint32_t avg_delt_time)
+   inline void PeerConnectionStatistic::SetAverageDeltaTime(boost::uint32_t avg_delt_time)
    {
        peer_connection_info_.AverageDeltaTime = avg_delt_time;
    }
 
-   inline void PeerConnectionStatistic::SetSortedValue(uint32_t sorted_value)
+   inline void PeerConnectionStatistic::SetSortedValue(boost::uint32_t sorted_value)
    {
        peer_connection_info_.SortedValue = sorted_value;
    }
 
-   inline uint32_t PeerConnectionStatistic::GetTotalRTTCount()
+   inline boost::uint32_t PeerConnectionStatistic::GetTotalRTTCount()
    {
        return peer_connection_info_.RTT_Count;
    }

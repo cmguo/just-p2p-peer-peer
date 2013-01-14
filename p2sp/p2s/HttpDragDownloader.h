@@ -38,20 +38,20 @@ namespace p2sp
         void Connect();
         string ConstructUrl();
         void DealError(bool dns_error = false);
-        void Recv(uint32_t recv_length);
+        void Recv(boost::uint32_t recv_length);
         bool ParseTinyDrag();
 
     private:
         //IHttpClientListener
         virtual void OnConnectSucced();
-        virtual void OnConnectFailed(uint32_t error_code);
+        virtual void OnConnectFailed(boost::uint32_t error_code);
         virtual void OnConnectTimeout();
 
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
-        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
-        virtual void OnRecvHttpDataFailed(uint32_t error_code);
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code);
+        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip);
+        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code);
         virtual void OnRecvTimeout();
 
         virtual void OnComplete();
@@ -75,7 +75,7 @@ namespace p2sp
         boost::int32_t error_times_;
         boost::int32_t tried_times_;
 
-        uint32_t drag_length_;
+        boost::uint32_t drag_length_;
         string drag_string_;
 
         bool using_backup_domain_;

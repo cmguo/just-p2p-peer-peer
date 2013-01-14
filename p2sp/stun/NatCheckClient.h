@@ -58,12 +58,12 @@ namespace p2sp
         boost::asio::ip::udp::endpoint endpoint_;
         boost::asio::ip::udp::endpoint endpoint__symncheck_;
         boost::uint32_t times_;
-        std::vector<uint32_t> local_ips_;
-        uint32_t local_first_ip_;
-        uint16_t local_port_;
-        uint16_t detect_port_;
-        uint32_t detect_ip_;
-        uint16_t upnp_ex_udp_port_;
+        std::vector<boost::uint32_t> local_ips_;
+        boost::uint32_t local_first_ip_;
+        boost::uint16_t local_port_;
+        boost::uint16_t detect_port_;
+        boost::uint32_t detect_ip_;
+        boost::uint16_t upnp_ex_udp_port_;
         bool is_nat_;
         string m_strConfig;
         vector<string> nat_check_server_list_;

@@ -7,7 +7,7 @@
 #ifndef _P2SP_P2P_SUB_PIECE_REQUEST_MANAGER_H_
 #define _P2SP_P2P_SUB_PIECE_REQUEST_MANAGER_H_
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma once
 #endif
 
@@ -22,7 +22,7 @@ namespace p2sp
 #endif
     {
     public:
-        SubPieceRequestTask(uint32_t timeout, boost::intrusive_ptr<ConnectionBase> peer_connection)
+        SubPieceRequestTask(boost::uint32_t timeout, boost::intrusive_ptr<ConnectionBase> peer_connection)
             : request_time_elapse_(0)
             , timeout_(timeout)
             , dead_(false)
@@ -35,8 +35,8 @@ namespace p2sp
         framework::timer::TickCounter::count_value_type GetTimeElapsed() const { return request_time_elapse_; }
 
     public:
-        uint32_t request_time_elapse_;
-        uint32_t timeout_;
+        boost::uint32_t request_time_elapse_;
+        boost::uint32_t timeout_;
         bool dead_;
         boost::intrusive_ptr<ConnectionBase> peer_connection_;
     };
@@ -62,11 +62,11 @@ namespace p2sp
         void CheckExternalTimeout();
         // 消息
         void OnSubPiece(protocol::SubPiecePacket const & packet);
-        void OnP2PTimer(uint32_t times);
+        void OnP2PTimer(boost::uint32_t times);
         // 属性
         inline bool IsRequesting(const protocol::SubPieceInfo& subpiece_info) const;
         inline bool IsRequestingTimeout(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed, boost::uint8_t percent = 9) const;
-        uint32_t GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const;
+        boost::uint32_t GetRequestingCount(const protocol::SubPieceInfo& subpiece_info, boost::uint32_t time_elapsed) const;
     private:
         // 模块
         P2PDownloader__p p2p_downloader_;

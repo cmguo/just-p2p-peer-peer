@@ -135,7 +135,7 @@ namespace p2sp
         stun_server_index_ = 0;
     }
 
-    void StunModule::GetStunEndpoint(uint32_t &ip, boost::uint16_t &port)
+    void StunModule::GetStunEndpoint(boost::uint32_t &ip, boost::uint16_t &port)
     {
         if (is_running_ == false)
             return;
@@ -207,7 +207,7 @@ namespace p2sp
 
         if (is_select_stunserver_ && stun_server_index_ < stun_server_info_.size())
         {
-            for (uint32_t i = 0; i < stun_servers.size(); ++i)
+            for (boost::uint32_t i = 0; i < stun_servers.size(); ++i)
             {
                 if (stun_servers[i] == stun_server_info_[stun_server_index_])
                 {
@@ -263,33 +263,33 @@ namespace p2sp
         }
     }
 
-    uint32_t LoadIPs(uint32_t maxCount, uint32_t ipArray[], const hostent& host)
+    boost::uint32_t LoadIPs(boost::uint32_t maxCount, boost::uint32_t ipArray[], const hostent& host)
     {
-        uint32_t count = 0;
+        boost::uint32_t count = 0;
         for (int index = 0; host.h_addr_list[index] != NULL; index++)
         {
             if (count >= maxCount)
                 break;
             const in_addr* addr = reinterpret_cast<const in_addr*> (host.h_addr_list[index]);
-            uint32_t v =
-#ifdef BOOST_WINDOWS_API
+            boost::uint32_t v =
+#ifdef PEER_PC_CLIENT
                 addr->S_un.S_addr;
 #else
                 addr->s_addr;
 #endif
             ipArray[count++] = ntohl(v);
         }
-        std::sort(ipArray, ipArray + count, std::greater<uint32_t>());
+        std::sort(ipArray, ipArray + count, std::greater<boost::uint32_t>());
         return count;
     }
 
-    uint32_t LoadLocalIPs(uint32_t maxCount, uint32_t ipArray[])
+    boost::uint32_t LoadLocalIPs(boost::uint32_t maxCount, boost::uint32_t ipArray[])
     {
         char hostName[256] = { 0 };
         if (gethostname(hostName, 255) != 0)
         {
-            uint32_t error =
-#ifdef BOOST_WINDOWS_API
+            boost::uint32_t error =
+#ifdef PEER_PC_CLIENT
                 ::WSAGetLastError();
 #else
                 0;
@@ -303,8 +303,8 @@ namespace p2sp
         struct hostent* host = gethostbyname(hostName);
         if (host == NULL)
         {
-            uint32_t error =
-#ifdef BOOST_WINDOWS_API
+            boost::uint32_t error =
+#ifdef PEER_PC_CLIENT
                 ::WSAGetLastError();
 #else
                 0;
@@ -314,7 +314,7 @@ namespace p2sp
                 << ") failed, ErrorCode=" << error);
             return 0;
         }
-        uint32_t count = LoadIPs(maxCount, ipArray, *host);
+        boost::uint32_t count = LoadIPs(maxCount, ipArray, *host);
         if (count == 0)
         {
             LOG4CPLUS_ERROR_LOG(logger_stun, "CIPTable::LoadLocal: No hostent found.");
@@ -322,13 +322,13 @@ namespace p2sp
         return count;
     }
 
-    void LoadLocalIPs(std::vector<uint32_t>& ipArray)
+    void LoadLocalIPs(std::vector<boost::uint32_t>& ipArray)
     {
-#ifdef BOOST_WINDOWS_API
-        const uint32_t max_count = 32;
+#ifdef PEER_PC_CLIENT
+        const boost::uint32_t max_count = 32;
         ipArray.clear();
         ipArray.resize(max_count);
-        uint32_t count = LoadLocalIPs(max_count, &ipArray[0]);
+        boost::uint32_t count = LoadLocalIPs(max_count, &ipArray[0]);
         assert(count <= max_count);
         if (count < max_count)
         {

@@ -581,7 +581,7 @@ namespace p2sp
             return nat_check_server_ip_;
         }
 
-        uint32_t GetNatNeedCheckMinDays() const
+        boost::uint32_t GetNatNeedCheckMinDays() const
         {
             return nat_need_check_min_days_;
         }

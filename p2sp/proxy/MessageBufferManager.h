@@ -26,11 +26,11 @@ namespace p2sp
 
         static p Inst() { return inst_; }
 
-        boost::uint8_t* NewBuffer(uint32_t buffer_size);
+        boost::uint8_t* NewBuffer(boost::uint32_t buffer_size);
 
         void DeleteBuffer(boost::uint8_t* buffer);
 
-        uint32_t ExpireCache();
+        boost::uint32_t ExpireCache();
 
         template <typename StructType>
         StructType* NewStruct()

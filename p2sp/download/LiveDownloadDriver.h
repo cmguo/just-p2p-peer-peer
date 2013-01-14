@@ -58,14 +58,14 @@ namespace p2sp
         LiveDownloadDriver(boost::asio::io_service & io_svc, ProxyConnection__p proxy_connetction);
 
     public:
-        void Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval, bool replay,
-            const vector<boost::uint32_t>& data_rate, const RID& channel_id, uint32_t source_type, JumpBWType bwtype,
-            uint32_t unique_id, bool is_too_near_from_last_vv_of_same_channel);
+        void Start(const string & url, const vector<RID>& rids, boost::uint32_t start_position, boost::uint32_t live_interval, bool replay,
+            const vector<boost::uint32_t>& data_rate, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype,
+            boost::uint32_t unique_id, bool is_too_near_from_last_vv_of_same_channel);
 
         void Stop();
 
-        bool OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
-            uint8_t progress_percentage);
+        bool OnRecvLivePiece(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
+            boost::uint8_t progress_percentage);
 
         storage::LiveInstance__p GetInstance() const;
 
@@ -179,7 +179,7 @@ namespace p2sp
         LiveDataRateManager data_rate_manager_;
 
         framework::timer::PeriodicTimer timer_;
-        uint32_t elapsed_seconds_since_started_;
+        boost::uint32_t elapsed_seconds_since_started_;
 
         // 起始播放点
         storage::LivePosition start_position_;

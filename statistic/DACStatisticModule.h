@@ -57,12 +57,12 @@ namespace statistic
         void Start();
         void Stop();
 
-        void SubmitHttpDownloadBytes(uint32_t http_download_bytes);
-        void SubmitP2PDownloadBytes(uint32_t p2p_download_bytes);
-        void SubmitP2PUploadBytes(uint32_t p2p_upload_bytes, bool is_push);
-        void SubmitP2PUploadSpeedInKBps(uint32_t p2p_upload_KBps);
+        void SubmitHttpDownloadBytes(boost::uint32_t http_download_bytes);
+        void SubmitP2PDownloadBytes(boost::uint32_t p2p_download_bytes);
+        void SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push);
+        void SubmitP2PUploadSpeedInKBps(boost::uint32_t p2p_upload_KBps);
         void SubmitP2PUploadSpeedLimitInKBps(boost::uint32_t p2p_upload_limit_KBps);
-        void SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes);
+        void SubmitP2PUploadDisCardBytes(boost::uint32_t p2p_upload_discard_bytes);
         void SubmitReportRequest();
         void SubmitReportResponse();
         void SubmitVodTrackerForListRequest();
@@ -102,7 +102,7 @@ namespace statistic
             return inst_;
         }
 
-        void SubmitNatCheckTimeCost(uint32_t time_cost)
+        void SubmitNatCheckTimeCost(boost::uint32_t time_cost)
         {
             nat_check_time_cost_in_ms_ = time_cost;
         }
@@ -130,14 +130,14 @@ namespace statistic
         boost::uint32_t upload_discard_byte_;
 
         // HTTP下载字节
-        uint32_t http_download_byte_;
+        boost::uint32_t http_download_byte_;
         // P2P下载字节
-        uint32_t p2p_download_byte_;
+        boost::uint32_t p2p_download_byte_;
         // P2P上传字节
         boost::uint64_t p2p_upload_byte_by_normal_;
         boost::uint64_t p2p_upload_byte_by_push_;
         // P2P上传最大速度
-        uint32_t max_peer_upload_kbps_;
+        boost::uint32_t max_peer_upload_kbps_;
 
         boost::uint32_t rid_upload_count_total_;
         boost::uint32_t rid_upload_count_in_ten_minutes_;
@@ -170,17 +170,17 @@ namespace statistic
         boost::int8_t        upnp_check_result_;
     };
 
-    inline void DACStatisticModule::SubmitHttpDownloadBytes(uint32_t http_download_kbps)
+    inline void DACStatisticModule::SubmitHttpDownloadBytes(boost::uint32_t http_download_kbps)
     {
         http_download_byte_ += http_download_kbps;
     }
 
-    inline void DACStatisticModule::SubmitP2PDownloadBytes(uint32_t p2p_download_kbps)
+    inline void DACStatisticModule::SubmitP2PDownloadBytes(boost::uint32_t p2p_download_kbps)
     {
         p2p_download_byte_ += p2p_download_kbps;
     }
 
-    inline void DACStatisticModule::SubmitP2PUploadBytes(uint32_t p2p_upload_bytes, bool is_push)
+    inline void DACStatisticModule::SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push)
     {
         if (is_push)
         {
@@ -192,7 +192,7 @@ namespace statistic
         }
     }
 
-    inline void DACStatisticModule::SubmitP2PUploadSpeedInKBps(uint32_t p2p_upload_KBps)
+    inline void DACStatisticModule::SubmitP2PUploadSpeedInKBps(boost::uint32_t p2p_upload_KBps)
     {
         if (max_peer_upload_kbps_ < p2p_upload_KBps)
         {
@@ -207,7 +207,7 @@ namespace statistic
         upload_limit_counter_.reset();
     }
 
-    inline void DACStatisticModule::SubmitP2PUploadDisCardBytes(uint32_t p2p_upload_discard_bytes)
+    inline void DACStatisticModule::SubmitP2PUploadDisCardBytes(boost::uint32_t p2p_upload_discard_bytes)
     {
         upload_discard_byte_ += p2p_upload_discard_bytes;
     }
@@ -289,8 +289,8 @@ namespace statistic
             in_addr add;
             add.s_addr = htonl(iter->first);           
             os <<inet_ntoa(add) <<":"
-                << (uint32_t)iter->second.first << ":"
-                << (uint32_t)iter->second.second;
+                << (boost::uint32_t)iter->second.first << ":"
+                << (boost::uint32_t)iter->second.second;
 
             if (++iter != stun_handshake_statistic_.end())
             {

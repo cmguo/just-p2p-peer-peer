@@ -32,7 +32,7 @@ namespace statistic
 
         bool IsRunning() const;
 
-        void OnShareMemoryTimer(uint32_t times);
+        void OnShareMemoryTimer(boost::uint32_t times);
 
         const DOWNLOADDRIVER_STATISTIC_INFO& TakeSnapshot();
 
@@ -52,9 +52,9 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
 
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
 
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
         SPEED_INFO GetSpeedInfo();
 
@@ -70,14 +70,14 @@ namespace statistic
 
         string GetSharedMemoryName();
 
-        uint32_t GetSharedMemorySize();
+        boost::uint32_t GetSharedMemorySize();
 
         //////////////////////////////////////////////////////////////////////////
         // Misc
 
-        uint32_t GetDownloadDriverID() const;
+        boost::uint32_t GetDownloadDriverID() const;
 
-        uint32_t GetMaxHttpDownloaderCount() const;
+        boost::uint32_t GetMaxHttpDownloaderCount() const;
 
         //////////////////////////////////////////////////////////////////////////
         // Resource Info
@@ -86,13 +86,13 @@ namespace statistic
 
         RID GetResourceID();
 
-        void SetFileLength(uint32_t file_length);
+        void SetFileLength(boost::uint32_t file_length);
 
-        uint32_t GetFileLength();
+        boost::uint32_t GetFileLength();
 
-        void SetBlockSize(uint32_t block_size);
+        void SetBlockSize(boost::uint32_t block_size);
 
-        uint32_t GetBlockSize();
+        boost::uint32_t GetBlockSize();
 
         void SetBlockCount(boost::uint16_t block_count);
 
@@ -105,31 +105,31 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // HTTP Data Bytes
 
-        void SubmitHttpDataBytesWithRedundance(uint32_t http_data_bytes);
+        void SubmitHttpDataBytesWithRedundance(boost::uint32_t http_data_bytes);
 
-        void SubmitHttpDataBytesWithoutRedundance(uint32_t http_data_bytes);
+        void SubmitHttpDataBytesWithoutRedundance(boost::uint32_t http_data_bytes);
 
-        void SetLocalDataBytes(uint32_t local_data_bytes);
+        void SetLocalDataBytes(boost::uint32_t local_data_bytes);
 
-        uint32_t GetTotalHttpDataBytesWithRedundancy()
+        boost::uint32_t GetTotalHttpDataBytesWithRedundancy()
         {
             return download_driver_statistic_info_.TotalHttpDataBytesWithRedundance;
         }
 
-        uint32_t GetTotalHttpDataBytesWithoutRedundancy()
+        boost::uint32_t GetTotalHttpDataBytesWithoutRedundancy()
         {
             return download_driver_statistic_info_.TotalHttpDataBytesWithoutRedundance;
         }
 
-        uint32_t GetTotalLocalDataBytes() { return download_driver_statistic_info_.TotalLocalDataBytes; }
+        boost::uint32_t GetTotalLocalDataBytes() { return download_driver_statistic_info_.TotalLocalDataBytes; }
 
         //////////////////////////////////////////////////////////////////////////
 
         // HTTP Max Download Speed (历史最大瞬时速度)
-        uint32_t GetHttpDownloadMaxSpeed();
+        boost::uint32_t GetHttpDownloadMaxSpeed();
 
         // HTTP 历史平均速度
-        uint32_t GetHttpDownloadAvgSpeed();
+        boost::uint32_t GetHttpDownloadAvgSpeed();
 
         //////////////////////////////////////////////////////////////////////////
         // IsHidden
@@ -154,11 +154,11 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // PlayingPosition
 
-        void SetPlayingPosition(uint32_t playing_position);
+        void SetPlayingPosition(boost::uint32_t playing_position);
 
-        uint32_t GetPlayingPosition();
+        boost::uint32_t GetPlayingPosition();
 
-        void SetDataRate(uint32_t date_rate);
+        void SetDataRate(boost::uint32_t date_rate);
 
         void SetHttpState(boost::uint8_t h);
         void SetP2PState(boost::uint8_t p);
@@ -210,13 +210,13 @@ namespace statistic
 
         DOWNLOADDRIVER_STATISTIC_INFO download_driver_statistic_info_;
 
-        uint32_t download_driver_id_;
+        boost::uint32_t download_driver_id_;
 
         HttpDownloaderStatisticMap http_downloader_statistic_map_;
 
         interprocess::SharedMemory shared_memory_;
 
-        uint32_t http_download_max_speed_;
+        boost::uint32_t http_download_max_speed_;
 
         bool is_flush_shared_memory_;
 
@@ -246,10 +246,10 @@ namespace statistic
               is_flush_shared_memory_(true)
         {}
 
-        DownloadDriverStatistic(uint32_t id, bool is_create_share_memory = true);
+        DownloadDriverStatistic(boost::uint32_t id, bool is_create_share_memory = true);
     };
 
-    inline void DownloadDriverStatistic::SetPlayingPosition(uint32_t playing_position)
+    inline void DownloadDriverStatistic::SetPlayingPosition(boost::uint32_t playing_position)
     {
         this->download_driver_statistic_info_.PlayingPosition = playing_position;
     }

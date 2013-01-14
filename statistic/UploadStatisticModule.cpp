@@ -41,7 +41,7 @@ namespace statistic
         upload_speed_info_.Stop();
     }
 
-    void UploadStatisticModule::SubmitUploadInfo(uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
+    void UploadStatisticModule::SubmitUploadInfo(boost::uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
     {
         upload_info_.peer_upload_count = uploading_peers_.size();
         upload_info_.actual_speed_limit = upload_speed_limit;
@@ -77,10 +77,10 @@ namespace statistic
         }
     }
 
-    void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::address address, uint32_t size)
+    void UploadStatisticModule::SubmitUploadSpeedInfo(boost::asio::ip::address address, boost::uint32_t size)
     {
         upload_speed_info_.SubmitUploadedBytes(size);
-        uint32_t upload_speed = upload_speed_info_.GetSpeedInfo().NowUploadSpeed / 1024;
+        boost::uint32_t upload_speed = upload_speed_info_.GetSpeedInfo().NowUploadSpeed / 1024;
         DACStatisticModule::Inst()->SubmitP2PUploadSpeedInKBps(upload_speed);
 
         std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.find(address);
@@ -99,7 +99,7 @@ namespace statistic
 
     bool UploadStatisticModule::CreateSharedMemory()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         shared_memory_.Create(GetSharedMemoryName().c_str(), GetSharedMemorySize());
         return shared_memory_.IsValid();
 #else
@@ -108,7 +108,7 @@ namespace statistic
 #endif
     }
 
-    void UploadStatisticModule::OnShareMemoryTimer(uint32_t times)
+    void UploadStatisticModule::OnShareMemoryTimer(boost::uint32_t times)
     {
         if (false == is_running_)
         {
@@ -121,7 +121,7 @@ namespace statistic
         for (std::map<boost::asio::ip::address, SpeedInfoStatistic>::iterator iter = m_upload_map.begin();
             iter != m_upload_map.end(); iter++)
         {
-            uint32_t ip = iter->first.to_v4().to_ulong();
+            boost::uint32_t ip = iter->first.to_v4().to_ulong();
             upload_info_.peer_upload_info[i].ip = ip;
             upload_info_.peer_upload_info[i].port = 0;
             upload_info_.peer_upload_info[i].upload_speed = iter->second.GetSpeedInfo().NowUploadSpeed;
@@ -143,7 +143,7 @@ namespace statistic
         return CreateUploadShareMemoryName(GetCurrentProcessID());
     }
 
-    uint32_t UploadStatisticModule::GetSharedMemorySize()
+    boost::uint32_t UploadStatisticModule::GetSharedMemorySize()
     {
         return sizeof(upload_info_);
     }

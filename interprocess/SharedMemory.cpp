@@ -12,6 +12,13 @@
 #include "Common.h"
 #include "interprocess/SharedMemory.h"
 
+#ifndef PEER_PC_CLIENT
+#include <boost/interprocess/shared_memory_object.hpp>
+#else
+#include <boost/interprocess/windows_shared_memory.hpp>
+#endif
+#include <boost/interprocess/mapped_region.hpp>
+
 #ifdef NO_SHARED_MEMORY
 // nothing
 #else
@@ -34,7 +41,7 @@ namespace interprocess
         Close();
     }
 
-    bool SharedMemory::Create(const string& name, uint32_t size)
+    bool SharedMemory::Create(const string& name, boost::uint32_t size)
     {
         Close();
         is_owner_ = true;
@@ -44,7 +51,7 @@ namespace interprocess
 #else
         try
         {
-#ifndef BOOST_WINDOWS_API
+#ifndef PEER_PC_CLIENT
             bi::shared_memory_object::remove(name_.c_str());
             shared_memory_ = SharedMemoryPtr(new bi::shared_memory_object(bi::create_only, name_.c_str(), bi::read_write));
             shared_memory_->truncate(size);
@@ -73,7 +80,7 @@ namespace interprocess
         try
         {
             is_owner_ = false;
-#ifndef BOOST_WINDOWS_API
+#ifndef PEER_PC_CLIENT
             shared_memory_ = SharedMemoryPtr(new bi::shared_memory_object(bi::open_only, name.c_str(), bi::read_only));
 #else
             shared_memory_ = SharedMemoryPtr(new bi::windows_shared_memory(bi::open_only, name.c_str(), bi::read_only));
@@ -139,7 +146,7 @@ namespace interprocess
         // nothing
 #else
         bool result = true;
-#ifndef BOOST_WINDOWS_API
+#ifndef PEER_PC_CLIENT
         result = bi::shared_memory_object::remove(name.c_str());
         (void)result;
 #endif

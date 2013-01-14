@@ -39,11 +39,11 @@ namespace p2sp
         // 方法
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
-        virtual void Start(uint32_t start_possition);
+        virtual void Start(boost::uint32_t start_possition);
         virtual void Stop();
     public:
         // 属性
-        virtual uint32_t GetPlayingPosition() const { return 0; }
+        virtual boost::uint32_t GetPlayingPosition() const { return 0; }
         virtual void SendHttpRequest();
         virtual void ResetPlayingPosition() {}
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
@@ -51,21 +51,21 @@ namespace p2sp
     public:
         // HttpClient
         virtual void OnConnectSucced();
-        virtual void OnConnectFailed(uint32_t error_code);
+        virtual void OnConnectFailed(boost::uint32_t error_code);
         virtual void OnConnectTimeout();
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
-        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
-        virtual void OnRecvHttpDataFailed(uint32_t error_code);
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code);
+        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip);
+        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code);
         virtual void OnRecvTimeout();
         virtual void OnComplete();
 
         // 获得Contentlength
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
 
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers);
 
     private:
         boost::asio::io_service & io_svc_;

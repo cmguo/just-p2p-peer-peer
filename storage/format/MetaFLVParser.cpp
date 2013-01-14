@@ -17,26 +17,26 @@ namespace storage
         return false;
     }
 
-    uint32_t MetaFLVParser::GetUINT16(const boost::uint8_t* buffer)
+    boost::uint32_t MetaFLVParser::GetUINT16(const boost::uint8_t* buffer)
     {
-        uint32_t value = 0;
+        boost::uint32_t value = 0;
         value = ((value << 8) | buffer[0]);
         value = ((value << 8) | buffer[1]);
         return value;
     }
 
-    uint32_t MetaFLVParser::GetUINT24(const boost::uint8_t* buffer)
+    boost::uint32_t MetaFLVParser::GetUINT24(const boost::uint8_t* buffer)
     {
-        uint32_t value = 0;
+        boost::uint32_t value = 0;
         value = ((value << 8) | buffer[0]);
         value = ((value << 8) | buffer[1]);
         value = ((value << 8) | buffer[2]);
         return value;
     }
 
-    uint32_t MetaFLVParser::GetUINT32(const boost::uint8_t* buffer)
+    boost::uint32_t MetaFLVParser::GetUINT32(const boost::uint8_t* buffer)
     {
-        uint32_t value = 0;
+        boost::uint32_t value = 0;
         value = ((value << 8) | buffer[0]);
         value = ((value << 8) | buffer[1]);
         value = ((value << 8) | buffer[2]);
@@ -48,7 +48,7 @@ namespace storage
     {
         double value = 0;
         boost::uint8_t data[sizeof(double)];
-        for (uint32_t i = 0; i < sizeof(double); i++)
+        for (boost::uint32_t i = 0; i < sizeof(double); i++)
             data[i] = buffer[sizeof(double) - i - 1];
         // value = *(double*)data;
         memcpy((void*)(&value), (void*)(data), sizeof(double)); // nightsuns: 这个地址无法检测
@@ -114,10 +114,10 @@ namespace storage
                     offset += sizeof(meta->Type); if (offset >= length) return;
                     if (meta->Type == 0x08)  // ECMAArray
                     {
-                        uint32_t ECMAArrayLength = GetUINT32(buffer + offset);
+                        boost::uint32_t ECMAArrayLength = GetUINT32(buffer + offset);
                         offset += sizeof(ECMAArrayLength); if (offset >= length) return;
                         // ECMA Array
-                        for (uint32_t i = 0; i < ECMAArrayLength; i++)
+                        for (boost::uint32_t i = 0; i < ECMAArrayLength; i++)
                         {
                             if (GetUINT24(buffer + offset) == 0x09U)
                                 break;
@@ -178,7 +178,7 @@ namespace storage
                                 break;
                             case 0x0A:
                                 {
-                                    // uint32_t len = GetUINT32(buffer + offset);
+                                    // boost::uint32_t len = GetUINT32(buffer + offset);
                                     offset += 4;
                                     // TODO
                                 }

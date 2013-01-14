@@ -12,13 +12,13 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Constants
 
-    const uint32_t BITMAP_SIZE = 50;
+    const boost::uint32_t BITMAP_SIZE = 50;
 
-    const uint32_t UINT8_MAX_VALUE = 256;
+    const boost::uint32_t UINT8_MAX_VALUE = 256;
 
-    const uint32_t LIVEDOWNLOADER_MAX_COUNT = 64;
+    const boost::uint32_t LIVEDOWNLOADER_MAX_COUNT = 64;
 
-    const uint32_t MAX_IP_COUNT = 10;
+    const boost::uint32_t MAX_IP_COUNT = 10;
 
     //////////////////////////////////////////////////////////////////////////
     // 公共结构
@@ -88,7 +88,7 @@ namespace statistic
     {
     boost::uint16_t Length;
     boost::uint8_t ModNo;
-    uint32_t IP;
+    boost::uint32_t IP;
     boost::uint16_t Port;
     boost::uint8_t Type;
     }
@@ -143,7 +143,7 @@ namespace statistic
 
     struct STATISTIC_INDEX_INFO
     {
-        uint32_t IP;
+        boost::uint32_t IP;
         boost::uint16_t Port;
         boost::uint8_t  Type;
         boost::uint16_t QueryRIDByUrlRequestCount;
@@ -186,7 +186,7 @@ namespace statistic
     // struct PEER_DOWNLOAD_INFO
     // {
     //    boost::uint8_t  IsDownloading;
-    //    uint32_t OnlineTime;
+    //    boost::uint32_t OnlineTime;
     //    boost::uint16_t AvgDownload;
     //    boost::uint16_t NowDownload;
     //    boost::uint16_t AvgUpload;
@@ -293,8 +293,8 @@ namespace statistic
         boost::uint8_t  DownloadDriverCount;               // 正在下载的视频
         boost::uint32_t DownloadDriverIDs[UINT8_MAX_VALUE];  // 正在下载的视频 驱动器ID; 如果为 0 表示不存在; (不连续)
 
-        uint32_t Resersed2;
-        uint32_t Resersed3;
+        boost::uint32_t Resersed2;
+        boost::uint32_t Resersed3;
 
         // 下载中 数据下载 实时相关信息
         boost::uint32_t  TotalHttpNotOriginalDataBytes;        // 实时 下载的纯数据 字节数
@@ -453,8 +453,8 @@ namespace statistic
         boost::uint16_t ElapseTime;                     // 当前超时时间
         boost::uint8_t  WindowSize;                     // 窗口大小
         boost::uint8_t  AssignedSubPieceCount;          // 当前预分配SubPiece数
-        uint32_t AverageDeltaTime;               // Average Delta Time
-        uint32_t SortedValue;                    // Sorted Value
+        boost::uint32_t AverageDeltaTime;               // Average Delta Time
+        boost::uint32_t SortedValue;                    // Sorted Value
 
         //////////////////////////////////////////////////////////////////////////
         boost::uint8_t  IsRidInfoValid;                 // 0-Invalid; 1-Valid
@@ -526,7 +526,7 @@ namespace statistic
         SPEED_INFO SpeedInfo;
 
         // 资源相关信息
-        uint32_t FileLength;
+        boost::uint32_t FileLength;
         boost::uint16_t BlockNum;
         boost::uint16_t BlockSize;
 
@@ -692,7 +692,7 @@ namespace statistic
 
     struct DOWNLOADDRIVER_STATISTIC_INFO
     {
-        uint32_t DownloadDriverID;
+        boost::uint32_t DownloadDriverID;
         SPEED_INFO SpeedInfo;
 
         boost::uint8_t  OriginalUrl[256];
@@ -714,8 +714,8 @@ namespace statistic
         boost::uint8_t   StateMachineType;
         boost::uint8_t   StateMachineState[14];
 
-        uint32_t PlayingPosition;
-        uint32_t DataRate;
+        boost::uint32_t PlayingPosition;
+        boost::uint32_t DataRate;
         boost::uint8_t http_state;
         boost::uint8_t p2p_state;
         boost::uint8_t timer_using_state;
@@ -794,7 +794,7 @@ namespace statistic
     // 共享内存名： LIVEDOWNLOADDRIVER_<PID>_<DownloadDriverID>
     struct LIVE_DOWNLOADDRIVER_STATISTIC_INFO
     {
-        uint32_t LiveDownloadDriverID;
+        boost::uint32_t LiveDownloadDriverID;
         SPEED_INFO LiveHttpSpeedInfo;
         SPEED_INFO LiveP2PSpeedInfo;
         SPEED_INFO LiveP2PSubPieceSpeedInfo;
@@ -925,7 +925,7 @@ namespace statistic
             Clear();
         }
 
-        uint32_t ip;
+        boost::uint32_t ip;
         boost::uint16_t port;
         boost::uint32_t upload_speed;
         PEER_INFO peer_info;

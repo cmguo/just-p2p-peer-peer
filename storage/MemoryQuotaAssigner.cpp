@@ -7,7 +7,7 @@
 
 namespace storage
 {
-    void MemoryQuotaAssigner::AssignQuota(uint32_t overall_bytes)
+    void MemoryQuotaAssigner::AssignQuota(boost::uint32_t overall_bytes)
     {
         quota_left_ = overall_bytes;
 
@@ -74,7 +74,7 @@ namespace storage
             ++map_iter)
         {
             //1. for a given priority, get the sum of additional bytes needed
-            uint32_t additional_bytes_needed(0);
+            boost::uint32_t additional_bytes_needed(0);
             for(std::list<MemoryConsumptionEntry>::iterator entry_iter = map_iter->second.begin();
                 entry_iter != map_iter->second.end();
                 ++entry_iter)
@@ -102,7 +102,7 @@ namespace storage
                 ++entry_iter)
             {
                 assert(entry_iter->usage_.GetMinimumSize() <= entry_iter->usage_.GetDesirableSize());
-                entry_iter->quota_.quota += static_cast<uint32_t>(ratio*(entry_iter->usage_.GetDesirableSize() - entry_iter->usage_.GetMinimumSize()));
+                entry_iter->quota_.quota += static_cast<boost::uint32_t>(ratio*(entry_iter->usage_.GetDesirableSize() - entry_iter->usage_.GetMinimumSize()));
             }
 
             if (quota_left_ == 0)

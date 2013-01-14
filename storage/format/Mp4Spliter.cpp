@@ -49,7 +49,7 @@ unsigned int Mp4Spliter::Mp4HeadLength(
 
 base::AppBuffer Mp4Spliter::Mp4HeadParse(
                                    base::AppBuffer const & mp4_head,
-                                   uint32_t & offset)
+                                   boost::uint32_t & offset)
 {
     atom_t ftyp_atom, moov_atom, mdat_atom, tmp_atom;
     unsigned char* p = mp4_head.Data();
@@ -224,14 +224,14 @@ base::AppBuffer Mp4Spliter::Mp4HeadParse(
 /*
 base::AppBuffer Mp4Spliter::Mp4GetHead(HANDLE file_handle)
 {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     if (INVALID_HANDLE_VALUE == file_handle)
     {
         return base::AppBuffer();
     }
     atom_t tmp_atom, mdat_atom;
     char buf[ATOM_PREAMBLE_SIZE];
-    uint32_t readlen;
+    boost::uint32_t readlen;
     bool have_mdat = false, have_ftyp = false, have_moov = false;
     base::AppBuffer ftyp_buf, moov_buf, mdat_buf;
 

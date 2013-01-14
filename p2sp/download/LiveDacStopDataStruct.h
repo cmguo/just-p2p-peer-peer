@@ -134,7 +134,7 @@ namespace p2sp
             log_stream << "&G1=" << MaxUploadSpeedIncludeSameSubnet;
             log_stream << "&H1=" << MaxUploadSpeedExcludeSameSubnet;
             log_stream << "&I1=" << MaxUnlimitedUploadSpeedInRecord;
-            log_stream << "&J1=" << (uint32_t)ChangeToP2PConditionWhenStart;
+            log_stream << "&J1=" << (boost::uint32_t)ChangeToP2PConditionWhenStart;
             log_stream << "&K1=" << ChangedToHttpTimesWhenUrgent;
             log_stream << "&L1=" << BlockTimesWhenUseHttpUnderUrgentSituation;
             log_stream << "&M1=" << MaxUploadSpeedDuringThisConnection;
@@ -142,7 +142,7 @@ namespace p2sp
             log_stream << "&O1=" << TimeOfReceivingFirstConnectRequest;
             log_stream << "&P1=" << TimeOfSendingFirstSubPiece;
             log_stream << "&Q1=" << TimeOfNonblankUploadConnections;
-            log_stream << "&R1=" << (uint32_t)NatType;
+            log_stream << "&R1=" << (boost::uint32_t)NatType;
             log_stream << "&S1=" << HttpDownloadBytesWhenStart;
             log_stream << "&T1=" << UploadBytesDuringThisConnection;
             log_stream << "&U1=" << IsNotifyRestart;
@@ -162,7 +162,7 @@ namespace p2sp
             log_stream << "&I2=" << MaxAnnounceResponseFromUdpServer;
             log_stream << "&J2=" << MinRatioOfResponseToRequestFromUdpserver;
             log_stream << "&K2=" << MaxRatioOfResponseToRequestFromUdpserver;
-            log_stream << "&L2=" << (uint32_t)BWType;
+            log_stream << "&L2=" << (boost::uint32_t)BWType;
             log_stream << "&M2=" << PPbscfLength;
             log_stream << "&N2=" << HttpDownloadStartTimeEveryTime;
             log_stream << "&O2=" << HttpDownloadEndTimeEveryTime;

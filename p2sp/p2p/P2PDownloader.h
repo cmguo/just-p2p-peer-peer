@@ -98,9 +98,9 @@ namespace p2sp
         virtual void SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
         virtual statistic::SPEED_INFO GetSpeedInfo();
         virtual statistic::SPEED_INFO_EX GetSpeedInfoEx();
-        uint32_t CalcConnectedFullBlockPeerCount();
-        uint32_t CalcConnectedAvailableBlockPeerCount();
-        uint32_t CalculateActivePeerCount();
+        boost::uint32_t CalcConnectedFullBlockPeerCount();
+        boost::uint32_t CalcConnectedAvailableBlockPeerCount();
+        boost::uint32_t CalculateActivePeerCount();
 
         protocol::PEER_COUNT_INFO GetPeerCountInfo() const;
 
@@ -163,7 +163,7 @@ namespace p2sp
     public:
 
         bool IsConnected();
-        uint32_t GetDataRate();
+        boost::uint32_t GetDataRate();
 
         bool IsPlayByRID();
 
@@ -220,18 +220,18 @@ namespace p2sp
         bool is_connected_;                                        // 记录是否已经连接
         framework::timer::TickCounter start_time_counter_;
         bool can_connect_;
-        uint32_t connected_full_block_peer_count_;                // 已经连上的Peer中有多少是FullBlock的
-        uint32_t connected_available_block_peer_count_;           // 已经连上的Peer中有多少个是拥有当前Block的(预分配队列中的第一个Piece所在的Block)
+        boost::uint32_t connected_full_block_peer_count_;                // 已经连上的Peer中有多少是FullBlock的
+        boost::uint32_t connected_available_block_peer_count_;           // 已经连上的Peer中有多少个是拥有当前Block的(预分配队列中的第一个Piece所在的Block)
 
 //        framework::timer::OnceTimer checking_timer_;
         // pausing
         bool is_p2p_pausing_;
         // video data rate
-        uint32_t data_rate_;
+        boost::uint32_t data_rate_;
         // active peer count
-        uint32_t active_peer_count_;
+        boost::uint32_t active_peer_count_;
         // p2p下载的距离，指当前下载的最后一片piece和第一片piece之间的piece数
-        uint16_t non_consistent_size_;
+        boost::uint16_t non_consistent_size_;
         boost::uint32_t p2p_max_connect_count_;
         boost::uint32_t p2p_min_connect_count_;
 
@@ -245,7 +245,7 @@ namespace p2sp
 
         // List相关
         framework::timer::TickCounter last_dolist_time_;
-        uint32_t dolist_count_;
+        boost::uint32_t dolist_count_;
 
         boost::uint32_t downloading_time_in_seconds_;
 

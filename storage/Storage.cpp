@@ -83,11 +83,11 @@ namespace storage
         boost::uint64_t ullDiskLimit,
         string DiskPathName,
         string ConfigPath,
-        uint32_t storage_mode
+        boost::uint32_t storage_mode
        )
     {
         LOG4CPLUS_INFO_LOG(logger_storage, "storage system start.............");
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         framework::configure::Config conf;
         framework::configure::ConfigModule & storage_conf =
             conf.register_module("Storage");
@@ -108,7 +108,7 @@ namespace storage
         }
 #endif  // #ifdef DISK_MODE
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         string DefalutStorePath = "d:\\shareFLV\\";
         storage_conf(CONFIG_PARAM_RDONLY(DefalutStorePath));
         if (DiskPathName.size() == 0)
@@ -124,7 +124,7 @@ namespace storage
         }
 #endif
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         boost::uint64_t disk_limit_size = ullDiskLimit / 1024 / 1024;
         storage_conf(CONFIG_PARAM_NAME_RDONLY("DiskLimitSize", disk_limit_size));
         disk_limit_size = disk_limit_size * 1024 * 1024;
@@ -158,7 +158,7 @@ namespace storage
         res_info_timer_->start();
 #endif  // #ifdef DISK_MODE
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         Performance::Inst()->Start();
 #endif
 
@@ -225,7 +225,7 @@ namespace storage
         {
             (*it)->Stop();
         }
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         Performance::Inst()->Stop();
 #endif
         rid_instance_map_.clear();
@@ -437,9 +437,9 @@ namespace storage
         // url
         assert(in_url_info_s.size() >= 1);
         // instance_p1->AddUrlInfo(in_url_info_s);
-        for (uint32_t i = 0; i < in_url_info_s.size(); i++)
+        for (boost::uint32_t i = 0; i < in_url_info_s.size(); i++)
         {
-            uint32_t dc = url_instance_map_.erase(in_url_info_s[i].url_);
+            boost::uint32_t dc = url_instance_map_.erase(in_url_info_s[i].url_);
             assert(dc == 1);
             url_instance_map_.insert(std::make_pair(in_url_info_s[i].url_, instance_p1));
             LOG4CPLUS_DEBUG_LOG(logger_storage, "合并URL: " << in_url_info_s[i].url_ << "到  instance: " 
@@ -450,7 +450,7 @@ namespace storage
         // rid
         if (!instance_p2->GetRID().is_empty())
         {
-            uint32_t dc = rid_instance_map_.erase(instance_p2->GetRID());
+            boost::uint32_t dc = rid_instance_map_.erase(instance_p2->GetRID());
             LOG4CPLUS_DEBUG_LOG(logger_storage, "Erase " << instance_p2->GetRID() << " ( " << instance_p2 
                 << " ) from rid_instance_map_");
             assert(dc == 1);
@@ -476,8 +476,8 @@ namespace storage
 #else
         // create NullResource and notify
         string filename = resource_inst->GetResourceName();
-        uint32_t file_size = resource_inst->GetResourceLength();
-        uint32_t init_size = (std::min)((uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
+        boost::uint32_t file_size = resource_inst->GetResourceLength();
+        boost::uint32_t init_size = (std::min)((boost::uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
         Resource::p resource_p = NullResource::CreateResource(io_svc_, file_size, filename, Instance::p(), init_size);
         assert(resource_p);
         Storage::Inst_Storage()->OnCreateResourceSuccess(resource_p, resource_inst);
@@ -537,7 +537,7 @@ namespace storage
             r_file.SecClose();
 
             // move to resourceinfo
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
             ::MoveFileEx(resourceinfo_file_tmp.c_str(), resourceinfo_file_.c_str(), MOVEFILE_REPLACE_EXISTING
                 | MOVEFILE_COPY_ALLOWED | MOVEFILE_WRITE_THROUGH);
 #else
@@ -587,7 +587,7 @@ namespace storage
     {
         if (CreateDirectoryRecursive(dirpath))
         {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         if (!SetFileAttributes(dirpath.c_str(), FILE_ATTRIBUTE_HIDDEN))
         {
             return false;
@@ -650,7 +650,7 @@ namespace storage
         CreateHiddenDir(space_manager_->GetHiddenSubPath());
 
         string tmp_check_name = resource_name;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         if (tmp_check_name.find(TEXT(":")) != 1)
 #else
         if (tmp_check_name.find("/") != 0)
@@ -712,7 +712,7 @@ namespace storage
 
             const string resource_name = (*i)->GetResourceName();
             string tmp_check_name = resource_name;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
             if (tmp_check_name.find(TEXT(":")) != 1)
 #else
             if (tmp_check_name.find("/") != 0)
@@ -1200,7 +1200,7 @@ namespace storage
         }
         std::vector<protocol::UrlInfo> url_s;
         pointer->GetUrls(url_s);
-        for (uint32_t i = 0; i < url_s.size(); i++)
+        for (boost::uint32_t i = 0; i < url_s.size(); i++)
         {
             if (url_instance_map_.find(url_s[i].url_) == url_instance_map_.end())
             {
@@ -1613,7 +1613,7 @@ namespace storage
     }
 
     // 根据mod_number和group_count获取rid_instance_map_中的rid
-    void Storage::GetVodResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count)
+    void Storage::GetVodResources(std::set<RID>& rid_s, boost::uint32_t mod_number, boost::uint32_t group_count)
     {
         if (is_running_ == false)
             return;
@@ -1628,7 +1628,7 @@ namespace storage
     }
 
     // 根据mod_number和group_count获取rid_to_live_instance_map_中的rid
-    void Storage::GetLiveResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count)
+    void Storage::GetLiveResources(std::set<RID>& rid_s, boost::uint32_t mod_number, boost::uint32_t group_count)
     {
         if (is_running_ == false)
         {
@@ -1700,7 +1700,7 @@ namespace storage
         }
         std::vector<protocol::UrlInfo> url_s;
         inst->GetUrls(url_s);
-        for (uint32_t i = 0; i < url_s.size(); i++)
+        for (boost::uint32_t i = 0; i < url_s.size(); i++)
         {
             url_instance_map_.erase(url_s[i].url_);
             if (url_filename_map_.find(url_s[i].url_) != url_filename_map_.end())
@@ -1921,11 +1921,11 @@ namespace storage
             boost::uint16_t data;
         } endian;
         endian.data = 0x0102u;
-        LOG4CPLUS_DEBUG_LOG(logger_storage, "bytes = " << (uint32_t)endian.bytes[0] << " " << 
-            (uint32_t)endian.bytes[1]);
+        LOG4CPLUS_DEBUG_LOG(logger_storage, "bytes = " << (boost::uint32_t)endian.bytes[0] << " " << 
+            (boost::uint32_t)endian.bytes[1]);
 
         framework::string::Md5 hash;
-        for (uint32_t i = 0; i < rid_info.GetBlockCount(); i++)
+        for (boost::uint32_t i = 0; i < rid_info.GetBlockCount(); i++)
         {
             if (rid_info.block_md5_s_[i].is_empty())
             {
@@ -1996,9 +1996,9 @@ namespace storage
             return protocol::SubPieceBuffer();
         }
 
-        uint32_t block_offset, block_len;
+        boost::uint32_t block_offset, block_len;
         inst->GetBlockPosition(rb_index.block_index, block_offset, block_len);
-        uint32_t sub_offset, sub_len;
+        boost::uint32_t sub_offset, sub_len;
         inst->GetSubPiecePosition(subpiece_info, sub_offset, sub_len);
         LOG4CPLUS_DEBUG_LOG(logger_storage, "block index:" << rb_index.block_index << "--block offset, block len:<"
             << block_offset << "," << block_len << ">--sub offset, sub len:<" << sub_offset << "," << sub_len << ">"
@@ -2006,7 +2006,7 @@ namespace storage
         assert(sub_offset >= block_offset);
         assert(sub_len <= block_len);
         assert(block_len == block_buf.Length());
-        uint32_t start = sub_offset - block_offset;
+        boost::uint32_t start = sub_offset - block_offset;
 
         if (start + sub_len > block_buf.Length() || sub_offset < block_offset || sub_len > block_len || block_len
             != block_buf.Length())

@@ -6,7 +6,7 @@
 #include "MainThread.h"
 
 MainThread* MainThread::instance_(NULL);
-uint32_t MainThread::id_(0);
+boost::uint32_t MainThread::id_(0);
 
 MainThread::MainThread()
 {
@@ -16,7 +16,7 @@ void MainThread::Start()
 {
     assert(instance_ == NULL);
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     instance_ = new WindowsMainThread();
 #else
     instance_ = new BoostMainThread();
@@ -35,7 +35,7 @@ void MainThread::Stop()
     }
 }
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 
 DWORD WINAPI MainThreadRunner(LPVOID)
 {

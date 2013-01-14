@@ -28,7 +28,7 @@ namespace p2sp
 
         void Stop();
 
-        void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
+        void SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
             bool is_vod, TrackerType tracker_type);
 
         void DoList(RID rid, bool is_vod, bool list_for_live_udpserver = false);

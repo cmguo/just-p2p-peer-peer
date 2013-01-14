@@ -11,8 +11,8 @@ namespace p2sp
 
     struct KickLiveConnectionIndicator
     {   
-        uint32_t last_minute_speed_in_bytes_;
-        uint32_t block_bitmap_empty_in_millseconds_;
+        boost::uint32_t last_minute_speed_in_bytes_;
+        boost::uint32_t block_bitmap_empty_in_millseconds_;
 
         bool ShouldKick() const
         {
@@ -107,7 +107,7 @@ namespace p2sp
 
         boost::uint32_t GetRequestingCount() const;
 
-        inline uint32_t GetConnectedPeersCount() const
+        inline boost::uint32_t GetConnectedPeersCount() const
         {
             return peers_.size();
         }

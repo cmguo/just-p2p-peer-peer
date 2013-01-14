@@ -42,24 +42,24 @@ namespace storage
         inst_.reset();
     }
 
-    bool Performance::IsIdleInSeconds(uint32_t sec)
+    bool Performance::IsIdleInSeconds(boost::uint32_t sec)
     {
         if (false == is_running)
         {
             return false;
         }
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         LASTINPUTINFO li;
         li.cbSize = sizeof(LASTINPUTINFO);
         ::GetLastInputInfo(&li);
-        uint32_t idle_time = (::GetTickCount() - li.dwTime) / 1000;
+        boost::uint32_t idle_time = (::GetTickCount() - li.dwTime) / 1000;
         return idle_time >= sec;
 #else
         return false;
 #endif
     }
 
-    bool Performance::IsIdle(uint32_t min)
+    bool Performance::IsIdle(boost::uint32_t min)
     {
         return IsIdleInSeconds(min * 60);
     }
@@ -69,17 +69,17 @@ namespace storage
         return IsIdle(USER_IDLE_ELAPSED_TIME);
     }
 
-    uint32_t Performance::GetIdleInSeconds()
+    boost::uint32_t Performance::GetIdleInSeconds()
     {
         if (false == is_running)
         {
             return false;
         }
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         LASTINPUTINFO li;
         li.cbSize = sizeof(LASTINPUTINFO);
         ::GetLastInputInfo(&li);
-        uint32_t idle_time = (::GetTickCount() - li.dwTime) / 1000;
+        boost::uint32_t idle_time = (::GetTickCount() - li.dwTime) / 1000;
         return idle_time;
 #else
         return 0;
@@ -88,7 +88,7 @@ namespace storage
 
     bool Performance::IsScreenSaverRunning()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         BOOL is_run = FALSE;
         ::SystemParametersInfo(SPI_GETSCREENSAVERRUNNING, 0, &is_run, 0);
         if (is_run)
@@ -103,7 +103,7 @@ namespace storage
 
     storage::DTType Performance::GetCurrDesktopType()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         if (Performance::IsScreenSaverRunning())
         {
             return DT_SCREEN_SAVER;

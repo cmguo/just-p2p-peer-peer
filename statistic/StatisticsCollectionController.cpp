@@ -87,7 +87,7 @@ namespace statistic
         StopStatisticsCollection();
     }
 
-    bool StatisticsCollectionController::IsConfigurationExpired(std::time_t file_modified_time, uint32_t expires_in_minutes)
+    bool StatisticsCollectionController::IsConfigurationExpired(std::time_t file_modified_time, boost::uint32_t expires_in_minutes)
     {
         std::time_t now;
         std::time(&now);
@@ -95,7 +95,7 @@ namespace statistic
         boost::posix_time::time_duration duration_since_file_last_modified = 
             boost::posix_time::from_time_t(now) - boost::posix_time::from_time_t(file_modified_time);
 
-        return static_cast<uint32_t>(duration_since_file_last_modified.total_seconds()) > expires_in_minutes*60;
+        return static_cast<boost::uint32_t>(duration_since_file_last_modified.total_seconds()) > expires_in_minutes*60;
     }
 
     void StatisticsCollectionController::StartStatisticsCollection(boost::shared_ptr<StatisticsConfigurations> statistics_configurations)

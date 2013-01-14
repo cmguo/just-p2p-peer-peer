@@ -72,7 +72,7 @@ typedef struct _NOTIFY_TASK
 
 #define UM_TESTSUCCESSMESSAGE    WM_USER + 1006
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(push, 1)
 #endif
 
@@ -106,6 +106,6 @@ typedef struct _PERIOD_DAC_STATISTIC_INFO
     char szLog[1024];                                           // 具体的日志内容
 } PERIOD_DAC_STATISTIC_INFO, *LPPERIOD_DAC_STATISTIC_INFO;
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(pop)
 #endif

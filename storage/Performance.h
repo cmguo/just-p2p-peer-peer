@@ -44,11 +44,11 @@ namespace storage
 
         // 判断系统是否“闲置”
         bool IsIdle();
-        bool IsIdle(uint32_t min);
-        bool IsIdleInSeconds(uint32_t sec);
+        bool IsIdle(boost::uint32_t min);
+        bool IsIdleInSeconds(boost::uint32_t sec);
 
         // 获得“闲置”时间(秒)
-        uint32_t GetIdleInSeconds();
+        boost::uint32_t GetIdleInSeconds();
 
         // 获取用户当前桌面类型
         storage::DTType GetCurrDesktopType();

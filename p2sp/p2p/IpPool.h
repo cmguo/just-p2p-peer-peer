@@ -50,7 +50,7 @@ namespace p2sp
 
         bool GetForConnect(protocol::CandidatePeerInfo& peer, bool is_udpserver = false);
         bool GetForExchange(protocol::CandidatePeerInfo& peer);
-        uint32_t GetPeerCount() const { return candidate_peers_.size();}
+        boost::uint32_t GetPeerCount() const { return candidate_peers_.size();}
 
         // 属性
         void OnConnect(const boost::asio::ip::udp::endpoint& end_point);

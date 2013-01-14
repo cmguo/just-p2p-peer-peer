@@ -5,7 +5,7 @@
 #ifndef STORAGE_RESOURCE_H
 #define STORAGE_RESOURCE_H
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma once
 #endif
 
@@ -42,17 +42,17 @@ namespace storage
         // 构造 启动
         Resource(
             boost::asio::io_service & io_svc,
-            uint32_t file_length,                 // 文件大小
+            boost::uint32_t file_length,                 // 文件大小
             string file_name,                   // 完整文件名
             boost::shared_ptr<Instance> inst_p,
-            uint32_t init_size);
+            boost::uint32_t init_size);
 
         Resource(
             boost::asio::io_service & io_svc,
             boost::shared_ptr<SubPieceManager> subpiece_manager,             // 关联的文件描述
             string file_name,                                               // 完整文件名
             boost::shared_ptr<Instance> inst_p,                             // 关联的instance
-            uint32_t actual_size                                              // 占用空间
+            boost::uint32_t actual_size                                              // 占用空间
            );
 
     public:
@@ -67,29 +67,29 @@ namespace storage
         // 返回文件名
         virtual string GetLocalFileName();
 
-        inline uint32_t GetActualSize() const { return actual_size_; }
+        inline boost::uint32_t GetActualSize() const { return actual_size_; }
 
 #ifdef DISK_MODE
-        virtual void ThreadPendingWriteBlock(uint32_t block_i, const std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p);
+        virtual void ThreadPendingWriteBlock(boost::uint32_t block_i, const std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p);
 
-        void ThreadPendingWriteBlockHelper(uint32_t block_i, uint32_t startpos, uint32_t length);
+        void ThreadPendingWriteBlockHelper(boost::uint32_t block_i, boost::uint32_t startpos, boost::uint32_t length);
 
         // 将一个block的subpiece写入文件，并计算该block的MD5值，然后交给Instance, 读取需要上传的block，上传
-        virtual void ThreadPendingHashBlock(uint32_t block_index, std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p);
+        virtual void ThreadPendingHashBlock(boost::uint32_t block_index, std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p);
 
         // ThreadPendingHashBlock辅助函数, 用于在主线程中内析构buffer_set_p对象, 保证intrusive_ptr的线程安全.
         // 以Helper结尾的函数均为辅助函数，为了保证内存池和intrusive_ptr不被跨线程访问@herain
         static void ThreadPendingHashBlockHelper(
             std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>* buffer_set_p,
             boost::shared_ptr<Instance> instance_p,
-            uint32_t &block_index,
+            boost::uint32_t &block_index,
             MD5 &hash_val);
 
         // 保存资源信息到cfg文件中
         virtual void SecSaveResourceFileInfo();
 
         // 从文件中读取指定的block，然后交给IUploadListener
-        virtual void ThreadReadBlockForUpload(const RID& rid, const uint32_t block_index, IUploadListener::p listener,
+        virtual void ThreadReadBlockForUpload(const RID& rid, const boost::uint32_t block_index, IUploadListener::p listener,
             bool need_hash);
 
         // 从某个subpiece处读取不超过n个的连续subpiece，然后交给player_listener
@@ -112,13 +112,13 @@ namespace storage
             const protocol::SubPieceInfo& subpiece_info,
             protocol::SubPieceContent* buffer);
 
-        void CheckFileDownComplete(uint32_t start_pos, uint32_t length);
+        void CheckFileDownComplete(boost::uint32_t start_pos, boost::uint32_t length);
 
         void ThreadTryRenameToNormalFile();
 
         // ------------------------------------------------------------------------------------
         // 派生类实现
-        virtual uint32_t GetLocalFileSize() = 0;
+        virtual boost::uint32_t GetLocalFileSize() = 0;
         virtual void FreeDiskSpace(bool need_remove_file) = 0;
 
         virtual void CloseFileHandle() = 0;
@@ -133,18 +133,18 @@ namespace storage
         unsigned char GetDownMode();
 
         // 改名并通知instance、删除某个block并通知instance、保存资源信息
-        virtual void ThreadRemoveBlock(uint32_t index);
+        virtual void ThreadRemoveBlock(boost::uint32_t index);
 
         virtual void Rename(const string& newname) = 0;
         virtual void CloseResource(bool need_remove_file) = 0;
 
     protected:
         virtual void FlushStore() = 0;
-        virtual base::AppBuffer ReadBuffer(const uint32_t startpos, const uint32_t length) = 0;
-        virtual std::vector<base::AppBuffer> ReadBufferArray(const uint32_t startpos, const uint32_t length) = 0;
-        virtual bool ReadBufferArray(const uint32_t startpos, const uint32_t length, std::vector<protocol::SubPieceContent*> buffs) = 0;
-        virtual bool WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer) = 0;
-        virtual void Erase(const uint32_t startpos, const uint32_t length) = 0;
+        virtual base::AppBuffer ReadBuffer(const boost::uint32_t startpos, const boost::uint32_t length) = 0;
+        virtual std::vector<base::AppBuffer> ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length) = 0;
+        virtual bool ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length, std::vector<protocol::SubPieceContent*> buffs) = 0;
+        virtual bool WriteBufferArray(const boost::uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffer) = 0;
+        virtual void Erase(const boost::uint32_t startpos, const boost::uint32_t length) = 0;
         virtual bool TryRenameToNormalFile() = 0;
         virtual bool TryRenameToTppFile() = 0;
 
@@ -164,7 +164,7 @@ namespace storage
 
         // ResourceDescriptor::p file_resource_desc_p_;    // 关联的文件描述
         boost::shared_ptr<SubPieceManager> subpiece_manager_;             // related subpiece manager
-        uint32_t actual_size_;                            // 由构造函数赋值，在派生类中改变
+        boost::uint32_t actual_size_;                            // 由构造函数赋值，在派生类中改变
 #ifdef DISK_MODE
         bool need_saveinfo_to_disk_;                    // 决定是否将下载信息保存到cfg文件中
 #endif

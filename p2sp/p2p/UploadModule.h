@@ -98,7 +98,7 @@ namespace p2sp
 		boost::uint32_t GetMaxUploadSpeedIncludeSameSubnet() const;
         boost::uint32_t GetMaxUploadSpeedExcludeSameSubnet() const;
 
-        void ReportRestPlayTime(uint32_t rest_play_time);
+        void ReportRestPlayTime(boost::uint32_t rest_play_time);
 
     private:
         UploadModule();
@@ -110,7 +110,7 @@ namespace p2sp
 
         boost::uint32_t MeasureCurrentUploadSpeed() const;
 
-        void OnUploadSpeedControl(uint32_t times);
+        void OnUploadSpeedControl(boost::uint32_t times);
 
         boost::uint32_t GetMaxUploadSpeedForControl() const;
 
@@ -141,7 +141,7 @@ namespace p2sp
 
         BootStrapGeneralConfig::UploadPolicy upload_policy_;
 
-        uint32_t recent_play_series_;
+        boost::uint32_t recent_play_series_;
 
         storage::DTType desktop_type_;
 

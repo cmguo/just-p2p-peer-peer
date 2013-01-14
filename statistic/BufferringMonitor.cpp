@@ -41,7 +41,7 @@ namespace statistic
         }
     }
 
-    void BufferringMonitor::BufferringOccurs(uint32_t bufferring_position_in_seconds)
+    void BufferringMonitor::BufferringOccurs(boost::uint32_t bufferring_position_in_seconds)
     {
         for(size_t i = 0; i < conditions_.size(); ++i)
         {

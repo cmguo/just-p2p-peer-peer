@@ -60,7 +60,7 @@ namespace p2sp
         ControlMode::Stop();
     }
 
-    void SwitchController::OpenServicePushControlMode::OnControlTimer(uint32_t times)
+    void SwitchController::OpenServicePushControlMode::OnControlTimer(boost::uint32_t times)
     {
         if (false == IsRunning())
             return;
@@ -175,8 +175,8 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                uint32_t active_peer_count = p2p->GetActivePeersCount();
-                uint32_t speed5 = p2p->GetCurrentDownloadSpeed();
+                boost::uint32_t active_peer_count = p2p->GetActivePeersCount();
+                boost::uint32_t speed5 = p2p->GetCurrentDownloadSpeed();
 
                 bool b1 = (active_peer_count >= 1);
                 bool b2 = (speed5 >= 10 * 1024);
@@ -224,9 +224,9 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
-                uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
-                uint32_t speed_h = http->GetCurrentDownloadSpeed();
+                boost::uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
+                boost::uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
+                boost::uint32_t speed_h = http->GetCurrentDownloadSpeed();
                 // action
                 bool b2 = (speed_p >= 20 * 1024);
 
@@ -262,8 +262,8 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
-                uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
+                boost::uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
+                boost::uint32_t speed_p = p2p->GetCurrentDownloadSpeed();
 
                 bool b1 = (speed_p < 10 * 1024);
 
@@ -298,7 +298,7 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 // action
-                uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
+                boost::uint32_t available_peer_count = p2p->GetAvailableBlockPeerCount();
 
                 bool b1 = (available_peer_count >= 1);
 

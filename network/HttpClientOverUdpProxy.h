@@ -65,7 +65,7 @@ namespace network
         boost::asio::streambuf request_buffer_;
         protocol::SubPieceBuffer content_buffer_;
         boost::asio::ip::udp::socket socket_;
-        uint32_t get_count_;
+        boost::uint32_t get_count_;
 
         boost::asio::ip::udp::endpoint sender_endpoint_;
 

@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------------------
 //     Copyright (c)2005-2010 PPLive Corporation.  All rights reserved.
 //------------------------------------------------------------------------------------------
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 
 #pragma once
 #include <boost/utility.hpp>

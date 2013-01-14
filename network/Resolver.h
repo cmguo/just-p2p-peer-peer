@@ -15,8 +15,8 @@ namespace network
     {
         typedef boost::shared_ptr<IResolverListener> p;
 
-        virtual void OnResolverSucced(uint32_t ip, boost::uint16_t port) = 0;
-        virtual void OnResolverFailed(uint32_t error_code) = 0;
+        virtual void OnResolverSucced(boost::uint32_t ip, boost::uint16_t port) = 0;
+        virtual void OnResolverFailed(boost::uint32_t error_code) = 0;
 
         virtual ~IResolverListener()
         {}
@@ -38,7 +38,7 @@ namespace network
         void Close();
         void DoResolver();
     public:
-        void SetResolverTimeout(uint32_t resolver_timeout)
+        void SetResolverTimeout(boost::uint32_t resolver_timeout)
         {
             resolver_timeout_ = resolver_timeout;
         }
@@ -52,11 +52,11 @@ namespace network
         string url_;
         boost::uint16_t  port_;
         framework::timer::OnceTimer resolver_timer_;
-        uint32_t  resolver_timeout_;
+        boost::uint32_t  resolver_timeout_;
         IResolverListener::p handler_;
         // ??
         bool is_resolving_;
-        uint32_t  failed_times_;
+        boost::uint32_t  failed_times_;
     };
 }
 

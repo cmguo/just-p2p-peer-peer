@@ -82,21 +82,21 @@ namespace p2sp
         UploadSpeedLimiter();
         ~UploadSpeedLimiter();
         void SendPacket(const protocol::SubPiecePacket & packet, bool ignoreUploadSpeedLimit,
-            uint16_t priority, uint16_t dest_protocol_version);
+            boost::uint16_t priority, boost::uint16_t dest_protocol_version);
 
         void SendPacket(const protocol::LiveSubPiecePacket & packet, bool ignoreUploadSpeedLimit,
-            uint16_t priority, uint16_t dest_protocol_version);
+            boost::uint16_t priority, boost::uint16_t dest_protocol_version);
 
         void SendPacket(const protocol::TcpSubPieceResponsePacket & packet, bool ignoreUploadSpeedLimit,
-            uint16_t priority, uint16_t dest_protocol_viersion);
+            boost::uint16_t priority, boost::uint16_t dest_protocol_viersion);
 
-        void SetSpeedLimitInKBps(uint32_t speed_limit_in_KBps);
-        uint32_t GetSpeedLimitInKBps() const;
+        void SetSpeedLimitInKBps(boost::uint32_t speed_limit_in_KBps);
+        boost::uint32_t GetSpeedLimitInKBps() const;
 
     private:
         void OnTimerElapsed(framework::timer::Timer * pointer);
         void DoSendPacket(boost::shared_ptr<PacketBase> packet, bool ignoreUploadSpeedLimit,
-            uint16_t priority, uint16_t dest_protocol_version);
+            boost::uint16_t priority, boost::uint16_t dest_protocol_version);
         struct EndpointPacketInfo
         {
             framework::timer::TickCounter life_time_;
@@ -134,16 +134,16 @@ namespace p2sp
         };
 
     private:
-        uint32_t speed_limit_in_KBps_;
-        uint32_t packet_number_per_tick_;
-        uint32_t packet_number_make_up_per_second_;
-        uint32_t packet_number_make_up_;
-        uint32_t sent_count_;
+        boost::uint32_t speed_limit_in_KBps_;
+        boost::uint32_t packet_number_per_tick_;
+        boost::uint32_t packet_number_make_up_per_second_;
+        boost::uint32_t packet_number_make_up_;
+        boost::uint32_t sent_count_;
         framework::timer::PeriodicTimer tick_timer_;
         std::multiset<EndpointPacketInfo> data_queue_;
 
-        const static uint32_t UPLIMIT_MAX_DATA_QUEUE_LENGTH = 400;
-        const static uint32_t UPLIMIT_PACKET_LIFE_LIMIT_IN_MS = 2750;
+        const static boost::uint32_t UPLIMIT_MAX_DATA_QUEUE_LENGTH = 400;
+        const static boost::uint32_t UPLIMIT_PACKET_LIFE_LIMIT_IN_MS = 2750;
     };
 }
 

@@ -232,7 +232,7 @@ namespace p2sp
         }
     }
 
-    void DownloadSpeedLimiter::SetSpeedLimitInKBps(uint32_t speed_limit_in_KBps)
+    void DownloadSpeedLimiter::SetSpeedLimitInKBps(boost::uint32_t speed_limit_in_KBps)
     {
         if (!is_running_)
         {

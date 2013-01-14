@@ -3,7 +3,7 @@
 
 namespace p2sp
 {
-    const uint32_t p2p_timeout = 4*1000;
+    const boost::uint32_t p2p_timeout = 4*1000;
 
     class ConnectingPeer
         : public boost::noncopyable

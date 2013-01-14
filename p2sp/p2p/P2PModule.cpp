@@ -257,7 +257,7 @@ namespace p2sp
     void P2PModule::OnTimerElapsed(framework::timer::Timer * pointer)
     {
         if (is_running_ == false) return;
-        uint32_t times = pointer->times();
+        boost::uint32_t times = pointer->times();
         if (pointer == &p2p_timer_)
         {
             OnP2PTimer(times);
@@ -268,7 +268,7 @@ namespace p2sp
         }
     }
 
-    void P2PModule::OnP2PTimer(uint32_t times)
+    void P2PModule::OnP2PTimer(boost::uint32_t times)
     {
 #ifdef COUNT_CPU_TIME
         count_cpu_time(__FUNCTION__);
@@ -295,7 +295,7 @@ namespace p2sp
         // 按每秒计算
         if (times % 4 == 0)
         {
-            uint32_t now_download_speed = statistic::StatisticModule::Inst()->GetTotalDownloadSpeed();
+            boost::uint32_t now_download_speed = statistic::StatisticModule::Inst()->GetTotalDownloadSpeed();
             if (max_download_speed_ < now_download_speed || times % (4 * 60) == 0)  // 1鍒嗛挓
             {
                 if (now_download_speed > 1024)

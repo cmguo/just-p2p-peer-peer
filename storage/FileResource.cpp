@@ -27,11 +27,11 @@ namespace storage
 
     FileResource::p FileResource::CreateResource(
         boost::asio::io_service & io_svc,
-        uint32_t file_length,
+        boost::uint32_t file_length,
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t init_size)
+        boost::uint32_t init_size)
     {
         assert(file_handle != NULL);
         FileResource::p pointer(new FileResource(
@@ -50,7 +50,7 @@ namespace storage
         const FileResourceInfo &resource_info)
     {
         FILE* resource_file_handle = NULL;
-        uint32_t actual_size;
+        boost::uint32_t actual_size;
 
         if (false == OpenResourceFile(resource_info, resource_file_handle, actual_size))
         {
@@ -128,11 +128,11 @@ namespace storage
 
     FileResource::FileResource(
         boost::asio::io_service & io_svc,
-        uint32_t file_length,
+        boost::uint32_t file_length,
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t init_size)
+        boost::uint32_t init_size)
         : Resource(io_svc, file_length, file_name, inst_p, init_size)
         , file_handle_(file_handle)
     {
@@ -145,7 +145,7 @@ namespace storage
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        uint32_t actual_size)
+        boost::uint32_t actual_size)
         : Resource(io_svc, subpiece_manager, file_name, inst_p, actual_size)
         , file_handle_(file_handle)
     {
@@ -159,7 +159,7 @@ namespace storage
     bool FileResource::OpenResourceFile(
         const FileResourceInfo &resource_info,
         FILE* &resource_file_handle,
-        uint32_t &actual_size)
+        boost::uint32_t &actual_size)
     {
         namespace fs = boost::filesystem;
 
@@ -180,7 +180,7 @@ namespace storage
         }
 
         try {
-            uint32_t fsize = fs::file_size(fs::path(resource_info.file_path_));
+            boost::uint32_t fsize = fs::file_size(fs::path(resource_info.file_path_));
             actual_size = fsize;
         }
         catch(const fs::filesystem_error&) {
@@ -191,7 +191,7 @@ namespace storage
         return true;
     }
 
-    std::vector<AppBuffer> FileResource::ReadBufferArray(const uint32_t startpos, const uint32_t length)
+    std::vector<AppBuffer> FileResource::ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length)
     {
         if (NULL == file_handle_)
         {
@@ -214,7 +214,7 @@ namespace storage
                 (length % SUB_PIECE_SIZE) : SUB_PIECE_SIZE;
             boost::uint32_t last_subpiece_index = subpiece_cnt - 1;
 
-            uint32_t readlen = 0, subpiece_len = SUB_PIECE_SIZE;
+            boost::uint32_t readlen = 0, subpiece_len = SUB_PIECE_SIZE;
             for (boost::uint32_t i = 0; i < subpiece_cnt; ++i)
             {
                 if (i == last_subpiece_index)
@@ -236,7 +236,7 @@ namespace storage
         }
     }
 
-    bool FileResource::ReadBufferArray(const uint32_t startpos, const uint32_t length, std::vector<protocol::SubPieceContent*> buffs)
+    bool FileResource::ReadBufferArray(const boost::uint32_t startpos, const boost::uint32_t length, std::vector<protocol::SubPieceContent*> buffs)
     {
         if (NULL == file_handle_)
         {
@@ -257,7 +257,7 @@ namespace storage
                 (length % SUB_PIECE_SIZE) : SUB_PIECE_SIZE;
             boost::uint32_t last_subpiece_index = subpiece_cnt - 1;
 
-            uint32_t readlen = 0, subpiece_len = SUB_PIECE_SIZE;
+            boost::uint32_t readlen = 0, subpiece_len = SUB_PIECE_SIZE;
             for (boost::uint32_t i = 0; i < subpiece_cnt; ++i)
             {
                 if (i == last_subpiece_index)
@@ -287,7 +287,7 @@ namespace storage
         }
     }
 
-    base::AppBuffer FileResource::ReadBuffer(const uint32_t startpos, const uint32_t length)
+    base::AppBuffer FileResource::ReadBuffer(const boost::uint32_t startpos, const boost::uint32_t length)
     {
         if (NULL == file_handle_)
         {
@@ -303,7 +303,7 @@ namespace storage
         {
             base::AppBuffer buff(length);
             fseek(file_handle_, startpos, SEEK_SET);
-            uint32_t readlen = fread(buff.Data(), 1, length, file_handle_);
+            boost::uint32_t readlen = fread(buff.Data(), 1, length, file_handle_);
             if (readlen != length)
             {
                 assert(false);
@@ -318,7 +318,7 @@ namespace storage
         }
     }
 
-    bool FileResource::WriteBufferArray(const uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffers)
+    bool FileResource::WriteBufferArray(const boost::uint32_t startpos, const std::vector<const protocol::SubPieceBuffer*>& buffers)
     {
         if (NULL == file_handle_)
         {
@@ -367,7 +367,7 @@ namespace storage
             base::util::memcpy2(p_buf, total_buf.Length() - (p_buf - total_buf.Data()), (*cit)->Data(), (*cit)->Length());
             p_buf += (*cit)->Length();
         }
-        uint32_t write_len = fwrite(total_buf.Data(), sizeof(boost::uint8_t), total_buf.Length(), file_handle_);
+        boost::uint32_t write_len = fwrite(total_buf.Data(), sizeof(boost::uint8_t), total_buf.Length(), file_handle_);
 
         if (write_len != total_bufsize)
         {
@@ -380,7 +380,7 @@ namespace storage
         return true;
     }
 
-    void FileResource::Erase(const uint32_t startpos, const uint32_t length)
+    void FileResource::Erase(const boost::uint32_t startpos, const boost::uint32_t length)
     {
         need_saveinfo_to_disk_ = true;
         return;
@@ -470,7 +470,7 @@ namespace storage
         return;
     }
 
-    uint32_t FileResource::GetLocalFileSize()
+    boost::uint32_t FileResource::GetLocalFileSize()
     {
         assert(is_running_ == false);
         return actual_size_;

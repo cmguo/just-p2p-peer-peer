@@ -161,7 +161,7 @@ namespace p2sp
         }
     }
 
-    void HttpDragDownloader::OnConnectFailed(uint32_t error_code)
+    void HttpDragDownloader::OnConnectFailed(boost::uint32_t error_code)
     {
         if (!is_running_)
         {
@@ -212,7 +212,7 @@ namespace p2sp
         }
     }
 
-    void HttpDragDownloader::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void HttpDragDownloader::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         if (!is_running_)
         {
@@ -227,7 +227,7 @@ namespace p2sp
     }
 
     void HttpDragDownloader::OnRecvHttpDataPartial(
-        protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+        protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         if (!is_running_)
         {
@@ -238,7 +238,7 @@ namespace p2sp
         DealError();
     }
 
-    void HttpDragDownloader::OnRecvHttpDataFailed(uint32_t error_code)
+    void HttpDragDownloader::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         if (!is_running_)
         {
@@ -303,7 +303,7 @@ namespace p2sp
                 proxy_client_.reset();
                 
                 // 获取Drag失败要汇报，drag_fetch_result定义见DownloadDriver.h
-                uint32_t drag_fetch_result = 0;
+                boost::uint32_t drag_fetch_result = 0;
                 drag_fetch_result |= tried_times_ << 24;
                 download_driver_->ReportDragFetchResult(drag_fetch_result, 0, 0, 0, tried_times_, 0);
             }
@@ -332,14 +332,14 @@ namespace p2sp
         }
     }
 
-    void HttpDragDownloader::Recv(uint32_t recv_length)
+    void HttpDragDownloader::Recv(boost::uint32_t recv_length)
     {
         if (!is_running_)
         {
             return;
         }
 
-        uint32_t real_recv_length = std::min(network::HttpClient<protocol::SubPieceContent>::MaxRecvLength, recv_length);
+        boost::uint32_t real_recv_length = std::min(network::HttpClient<protocol::SubPieceContent>::MaxRecvLength, recv_length);
         if (using_udp_proxy_)
         {
             proxy_client_->HttpRecv(real_recv_length);
@@ -351,7 +351,7 @@ namespace p2sp
     }
 
     void HttpDragDownloader::OnRecvHttpDataSucced(
-        protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
+        protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip)
     {
         if (!is_running_)
         {
@@ -363,7 +363,7 @@ namespace p2sp
             << fetch_timer_.elapsed());
         
         assert(content_offset == drag_string_.size());
-        uint32_t old_drag_string_size = drag_string_.size();
+        boost::uint32_t old_drag_string_size = drag_string_.size();
         drag_string_.resize(old_drag_string_size + buffer.Length());
         base::util::memcpy2((void*)(drag_string_.c_str() + old_drag_string_size), buffer.Length(),
             buffer.Data(), buffer.Length());
@@ -379,8 +379,8 @@ namespace p2sp
             //assert(drag_string_.size() == drag_length_);
 
             // drag_fetch_result的定义见downloaddriver.h
-            uint32_t drag_fetch_result = 0x80000000;
-            uint32_t is_parse_tinydrag_success = 0;
+            boost::uint32_t drag_fetch_result = 0x80000000;
+            boost::uint32_t is_parse_tinydrag_success = 0;
 
             if (using_udp_proxy_)
             {

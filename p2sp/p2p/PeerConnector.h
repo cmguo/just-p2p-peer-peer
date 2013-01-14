@@ -45,11 +45,11 @@ namespace p2sp
         void Connect(const protocol::CandidatePeerInfo& candidate_peer_info);
         void CheckConnectTimeout();
         // 消息
-        void OnP2PTimer(uint32_t times);
+        void OnP2PTimer(boost::uint32_t times);
         void OnReConectPacket(protocol::ConnectPacket const & packet);
         void OnErrorPacket(protocol::ErrorPacket const & packet);
         // 属性
-        uint32_t GetConnectingPeerCount() const {return connecting_peers_.size();}
+        boost::uint32_t GetConnectingPeerCount() const {return connecting_peers_.size();}
     private:
         bool FindConnectingPeerEndPointByIp(const boost::asio::ip::udp::endpoint& end_point);
         bool EraseConnectingPeerByIp(const boost::asio::ip::udp::endpoint& end_point);

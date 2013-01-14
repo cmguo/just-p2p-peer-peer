@@ -7,9 +7,9 @@
 
 namespace p2sp
 {
-    static const int32_t MinUploadSpeedLimitInKbsResidentStatus = 10;
-    static const int32_t MinUploadSpeedLimitInKbs = 20;
-    static const int32_t UrgentRestPlayTimeThresholdInMs = 30*1000;
+    static const boost::int32_t MinUploadSpeedLimitInKbsResidentStatus = 10;
+    static const boost::int32_t MinUploadSpeedLimitInKbs = 20;
+    static const boost::int32_t UrgentRestPlayTimeThresholdInMs = 30*1000;
 
     boost::shared_ptr<UploadModule> UploadModule::inst_;
 
@@ -170,7 +170,7 @@ namespace p2sp
 
     void UploadModule::UploadControlOnPingPolicy()
     {
-        uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
+        boost::uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
         DebugLog("upload lost_rate:%d%%, avg_delay:%d ms, upload_speed:%d, upload_bd:%d\n", network_quality_monitor_->GetPingLostRate(),
             network_quality_monitor_->GetAveragePingDelay(), upload_speed_kbs, GetMaxUploadSpeedForControl() / 1024);
 
@@ -198,14 +198,14 @@ namespace p2sp
 
     void UploadModule::LoadHistoricalMaxUploadSpeed()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         if (config_path_.length() > 0)
         {
             boost::filesystem::path configpath(config_path_);
             configpath /= TEXT("ppvaconfig.ini");
             string filename = configpath.file_string();
 
-            uint32_t upload_velocity = 64*1024;
+            boost::uint32_t upload_velocity = 64*1024;
 
             try
             {
@@ -215,7 +215,7 @@ namespace p2sp
 
                 // IP check
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("I", local_ip_from_ini_));
-                uint32_t ip_local = base::util::GetLocalFirstIP();
+                boost::uint32_t ip_local = base::util::GetLocalFirstIP();
 
                 if (local_ip_from_ini_ == ip_local)
                 {
@@ -234,7 +234,7 @@ namespace p2sp
 
     void UploadModule::SaveHistoricalMaxUploadSpeed()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         if (config_path_.length() > 0)
         {
             boost::filesystem::path configpath(config_path_);
@@ -247,8 +247,8 @@ namespace p2sp
                 framework::configure::ConfigModule & ppva_um_conf =
                     conf.register_module("PPVA_UM_NEW");
 
-                uint32_t ip_local;
-                uint32_t v;
+                boost::uint32_t ip_local;
+                boost::uint32_t v;
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("I", ip_local));
                 ppva_um_conf(CONFIG_PARAM_NAME_RDONLY("V", v));
 
@@ -301,7 +301,7 @@ namespace p2sp
         return current_upload_speed;
     }
 
-    void UploadModule::OnUploadSpeedControl(uint32_t times)
+    void UploadModule::OnUploadSpeedControl(boost::uint32_t times)
     {
         if (times % 4 == 0)
         {
@@ -352,8 +352,8 @@ namespace p2sp
         bool is_http_downloading = p2sp::ProxyModule::Inst()->IsHttpDownloading();
         bool is_p2p_downloading = p2sp::ProxyModule::Inst()->IsP2PDownloading();
         bool is_watching_movie = p2sp::ProxyModule::Inst()->IsWatchingMovie();            
-        uint32_t idle_time_in_seconds = storage::Performance::Inst()->GetIdleInSeconds();
-        uint32_t upload_bandwidth = GetMaxUploadSpeedForControl();
+        boost::uint32_t idle_time_in_seconds = storage::Performance::Inst()->GetIdleInSeconds();
+        boost::uint32_t upload_bandwidth = GetMaxUploadSpeedForControl();
         boost::uint32_t revised_up_speedlimit = (std::max)((boost::int32_t)upload_bandwidth - 262144, boost::int32_t(0));     // 超过256KBps的上传带宽
         bool is_watching_live_by_peer = p2sp::ProxyModule::Inst()->IsWatchingLive();
 
@@ -394,7 +394,7 @@ namespace p2sp
         // slow down mode
         else if (is_download_with_slowmode)
         {
-            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? revised_up_speedlimit : std::min(static_cast<uint32_t>(upload_bandwidth * 0.3 + 0.5), (uint32_t)15 * 1024);
+            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? revised_up_speedlimit : std::min(static_cast<boost::uint32_t>(upload_bandwidth * 0.3 + 0.5), (boost::uint32_t)15 * 1024);
             UpdateSpeedLimit(speed_limit);
         }
         // downloading
@@ -430,21 +430,21 @@ namespace p2sp
         // [0, 1)
         else if (idle_time_in_seconds >= 0 && idle_time_in_seconds < 1 * 60)
         {
-            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? revised_up_speedlimit : std::min(static_cast<uint32_t>(upload_bandwidth * 0.3 + 0.5), (uint32_t)32 * 1024);
+            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? revised_up_speedlimit : std::min(static_cast<boost::uint32_t>(upload_bandwidth * 0.3 + 0.5), (boost::uint32_t)32 * 1024);
             UpdateSpeedLimit(speed_limit);
         }
         // [1, 5)
         else if (idle_time_in_seconds >= 1 && idle_time_in_seconds < 5 * 60)
         {
             // 78643 = 256*1024*0.3
-            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? (revised_up_speedlimit  + 78643) : std::min(static_cast<uint32_t>(upload_bandwidth * 0.5 + 0.5), (uint32_t)32 * 1024);
+            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? (revised_up_speedlimit  + 78643) : std::min(static_cast<boost::uint32_t>(upload_bandwidth * 0.5 + 0.5), (boost::uint32_t)32 * 1024);
             UpdateSpeedLimit(speed_limit);
         }
         // [5, 20)
         else if (idle_time_in_seconds >= 5 * 60 && idle_time_in_seconds < 20 * 60)
         {
             // 183501 = 256*1024*0.7
-            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? (revised_up_speedlimit  + 183501) : std::min(static_cast<uint32_t>(upload_bandwidth * 0.8 + 0.5), (uint32_t)128 * 1024);
+            boost::int32_t speed_limit = revised_up_speedlimit > 0 ? (revised_up_speedlimit  + 183501) : std::min(static_cast<boost::uint32_t>(upload_bandwidth * 0.8 + 0.5), (boost::uint32_t)128 * 1024);
             UpdateSpeedLimit(speed_limit);
         }
         // [20, + Inf)
@@ -509,12 +509,12 @@ namespace p2sp
         upload_limiter_->SetSpeedLimitInKBps(upload_speed_param_.GetMaxSpeedInKBps());
     }
 
-    int32_t UploadModule::CalcUploadSpeedLimitOnPingPolicy(bool is_network_good)
+    boost::int32_t UploadModule::CalcUploadSpeedLimitOnPingPolicy(bool is_network_good)
     {
-        int32_t upload_speed_limit_kbs = GetUploadSpeedLimitInKBps();
+        boost::int32_t upload_speed_limit_kbs = GetUploadSpeedLimitInKBps();
         bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
 
-        uint32_t currentMinUploadSpeedLimit = MinUploadSpeedLimitInKbs;
+        boost::uint32_t currentMinUploadSpeedLimit = MinUploadSpeedLimitInKbs;
         if (p2sp::ProxyModule::Inst()->IsWatchingLive())
         {
             currentMinUploadSpeedLimit = BootStrapGeneralConfig::Inst()->GetLiveMinimumUploadSpeedInKiloBytes();
@@ -556,7 +556,7 @@ namespace p2sp
             }
             else
             {
-                uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
+                boost::uint32_t upload_speed_kbs = statistic::StatisticModule::Inst()->GetUploadDataSpeedInKBps();
                 if (upload_speed_limit_kbs < upload_speed_kbs + 120 ||
                     upload_speed_limit_kbs < upload_speed_kbs * 12 / 10)
                 {
@@ -623,7 +623,7 @@ namespace p2sp
         return live_max_upload_speed_exclude_same_subnet_;
     }
 
-    void UploadModule::ReportRestPlayTime(uint32_t rest_play_time)
+    void UploadModule::ReportRestPlayTime(boost::uint32_t rest_play_time)
     {
         if (rest_play_time < UrgentRestPlayTimeThresholdInMs)
         {

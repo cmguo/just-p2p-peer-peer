@@ -20,7 +20,7 @@ namespace p2sp
 
     void LiveSubPieceCountManager::EliminateElapsedSubPieceCountMap(boost::uint32_t block_id)
     {
-        for (map<uint32_t, uint16_t>::iterator iter = subpiece_count_map_.begin(); 
+        for (map<boost::uint32_t, boost::uint16_t>::iterator iter = subpiece_count_map_.begin(); 
             iter != subpiece_count_map_.end(); )
         {
             if (iter->first < block_id)
@@ -41,7 +41,7 @@ namespace p2sp
 
     boost::uint16_t LiveSubPieceCountManager::GetSubPieceCount(boost::uint32_t block_id) const
     {
-        map<uint32_t, uint16_t>::const_iterator iter = subpiece_count_map_.find(block_id);
+        map<boost::uint32_t, boost::uint16_t>::const_iterator iter = subpiece_count_map_.find(block_id);
         if (iter != subpiece_count_map_.end())
         {
             return iter->second;

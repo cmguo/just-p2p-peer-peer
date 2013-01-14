@@ -95,9 +95,9 @@ namespace p2sp
     LIVE_CONNECT_LEVEL LiveP2PDownloader::GetConnectLevel()
     {
         LIVE_CONNECT_LEVEL level = MEDIUM;
-        int32_t rest_time = live_stream_->GetRestPlayableTimeInSecond();
-        int32_t downloadable_peers_count = this->GetDownloadablePeersCount();
-        int32_t connection_threshold = p2p_max_connect_count_ / 3;
+        boost::int32_t rest_time = live_stream_->GetRestPlayableTimeInSecond();
+        boost::int32_t downloadable_peers_count = this->GetDownloadablePeersCount();
+        boost::int32_t connection_threshold = p2p_max_connect_count_ / 3;
 
         if (rest_time >= live_connect_low_normal_threshold_ && !this->is_p2p_pausing_)
         {
@@ -139,7 +139,7 @@ namespace p2sp
         return live_stream_->GetInstance();
     }
 
-    uint32_t LiveP2PDownloader::GetDownloadablePeersCount() const
+    boost::uint32_t LiveP2PDownloader::GetDownloadablePeersCount() const
     {
         return live_connection_manager_.GetDownloadablePeersCount();
     }
@@ -455,14 +455,14 @@ namespace p2sp
         return GetSpeedInfoEx().SecondDownloadSpeed;
     }
 
-    uint32_t LiveP2PDownloader::GetMinuteDownloadSpeed()
+    boost::uint32_t LiveP2PDownloader::GetMinuteDownloadSpeed()
     {
         if (false == is_running_)
             return 0;
         return GetSpeedInfoEx().MinuteDownloadSpeed;
     }
 
-    uint32_t LiveP2PDownloader::GetRecentDownloadSpeed() 
+    boost::uint32_t LiveP2PDownloader::GetRecentDownloadSpeed() 
     {
         if (false == is_running_)
             return 0;
@@ -490,16 +490,16 @@ namespace p2sp
 
     }
 
-    uint32_t LiveP2PDownloader::GetFullBlockPeersCount()
+    boost::uint32_t LiveP2PDownloader::GetFullBlockPeersCount()
     {
         return 0;
     }
 
-    uint32_t LiveP2PDownloader::GetActivePeersCount()
+    boost::uint32_t LiveP2PDownloader::GetActivePeersCount()
     {
         return 0;
     }
-    uint32_t LiveP2PDownloader::GetAvailableBlockPeerCount()
+    boost::uint32_t LiveP2PDownloader::GetAvailableBlockPeerCount()
     {
         return 0;
     }
@@ -529,7 +529,7 @@ namespace p2sp
         }
     }
 
-    uint32_t LiveP2PDownloader::GetMaxConnectCount()
+    boost::uint32_t LiveP2PDownloader::GetMaxConnectCount()
     {
         return p2p_max_connect_count_;
     }
@@ -846,13 +846,13 @@ namespace p2sp
         return live_subpiece_request_manager_.IsRequesting(subpiece_info);
     }
 
-    uint32_t LiveP2PDownloader::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info)
+    boost::uint32_t LiveP2PDownloader::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info)
     {
         return live_subpiece_request_manager_.GetRequestingCount(subpiece_info);
     }
 
     void LiveP2PDownloader::AddRequestingSubpiece(const protocol::LiveSubPieceInfo & subpiece_info,
-        boost::uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
+        boost::uint32_t timeout, LivePeerConnection__p peer_connection, boost::uint32_t transaction_id)
     {
         live_subpiece_request_manager_.Add(subpiece_info, timeout, peer_connection, transaction_id);
     }

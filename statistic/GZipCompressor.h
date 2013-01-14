@@ -16,12 +16,12 @@ namespace statistic
     {
         struct RawData
         {
-            RawData(uint8_t* raw_data_buffer, int raw_data_size)
+            RawData(boost::uint8_t* raw_data_buffer, int raw_data_size)
                 :buffer(raw_data_buffer), buffer_size(raw_data_size)
             {
             }
 
-            uint8_t* buffer;
+            boost::uint8_t* buffer;
             int buffer_size;
         };
 
@@ -30,7 +30,7 @@ namespace statistic
 
         ~GZipCompressor();
 
-        bool Compress(uint8_t* raw_data, int raw_data_size, std::ostream& result);
+        bool Compress(boost::uint8_t* raw_data, int raw_data_size, std::ostream& result);
     private:
         bool Compress(const std::vector<RawData>& buffers, std::ostream& result);
 
@@ -40,7 +40,7 @@ namespace statistic
 
     private:
         static const int OutputBufferSize;
-        uint8_t *output_buffer_;
+        boost::uint8_t *output_buffer_;
         z_stream compression_stream_;
         unsigned long raw_data_crc_;
     };

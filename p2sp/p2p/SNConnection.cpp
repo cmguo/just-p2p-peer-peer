@@ -96,7 +96,7 @@ namespace p2sp
             p2p_downloader_->DoSendPacket(packet, peer_version_);
         }
 
-        for (uint32_t i = 0; i < subpieces.size(); ++i)
+        for (boost::uint32_t i = 0; i < subpieces.size(); ++i)
         {
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 

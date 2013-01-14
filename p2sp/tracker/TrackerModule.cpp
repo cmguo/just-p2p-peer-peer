@@ -40,7 +40,7 @@ namespace p2sp
         inst_.reset();
     }
 
-    void TrackerModule::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
+    void TrackerModule::SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & tracker_s,
         bool is_vod, TrackerType tracker_type)
     {
         if (is_running_ == false)

@@ -62,15 +62,15 @@ namespace p2sp
 
         // IHttpClientListener
         virtual void OnConnectSucced();
-        virtual void OnConnectFailed(uint32_t error_code);
+        virtual void OnConnectFailed(boost::uint32_t error_code);
         virtual void OnConnectTimeout();
 
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
-        virtual void OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code);
+        virtual void OnRecvHttpDataSucced(protocol::LiveSubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip);
+        virtual void OnRecvHttpDataPartial(protocol::LiveSubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
 
-        virtual void OnRecvHttpDataFailed(uint32_t error_code);
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code);
         virtual void OnRecvTimeout();
 
         virtual void OnComplete();
@@ -86,7 +86,7 @@ namespace p2sp
         void DoConnect();
         void DoClose();
         void SleepForConnect();
-        string MakeRequstPath(uint32_t start_piece_id);
+        string MakeRequstPath(boost::uint32_t start_piece_id);
         void RequestNextBlock();
         void RequestSubPiece();
         void OnError(); 
@@ -98,7 +98,7 @@ namespace p2sp
         string rid_;
         
         string pms_url_domain_;
-        uint16_t pms_url_port_;
+        boost::uint16_t pms_url_port_;
         string pms_url_path_;
         string pms_url_parameters_;
 
@@ -109,7 +109,7 @@ namespace p2sp
         statistic::SpeedInfoStatistic http_speed_info_;
         boost::uint32_t http_status_;
 
-        uint32_t connect_failed_times_;
+        boost::uint32_t connect_failed_times_;
         bool is_pms_status_good_;  // true代表正常，false代表不正常
 
         bool is_http_pausing_;

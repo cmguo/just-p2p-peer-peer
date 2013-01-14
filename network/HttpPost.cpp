@@ -50,7 +50,7 @@ namespace network
         request.head()["Accept"] = "{*/*}";
         request.head().host = server_;
         request.head().path = path_;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         request.head().connection = util::protocol::http_filed::Connection::close;
 #else
         request.head().connection = util::protocol::http_field::Connection::close;

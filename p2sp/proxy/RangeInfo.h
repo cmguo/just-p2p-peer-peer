@@ -19,23 +19,23 @@ namespace p2sp
         typedef boost::shared_ptr<RangeInfo> p;
 
     public:
-        static const uint32_t npos = static_cast<uint32_t>(-1);
+        static const boost::uint32_t npos = static_cast<boost::uint32_t>(-1);
 
         static bool IsSupportedRangeFormat(const string& range_property);
 
         static RangeInfo::p Parse(const string& range_property);
 
-        RangeInfo(uint32_t range_begin, uint32_t range_end);
+        RangeInfo(boost::uint32_t range_begin, boost::uint32_t range_end);
 
-        void SetRangeBegin(uint32_t range_begin) { range_begin_ = range_begin; }
-        uint32_t GetRangeBegin() const { return range_begin_; }
+        void SetRangeBegin(boost::uint32_t range_begin) { range_begin_ = range_begin; }
+        boost::uint32_t GetRangeBegin() const { return range_begin_; }
 
-        void SetRangeEnd(uint32_t range_end) { range_end_ = range_end; }
-        uint32_t GetRangeEnd() const { return range_end_; }
+        void SetRangeEnd(boost::uint32_t range_end) { range_end_ = range_end; }
+        boost::uint32_t GetRangeEnd() const { return range_end_; }
 
     private:
-        uint32_t range_begin_;
-        uint32_t range_end_;
+        boost::uint32_t range_begin_;
+        boost::uint32_t range_end_;
     };
 }
 

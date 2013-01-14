@@ -21,7 +21,7 @@ namespace statistic
     bool StatisticsRequest::GetCompressedData(std::ostream& data)
     {
         const int max_size = 1000*1024;
-        uint8_t* buffer = new uint8_t[max_size];
+        boost::uint8_t* buffer = new boost::uint8_t[max_size];
 
         util::archive::ArchiveBuffer<> archive_buffer(reinterpret_cast<char*>(buffer), max_size);
         util::archive::LittleEndianBinaryOArchive<> output(archive_buffer);

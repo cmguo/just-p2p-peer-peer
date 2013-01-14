@@ -98,7 +98,7 @@ namespace statistic
         return speed_info_.GetSpeedInfoEx();
     }
 
-    void HttpDownloaderStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    void HttpDownloaderStatistic::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
         if (download_driver_statistic_)
@@ -113,7 +113,7 @@ namespace statistic
             << " Bytes.");
     }
 
-    void HttpDownloaderStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    void HttpDownloaderStatistic::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
         if (download_driver_statistic_)
@@ -173,7 +173,7 @@ namespace statistic
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetSupportRange " << is_support_range);
     }
 
-    void HttpDownloaderStatistic::SetHttpStatusCode(uint32_t http_status_code)
+    void HttpDownloaderStatistic::SetHttpStatusCode(boost::uint32_t http_status_code)
     {
         http_downloader_info_.LastHttpStatusCode = http_status_code;
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "HttpDownloaderStatistic::SetHttpStatusCode " << http_status_code);

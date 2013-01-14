@@ -216,7 +216,7 @@ namespace p2sp
             return;
         }
 
-        for (uint32_t i = 0; i < packet.sub_piece_infos_.size(); ++i)
+        for (boost::uint32_t i = 0; i < packet.sub_piece_infos_.size(); ++i)
         {
             const protocol::LiveSubPieceInfo &live_sub_piece_info = packet.sub_piece_infos_[i];
 

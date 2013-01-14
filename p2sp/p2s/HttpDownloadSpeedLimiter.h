@@ -28,13 +28,13 @@ namespace p2sp
 
     private:
 
-        uint32_t max_data_queue_length_;
+        boost::uint32_t max_data_queue_length_;
 
         boost::int32_t speed_limit_in_KBps_;
 
-        uint32_t packet_number_cur_tick_;
+        boost::uint32_t packet_number_cur_tick_;
 
-        uint32_t packet_send_count_per_tick_;
+        boost::uint32_t packet_send_count_per_tick_;
 
         framework::timer::PeriodicTimer tick_timer_;
 

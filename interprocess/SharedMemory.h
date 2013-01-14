@@ -12,12 +12,18 @@
 #ifndef FRAMEWORK_INTERPROCESS_SHAREDMEMORY_H
 #define FRAMEWORK_INTERPROCESS_SHAREDMEMORY_H
 
-#ifndef BOOST_WINDOWS_API
-#include <boost/interprocess/shared_memory_object.hpp>
+namespace boost
+{
+    namespace interprocess
+    {
+#ifndef PEER_PC_CLIENT
+        class shared_memory_object;
 #else
-#include <boost/interprocess/windows_shared_memory.hpp>
+        class windows_shared_memory;
 #endif
-#include <boost/interprocess/mapped_region.hpp>
+        class mapped_region;
+    }
+}
 
 namespace interprocess
 {
@@ -25,7 +31,7 @@ namespace interprocess
     class SharedMemory
     {
     public:
-        bool Create(const string& name, uint32_t size);
+        bool Create(const string& name, boost::uint32_t size);
         bool Open(const string& name);
         void Close();
         void* GetView();
@@ -42,7 +48,7 @@ namespace interprocess
         // nothing
 #else
 
-#ifndef BOOST_WINDOWS_API
+#ifndef PEER_PC_CLIENT
         typedef boost::shared_ptr<boost::interprocess::shared_memory_object> SharedMemoryPtr;
 #else
         typedef boost::shared_ptr<boost::interprocess::windows_shared_memory> SharedMemoryPtr;

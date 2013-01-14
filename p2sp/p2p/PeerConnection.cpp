@@ -58,7 +58,7 @@ namespace p2sp
         connect_rtt_ = rtt_ = framework::timer::TickCounter::tick_count() - reconnect_packet.send_off_time_;
         // rtt_ += P2SPConfigs::PEERCONNECTION_RTT_MODIFICATION_TIME_IN_MILLISEC;
         //
-        rtt_ = (uint32_t)(sqrt(rtt_ + 0.0) * 10 + 0.5) + P2SPConfigs::PEERCONNECTION_RTT_MODIFICATION_TIME_IN_MILLISEC;
+        rtt_ = (boost::uint32_t)(sqrt(rtt_ + 0.0) * 10 + 0.5) + P2SPConfigs::PEERCONNECTION_RTT_MODIFICATION_TIME_IN_MILLISEC;
         LOG4CPLUS_INFO_LOG(logger_peer_connection, __FUNCTION__ << " " << p2p_downloader_ << " " << " EndPoint = " << end_point << " RTT = " << rtt_);
         longest_rtt_ = rtt_ + 500;
 
@@ -139,7 +139,7 @@ namespace p2sp
         //
         // 返回true
 
-        uint32_t delta = 0;
+        boost::uint32_t delta = 0;
         if (false == need_check && window_size_ - requesting_count_ < curr_delta_size_)
         {
             delta = curr_delta_size_ + requesting_count_ - window_size_;
@@ -182,7 +182,7 @@ namespace p2sp
         
         if (delta > 0)
         {
-            uint32_t v = delta;  // min(delta, curr_request_count_);
+            boost::uint32_t v = delta;  // min(delta, curr_request_count_);
             window_size_ -= v;
             requesting_count_ -= v;
         }
@@ -203,7 +203,7 @@ namespace p2sp
             return;
         }
 
-        uint32_t trans_id = protocol::Packet::NewTransactionID();
+        boost::uint32_t trans_id = protocol::Packet::NewTransactionID();
 
         if (peer_version_ >= protocol::PEER_VERSION_V4)
         {
@@ -362,7 +362,7 @@ namespace p2sp
         // 修正windows_size
         if (times % 4 == 0)
         {
-            uint32_t current_window_size = statistic_->GetSpeedInfo().NowDownloadSpeed / 1000;
+            boost::uint32_t current_window_size = statistic_->GetSpeedInfo().NowDownloadSpeed / 1000;
 
             if (current_window_size < window_size_)
             {
@@ -476,7 +476,7 @@ namespace p2sp
             protocol::RequestSubPiecePacket packet(protocol::Packet::NewTransactionID(),
             p2p_downloader_->GetRid(), subpieces, endpoint_, p2p_downloader_->GetDownloadPriority());
 
-            for (uint32_t i = 0; i < copy_count; ++i) 
+            for (boost::uint32_t i = 0; i < copy_count; ++i) 
             {
             p2p_downloader_->DoSendPacket(packet, peer_version_);
             }
@@ -488,7 +488,7 @@ namespace p2sp
             protocol::RequestSubPiecePacket packet(protocol::Packet::NewTransactionID(),
             p2p_downloader_->GetRid(), subpieces, endpoint_, protocol::RequestSubPiecePacket::INVALID_PRIORITY);
 
-            for (uint32_t i = 0; i < copy_count; ++i) {
+            for (boost::uint32_t i = 0; i < copy_count; ++i) {
             p2p_downloader_->DoSendPacket(packet, peer_version_);
             }
             statistic_->SubmitUploadedBytes(copy_count * packet.length());
@@ -503,14 +503,14 @@ namespace p2sp
             p2p_downloader_->GetRid(), AppModule::Inst()->GetPeerGuid(), subpieces, endpoint_);
 
             // send multiple packets
-            for (uint32_t i = 0; i < copy_count; ++i) {
+            for (boost::uint32_t i = 0; i < copy_count; ++i) {
             p2p_downloader_->DoSendPacket(packet, peer_version_);
             }
 
             statistic_->SubmitUploadedBytes(copy_count * packet.length());
         }
 
-        for (uint32_t i = 0; i < subpieces.size(); ++i)
+        for (boost::uint32_t i = 0; i < subpieces.size(); ++i)
         {
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], curr_time_out_, this);
 

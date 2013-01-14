@@ -69,7 +69,7 @@ namespace storage
         if (pszHash == NULL)
             return false;
 
-        uint32_t nLen = strlen(pszHash);
+        boost::uint32_t nLen = strlen(pszHash);
 
         if (nLen >= 8 + 32 && strncmp(pszHash, "urn:md5:", strlen("urn:md5:")) == 0)
         {
@@ -89,7 +89,7 @@ namespace storage
         b_reset_ = true;
     }
 
-    void CHmacMD5::Add(void const * pData, uint32_t nLength)
+    void CHmacMD5::Add(void const * pData, boost::uint32_t nLength)
     {
         if (nLength == 0)
             return;
@@ -107,7 +107,7 @@ namespace storage
     }
 
     CHmacMD5::CHmacMD5(
-        u_char *key, uint32_t keylen)
+        u_char *key, boost::uint32_t keylen)
         : b_reset_(true)
     {
         framework::string::Md5 md5_;
@@ -115,7 +115,7 @@ namespace storage
         md5_.update(key, keylen);
         md5_.final();
         memset(m_key, 0, sizeof(m_key));
-        base::util::memcpy2(m_key, sizeof(m_key), md5_.digest(), (std::min)((uint32_t)sizeof(SMD5), (uint32_t)DEFAULT_KEY_LEN));
+        base::util::memcpy2(m_key, sizeof(m_key), md5_.digest(), (std::min)((boost::uint32_t)sizeof(SMD5), (boost::uint32_t)DEFAULT_KEY_LEN));
     }
 
     CHmacMD5::~CHmacMD5()

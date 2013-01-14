@@ -16,11 +16,11 @@
 
 namespace network
 {
-    HttpResponse::p HttpResponse::ParseFromStream(std::istream& iss, uint32_t http_header_length)
+    HttpResponse::p HttpResponse::ParseFromStream(std::istream& iss, boost::uint32_t http_header_length)
     {
         return HttpResponse::p();
     }
-    HttpResponse::p HttpResponse::ParseFromBufferMini(string response, uint32_t& http_header_length)
+    HttpResponse::p HttpResponse::ParseFromBufferMini(string response, boost::uint32_t& http_header_length)
     {
         http_header_length = response.find("\r\n\r\n");
         if (string::npos == http_header_length)
@@ -49,7 +49,7 @@ namespace network
                 continue;
             }
 
-            uint32_t i = line.find_first_of(':');
+            boost::uint32_t i = line.find_first_of(':');
             if (i == string::npos)
                 continue;
             string key = line.substr(0, i);
@@ -97,21 +97,21 @@ namespace network
         }
         http_response->http_version_ = str_s[0];
 
-        // http_response->status_code_ = boost::lexical_cast<uint32_t>(str_s[1]);
+        // http_response->status_code_ = boost::lexical_cast<boost::uint32_t>(str_s[1]);
         boost::system::error_code ec = framework::string::parse2(str_s[1], http_response->status_code_);
         if (ec)
         {
             return HttpResponse::p();
         }
 
-        for (uint32_t i = 2; i < str_s.size(); i++)
+        for (boost::uint32_t i = 2; i < str_s.size(); i++)
             http_response->status_string_.append(str_s[i] + " ");
         boost::algorithm::trim(http_response->status_string_);
 
         return http_response;
     }
 
-    HttpResponse::p HttpResponse::ParseFromBuffer(string response, uint32_t& http_header_length)
+    HttpResponse::p HttpResponse::ParseFromBuffer(string response, boost::uint32_t& http_header_length)
     {
         HttpResponse::p http_response = ParseFromBufferMini(response, http_header_length);
 
@@ -134,7 +134,7 @@ namespace network
                 }
                 content_range_string = content_range_string.substr(6);
                 boost::algorithm::trim(content_range_string);
-                uint32_t range_end_position = content_range_string.find('/');
+                boost::uint32_t range_end_position = content_range_string.find('/');
                 if (range_end_position == string::npos)
                 {
                     return HttpResponse::p();
@@ -146,17 +146,17 @@ namespace network
                 if (range_st_s.size() != 2)
                     break;
 
-                // http_response->range_begin_ = boost::lexical_cast<uint32_t>(range_st_s[0]);
+                // http_response->range_begin_ = boost::lexical_cast<boost::uint32_t>(range_st_s[0]);
                 boost::system::error_code ec = framework::string::parse2(range_st_s[0], http_response->range_begin_);
                 if (ec)
                     return HttpResponse::p();
 
-                // http_response->range_end_ = boost::lexical_cast<uint32_t>(range_st_s[1]);
+                // http_response->range_end_ = boost::lexical_cast<boost::uint32_t>(range_st_s[1]);
                 ec = framework::string::parse2(range_st_s[1], http_response->range_end_);
                 if (ec)
                     return HttpResponse::p();
 
-                // http_response->file_length_ = boost::lexical_cast<uint32_t>(file_length_string);
+                // http_response->file_length_ = boost::lexical_cast<boost::uint32_t>(file_length_string);
                 ec = framework::string::parse2(file_length_string, http_response->file_length_);
                 if (ec)
                     return HttpResponse::p();
@@ -167,7 +167,7 @@ namespace network
         return http_response;
     }
 
-    HttpResponse::p HttpResponse::ParseFromBufferByFlvStart(string response, uint32_t start, uint32_t& http_header_length)
+    HttpResponse::p HttpResponse::ParseFromBufferByFlvStart(string response, boost::uint32_t start, boost::uint32_t& http_header_length)
     {
         HttpResponse::p http_response = ParseFromBufferMini(response, http_header_length);
 
@@ -233,19 +233,19 @@ namespace network
         return properties_.find("Content-Length") != properties_.end();
     }
 
-    uint32_t HttpResponse::GetContentLength()
+    boost::uint32_t HttpResponse::GetContentLength()
     {
         string content_length_string = GetProperty("Content-Length");
 
-        // uint32_t content_length = boost::lexical_cast<uint32_t>(content_length_string);
-        uint32_t content_length = std::numeric_limits<uint32_t>::max();
+        // boost::uint32_t content_length = boost::lexical_cast<boost::uint32_t>(content_length_string);
+        boost::uint32_t content_length = std::numeric_limits<boost::uint32_t>::max();
         boost::system::error_code ec = framework::string::parse2(content_length_string, content_length);
         if (ec)
             return 0;
         return content_length;
     }
 
-    void HttpResponse::SetContentLength(uint32_t content_length)
+    void HttpResponse::SetContentLength(boost::uint32_t content_length)
     {
         string content_length_text = framework::string::format(content_length);
         SetProperty("Content-Length", content_length_text);

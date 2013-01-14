@@ -13,7 +13,7 @@ namespace p2sp
 
     MessageBufferManager::p MessageBufferManager::inst_(new MessageBufferManager());
 
-    boost::uint8_t* MessageBufferManager::NewBuffer(uint32_t buffer_size)
+    boost::uint8_t* MessageBufferManager::NewBuffer(boost::uint32_t buffer_size)
     {
         if (buffer_size == 0)
         {
@@ -59,10 +59,10 @@ namespace p2sp
         }
     }
 
-    uint32_t MessageBufferManager::ExpireCache()
+    boost::uint32_t MessageBufferManager::ExpireCache()
     {
         LOG4CPLUS_DEBUG_LOG(logger_msg, "");
-        uint32_t count = 0;
+        boost::uint32_t count = 0;
         BufferCacheMap::iterator it;
         for (it = buffer_cache_map_.begin(); it != buffer_cache_map_.end();)
         {

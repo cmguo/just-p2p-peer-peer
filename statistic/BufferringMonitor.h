@@ -23,7 +23,7 @@ namespace statistic
         BufferringMonitor(RID rid, boost::shared_ptr<StatisticsReporter> reporter);
         ~BufferringMonitor();
 
-        void BufferringOccurs(uint32_t bufferring_position_in_seconds);
+        void BufferringOccurs(boost::uint32_t bufferring_position_in_seconds);
 
     private:
         boost::shared_ptr<BufferringReportCondition> CreateBufferringReportCondition(

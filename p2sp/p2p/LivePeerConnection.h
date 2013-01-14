@@ -44,13 +44,13 @@ namespace p2sp
 
         void ClearTaskQueue();
         void AddAssignedSubPiece(const protocol::LiveSubPieceInfo & subpiece_info);
-        void OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length);
+        void OnSubPiece(boost::uint32_t subpiece_rtt, boost::uint32_t buffer_length);
         void OnSubPieceTimeout();
 
         bool HasSubPieceInBitmap(const protocol::LiveSubPieceInfo & subpiece);
         bool HasSubPieceInTaskSet(const protocol::LiveSubPieceInfo & subpiece) const;
 
-        void EliminateElapsedBlockBitMap(uint32_t block_id);
+        void EliminateElapsedBlockBitMap(boost::uint32_t block_id);
 
         boost::uint32_t GetAvgDeltaTime() const;
 
@@ -60,9 +60,9 @@ namespace p2sp
 
         const statistic::SPEED_INFO_EX & GetSpeedInfoEx();
 
-        uint32_t Get75PercentPointInBitmap(uint32_t live_interval);
+        boost::uint32_t Get75PercentPointInBitmap(boost::uint32_t live_interval);
 
-        uint32_t GetSubPieceCountInBitmap(uint32_t block_id);
+        boost::uint32_t GetSubPieceCountInBitmap(boost::uint32_t block_id);
 
         const protocol::CandidatePeerInfo & GetCandidatePeerInfo() const {return candidate_peer_info_;}
 
@@ -75,9 +75,9 @@ namespace p2sp
             return block_bitmap_.empty();
         }
 
-        uint32_t GetConnectedTimeInMillseconds();
+        boost::uint32_t GetConnectedTimeInMillseconds();
 
-        uint32_t GetBitmapEmptyTimeInMillseconds();
+        boost::uint32_t GetBitmapEmptyTimeInMillseconds();
 
         bool IsUdpServer() const;
 
@@ -88,9 +88,9 @@ namespace p2sp
 
         void UpdatePeerInfo(const statistic::PEER_INFO & peer_info);
 
-        void UpdateLastReceived(uint32_t transaction_id);
+        void UpdateLastReceived(boost::uint32_t transaction_id);
 
-        void DeleteLostPackets(uint32_t transaction_id, std::multimap<uint32_t, protocol::LiveSubPieceInfo>& to_delete);
+        void DeleteLostPackets(boost::uint32_t transaction_id, std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo>& to_delete);
 
         boost::uint32_t GetReverseOrderSubPiecePacketCount() const;
         boost::uint32_t GetTotalReceivedSubPiecePacketCount() const;
@@ -138,7 +138,7 @@ namespace p2sp
 
         void RequestTillFullWindow();
 
-        void RequestSubPieces(uint32_t block_count, bool need_check = false);
+        void RequestSubPieces(boost::uint32_t block_count, bool need_check = false);
 
         void UpdateBlockBitmapEmptyTickCount();
 
@@ -176,7 +176,7 @@ namespace p2sp
 
         boost::uint8_t connect_type_;        
 
-        uint32_t block_bitmap_empty_tick_count_in_millseconds_;
+        boost::uint32_t block_bitmap_empty_tick_count_in_millseconds_;
 
         statistic::PEER_INFO peer_info_;
 
@@ -191,7 +191,7 @@ namespace p2sp
 
         boost::uint32_t last_received_packet_;
 
-        std::multimap<uint32_t, protocol::LiveSubPieceInfo> request_map_;
+        std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo> request_map_;
 
         boost::uint32_t reverse_order_packet_count_;
         boost::uint32_t total_received_packet_count_;

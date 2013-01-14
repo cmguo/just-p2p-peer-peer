@@ -56,7 +56,7 @@ namespace p2sp
         void OnRIDInfoResponse(protocol::RIDInfoResponsePacket const & packet);
 
         // 属性
-        uint32_t GetUsedTime();
+        boost::uint32_t GetUsedTime();
 
         boost::uint32_t GetWindowSize() const;
         boost::uint32_t GetLongestRtt() const;
@@ -90,11 +90,11 @@ namespace p2sp
         bool CanRequest() const;
 
     private:
-        uint32_t curr_delta_size_;
+        boost::uint32_t curr_delta_size_;
 
         // Peer对方的相关变量
-        uint32_t connect_rtt_;
-        uint32_t rtt_;
+        boost::uint32_t connect_rtt_;
+        boost::uint32_t rtt_;
         
         protocol::PEER_DOWNLOAD_INFO peer_download_info_;
         protocol::BlockMap block_map_;

@@ -16,16 +16,16 @@ namespace network
 
         virtual bool Bind(const string & destination_ip);
 
-        virtual uint16_t AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler);
+        virtual boost::uint16_t AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler);
 
-        virtual bool SetTtl(int32_t ttl);
+        virtual bool SetTtl(boost::int32_t ttl);
 
     private:
         PingClient(boost::asio::io_service & io_svc);
 
         static unsigned short GetIdentifier();
         void Receive();
-        void HandleReceive(const boost::system::error_code & error_code, uint32_t bytes_transfered);
+        void HandleReceive(const boost::system::error_code & error_code, boost::uint32_t bytes_transfered);
         bool TryGetCurrentTtl(int & ttl);
 
     private:
@@ -35,7 +35,7 @@ namespace network
         boost::asio::streambuf recv_buffer_;
         boost::asio::ip::icmp::endpoint destination_endpoint_;
 
-        static uint16_t sequence_num_;
+        static boost::uint16_t sequence_num_;
 
         bool is_ttl_supported_;
         bool is_ttl_support_tested_;

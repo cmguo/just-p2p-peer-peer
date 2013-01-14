@@ -50,19 +50,19 @@ namespace storage
         void AddSubPiece(const protocol::LiveSubPieceInfo & subpiece, const protocol::LiveSubPieceBuffer & subpiece_buffer);
 
         //downloader通过此接口查询接下来待下载的block
-        void GetNextIncompleteBlock(uint32_t start_block_id, protocol::LiveSubPieceInfo & next_incomplete_block) const;
+        void GetNextIncompleteBlock(boost::uint32_t start_block_id, protocol::LiveSubPieceInfo & next_incomplete_block) const;
 
-        bool BlockExists(uint32_t block_id) const;
-        bool IsBlockValid(uint32_t block_id) const; //TBD – will be available if needed
-        bool IsPieceValid(uint32_t block_id, uint16_t piece_index) const;
-        bool IsBlockHeaderValid(uint32_t block_id) const;
-        bool HasCompleteBlock(uint32_t block_id) const;
-        bool IsPieceComplete(uint32_t block_id, uint16_t piece_index) const;
+        bool BlockExists(boost::uint32_t block_id) const;
+        bool IsBlockValid(boost::uint32_t block_id) const; //TBD – will be available if needed
+        bool IsPieceValid(boost::uint32_t block_id, boost::uint16_t piece_index) const;
+        bool IsBlockHeaderValid(boost::uint32_t block_id) const;
+        bool HasCompleteBlock(boost::uint32_t block_id) const;
+        bool IsPieceComplete(boost::uint32_t block_id, boost::uint16_t piece_index) const;
         bool HasSubPiece(const protocol::LiveSubPieceInfo &subpiece) const;
 
         //返回指定block的总长度，前提是对应的block的第一个subpiece (header subpiece)已经获得，不然将返回0
         //另外这个结果不一定正确，调用者（比如Upload Manager）如果在乎的话，应该额外查询IsBlockHeaderValid(block_id)来进行核实.
-        uint32_t GetBlockSizeInBytes(uint32_t block_id) const;
+        boost::uint32_t GetBlockSizeInBytes(boost::uint32_t block_id) const;
 
         void AttachStream(p2sp::ILiveStreamPointer live_stream);
 
@@ -73,7 +73,7 @@ namespace storage
         RID GetRID() const { return cache_manager_.GetRID(); }
         void GetSubPiece(protocol::LiveSubPieceInfo subpiece_info, protocol::LiveSubPieceBuffer & subpiece_buffer) const;
 
-        void BuildAnnounceMap(uint32_t request_block_id, protocol::LiveAnnounceMap& announce_map);
+        void BuildAnnounceMap(boost::uint32_t request_block_id, protocol::LiveAnnounceMap& announce_map);
 
         //为统计模块服务的接口
         boost::uint32_t GetDataRate() const;
@@ -112,32 +112,32 @@ namespace storage
         return cache_manager_.HasSubPiece(subpiece);
     }
 
-    inline bool LiveInstance::BlockExists(uint32_t block_id) const
+    inline bool LiveInstance::BlockExists(boost::uint32_t block_id) const
     {
         return cache_manager_.BlockExists(block_id);
     }
 
-    inline bool LiveInstance::HasCompleteBlock(uint32_t piece_id) const
+    inline bool LiveInstance::HasCompleteBlock(boost::uint32_t piece_id) const
     {
         return cache_manager_.HasCompleteBlock(piece_id);
     }
 
-    inline bool LiveInstance::IsBlockHeaderValid(uint32_t block_id) const
+    inline bool LiveInstance::IsBlockHeaderValid(boost::uint32_t block_id) const
     {
         return cache_manager_.IsBlockHeaderValid(block_id);
     }
 
-    inline bool LiveInstance::IsPieceValid(uint32_t block_id, uint16_t piece_index) const
+    inline bool LiveInstance::IsPieceValid(boost::uint32_t block_id, boost::uint16_t piece_index) const
     {
         return cache_manager_.IsPieceValid(block_id, piece_index);
     }
 
-    inline bool LiveInstance::IsPieceComplete(uint32_t block_id, uint16_t piece_index) const
+    inline bool LiveInstance::IsPieceComplete(boost::uint32_t block_id, boost::uint16_t piece_index) const
     {
         return cache_manager_.IsPieceComplete(block_id, piece_index);
     }
 
-    inline uint32_t LiveInstance::GetBlockSizeInBytes(uint32_t block_id) const
+    inline boost::uint32_t LiveInstance::GetBlockSizeInBytes(boost::uint32_t block_id) const
     {
         return cache_manager_.GetBlockSizeInBytes(block_id);
     }

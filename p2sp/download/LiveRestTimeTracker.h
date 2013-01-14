@@ -16,7 +16,7 @@ namespace p2sp
 
             }
 
-            Progress(uint32_t block_id, uint32_t percentage, uint32_t live_interval)
+            Progress(boost::uint32_t block_id, boost::uint32_t percentage, boost::uint32_t live_interval)
                 : block_id_(block_id)
                 , percentage_(percentage)
                 , live_interval_(live_interval)
@@ -24,7 +24,7 @@ namespace p2sp
 
             }
 
-            uint32_t DistanceInSeconds(Progress & last_reset_progress)
+            boost::uint32_t DistanceInSeconds(Progress & last_reset_progress)
             {
                 assert(last_reset_progress <= *this);
 
@@ -50,16 +50,16 @@ namespace p2sp
             }
 
         private:
-            uint32_t block_id_;
-            uint32_t percentage_;
-            uint32_t live_interval_;
+            boost::uint32_t block_id_;
+            boost::uint32_t percentage_;
+            boost::uint32_t live_interval_;
         };
 
 
         RestTimeTracker();
-        void Start(uint32_t block_id, uint32_t live_interval);
-        void UpdateCurrentProgress(uint32_t current_block_id, uint32_t current_progress_percentage);
-        uint32_t GetRestTimeInSeconds();
+        void Start(boost::uint32_t block_id, boost::uint32_t live_interval);
+        void UpdateCurrentProgress(boost::uint32_t current_block_id, boost::uint32_t current_progress_percentage);
+        boost::uint32_t GetRestTimeInSeconds();
         void OnPause(bool pause);
         bool IsPaused();
 
@@ -74,8 +74,8 @@ namespace p2sp
         framework::timer::TickCounter ticks_since_last_progress_update_;
         Progress current_progress_;
         Progress last_reset_progress_;
-        uint32_t rest_time_in_seconds_;
-        uint32_t live_interval_;
+        boost::uint32_t rest_time_in_seconds_;
+        boost::uint32_t live_interval_;
         bool paused_;
 
         bool need_calculate_rest_time_;

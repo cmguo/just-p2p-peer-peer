@@ -58,7 +58,7 @@ namespace statistic
         void StartStatisticsCollection(boost::shared_ptr<StatisticsConfigurations> statistics_configuration);
         void StopStatisticsCollection();
 
-        static bool IsConfigurationExpired(std::time_t file_modified_time, uint32_t expires_in_minutes);
+        static bool IsConfigurationExpired(std::time_t file_modified_time, boost::uint32_t expires_in_minutes);
 
         static string BuildRelativeDownloadUrl();
     };

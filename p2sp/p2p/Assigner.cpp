@@ -61,7 +61,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void Assigner::OnP2PTimer(uint32_t times)
+    void Assigner::OnP2PTimer(boost::uint32_t times)
     {
 #ifdef COUNT_CPU_TIME
         count_cpu_time(__FUNCTION__);
@@ -134,7 +134,7 @@ namespace p2sp
 
     // 计算当前piece_task中，可以提供分配subpiece数
     // @return p2p_downloader_ 的 piece_tasks_ 中正在被请求的subpiece个数
-    uint32_t Assigner::CaclSubPieceAssignCount()
+    boost::uint32_t Assigner::CaclSubPieceAssignCount()
     {
 #ifdef COUNT_CPU_TIME
         count_cpu_time(__FUNCTION__);
@@ -146,11 +146,11 @@ namespace p2sp
 
         LOG4CPLUS_INFO_LOG(logger_assigner, "Assigner::CaclSubPieceAssignCount" << p2p_downloader_);
 
-        uint32_t subpiece_count = 0;
+        boost::uint32_t subpiece_count = 0;
         protocol::PieceInfo piece;
-        uint32_t sub_piece_end;
-        uint32_t first_empty_offset_ = -1;
-        uint32_t last_data_offset_ = -1;
+        boost::uint32_t sub_piece_end;
+        boost::uint32_t first_empty_offset_ = -1;
+        boost::uint32_t last_data_offset_ = -1;
 
         // 用一个std::set来过滤掉重复的Piece
         std::set <protocol::PieceInfoEx> piece_info_s;
@@ -172,7 +172,7 @@ namespace p2sp
                     sub_piece_end = iter->first.subpiece_index_end_;
                 }
 
-                for (uint32_t i = iter->first.subpiece_index_; i <= sub_piece_end; ++i)
+                for (boost::uint32_t i = iter->first.subpiece_index_; i <= sub_piece_end; ++i)
                 {
                     protocol::SubPieceInfo sub_piece(piece.block_index_, piece.piece_index_ * SUB_PIECE_COUNT_PER_PIECE + i);
 
@@ -227,11 +227,11 @@ namespace p2sp
         // 用一个std::set来过滤掉重复的Piece
         std::set <protocol::PieceInfoEx> piece_info_s;
         // 待分配的piece中，最后一片subpiece(一般为128, 文件末尾另外计算)
-        uint32_t subpiece_end;
+        boost::uint32_t subpiece_end;
 
         protocol::PieceInfo piece;
 
-        uint32_t index = 0;
+        boost::uint32_t index = 0;
         bool eof_file = false;
 
         LOG4CPLUS_DEBUG_LOG(logger_assigner, "piece task size = " << p2p_downloader_->piece_tasks_.size());
@@ -239,7 +239,7 @@ namespace p2sp
         if (p2p_downloader_->piece_tasks_.size() > 0)
         {
             piece = p2p_downloader_->piece_tasks_.rbegin()->first.GetPieceInfo();
-            uint32_t end_position = piece.GetEndPosition(block_size_);
+            boost::uint32_t end_position = piece.GetEndPosition(block_size_);
 
             if (end_position >= file_length_ && end_position < file_length_ + PIECE_SIZE)
             {
@@ -257,7 +257,7 @@ namespace p2sp
                 piece = iter->first.GetPieceInfo();
 
                 // 修正subpiece_end
-                uint32_t end_position = piece.GetEndPosition(block_size_);
+                boost::uint32_t end_position = piece.GetEndPosition(block_size_);
                 if (end_position >= file_length_)
                 {
                     // 文件末尾情况，subpiece_end 需要计算
@@ -272,8 +272,8 @@ namespace p2sp
                     subpiece_end = iter->first.subpiece_index_end_;
                 }
 
-                uint32_t block_p = piece.block_index_ * block_size_;
-                uint32_t needdown_sp_num = 0;
+                boost::uint32_t block_p = piece.block_index_ * block_size_;
+                boost::uint32_t needdown_sp_num = 0;
 
                 // 遍历piece中的每一个subpiece并正常分配
                 for (boost::uint32_t i = iter->first.subpiece_index_; i <= subpiece_end; ++i)
@@ -352,7 +352,7 @@ namespace p2sp
                         }  // else if (index == 0)
                         else
                         {
-                            uint32_t redundant_decision_mod = index <= P2SPConfigs::ASSIGN_REDUNTANT_PIECE_COUNT ?  0 : P2SPConfigs::ASSIGN_REDUNTANT_DECISION_SIZE_INTERVAL;
+                            boost::uint32_t redundant_decision_mod = index <= P2SPConfigs::ASSIGN_REDUNTANT_PIECE_COUNT ?  0 : P2SPConfigs::ASSIGN_REDUNTANT_DECISION_SIZE_INTERVAL;
                             if (needdown_sp_num < P2SPConfigs::ASSIGN_REDUNTANT_DECISION_SIZE - redundant_decision_mod)
                             {
                                 for (boost::uint32_t i = iter->first.subpiece_index_; i <= subpiece_end; ++i)
@@ -362,7 +362,7 @@ namespace p2sp
                                     if (false == p2p_downloader_->HasSubPiece(sub_piece))
                                     {
                                         // 紧急的piece每一秒冗余一次，不紧急的piece每3秒冗余一次
-                                        uint32_t redundant_times = index <= P2SPConfigs::ASSIGN_REDUNTANT_PIECE_COUNT ?
+                                        boost::uint32_t redundant_times = index <= P2SPConfigs::ASSIGN_REDUNTANT_PIECE_COUNT ?
                                             P2SPConfigs::ASSIGN_REDUNTANT_TIMES_URGENT :  P2SPConfigs::ASSIGN_REDUNTANT_TIMES_NORMAL;
                                         if (p2p_downloader_->subpiece_request_manager_.IsRequesting(sub_piece)
                                             && (p2p_downloader_->subpiece_request_manager_.IsRequestingTimeout(sub_piece, P2SPConfigs::ASSIGN_REDUNTANT_DECISION_TIMEOUT, 10)
@@ -540,7 +540,7 @@ namespace p2sp
 
         std::deque<protocol::SubPieceInfo>::iterator iter_subpiece;
         std::list<PEER_RECVTIME>::iterator iter_peer;
-        uint32_t rcvtime;
+        boost::uint32_t rcvtime;
         ConnectionBasePointer peer;
         std::map<ConnectionBasePointer, boost::uint32_t> assigned_peers;
         LOG4CPLUS_DEBUG_LOG(logger_assigner, "Assigner: subpiece_assign_map size = " << subpiece_assign_map_.size());
@@ -600,10 +600,10 @@ namespace p2sp
     void Assigner::CalcSubpieceTillCapatity()
     {
         // 请求piece的任务之前，首先计算subpiece的数量
-        uint32_t subpiece_count_ = CaclSubPieceAssignCount();
+        boost::uint32_t subpiece_count_ = CaclSubPieceAssignCount();
 
         // Assigner 500ms分配一次
-        uint32_t capacity_ = p2p_downloader_->GetSpeedLimitRestCount();
+        boost::uint32_t capacity_ = p2p_downloader_->GetSpeedLimitRestCount();
 
         if (p2p_downloader_->GetDownloadMode() == IP2PControlTarget::CONTINUOUS_MODE)
         {

@@ -32,7 +32,7 @@ namespace p2sp
 
     }
 
-    void TestCoreProxySender::Start(uint32_t start_possition)
+    void TestCoreProxySender::Start(boost::uint32_t start_possition)
     {
         assert(0);
     }
@@ -90,7 +90,7 @@ namespace p2sp
         assert(0);
     }
 
-    void TestCoreProxySender::OnHttpRecvFailed(uint32_t error_code)
+    void TestCoreProxySender::OnHttpRecvFailed(boost::uint32_t error_code)
     {
         assert(0);
     }
@@ -100,7 +100,7 @@ namespace p2sp
         assert(0);
     }
 
-    void TestCoreProxySender::OnTcpSendSucced(uint32_t length)
+    void TestCoreProxySender::OnTcpSendSucced(boost::uint32_t length)
     {
         if (is_running_ == false) return;
         // LOG(__INFO, "proxy", "OnTcpSendSucced " << http_server_socket_->GetEndPoint() << " length=" << length);
@@ -119,26 +119,26 @@ namespace p2sp
         assert(0);
     }
 
-    void TestCoreProxySender::OnDownloadDriverError(uint32_t error_code)
+    void TestCoreProxySender::OnDownloadDriverError(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         assert(0);
     }
 
 
-    void TestCoreProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::SubPieceContent& buffer)
+    void TestCoreProxySender::OnAsyncGetSubPieceSucced(boost::uint32_t start_position, base::SubPieceContent& buffer)
     {
         if (is_running_ == false) return;
         assert(0);
     }
 
-    void TestCoreProxySender::OnAsyncGetSubPieceFailed(uint32_t start_position, int failed_code)
+    void TestCoreProxySender::OnAsyncGetSubPieceFailed(boost::uint32_t start_position, int failed_code)
     {
         if (is_running_ == false) return;
         assert(0);
     }
 
-    void TestCoreProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void TestCoreProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false) return;
         assert(0);
@@ -152,7 +152,7 @@ namespace p2sp
         http_client_->HttpGetByString(http_request_->GetRequestString());
     }
 
-    void TestCoreProxySender::OnConnectFailed(uint32_t error_code)
+    void TestCoreProxySender::OnConnectFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
 
@@ -181,7 +181,7 @@ namespace p2sp
         http_client_->HttpRecvSubPiece();
     }
 
-    void TestCoreProxySender::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void TestCoreProxySender::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         LOG(__INFO, "proxy", "TestCoreProxySender::OnRecvHttpHeaderFailed");
@@ -192,7 +192,7 @@ namespace p2sp
 
     }
 
-    void TestCoreProxySender::OnRecvHttpDataSucced(base::SubPieceContent buffer, uint32_t file_offset, uint32_t content_offset)
+    void TestCoreProxySender::OnRecvHttpDataSucced(base::SubPieceContent buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         if (is_running_ == false) return;
         LOG(__INFO, "proxy", "TestCoreProxySender::OnRecvHttpDataSucced");
@@ -202,7 +202,7 @@ namespace p2sp
         http_client_->HttpRecvSubPiece();
     }
 
-    void TestCoreProxySender::OnRecvHttpDataPartial(base::SubPieceContent buffer, uint32_t file_offset, uint32_t content_offset)
+    void TestCoreProxySender::OnRecvHttpDataPartial(base::SubPieceContent buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         if (is_running_ == false) return;
         LOG(__INFO, "proxy", "TestCoreProxySender::OnRecvHttpDataPartial");
@@ -211,7 +211,7 @@ namespace p2sp
 
     }
 
-    void TestCoreProxySender::OnRecvHttpDataFailed(uint32_t error_code)
+    void TestCoreProxySender::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         LOG(__INFO, "proxy", "TestCoreProxySender::OnRecvHttpDataFailed");
@@ -249,7 +249,7 @@ namespace p2sp
         http_server_socket_->HttpSend403Header();
     }
 
-    void TestCoreProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void TestCoreProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;

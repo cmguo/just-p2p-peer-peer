@@ -122,7 +122,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Online Time Info
 
-    uint32_t SpeedInfoStatistic::GetElapsedTimeInMilliSeconds() const
+    boost::uint32_t SpeedInfoStatistic::GetElapsedTimeInMilliSeconds() const
     {
         return download_speed_meter_.GetElapsedTimeInMilliSeconds(framework::timer::TickCounter::tick_count());
     }

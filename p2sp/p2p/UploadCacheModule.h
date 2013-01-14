@@ -137,8 +137,8 @@ namespace p2sp
             storage::Instance::p instance,
             SubPieceLoadListener::p upload_manager);
 
-        virtual void OnAsyncGetBlockSucced(const RID& rid, uint32_t block_index, base::AppBuffer const & buffer);
-        virtual void OnAsyncGetBlockFailed(const RID& rid, uint32_t block_index, int failed_code);
+        virtual void OnAsyncGetBlockSucced(const RID& rid, boost::uint32_t block_index, base::AppBuffer const & buffer);
+        virtual void OnAsyncGetBlockFailed(const RID& rid, boost::uint32_t block_index, int failed_code);
 
         void OnP2PTimer(boost::uint32_t times);
 

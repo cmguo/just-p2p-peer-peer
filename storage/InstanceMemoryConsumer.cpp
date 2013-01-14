@@ -11,15 +11,15 @@ namespace storage
 {
     MemoryUsageDescription InstanceMemoryConsumer::GetMemoryUsage() const
     {
-        const uint32_t MostWantedBlocksScoreBar = 3;
+        const boost::uint32_t MostWantedBlocksScoreBar = 3;
 
-        std::map<uint32_t, size_t> blocks_importance_score;
+        std::map<boost::uint32_t, size_t> blocks_importance_score;
         BuildBlocksImportanceScore(blocks_importance_score);
 
         size_t min_blocks = 0;
         size_t desirable_blocks = 0;
 
-        for(std::map<uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
+        for(std::map<boost::uint32_t, size_t>::const_iterator iter = blocks_importance_score.begin();
             iter != blocks_importance_score.end();
             ++iter)
         {
@@ -47,14 +47,14 @@ namespace storage
 
     void InstanceMemoryConsumer::SetMemoryQuota(const MemoryQuota & quota)
     {
-        std::map<uint32_t, size_t> blocks_importance_score;
+        std::map<boost::uint32_t, size_t> blocks_importance_score;
         BuildBlocksImportanceScore(blocks_importance_score);
 
         //先删掉得分为0或压根没记录在block_importance_score中的block。
-        std::multimap<size_t, uint32_t> score_to_block_id;
-        for (uint32_t block_id = 0; block_id < instance_->GetBlockCount(); ++block_id)
+        std::multimap<size_t, boost::uint32_t> score_to_block_id;
+        for (boost::uint32_t block_id = 0; block_id < instance_->GetBlockCount(); ++block_id)
         {
-            std::map<uint32_t, size_t>::const_iterator iter = blocks_importance_score.find(block_id);
+            std::map<boost::uint32_t, size_t>::const_iterator iter = blocks_importance_score.find(block_id);
             if (iter != blocks_importance_score.end() && iter->second > 0)
             {
                 score_to_block_id.insert(std::make_pair(iter->second, iter->first));
@@ -79,7 +79,7 @@ namespace storage
         {
             //根据block的得分从小到大把block的中占用memory的数据部分给拿掉
             size_t blocks_to_remove = blocks_quota - score_to_block_id.size();
-            for(std::multimap<size_t, uint32_t>::const_iterator iter = score_to_block_id.begin();
+            for(std::multimap<size_t, boost::uint32_t>::const_iterator iter = score_to_block_id.begin();
                 iter != score_to_block_id.end() && blocks_to_remove > 0;
                 ++iter)
             {
@@ -110,7 +110,7 @@ namespace storage
         return (quota.quota + block_size - 1)/block_size;
     }
 
-    void InstanceMemoryConsumer::GetSortedPlayPoints(std::vector<uint32_t>& sorted_play_points) const
+    void InstanceMemoryConsumer::GetSortedPlayPoints(std::vector<boost::uint32_t>& sorted_play_points) const
     {
         sorted_play_points.clear();
 
@@ -118,7 +118,7 @@ namespace storage
             iter != instance_->download_driver_s_.end();
             ++iter)
         {
-            uint32_t position = (*iter)->GetPlayingPosition();
+            boost::uint32_t position = (*iter)->GetPlayingPosition();
             protocol::PieceInfo piece_info;
             if (instance_->subpiece_manager_->PosToPieceInfo(position, piece_info))
             {
@@ -129,7 +129,7 @@ namespace storage
         std::sort(sorted_play_points.begin(), sorted_play_points.end());
     }
 
-    size_t InstanceMemoryConsumer::GetPlayPointsRelevanceScore(uint32_t block_id, const std::vector<uint32_t>& sorted_play_points) const
+    size_t InstanceMemoryConsumer::GetPlayPointsRelevanceScore(boost::uint32_t block_id, const std::vector<boost::uint32_t>& sorted_play_points) const
     {
         const int play_point_relevance_score_base = 5;
         const int PlayPointRelevantBlocks = 10;
@@ -159,7 +159,7 @@ namespace storage
         return play_point_relevance_score;
     }
 
-    size_t InstanceMemoryConsumer::GetPotentialDiskWriteScore(uint32_t block_id) const
+    size_t InstanceMemoryConsumer::GetPotentialDiskWriteScore(boost::uint32_t block_id) const
     {
         if (instance_->subpiece_manager_->DownloadingBlock(block_id))
         {
@@ -169,14 +169,14 @@ namespace storage
         return 0;
     }
 
-    void InstanceMemoryConsumer::BuildBlocksImportanceScore(std::map<uint32_t, size_t>& blocks_importance_score) const
+    void InstanceMemoryConsumer::BuildBlocksImportanceScore(std::map<boost::uint32_t, size_t>& blocks_importance_score) const
     {
         blocks_importance_score.clear();
 
-        vector<uint32_t> sorted_play_points;
+        vector<boost::uint32_t> sorted_play_points;
         GetSortedPlayPoints(sorted_play_points);
 
-        for(uint32_t block_id = 0; block_id < instance_->GetBlockCount(); ++block_id)
+        for(boost::uint32_t block_id = 0; block_id < instance_->GetBlockCount(); ++block_id)
         {
             if (instance_->subpiece_manager_->IsBlockDataInMemCache(block_id))
             {

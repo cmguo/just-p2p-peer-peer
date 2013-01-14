@@ -182,13 +182,13 @@ namespace p2sp
 
         return GetSpeedInfoEx().NowDownloadSpeed;
     }
-    uint32_t HttpDownloader::GetRecentDownloadSpeed()
+    boost::uint32_t HttpDownloader::GetRecentDownloadSpeed()
     {
         if (false == is_running_)
             return 0;
         return GetSpeedInfoEx().RecentDownloadSpeed;
     }
-    uint32_t HttpDownloader::GetMinuteDownloadSpeed()
+    boost::uint32_t HttpDownloader::GetMinuteDownloadSpeed()
     {
         if (false == is_running_)
             return 0;

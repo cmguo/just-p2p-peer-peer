@@ -35,7 +35,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void Exchanger::OnP2PTimer(uint32_t times)
+    void Exchanger::OnP2PTimer(boost::uint32_t times)
     {
         if (is_running_ == false)
         {

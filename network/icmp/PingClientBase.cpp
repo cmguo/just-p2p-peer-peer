@@ -1,7 +1,7 @@
 #include "Common.h"
 #include "PingClientBase.h"
 #include "PingClient.h"
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "PingClientWithAPI.h"
 #endif
 
@@ -10,7 +10,7 @@ namespace network
     typedef boost::shared_ptr<PingClientBase> p;
     p PingClientBase::create(boost::asio::io_service & io_svc)
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         //已知在Win7下构造raw socket会抛出异常，或者构造后不能正常收到ICMP回包
         OSVERSIONINFO osi;
         ZeroMemory(&osi, sizeof(OSVERSIONINFO));
@@ -31,14 +31,14 @@ namespace network
 #endif
     }
 
-    void PingClientBase::AddHandler(uint16_t sequence_num, 
+    void PingClientBase::AddHandler(boost::uint16_t sequence_num, 
         boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         assert(handler_map_.find(sequence_num) == handler_map_.end());
         handler_map_.insert(std::make_pair(sequence_num, handler));
     }
 
-    void PingClientBase::NotifyHandler(uint16_t sequence_num, unsigned char type, const string & ip,
+    void PingClientBase::NotifyHandler(boost::uint16_t sequence_num, unsigned char type, const string & ip,
         boost::uint32_t ping_rtt_for_win7)
     {
         if (handler_map_.find(sequence_num) != handler_map_.end())
@@ -48,7 +48,7 @@ namespace network
         }
     }
 
-    void PingClientBase::Cancel(uint16_t sequence_num)
+    void PingClientBase::Cancel(boost::uint16_t sequence_num)
     {
         if (handler_map_.find(sequence_num) != handler_map_.end())
         {

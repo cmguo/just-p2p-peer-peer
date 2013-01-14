@@ -22,7 +22,7 @@ namespace p2sp
     {
     public:
         typedef boost::shared_ptr<LiveSubPieceRequestTask> p;
-        static p create(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
+        static p create(boost::uint32_t timeout, LivePeerConnection__p peer_connection, boost::uint32_t transaction_id)
         {
             return p(new LiveSubPieceRequestTask(timeout, peer_connection, transaction_id));
         }
@@ -43,15 +43,15 @@ namespace p2sp
         }
 
     public:
-        uint32_t timeout_;
+        boost::uint32_t timeout_;
         LivePeerConnection__p peer_connection_;
 
     private:
         framework::timer::TickCounter request_time_counter_;
-        uint32_t transaction_id_;
+        boost::uint32_t transaction_id_;
 
     private:
-        LiveSubPieceRequestTask(uint32_t timeout, LivePeerConnection__p peer_connection, uint32_t transaction_id)
+        LiveSubPieceRequestTask(boost::uint32_t timeout, LivePeerConnection__p peer_connection, boost::uint32_t transaction_id)
             : timeout_(timeout)
             , peer_connection_(peer_connection)
             , transaction_id_(transaction_id)
@@ -67,16 +67,16 @@ namespace p2sp
     public:
         // 操作
         void Add(const protocol::LiveSubPieceInfo & subpiece_info, boost::uint32_t timeout, 
-            LivePeerConnection__p peer_connection, uint32_t transaction_id);
+            LivePeerConnection__p peer_connection, boost::uint32_t transaction_id);
 
         // 消息
         void OnSubPiece(const protocol::LiveSubPiecePacket & packet);
         // 每秒执行一次
-        void OnP2PTimer(uint32_t times);
+        void OnP2PTimer(boost::uint32_t times);
 
         bool IsRequesting(const protocol::LiveSubPieceInfo& subpiece_info) const;
 
-        uint32_t GetRequestingCount( const protocol::LiveSubPieceInfo & subpiece_info ) const;
+        boost::uint32_t GetRequestingCount( const protocol::LiveSubPieceInfo & subpiece_info ) const;
 
     private:
         void CheckExternalTimeout();

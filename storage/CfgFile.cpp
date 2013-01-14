@@ -10,7 +10,7 @@
 
 #include <boost/scoped_array.hpp>
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include <io.h>
 #else
 #include <sys/stat.h>
@@ -63,8 +63,8 @@ namespace storage
         {
             return false;
         }
-#ifdef BOOST_WINDOWS_API
-        uint32_t low_size = _filelength(_fileno(m_handle));
+#ifdef PEER_PC_CLIENT
+        boost::uint32_t low_size = _filelength(_fileno(m_handle));
         if (low_size == INVALID_FILE_SIZE)
         {
             return false;
@@ -72,12 +72,12 @@ namespace storage
 #else
         struct stat status;
         int result = fstat(fileno(m_handle), &status);
-        uint32_t low_size = status.st_size;
+        boost::uint32_t low_size = status.st_size;
         if (result != 0)
         {
             return false;
         }
-#endif  // BOOST_WINDOWS_API
+#endif  // PEER_PC_CLIENT
         if (low_size > max_sec_file_size)
         {
             return false;
@@ -105,7 +105,7 @@ namespace storage
         {
             return false;
         }
-        uint32_t readnum = Read(&head_, sizeof(SecFileHead));
+        boost::uint32_t readnum = Read(&head_, sizeof(SecFileHead));
         if (readnum != sizeof(SecFileHead))
         {
             return false;
@@ -156,7 +156,7 @@ namespace storage
 
         Seek(SecFileHead::md5_offset(), SEEK_SET);
 
-        uint32_t wlen = Write((char*) &hash, sizeof(MD5));
+        boost::uint32_t wlen = Write((char*) &hash, sizeof(MD5));
 
         if (wlen != sizeof(MD5))
         {
@@ -173,12 +173,12 @@ namespace storage
         StdFile::Flush();
         if (!crash_b_)
         {
-#ifdef BOOST_WINDOWS_API
-            uint32_t low_size = _filelength(_fileno(m_handle));
+#ifdef PEER_PC_CLIENT
+            boost::uint32_t low_size = _filelength(_fileno(m_handle));
 #else
             struct stat status;
             fstat(fileno(m_handle), &status);
-            uint32_t low_size = status.st_size;
+            boost::uint32_t low_size = status.st_size;
 #endif
             assert(low_size == sec_content_count_);
             if (!only_read)
@@ -193,7 +193,7 @@ namespace storage
         return;
     }
 
-    bool SecFile::SecWrite(const boost::uint8_t *buf, uint32_t buflen)
+    bool SecFile::SecWrite(const boost::uint8_t *buf, boost::uint32_t buflen)
     {
         if (crash_b_)
         {
@@ -205,7 +205,7 @@ namespace storage
         {
             return false;
         }
-        uint32_t w_len = Write(buf, buflen);
+        boost::uint32_t w_len = Write(buf, buflen);
         {
             if (w_len != buflen)
             {
@@ -219,7 +219,7 @@ namespace storage
         return true;
     }
 
-    uint32_t SecFile::SecRead(boost::uint8_t *buf, uint32_t buflen)
+    boost::uint32_t SecFile::SecRead(boost::uint8_t *buf, boost::uint32_t buflen)
     {
         if (crash_b_)
         {
@@ -230,7 +230,7 @@ namespace storage
         return Read(buf, buflen);
     }
 
-    uint32_t SecFile::GetContentSize()
+    boost::uint32_t SecFile::GetContentSize()
     {
         return sec_content_count_ - sizeof(SecFileHead);
     }
@@ -247,7 +247,7 @@ namespace storage
         {
             return false;
         }
-        uint32_t readnum = SecRead((boost::uint8_t*) &resource_file_size_, sizeof(resource_file_size_));
+        boost::uint32_t readnum = SecRead((boost::uint8_t*) &resource_file_size_, sizeof(resource_file_size_));
         cfg_head_len_ += sizeof(resource_file_size_);
         if (readnum != sizeof(resource_file_size_))
         {
@@ -307,7 +307,7 @@ namespace storage
         return true;
     }
 
-    bool CfgFile::SecCreate(const string &resource_file_path, uint32_t resource_file_size)
+    bool CfgFile::SecCreate(const string &resource_file_path, boost::uint32_t resource_file_size)
     {
         string cfg_file_path = Storage::Inst_Storage()->GetCfgFilename(resource_file_path);
 
@@ -323,8 +323,8 @@ namespace storage
             return false;
         }
 
-        // uint32_t file_name_len = resource_file_path.size() * 2;
-        uint32_t file_name_len = resource_file_path.size();
+        // boost::uint32_t file_name_len = resource_file_path.size() * 2;
+        boost::uint32_t file_name_len = resource_file_path.size();
         if (!SecWrite((boost::uint8_t*) &file_name_len, sizeof(file_name_len)))
         {
             SecClose();
@@ -351,7 +351,7 @@ namespace storage
 
     bool CfgFile::AddContent(base::AppBuffer const & buf)
     {
-        uint32_t len = buf.Length();
+        boost::uint32_t len = buf.Length();
         if (!SecFile::SecWrite((boost::uint8_t*)&len, sizeof(len)))
         {
             assert(false);
@@ -373,9 +373,9 @@ namespace storage
             base::AppBuffer buf(0);
             return buf;
         }
-        uint32_t content_len = GetContentSize() - cfg_head_len_;
-        uint32_t readbuflen = 0;
-        uint32_t readnum = SecRead((boost::uint8_t*) (&readbuflen), sizeof(readbuflen));
+        boost::uint32_t content_len = GetContentSize() - cfg_head_len_;
+        boost::uint32_t readbuflen = 0;
+        boost::uint32_t readnum = SecRead((boost::uint8_t*) (&readbuflen), sizeof(readbuflen));
 
         assert(readnum == sizeof(readbuflen));
 
@@ -402,9 +402,9 @@ namespace storage
 
     bool ResourceInfoListFile::GetResourceInfo(FileResourceInfo &r_info, bool & bEof)
     {
-        static uint32_t item_max_len = 10 * 1024;
-        uint32_t item_len = 0;
-        uint32_t r_len = SecRead((boost::uint8_t*) &item_len, 4);
+        static boost::uint32_t item_max_len = 10 * 1024;
+        boost::uint32_t item_len = 0;
+        boost::uint32_t r_len = SecRead((boost::uint8_t*) &item_len, 4);
         bEof = false;
         if (r_len != 4)
         {

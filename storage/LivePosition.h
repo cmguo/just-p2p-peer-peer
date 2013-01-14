@@ -13,21 +13,21 @@ namespace storage
 #endif
     {
     public:
-        LivePosition(uint32_t block_id = 0, boost::int16_t subpiece_index = 0)
+        LivePosition(boost::uint32_t block_id = 0, boost::int16_t subpiece_index = 0)
             : position_(block_id, subpiece_index)
         {
         }
 
-        uint32_t GetBlockId() const { return position_.GetBlockId(); }
+        boost::uint32_t GetBlockId() const { return position_.GetBlockId(); }
 
-        uint16_t GetSubPieceIndex() const { return position_.GetSubPieceIndex(); }
+        boost::uint16_t GetSubPieceIndex() const { return position_.GetSubPieceIndex(); }
 
-        void SetBlockId(uint32_t new_block_id)
+        void SetBlockId(boost::uint32_t new_block_id)
         { 
             position_ = protocol::LiveSubPieceInfo(new_block_id, 0); 
         }
 
-        void AdvanceSubPieceIndexTo(uint16_t new_subpiece_index)
+        void AdvanceSubPieceIndexTo(boost::uint16_t new_subpiece_index)
         {
             assert(position_.GetSubPieceIndex() < new_subpiece_index);
             position_ = protocol::LiveSubPieceInfo(position_.GetBlockId(), new_subpiece_index);

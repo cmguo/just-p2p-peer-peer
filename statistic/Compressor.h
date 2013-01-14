@@ -10,7 +10,7 @@ namespace statistic
     class ICompressor
     {
     public:
-        virtual bool Compress(uint8_t* raw_data, int raw_data_size, std::ostream& result) = 0;
+        virtual bool Compress(boost::uint8_t* raw_data, int raw_data_size, std::ostream& result) = 0;
         virtual ~ICompressor(){}
     };
 }

@@ -23,8 +23,8 @@ namespace p2sp
         bool HasGateWay() const {return !gateway_ip_.empty() && ping_counter_.running();}
 
         void OnGateWayFound(const string & gateway_ip);
-        uint32_t GetAveragePingDelay() {return ping_delay_buffer_.Average();}
-        uint32_t GetPingLostRate();
+        boost::uint32_t GetAveragePingDelay() {return ping_delay_buffer_.Average();}
+        boost::uint32_t GetPingLostRate();
         void ClearPingLostRate() {ping_lost_buffer_.Clear();}
 
     private:
@@ -40,7 +40,7 @@ namespace p2sp
         framework::timer::PeriodicTimer ping_timer_;
         framework::timer::TickCounter ping_counter_;
         bool is_ping_replied_;
-        uint16_t sequence_num_;
+        boost::uint16_t sequence_num_;
 
         measure::CycleBuffer ping_delay_buffer_;
         // 丢包插入1，不丢包插入0，这样ping_lost_buffer_的平均值就是丢包率

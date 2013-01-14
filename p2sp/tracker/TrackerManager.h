@@ -33,7 +33,7 @@ namespace p2sp
 
         void Stop();
 
-        void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+        void SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
             bool is_got_tracker_list_from_bs, TrackerType tracker_type);
 
         void DoList(RID rid, bool list_for_live_udpserver);
@@ -60,7 +60,7 @@ namespace p2sp
 
         void ClearAllGroups();
 
-        void SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+        void SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
             bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
             TrackerType tracker_type);
 

@@ -28,20 +28,20 @@ namespace p2sp
     public:
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
-        virtual void Start(uint32_t start_possition);
+        virtual void Start(boost::uint32_t start_possition);
         virtual void Stop();
 
     public:
-        virtual uint32_t GetPlayingPosition() const { assert(false); return 0; }
+        virtual boost::uint32_t GetPlayingPosition() const { assert(false); return 0; }
         virtual void SendHttpRequest() {assert(0);}
         virtual void ResetPlayingPosition() { assert(false); }
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
 
     public:
         virtual void OnClose();
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
 
     private:
         network::HttpServer::pointer http_server_socket_;

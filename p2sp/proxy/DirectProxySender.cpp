@@ -14,7 +14,7 @@
 #include "p2sp/AppModule.h"
 #include "p2sp/download/DownloadDriver.h"
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "WindowsMessage.h"
 #endif
 
@@ -62,7 +62,7 @@ namespace p2sp
         }
     }
 
-    void DirectProxySender::Start(uint32_t start_possition)
+    void DirectProxySender::Start(boost::uint32_t start_possition)
     {
         assert(0);
     }
@@ -127,7 +127,7 @@ namespace p2sp
         http_client_->Connect();
     }
 
-    void DirectProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void DirectProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false)
         {
@@ -146,7 +146,7 @@ namespace p2sp
         http_client_->HttpGetByString(network::ProxyRequestToDirectRequest(http_request_->GetRequestString()));
     }
 
-    void DirectProxySender::OnConnectFailed(uint32_t error_code)
+    void DirectProxySender::OnConnectFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false)
         {
@@ -189,7 +189,7 @@ namespace p2sp
         http_client_->HttpRecvSubPiece();
     }
 
-    void DirectProxySender::OnRecvHttpHeaderFailed(uint32_t error_code)
+    void DirectProxySender::OnRecvHttpHeaderFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false)
         {
@@ -203,7 +203,7 @@ namespace p2sp
 
     }
 
-    void DirectProxySender::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip)
+    void DirectProxySender::OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip)
     {
         if (is_running_ == false)
         {
@@ -225,7 +225,7 @@ namespace p2sp
         http_client_->HttpRecvSubPiece();
     }
 
-    void DirectProxySender::OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset)
+    void DirectProxySender::OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         if (is_running_ == false)
         {
@@ -240,7 +240,7 @@ namespace p2sp
         }
     }
 
-    void DirectProxySender::OnRecvHttpDataFailed(uint32_t error_code)
+    void DirectProxySender::OnRecvHttpDataFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false)
         {
@@ -275,14 +275,14 @@ namespace p2sp
         proxy_connection_->WillStop();
     }
 
-    void DirectProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void DirectProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;
     }
-    void DirectProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
+    void DirectProxySender::OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
-        for (uint32_t i = 0; i < buffers.size(); ++i)
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i)
         {
             position += buffers[i].Length();
         }

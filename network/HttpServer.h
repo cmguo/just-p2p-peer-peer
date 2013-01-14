@@ -19,7 +19,7 @@ namespace network
     {
         typedef boost::shared_ptr<IHttpServerListener> pointer;
         virtual void OnHttpRecvSucced(HttpRequest::p http_request) = 0;
-        virtual void OnHttpRecvFailed(uint32_t error_code) = 0;
+        virtual void OnHttpRecvFailed(boost::uint32_t error_code) = 0;
         virtual void OnTcpSendFailed() = 0;
         virtual void OnClose() = 0;
 
@@ -52,12 +52,12 @@ namespace network
             boost::asio::io_service & io_svc);
     public:
         void HttpRecv();
-        void HttpSendHeader(uint32_t content_length, string content_type = "html/text");
+        void HttpSendHeader(boost::uint32_t content_length, string content_type = "html/text");
         void HttpSendHeader(string header_string);
-        void HttpSendBuffer(const boost::uint8_t* data, uint32_t length);
+        void HttpSendBuffer(const boost::uint8_t* data, boost::uint32_t length);
         void HttpSendBuffer(const base::AppBuffer& buffer);
         void HttpSendBuffer(const protocol::SubPieceBuffer& buffer);
-        void HttpSendContent(const boost::uint8_t* data, uint32_t length, string content_type = "html/text");
+        void HttpSendContent(const boost::uint8_t* data, boost::uint32_t length, string content_type = "html/text");
         void HttpSendContent(const string& text, string content_type = "html/text");
         void TcpSend(const base::AppBuffer& buffer);
         void WillClose();
@@ -72,7 +72,7 @@ namespace network
         {
             handler_ = handler;
         }
-        uint32_t GetSendPendingCount() const
+        boost::uint32_t GetSendPendingCount() const
         {
             return send_list_.size();
         }
@@ -81,8 +81,8 @@ namespace network
             return is_open_;
         }
     protected:
-        void HandleHttpRecv(const boost::system::error_code& err, uint32_t bytes_transferred);
-        void HandleTcpSend(const boost::system::error_code& error, uint32_t bytes_transferred);
+        void HandleHttpRecv(const boost::system::error_code& err, boost::uint32_t bytes_transferred);
+        void HandleTcpSend(const boost::system::error_code& error, boost::uint32_t bytes_transferred);
     private:
         boost::asio::ip::tcp::socket socket_;
         boost::asio::streambuf request_;

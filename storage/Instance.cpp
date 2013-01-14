@@ -37,8 +37,8 @@ namespace storage
 #endif
     using namespace base;
 
-    const uint32_t storage_send_speed_limit = 2048;
-    const int32_t deattach_timer_timeout = 5;
+    const boost::uint32_t storage_send_speed_limit = 2048;
+    const boost::int32_t deattach_timer_timeout = 5;
     const boost::int64_t OneDayInSeconds = 24 * 60 * 60;
 
     Instance::Instance()
@@ -150,7 +150,7 @@ namespace storage
 #endif  // #ifdef DISK_MODE
 
     // 根据file_length创建文件资源
-    void Instance::SetFileLength(uint32_t file_length)
+    void Instance::SetFileLength(boost::uint32_t file_length)
     {
         if (is_running_ == false)
             return;
@@ -347,7 +347,7 @@ namespace storage
         assert(instance_state_ == INSTANCE_BEING_MERGED);
         bool merge_finish = false;
 
-        uint32_t merging_count = 0;
+        boost::uint32_t merging_count = 0;
         while (true)
         {
             //我们收集到的个别crash (1910, 0x2e4ed)中，merge_to_instance_p为空。
@@ -441,7 +441,7 @@ namespace storage
                 return false;
             }
 
-            for (uint32_t i = 0; i < subpiece_manager_->GetBlockCount(); i++)
+            for (boost::uint32_t i = 0; i < subpiece_manager_->GetBlockCount(); i++)
             {
                 if (!subpiece_manager_->GetRidInfo().block_md5_s_[i].is_empty())
                 {
@@ -627,7 +627,7 @@ namespace storage
         {
             if (send_count_ < send_speed_limit_)
             {
-                uint32_t position = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
+                boost::uint32_t position = subpiece_manager_->SubPieceInfoToPosition(subpiece_info);
                 LOG4CPLUS_ERROR_LOG(logger_instance, "Notify OnRecvSubPiece, subpiece:" << subpiece_info 
                     << ", position = " << position);
                 for (std::set<IDownloadDriver::p>::const_iterator iter = download_driver_s_.begin(); iter != download_driver_s_.end(); ++iter) {
@@ -643,7 +643,7 @@ namespace storage
         }
     }
 
-    void Instance::OnWriteBlockFinish(uint32_t block_index)
+    void Instance::OnWriteBlockFinish(boost::uint32_t block_index)
     {
         if (false == is_running_)
             return;
@@ -654,7 +654,7 @@ namespace storage
         }
     }
 
-void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, 
+void Instance::OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, base::AppBuffer& buf, 
         IUploadListener::p listener, MD5 hash_val)
     {
         if (false == is_running_)
@@ -690,7 +690,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         }
     }
 
-    void Instance::OnReadBlockForUploadFinish(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener)
+    void Instance::OnReadBlockForUploadFinish(boost::uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener)
     {
         if (false == is_running_)
         {
@@ -706,7 +706,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
     // block写入完毕，赋予MD5值，检查文件是否写入完毕，完毕则通知其他模块下载完毕
     // 读取需要上传的block，上传
-    void Instance::OnPendingHashBlockFinish(uint32_t block_index, MD5 hash_val)
+    void Instance::OnPendingHashBlockFinish(boost::uint32_t block_index, MD5 hash_val)
     {
         if (false == is_running_)
             return;
@@ -757,7 +757,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
     // 从资源描述, pending_subpiece_manager和pending_get_subpiece_manager中删除block
     // 通知upload_listener获取subpiece失败，通知download_driver，makeblock失败
-    void Instance::OnRemoveResourceBlockFinish(uint32_t block_index)
+    void Instance::OnRemoveResourceBlockFinish(boost::uint32_t block_index)
     {
         if (!subpiece_manager_)
         {
@@ -795,7 +795,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     }
 
     // 如果某个block已被鉴定，则从文件中读取，将该block交给upload_driver，否则...
-    void Instance::AsyncGetBlock(uint32_t block_index, IUploadListener::p listener)
+    void Instance::AsyncGetBlock(boost::uint32_t block_index, IUploadListener::p listener)
     {
         
         if (is_running_ == false)
@@ -882,7 +882,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         AsyncAddSubPiece(subpiece_info, buffer);
     }
 
-    bool Instance::GetSubPieceForPlay(IDownloadDriver::p dd, uint32_t start_position, std::vector<protocol::SubPieceBuffer> & buffers)
+    bool Instance::GetSubPieceForPlay(IDownloadDriver::p dd, boost::uint32_t start_position, std::vector<protocol::SubPieceBuffer> & buffers)
     {
         LOG4CPLUS_DEBUG_LOG(logger_instance, " start_position:" << start_position);
         if (is_running_ == false)
@@ -982,7 +982,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         }
     }
 
-    bool Instance::GetNextPieceForDownload(uint32_t start_position, protocol::PieceInfoEx& piece_for_download)
+    bool Instance::GetNextPieceForDownload(boost::uint32_t start_position, protocol::PieceInfoEx& piece_for_download)
     {
         if (is_running_ == false)
             return false;
@@ -1116,7 +1116,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     }
 
     // 通知DownloadDriver makeblock成功或失败
-    void Instance::OnNotifyHashBlock(uint32_t block_index, bool b_success)
+    void Instance::OnNotifyHashBlock(boost::uint32_t block_index, bool b_success)
     {
         if (is_running_ == false)
             return;
@@ -1271,7 +1271,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             for (; iter != download_driver_s_.end() && (*iter)->IsHeaderResopnsed(); ++iter)
             {
                 IDownloadDriver::p dd = *iter;
-                uint32_t play_position = dd->GetPlayingPosition();
+                boost::uint32_t play_position = dd->GetPlayingPosition();
                 if (play_position < GetFileLength())
                 {
                     protocol::SubPieceInfo play_s_info;
@@ -1396,7 +1396,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     float Instance::GetInstanceValue()
     {
         LOG4CPLUS_DEBUG_LOG(logger_instance, "--------------" << resource_p_->file_name_);
-        uint32_t total_time = traffic_list_.size();
+        boost::uint32_t total_time = traffic_list_.size();
         float protect_value = 0.0;
         if (total_time <= TRAFFIC_PROTECT_TIME)
         {
@@ -1407,14 +1407,14 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         // assert(total_time > 0);
 
-        std::list<uint32_t>::iterator begin = traffic_list_.begin();
-        std::list<uint32_t>::iterator end = traffic_list_.end();
+        std::list<boost::uint32_t>::iterator begin = traffic_list_.begin();
+        std::list<boost::uint32_t>::iterator end = traffic_list_.end();
 
         double sum = 0;
         int i = 0;
         int n = traffic_list_.size();
         LOG4CPLUS_DEBUG_LOG(logger_instance, "天数 = " << n);
-        for (std::list<uint32_t>::iterator it = begin; it != end; ++it)
+        for (std::list<boost::uint32_t>::iterator it = begin; it != end; ++it)
         {
             LOG4CPLUS_DEBUG_LOG(logger_instance, "i = " << i << " 分子 = " << pow((double)2, (double)i) << " 分母 = " 
                 << (pow((double)2, (double)n)-1) << " 值 = " << *it);
@@ -1477,16 +1477,16 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
             // get
             boost::any duration = parser.GetProperty("duration");
             if (duration.type() == typeid(double))
-                GetMetaData().Duration = (uint32_t) (boost::any_cast<double>(duration) + 0.5);
+                GetMetaData().Duration = (boost::uint32_t) (boost::any_cast<double>(duration) + 0.5);
             boost::any width = parser.GetProperty("width");
             if (width.type() == typeid(double))
-                GetMetaData().Width = (uint32_t) (boost::any_cast<double>(width) + 0.5);
+                GetMetaData().Width = (boost::uint32_t) (boost::any_cast<double>(width) + 0.5);
             boost::any height = parser.GetProperty("height");
             if (height.type() == typeid(double))
-                GetMetaData().Height = (uint32_t) (boost::any_cast<double>(height) + 0.5);
+                GetMetaData().Height = (boost::uint32_t) (boost::any_cast<double>(height) + 0.5);
             boost::any video_data_rate = parser.GetProperty("videodatarate");
             if (video_data_rate.type() == typeid(double))
-                GetMetaData().VideoDataRate = (uint32_t) (boost::any_cast<double>(video_data_rate) / 8.0 + 0.5);
+                GetMetaData().VideoDataRate = (boost::uint32_t) (boost::any_cast<double>(video_data_rate) / 8.0 + 0.5);
         }
         else if (GetMetaData().FileFormat == "mp4")
         {
@@ -1498,7 +1498,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
 
         GetMetaData().FileLength = GetFileLength();
         if (GetMetaData().Duration != 0)
-            GetMetaData().VideoDataRate = (uint32_t) (GetMetaData().FileLength / (GetMetaData().Duration + 0.0) + 0.5);
+            GetMetaData().VideoDataRate = (boost::uint32_t) (GetMetaData().FileLength / (GetMetaData().Duration + 0.0) + 0.5);
 
         file_duration_in_sec_ = GetMetaData().Duration;
         data_rate_ = GetMetaData().VideoDataRate;
@@ -1568,7 +1568,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
         {
             std::vector<protocol::SubPieceContent*> buffs;
             protocol::SubPieceInfo iter_sub_piece(start_s_info);
-            uint32_t subpiece_count_in_block;
+            boost::uint32_t subpiece_count_in_block;
 
             if (subpiece_manager_->SetBlockReading(iter_sub_piece.block_index_))
             {
@@ -1603,7 +1603,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     }
 #endif
 
-    void Instance::UpdateBlockHashTime(uint32_t block_index)
+    void Instance::UpdateBlockHashTime(boost::uint32_t block_index)
     {
 #ifdef DISK_MODE
         boost::int64_t last_write_time_now = resource_p_->GetLastWriteTime();
@@ -1622,7 +1622,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     }
 
 #ifdef DISK_MODE
-    bool Instance::CheckBlockNeedHash(uint32_t block_index)
+    bool Instance::CheckBlockNeedHash(boost::uint32_t block_index)
     {
         boost::uint64_t last_write_time_now = resource_p_->GetLastWriteTime();
         if (last_write_time_now == 0 || filesystem_last_write_time_ != last_write_time_now
@@ -1641,15 +1641,15 @@ void Instance::OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::Ap
     }
 #endif
 
-    std::map<uint32_t,boost::dynamic_bitset<uint32_t> > Instance::GetSubPiecesBitMap()
+    std::map<boost::uint32_t,boost::dynamic_bitset<boost::uint32_t> > Instance::GetSubPiecesBitMap()
     {
-       map<uint32_t,boost::dynamic_bitset<uint32_t> > subpieces_bitmap_;
-       uint32_t total_block_count = GetBlockCount();
-       for(uint32_t block_index = 0; block_index<total_block_count; block_index++)
+       map<boost::uint32_t,boost::dynamic_bitset<boost::uint32_t> > subpieces_bitmap_;
+       boost::uint32_t total_block_count = GetBlockCount();
+       for(boost::uint32_t block_index = 0; block_index<total_block_count; block_index++)
        {
            //获取每个block中的bitset
-           boost::dynamic_bitset<uint32_t> &db = subpieces_bitmap_[block_index];
-           uint32_t block_subpiece_num = subpiece_manager_->GetBlockSubPieceCount(block_index);
+           boost::dynamic_bitset<boost::uint32_t> &db = subpieces_bitmap_[block_index];
+           boost::uint32_t block_subpiece_num = subpiece_manager_->GetBlockSubPieceCount(block_index);
            db.resize(block_subpiece_num);
            for(int subpiece_index = 0; subpiece_index < block_subpiece_num; subpiece_index++)
            {

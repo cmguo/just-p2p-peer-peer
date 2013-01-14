@@ -46,18 +46,18 @@ namespace p2sp
 
         struct PEER_RECVTIME
         {
-            PEER_RECVTIME(uint32_t recv_time_, LivePeerConnection__p peer_)
+            PEER_RECVTIME(boost::uint32_t recv_time_, LivePeerConnection__p peer_)
                 : recv_time(recv_time_), peer(peer_) {}           
             PEER_RECVTIME(const PEER_RECVTIME & p1)
                 : recv_time(p1.recv_time), peer(p1.peer){}
-            uint32_t recv_time;
+            boost::uint32_t recv_time;
             LivePeerConnection__p peer;
         };
         friend inline bool operator < (PEER_RECVTIME & p1, PEER_RECVTIME & p2);
 
         std::list<PEER_RECVTIME> peer_connection_recvtime_list_;
 
-        std::map<uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
+        std::map<boost::uint32_t, protocol::LiveSubPieceInfo> block_tasks_;
     };
 
     inline bool operator < (LiveAssigner::PEER_RECVTIME & p1, LiveAssigner::PEER_RECVTIME & p2)

@@ -129,7 +129,7 @@ namespace p2sp
         }
     }
 
-    uint32_t NetworkQualityMonitor::GetPingLostRate()
+    boost::uint32_t NetworkQualityMonitor::GetPingLostRate()
     {
         if (!is_running_)
         {

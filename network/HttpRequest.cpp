@@ -50,7 +50,7 @@ namespace network
                 continue;
             }
             std::vector<string> key_value;
-            uint32_t splite_pos = line.find_first_of(":");
+            boost::uint32_t splite_pos = line.find_first_of(":");
             if (splite_pos == string::npos)
                 continue;
             string key = line.substr(0, splite_pos);
@@ -292,7 +292,7 @@ namespace network
                 }
                 else if (key == "Pragma")
                 {
-                    uint32_t idx = value.find_first_of('=');
+                    boost::uint32_t idx = value.find_first_of('=');
                     // remove Proxy
                     if (idx != string::npos && boost::algorithm::trim_copy(value.substr(0, idx)) == "Proxy")
                     {

@@ -24,8 +24,8 @@ namespace network
         boost::uint16_t port,
         string request,
         string refer_url,
-        uint32_t range_begin,
-        uint32_t range_end,
+        boost::uint32_t range_begin,
+        boost::uint32_t range_end,
         bool is_accept_gzip,
         string user_agent)
         : socket_(io_svc)
@@ -73,8 +73,8 @@ namespace network
         boost::asio::io_service & io_svc,
         string url,
         string refer_url,
-        uint32_t range_begin,
-        uint32_t range_end,
+        boost::uint32_t range_begin,
+        boost::uint32_t range_end,
         bool is_accept_gzip,
         string user_agent)
     {
@@ -98,8 +98,8 @@ namespace network
         network::HttpRequest::p http_request_demo,
         string url,
         string refer_url,
-        uint32_t range_begin,
-        uint32_t range_end,
+        boost::uint32_t range_begin,
+        boost::uint32_t range_end,
         bool is_accept_gzip,
         string user_agent)
     {
@@ -160,8 +160,8 @@ namespace network
         boost::uint16_t port,
         string request,
         string refer_url,
-        uint32_t range_begin,
-        uint32_t range_end,
+        boost::uint32_t range_begin,
+        boost::uint32_t range_end,
         bool is_accept_gzip,
         string user_agent)
     {
@@ -518,7 +518,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HttpGet(uint32_t range_begin, uint32_t range_end)
+    void HttpClient<ContentType>::HttpGet(boost::uint32_t range_begin, boost::uint32_t range_end)
     {
         if (!is_accept_gzip_)
         {
@@ -529,7 +529,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HttpGet(string refer_url, uint32_t range_begin, uint32_t range_end)
+    void HttpClient<ContentType>::HttpGet(string refer_url, boost::uint32_t range_begin, boost::uint32_t range_end)
     {
         request_info_.refer_url_ = refer_url;
         if (!is_accept_gzip_)
@@ -541,7 +541,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HttpGet(network::HttpRequest::p http_request_demo, uint32_t range_begin, uint32_t range_end)
+    void HttpClient<ContentType>::HttpGet(network::HttpRequest::p http_request_demo, boost::uint32_t range_begin, boost::uint32_t range_end)
     {
         request_info_.http_request_demo_ = http_request_demo;
         request_info_.range_begin_ = range_begin;
@@ -550,7 +550,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HttpGet(network::HttpRequest::p http_request_demo, string refer_url, uint32_t range_begin, uint32_t range_end)
+    void HttpClient<ContentType>::HttpGet(network::HttpRequest::p http_request_demo, string refer_url, boost::uint32_t range_begin, boost::uint32_t range_end)
     {
         request_info_.http_request_demo_ = http_request_demo;
         request_info_.refer_url_ = refer_url;
@@ -577,7 +577,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HandleWriteRequest(const boost::system::error_code& err, uint32_t bytes_transferred)
+    void HttpClient<ContentType>::HandleWriteRequest(const boost::system::error_code& err, boost::uint32_t bytes_transferred)
     {
         if (false == is_connected_)
             return;
@@ -613,7 +613,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HandleReadHttpHeader(const boost::system::error_code& err, uint32_t bytes_transferred)
+    void HttpClient<ContentType>::HandleReadHttpHeader(const boost::system::error_code& err, boost::uint32_t bytes_transferred)
     {
         if (false == is_connected_)
             return;
@@ -632,7 +632,7 @@ namespace network
                 ", ResponseSize = " << response_.size());
             assert(bytes_transferred <= response_.size());
             string response_string;
-            uint32_t header_length;
+            boost::uint32_t header_length;
             std::istream is(&response_);
             response_string.resize(bytes_transferred);
             is.read((char*)&response_string[0], bytes_transferred);
@@ -680,7 +680,7 @@ namespace network
 
             if (false == http_response_->HasContentLength())
             {
-                content_length_ = std::numeric_limits<uint32_t>::max();
+                content_length_ = std::numeric_limits<boost::uint32_t>::max();
                 is_chunked_ = true;
             }
             else
@@ -691,7 +691,7 @@ namespace network
 
             if (request_info_.range_begin_ != 0)
             {
-                uint32_t range_begin = http_response_->GetRangeBegin();
+                boost::uint32_t range_begin = http_response_->GetRangeBegin();
                 file_offset_ = range_begin;
                 LOG4CPLUS_INFO_LOG(logger_httpclient, "http_response_->GetRangeBegin(): " << range_begin << 
                     " file_offset=" << file_offset_);
@@ -731,7 +731,7 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HttpRecv(uint32_t length)
+    void HttpClient<ContentType>::HttpRecv(boost::uint32_t length)
     {
         if (false == is_connected_)
             return;
@@ -755,8 +755,8 @@ namespace network
             length = content_length_ - content_offset_;
         }
 
-        uint32_t network_length = length;
-        uint32_t buffer_offset = 0;
+        boost::uint32_t network_length = length;
+        boost::uint32_t buffer_offset = 0;
 
         protocol::SubPieceBufferImp<ContentType> buffer(new ContentType(), length);
         if (!buffer.GetSubPieceBuffer())
@@ -771,8 +771,8 @@ namespace network
             is.read((char*) buffer.Data(), length);
             buffer.Length(length);
 
-            uint32_t file_offset = file_offset_;
-            uint32_t content_offset = content_offset_;
+            boost::uint32_t file_offset = file_offset_;
+            boost::uint32_t content_offset = content_offset_;
             file_offset_ += length;
             content_offset_ += length;
             if (handler_)
@@ -833,14 +833,14 @@ namespace network
     }
 
     template <typename ContentType>
-    void HttpClient<ContentType>::HandleReadHttp(const boost::system::error_code& err, uint32_t bytes_transferred, uint32_t buffer_length,
-        uint32_t file_offset, uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, uint32_t buffer_offset)
+    void HttpClient<ContentType>::HandleReadHttp(const boost::system::error_code& err, boost::uint32_t bytes_transferred, boost::uint32_t buffer_length,
+        boost::uint32_t file_offset, boost::uint32_t content_offset, protocol::SubPieceBufferImp<ContentType> buffer, boost::uint32_t buffer_offset)
     {
         LOG4CPLUS_INFO_LOG(logger_httpclient, "BytesTransferred = " << bytes_transferred);
         if (false == is_connected_)
             return;
 
-        static uint32_t id = 0;
+        static boost::uint32_t id = 0;
 
         assert(is_requesting_ == true);
         if (is_requesting_ == false)

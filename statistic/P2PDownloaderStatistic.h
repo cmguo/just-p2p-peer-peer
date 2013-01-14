@@ -34,7 +34,7 @@ namespace statistic
 
         bool IsRunning() const;
 
-        void OnShareMemoryTimer(uint32_t times);
+        void OnShareMemoryTimer(boost::uint32_t times);
 
         const P2PDOWNLOADER_STATISTIC_INFO& TakeSnapshot();
 
@@ -57,14 +57,14 @@ namespace statistic
 
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
-        void SubmitPeerDownloadedBytes(uint32_t downloaded_bytes);
-        void SubmitPeerUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitPeerDownloadedBytes(boost::uint32_t downloaded_bytes);
+        void SubmitPeerUploadedBytes(boost::uint32_t uploaded_bytes);
 
-        void SubmitSnDownloadedBytes(uint32_t downloaded_bytes);
-        void SubmitSnUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitSnDownloadedBytes(boost::uint32_t downloaded_bytes);
+        void SubmitSnUploadedBytes(boost::uint32_t uploaded_bytes);
 
         void SubmitDoListRequestCount(boost::uint32_t station_no);
         void SubmitDoListReponseCount(boost::uint32_t station_no);
@@ -81,12 +81,12 @@ namespace statistic
 
         SPEED_INFO_EX GetSnSpeedInfoEx();
 
-        uint32_t GetElapsedTimeInMilliSeconds();
+        boost::uint32_t GetElapsedTimeInMilliSeconds();
 
         //////////////////////////////////////////////////////////////////////////
         // Resource Info
 
-        void SetFileLength(uint32_t file_length);
+        void SetFileLength(boost::uint32_t file_length);
 
         void SetBlockNum(boost::uint16_t block_num);
 
@@ -142,32 +142,32 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Misc
 
-        uint32_t GetMaxP2PConnectionCount() const;
+        boost::uint32_t GetMaxP2PConnectionCount() const;
 
         RID GetResourceID() const;
 
         //////////////////////////////////////////////////////////////////////////
         // P2P Data Bytes
 
-        void SubmitP2PPeerDataBytesWithRedundance(uint32_t p2p_data_bytes);
+        void SubmitP2PPeerDataBytesWithRedundance(boost::uint32_t p2p_data_bytes);
 
-        void SubmitP2PPeerDataBytesWithoutRedundance(uint32_t p2p_data_bytes);
+        void SubmitP2PPeerDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes);
 
-        void SubmitP2PSnDataBytesWithRedundance(uint32_t p2p_data_bytes);
+        void SubmitP2PSnDataBytesWithRedundance(boost::uint32_t p2p_data_bytes);
 
-        void SubmitP2PSnDataBytesWithoutRedundance(uint32_t p2p_data_bytes);
+        void SubmitP2PSnDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes);
 
         void ClearP2PDataBytes();
 
-        uint32_t GetTotalP2PPeerDataBytesWithRedundance();
+        boost::uint32_t GetTotalP2PPeerDataBytesWithRedundance();
 
-        uint32_t GetTotalP2PPeerDataBytesWithoutRedundance();
+        boost::uint32_t GetTotalP2PPeerDataBytesWithoutRedundance();
 
-        uint32_t GetTotalP2PSnDataBytesWithRedundance();
+        boost::uint32_t GetTotalP2PSnDataBytesWithRedundance();
 
-        uint32_t GetTotalP2PSnDataBytesWithoutRedundance();
+        boost::uint32_t GetTotalP2PSnDataBytesWithoutRedundance();
 
-        void SetEmptySubpieceDistance(uint32_t empty_subpiece_distance);
+        void SetEmptySubpieceDistance(boost::uint32_t empty_subpiece_distance);
 
         void SubmitPeerConnectRequestCount(boost::uint8_t nat_type);
         void SubmitPeerConnectSuccessCount(boost::uint8_t nat_type);
@@ -196,7 +196,7 @@ namespace statistic
 
         string GetSharedMemoryName();
 
-        uint32_t GetSharedMemorySize();
+        boost::uint32_t GetSharedMemorySize();
 
         //////////////////////////////////////////////////////////////////////////
         // Misc
@@ -219,10 +219,10 @@ namespace statistic
 
         boost::uint32_t total_list_request_count_;
         boost::uint32_t total_list_response_count_;
-        std::map<uint32_t, int> tracker_list_request_count_;
-        std::map<uint32_t, int> tracker_list_response_count_;
+        std::map<boost::uint32_t, int> tracker_list_request_count_;
+        std::map<boost::uint32_t, int> tracker_list_response_count_;
 
-        std::map<uint16_t, std::pair<uint32_t, uint32_t> > nat_type_connection_statistic_;
+        std::map<boost::uint16_t, std::pair<boost::uint32_t, boost::uint32_t> > nat_type_connection_statistic_;
 
         RID resource_id_;
 
@@ -241,22 +241,22 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // P2P Data Bytes
 
-    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithRedundance(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithRedundance(boost::uint32_t p2p_data_bytes)
     {
         p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance += p2p_data_bytes;
     }
 
-    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithoutRedundance(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes)
     {
         p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance += p2p_data_bytes;
     }
 
-    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithRedundance(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithRedundance(boost::uint32_t p2p_data_bytes)
     {
         p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance += p2p_data_bytes;
     }
 
-    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithoutRedundance(uint32_t p2p_data_bytes)
+    inline void P2PDownloaderStatistic::SubmitP2PSnDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes)
     {
         p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance += p2p_data_bytes;
     }
@@ -269,22 +269,22 @@ namespace statistic
         p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance = 0;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithRedundance()
+    inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithRedundance()
     {
         return p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithoutRedundance()
+    inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithoutRedundance()
     {
         return p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithRedundance()
+    inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithRedundance()
     {
         return p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance;
     }
 
-    inline uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithoutRedundance()
+    inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PSnDataBytesWithoutRedundance()
     {
         return p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance;
     }
@@ -314,32 +314,32 @@ namespace statistic
 
     //////////////////////////////////////////////////////////////////////////
     // Speed Info
-    inline void P2PDownloaderStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitPeerDownloadedBytes(uint32_t downloaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitPeerDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         peer_speed_info_.SubmitDownloadedBytes(downloaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitPeerUploadedBytes(uint32_t uploaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitPeerUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         peer_speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitSnDownloadedBytes(uint32_t downloaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitSnDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         sn_speed_info_.SubmitDownloadedBytes(downloaded_bytes);
     }
 
-    inline void P2PDownloaderStatistic::SubmitSnUploadedBytes(uint32_t uploaded_bytes)
+    inline void P2PDownloaderStatistic::SubmitSnUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         sn_speed_info_.SubmitUploadedBytes(uploaded_bytes);
     }

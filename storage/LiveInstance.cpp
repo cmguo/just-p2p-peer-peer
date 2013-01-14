@@ -45,7 +45,7 @@ namespace storage
     }
 
     void LiveInstance::GetNextIncompleteBlock(
-        uint32_t start_piece_id, protocol::LiveSubPieceInfo & next_incomplete_block) const
+        boost::uint32_t start_piece_id, protocol::LiveSubPieceInfo & next_incomplete_block) const
     {
         LOG4CPLUS_DEBUG_LOG(logger_live_instance, "start_piece_id:" << start_piece_id);
         cache_manager_.GetNextMissingSubPiece(start_piece_id, next_incomplete_block);
@@ -79,7 +79,7 @@ namespace storage
         }
     }
 
-    void LiveInstance::BuildAnnounceMap(uint32_t request_block_id, protocol::LiveAnnounceMap& announce_map)
+    void LiveInstance::BuildAnnounceMap(boost::uint32_t request_block_id, protocol::LiveAnnounceMap& announce_map)
     {
         LiveAnnouceMapBuilder builder(cache_manager_, announce_map);
         builder.Build(request_block_id);
@@ -96,14 +96,14 @@ namespace storage
             if (cache_manager_.HasCompleteBlock(current_play_position.GetBlockId()))
             {
                 //send range [subpiece_index, last_subpiece_of_block]
-                uint32_t subpieces_count = cache_manager_.GetSubPiecesCount(current_play_position.GetBlockId());
-                if (false == SendSubPieces(download_driver, static_cast<uint16_t>(subpieces_count - 1)))
+                boost::uint32_t subpieces_count = cache_manager_.GetSubPiecesCount(current_play_position.GetBlockId());
+                if (false == SendSubPieces(download_driver, static_cast<boost::uint16_t>(subpieces_count - 1)))
                 {
                     return;
                 }
 
                 assert(cache_manager_.GetLiveInterval()>0);
-                uint32_t next_block_id = current_play_position.GetBlockId() + cache_manager_.GetLiveInterval();
+                boost::uint32_t next_block_id = current_play_position.GetBlockId() + cache_manager_.GetLiveInterval();
                 current_play_position.SetBlockId(next_block_id);
             }
             else
@@ -115,9 +115,9 @@ namespace storage
                 if (next_missing_subpiece.GetBlockId() == current_play_position.GetBlockId() &&
                     next_missing_subpiece.GetSubPieceIndex() > current_play_position.GetSubPieceIndex())
                 {
-                    uint16_t containing_piece_of_missing_subpiece = LiveBlockNode::GetPieceIndex(next_missing_subpiece.GetSubPieceIndex());
+                    boost::uint16_t containing_piece_of_missing_subpiece = LiveBlockNode::GetPieceIndex(next_missing_subpiece.GetSubPieceIndex());
 
-                    uint32_t last_subpiece_to_send = LiveBlockNode::GetFirstSubPieceIndex(containing_piece_of_missing_subpiece) - 1;
+                    boost::uint32_t last_subpiece_to_send = LiveBlockNode::GetFirstSubPieceIndex(containing_piece_of_missing_subpiece) - 1;
                     if (last_subpiece_to_send >= current_play_position.GetSubPieceIndex())
                     {
                         //这里不必再校验数据，因为每个piece变成完整那一刻都会触发validation，而如果validation不过，数据已被丢掉
@@ -153,7 +153,7 @@ namespace storage
 
         bool is_first_block = current_play_position.GetBlockId() == live_stream->GetStartPosition().GetBlockId();
 
-        uint16_t start_subpiece_index = current_play_position.GetSubPieceIndex();
+        boost::uint16_t start_subpiece_index = current_play_position.GetSubPieceIndex();
         //block的第一个subpiece不推送
         if (start_subpiece_index == 0)
         {
@@ -165,11 +165,11 @@ namespace storage
         
         assert(subpiece_buffers.size() > 0);
 
-        uint32_t total_subpieces_count = cache_manager_.GetSubPiecesCount(current_play_position.GetBlockId());
+        boost::uint32_t total_subpieces_count = cache_manager_.GetSubPiecesCount(current_play_position.GetBlockId());
         assert(total_subpieces_count > 0);
-        uint32_t subpieces_downloaded = current_play_position.GetSubPieceIndex() + subpiece_buffers.size();
+        boost::uint32_t subpieces_downloaded = current_play_position.GetSubPieceIndex() + subpiece_buffers.size();
         assert(subpieces_downloaded <= total_subpieces_count);
-        uint8_t block_progress_percentage =  static_cast<uint8_t>(subpieces_downloaded * 100 / total_subpieces_count);
+        boost::uint8_t block_progress_percentage =  static_cast<boost::uint8_t>(subpieces_downloaded * 100 / total_subpieces_count);
 
         //除了第一个block，其他block的subpiece[1]的前面的FLV头应该去除
         if (false == is_first_block && 

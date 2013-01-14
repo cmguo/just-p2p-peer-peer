@@ -27,22 +27,22 @@ namespace storage
         bool HasSubPiece(const protocol::LiveSubPieceInfo & subpiece) const;
 
         bool IsEmpty() const { return block_nodes_.size() == 0; }
-        bool IsBlockHeaderValid(uint32_t block_id) const;
-        bool HasCompleteBlock(uint32_t block_id) const;
-        bool IsPieceComplete(uint32_t block_id, uint16_t piece_index) const;
-        bool IsPieceValid(uint32_t block_id, uint16_t piece_index) const;
-        bool BlockExists(uint32_t block_id) const { return block_nodes_.find(block_id) != block_nodes_.end(); }
+        bool IsBlockHeaderValid(boost::uint32_t block_id) const;
+        bool HasCompleteBlock(boost::uint32_t block_id) const;
+        bool IsPieceComplete(boost::uint32_t block_id, boost::uint16_t piece_index) const;
+        bool IsPieceValid(boost::uint32_t block_id, boost::uint16_t piece_index) const;
+        bool BlockExists(boost::uint32_t block_id) const { return block_nodes_.find(block_id) != block_nodes_.end(); }
 
-        void GetBlock(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const;
+        void GetBlock(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const;
         void GetSubPiece(protocol::LiveSubPieceInfo subpiece_info, protocol::LiveSubPieceBuffer & subpiece_buffer) const;
 
         //返回range[start_subpiece_index, last_subpiece_index]
-        void GetSubPieces(uint32_t block_id, uint16_t start_subpiece_index, uint16_t last_subpiece_index, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const;
+        void GetSubPieces(boost::uint32_t block_id, boost::uint16_t start_subpiece_index, boost::uint16_t last_subpiece_index, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const;
 
-        uint32_t GetBlockSizeInBytes(uint32_t block_id) const;
-        uint32_t GetSubPiecesCount(uint32_t block_id) const;
+        boost::uint32_t GetBlockSizeInBytes(boost::uint32_t block_id) const;
+        boost::uint32_t GetSubPiecesCount(boost::uint32_t block_id) const;
 
-        void GetNextMissingSubPiece(uint32_t start_block_id, protocol::LiveSubPieceInfo & missing_subpiece) const;
+        void GetNextMissingSubPiece(boost::uint32_t start_block_id, protocol::LiveSubPieceInfo & missing_subpiece) const;
 
         boost::uint32_t GetDataRate() const;
         boost::uint16_t GetCacheSize() const;
@@ -60,7 +60,7 @@ namespace storage
             live_point_tracker_.SetCurrentLivePoint(live_point);
         }
 
-        bool RemoveBlock(uint32_t block_id);
+        bool RemoveBlock(boost::uint32_t block_id);
 
         const RID& GetRID() const { return rid_; }
 
@@ -70,13 +70,13 @@ namespace storage
         boost::uint32_t GetExistSubPieceCount(boost::uint32_t block_id) const;
 
     private:
-        void EnsureBlockExists(uint32_t block_id);
+        void EnsureBlockExists(boost::uint32_t block_id);
 
     private:
         RID rid_;
-        map<uint32_t, LiveBlockNode::p> block_nodes_;
+        map<boost::uint32_t, LiveBlockNode::p> block_nodes_;
         LivePointTracker live_point_tracker_;
-        mutable map<uint32_t, uint32_t> block_checksum_failed_times_;
+        mutable map<boost::uint32_t, boost::uint32_t> block_checksum_failed_times_;
     };
 }
 

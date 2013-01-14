@@ -29,7 +29,7 @@
 #include "p2sp/push/PushModule.h"
 #include "autopeerversion.h"
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "WindowsMessage.h"
 #endif
 
@@ -216,7 +216,7 @@ namespace p2sp
         ProxyModule::Inst()->RemoveProxyConnection(shared_from_this());
     }
 
-    uint32_t ProxyConnection::GetPlayingPosition() const
+    boost::uint32_t ProxyConnection::GetPlayingPosition() const
     {
         if (false == is_running_)
         {
@@ -248,7 +248,7 @@ namespace p2sp
     }
 
     void ProxyConnection::OnRecvSubPiece(
-        uint32_t start_position,
+        boost::uint32_t start_position,
         std::vector<base::AppBuffer> const & buffers)
     {
         LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "OnRecvSubPiece start_position = " << start_position);
@@ -329,14 +329,14 @@ namespace p2sp
 
         if (!metadata_parsed_ && header_buffer_)
         {
-            uint32_t i = 0;
-            uint32_t start_pos = start_position;
+            boost::uint32_t i = 0;
+            boost::uint32_t start_pos = start_position;
 
             while (start_pos < HEADER_LENGTH && i < buffers.size())
             {
                 base::AppBuffer const & buffer = buffers[i++];
-                uint32_t remain = HEADER_LENGTH - start_pos;
-                uint32_t len = (remain < buffer.Length() ? remain : buffer.Length());
+                boost::uint32_t remain = HEADER_LENGTH - start_pos;
+                boost::uint32_t len = (remain < buffer.Length() ? remain : buffer.Length());
                 base::util::memcpy2(header_buffer_.Data() + start_pos, header_buffer_.Length() - start_pos, buffer.Data(), len);
                 start_pos += len;
             }
@@ -406,7 +406,7 @@ namespace p2sp
         }
 
         download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
-        download_driver_->SetSourceType(static_cast<uint32_t>(play_info->GetSourceType()));
+        download_driver_->SetSourceType(static_cast<boost::uint32_t>(play_info->GetSourceType()));
         // speed limit
         download_driver_->SetSpeedLimitInKBps(speed_limit_in_kBps);
 
@@ -593,7 +593,7 @@ namespace p2sp
             int speed_limit_in_kBps = play_info->GetSpeedLimit();
 
             protocol::UrlInfo url_info = play_info->GetUrlInfo();
-            uint32_t start_position = play_info->GetStartPosition();
+            boost::uint32_t start_position = play_info->GetStartPosition();
 
             // fix url
             if (!boost::algorithm::istarts_with(url_info.url_, "http://"))
@@ -685,7 +685,7 @@ namespace p2sp
             download_driver_->SetSessionID(play_info->GetPlayerId());
             download_driver_->SetOpenServiceStartPosition(start_position);
             download_driver_->SetOpenServiceHeadLength(play_info->GetHeadLength());
-            download_driver_->SetSourceType(static_cast<uint32_t>(play_info->GetSourceType()));
+            download_driver_->SetSourceType(static_cast<boost::uint32_t>(play_info->GetSourceType()));
             download_driver_->SetSpeedLimitInKBps(speed_limit_in_kBps);
             download_driver_->SetBWType((JumpBWType)play_info->GetBWType());
             download_driver_->SetBakHosts(play_info->GetBakHosts());
@@ -1089,7 +1089,7 @@ namespace p2sp
         }
     }
 
-    void ProxyConnection::OnHttpRecvFailed(uint32_t error_code)
+    void ProxyConnection::OnHttpRecvFailed(boost::uint32_t error_code)
     {
         if (is_running_ == false) return;
         if (false == save_mode_)
@@ -1148,7 +1148,7 @@ namespace p2sp
         }
     }
 
-    void ProxyConnection::OnProxyTimer(uint32_t times)
+    void ProxyConnection::OnProxyTimer(boost::uint32_t times)
     {
         if (is_running_ == false)
             return;
@@ -1246,7 +1246,7 @@ namespace p2sp
         WillStop();
     }
 
-    void ProxyConnection::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void ProxyConnection::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false) return;
         // assert(is_response_header_ == false);
@@ -1269,7 +1269,7 @@ namespace p2sp
         }
     }
 
-    void ProxyConnection::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void ProxyConnection::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;
@@ -1344,7 +1344,7 @@ namespace p2sp
      */
     /************************************************************************/
     base::AppBuffer ProxyConnection::GetHeader(
-        uint32_t& key_frame_position,
+        boost::uint32_t& key_frame_position,
         base::AppBuffer const & header_buffer)
     {
         // only used in OpenService
@@ -1366,8 +1366,8 @@ namespace p2sp
                 string filename = boost::lexical_cast<string>(fid) + "_head_" + boost::lexical_cast<string>(key_frame_position) + "_source.mp4";
                 FILE * f = fopen(filename.c_str(), "wb");
                 if (f != NULL) {
-                    for (uint32_t i = 0; i < header_buffer.Length();) {
-                        uint32_t c = fwrite(header_buffer.Data() + i, sizeof(boost::uint8_t), header_buffer.Length() - i, f);
+                    for (boost::uint32_t i = 0; i < header_buffer.Length();) {
+                        boost::uint32_t c = fwrite(header_buffer.Data() + i, sizeof(boost::uint8_t), header_buffer.Length() - i, f);
                         i += c;
                     }
                     fclose(f);
@@ -1391,8 +1391,8 @@ namespace p2sp
                 string filename = boost::lexical_cast<string>(fid) + "_head_" + boost::lexical_cast<string>(key_frame_position) + "_generate.mp4";
                 FILE * f = fopen(filename.c_str(), "wb");
                 if (f != NULL) {
-                    for (uint32_t i = 0; i < header.Length();) {
-                        uint32_t c = fwrite(header.Data() + i, sizeof(boost::uint8_t), header.Length() - i, f);
+                    for (boost::uint32_t i = 0; i < header.Length();) {
+                        boost::uint32_t c = fwrite(header.Data() + i, sizeof(boost::uint8_t), header.Length() - i, f);
                         i += c;
                     }
                     fclose(f);
@@ -1613,7 +1613,7 @@ namespace p2sp
         live_download_driver_ = LiveDownloadDriver::create(io_svc_, shared_from_this());
         live_download_driver_->Start(play_info->GetUrlInfo().url_, play_info->GetLiveRIDs(),
             play_info->GetLiveStart(), play_info->GetLiveInterval(), play_info->IsLiveReplay(), play_info->GetDataRates(),
-            play_info->GetChannelID(), static_cast<uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID(),
+            play_info->GetChannelID(), static_cast<boost::uint32_t>(play_info->GetSourceType()), (JumpBWType)play_info->GetBWType(), play_info->GetUniqueID(),
             is_two_vv_of_same_channel_too_near);
 
         if (play_info->GetRestTimeInMillisecond() > 0)
@@ -1634,7 +1634,7 @@ namespace p2sp
     }
 
     // 直播收到数据
-    bool ProxyConnection::OnRecvLivePiece(uint32_t block_id, std::vector<base::AppBuffer> const & buffers)
+    bool ProxyConnection::OnRecvLivePiece(boost::uint32_t block_id, std::vector<base::AppBuffer> const & buffers)
     {
         if (!is_running_)
         {

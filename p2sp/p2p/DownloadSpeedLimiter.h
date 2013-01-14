@@ -109,21 +109,21 @@ namespace p2sp
 
         volatile bool is_running_;
 
-        uint32_t max_data_queue_length_;
+        boost::uint32_t max_data_queue_length_;
 
-        uint32_t packet_life_limit_in_ms_;
+        boost::uint32_t packet_life_limit_in_ms_;
 
         boost::int32_t speed_limit_in_KBps_;
 
-        uint32_t tick_interval_in_ms_;
+        boost::uint32_t tick_interval_in_ms_;
 
-        uint32_t packet_number_per_tick_;
+        boost::uint32_t packet_number_per_tick_;
 
-        uint32_t packet_interval_in_ms_;
+        boost::uint32_t packet_interval_in_ms_;
 
-        uint32_t last_trans_id_;
+        boost::uint32_t last_trans_id_;
 
-        uint32_t sent_count_;
+        boost::uint32_t sent_count_;
 
         framework::timer::PeriodicTimer tick_timer_;
 

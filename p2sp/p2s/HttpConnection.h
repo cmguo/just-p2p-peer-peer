@@ -12,14 +12,14 @@
 
 namespace p2sp
 {
-    const uint32_t NONE = 0;
-    const uint32_t CONNECTING = 1;
-    const uint32_t CONNECTED = 2;
-    const uint32_t HEADERING = 3;
-    const uint32_t HEADERED = 4;
-    const uint32_t PIECEING = 5;
-    const uint32_t PIECED = 6;
-    const uint32_t SLEEPING = 7;
+    const boost::uint32_t NONE = 0;
+    const boost::uint32_t CONNECTING = 1;
+    const boost::uint32_t CONNECTED = 2;
+    const boost::uint32_t HEADERING = 3;
+    const boost::uint32_t HEADERED = 4;
+    const boost::uint32_t PIECEING = 5;
+    const boost::uint32_t PIECED = 6;
+    const boost::uint32_t SLEEPING = 7;
 
     class HttpDownloader;
     typedef boost::shared_ptr<HttpDownloader> HttpDownloader__p;
@@ -56,7 +56,7 @@ namespace p2sp
         }
 
     public:
-        void Start(bool is_support_start, bool open_service = false, uint32_t head_length = (uint32_t)-1);
+        void Start(bool is_support_start, bool open_service = false, boost::uint32_t head_length = (boost::uint32_t)-1);
 
         void Stop();
 
@@ -87,15 +87,15 @@ namespace p2sp
     public:
         // 锟斤拷息
         virtual void OnConnectSucced();
-        virtual void OnConnectFailed(uint32_t error_code);
+        virtual void OnConnectFailed(boost::uint32_t error_code);
         virtual void OnConnectTimeout();
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
 
 
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset, bool is_gzip);
-        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, uint32_t file_offset, uint32_t content_offset);
-        virtual void OnRecvHttpDataFailed(uint32_t error_code);
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code);
+        virtual void OnRecvHttpDataSucced(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset, bool is_gzip);
+        virtual void OnRecvHttpDataPartial(protocol::SubPieceBuffer const & buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code);
         virtual void OnRecvTimeout();
         virtual void OnComplete();
 
@@ -124,9 +124,9 @@ namespace p2sp
         bool is_connected_;
         bool is_open_service_;
 
-        uint32_t head_length_;
+        boost::uint32_t head_length_;
 
-        uint32_t status;
+        boost::uint32_t status;
         bool have_piece_;
         volatile bool is_support_range_;
         bool is_to_get_header_;
@@ -145,10 +145,10 @@ namespace p2sp
         network::HttpRequest::p http_request_demo_;
 
         // 403 header retry
-        uint32_t retry_count_403_header_;
+        boost::uint32_t retry_count_403_header_;
         // 500 header retry
-        uint32_t retry_count_500_header_;
-        uint32_t connect_fail_count_;
+        boost::uint32_t retry_count_500_header_;
+        boost::uint32_t connect_fail_count_;
 
         std::deque<protocol::PieceInfoEx> piece_task;
         bool is_downloading_;

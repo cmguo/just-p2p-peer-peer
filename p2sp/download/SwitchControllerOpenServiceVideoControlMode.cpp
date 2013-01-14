@@ -86,10 +86,10 @@ namespace p2sp
     SwitchController::OpenServiceVideoControlMode::HTTPSPEED 
         SwitchController::OpenServiceVideoControlMode::Check2300HttpSpeed()
     {
-        uint32_t rest_play_time_inms = GetGlobalDataProvider()->GetRestPlayableTime();
-        uint32_t peer_count = GetP2PControlTarget()->GetConnectedPeersCount();
+        boost::uint32_t rest_play_time_inms = GetGlobalDataProvider()->GetRestPlayableTime();
+        boost::uint32_t peer_count = GetP2PControlTarget()->GetConnectedPeersCount();
         IHTTPControlTarget::p http = GetHTTPControlTarget();
-        uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
+        boost::uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
         bool is_http_speed_slow = false;
         bool is_drag = GetGlobalDataProvider()->IsDrag() || GetGlobalDataProvider()->IsStartFromNonZero();
 
@@ -189,9 +189,9 @@ namespace p2sp
     bool SwitchController::OpenServiceVideoControlMode::Is2300RestTimeEnough()
     {
         double data_rate_v;
-        uint32_t data_rate_inkbps = GetGlobalDataProvider()->GetDataRate() / 1024 * 8;        
-        uint32_t rest_play_time_inms = GetGlobalDataProvider()->GetRestPlayableTime();
-        uint32_t peer_count = GetP2PControlTarget()->GetConnectedPeersCount();
+        boost::uint32_t data_rate_inkbps = GetGlobalDataProvider()->GetDataRate() / 1024 * 8;        
+        boost::uint32_t rest_play_time_inms = GetGlobalDataProvider()->GetRestPlayableTime();
+        boost::uint32_t peer_count = GetP2PControlTarget()->GetConnectedPeersCount();
 
         if (data_rate_inkbps < 700)
         {
@@ -232,8 +232,8 @@ namespace p2sp
 
     bool SwitchController::OpenServiceVideoControlMode::Is3200P2pSlow()
     {
-        uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-        uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
+        boost::uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
+        boost::uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
         IP2PControlTarget::p p2p = GetP2PControlTarget();
 
         if (time_counter_3200.elapsed() >= 10000)
@@ -409,7 +409,7 @@ namespace p2sp
 #endif
 
 
-    void SwitchController::OpenServiceVideoControlMode::OnControlTimer(uint32_t times)
+    void SwitchController::OpenServiceVideoControlMode::OnControlTimer(boost::uint32_t times)
     {
         if (false == IsRunning())
             return;
@@ -609,8 +609,8 @@ namespace p2sp
                 // assert
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
-                uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
+                boost::uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
+                boost::uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
                 boost::uint32_t rest_playable_time_in_ms = GetGlobalDataProvider()->GetRestPlayableTime();
 
                 // 进入2200状态表明p2p和http速度不能满足播放，两个一起跑，尽量跑快
@@ -674,8 +674,8 @@ namespace p2sp
                 // assert
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
-                uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
+                boost::uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
+                boost::uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
                 boost::uint32_t rest_playable_time_in_ms = GetGlobalDataProvider()->GetRestPlayableTime();
 
                 if (is_p2p_start_ && time_counter_3200.elapsed() <= 8000 && rest_playable_time_in_ms <= 30000)
@@ -740,8 +740,8 @@ namespace p2sp
                 IP2PControlTarget::p p2p = GetP2PControlTarget();
                 IHTTPControlTarget::p http = GetHTTPControlTarget();
                 boost::uint32_t rest_playable_time = GetGlobalDataProvider()->GetRestPlayableTime();
-                uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
-                uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
+                boost::uint32_t data_rate = GetGlobalDataProvider()->GetDataRate();
+                boost::uint32_t band_width = GetGlobalDataProvider()->GetBandWidth();
 
                 LOG4CPLUS_DEBUG_LOG(logger_switch, (string)state_ << " 2300 " << times << 
                     " time_counter_2300.GetElapsed() = " << time_counter_2300.elapsed()
@@ -787,7 +787,7 @@ namespace p2sp
                             //在这种情况下，我们不能确定正在播放的那一集的剩余缓冲时间。
                             //为避免出现HTTP不够好时，即使上一集即将播完我们也没有尝试速度可能较好的P2P，
                             //我们保守地假设rest_time==-1意味着数据是紧急的
-                            uint32_t rest_time = GetGlobalDataProvider()->GetRestPlayableTime();
+                            boost::uint32_t rest_time = GetGlobalDataProvider()->GetRestPlayableTime();
                             bool urgent_to_download = rest_time < 30*1000 || rest_time == -1;
 
                             if (PrefersSavingServerBandwidth() || urgent_to_download)

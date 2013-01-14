@@ -163,7 +163,7 @@ namespace p2sp
     void ProxyModule::OnTimerElapsed(framework::timer::Timer * pointer)
     {
         if (is_running_ == false) return;
-        uint32_t times = pointer->times();
+        boost::uint32_t times = pointer->times();
         if (pointer == &proxy_timer_)
         {
             OnProxyTimer(times);
@@ -174,7 +174,7 @@ namespace p2sp
         }
     }
 
-    void ProxyModule::OnProxyTimer(uint32_t times)
+    void ProxyModule::OnProxyTimer(boost::uint32_t times)
     {
         if (is_running_ == false) return;
 
@@ -215,7 +215,7 @@ namespace p2sp
 
         if (times % (4*5) == 0)  // 5s
         {
-            uint32_t local_ip = base::util::GetLocalFirstIP();
+            boost::uint32_t local_ip = base::util::GetLocalFirstIP();
             if (local_ip_from_ini_ != local_ip)
             {
                 history_max_download_speed_ = 0;
@@ -1263,12 +1263,12 @@ namespace p2sp
         }
     }
 
-    uint32_t ProxyModule::GetDragPrecent()
+    boost::uint32_t ProxyModule::GetDragPrecent()
     {
         return last_drag_precent;
     }
 
-    void ProxyModule::SetLastDragPrecent(uint32_t drag_precent)
+    void ProxyModule::SetLastDragPrecent(boost::uint32_t drag_precent)
     {
         last_drag_precent = drag_precent;
     }
@@ -1565,15 +1565,15 @@ namespace p2sp
     string ProxyModule::ParseOpenServiceFileName(const network::Uri & uri)
     {
         string filename = uri.getfile();
-#ifdef BOOST_WINDOWS_API
-        // TODO(herain):2011-4-14:why BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
+        // TODO(herain):2011-4-14:why PEER_PC_CLIENT
         filename = network::UrlCodec::Decode(filename);
 #endif
         string segno = base::util::GetSegno(uri);
         LOG4CPLUS_DEBUG_LOG(logger_proxy, "segno = " << segno);
 
         string ext = "[" + segno + "]";
-        uint32_t pos = filename.rfind('.');
+        boost::uint32_t pos = filename.rfind('.');
         if (pos != string::npos) 
         {
             filename.insert(pos, ext);

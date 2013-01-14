@@ -35,7 +35,7 @@ namespace p2sp
         void Start();
         void Stop();
         // 消息
-        void OnP2PTimer(uint32_t times);
+        void OnP2PTimer(boost::uint32_t times);
         void OnPeerExchangePacket(const protocol::PeerExchangePacket & packet);
     public:
         void DoPeerExchange(protocol::CandidatePeerInfo candidate_peerinfo) const;

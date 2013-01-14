@@ -33,9 +33,9 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
 
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
 
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
         const SPEED_INFO & GetSpeedInfo();
 
@@ -44,7 +44,7 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Online Time Info
 
-        uint32_t GetElapsedTimeInMilliSeconds() const;
+        boost::uint32_t GetElapsedTimeInMilliSeconds() const;
 
     private:
 
@@ -60,15 +60,15 @@ namespace statistic
 
         measure::ByteSpeedMeter upload_speed_meter_;
 
-        uint32_t start_time_;
+        boost::uint32_t start_time_;
     };
 
-    inline void SpeedInfoStatistic::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    inline void SpeedInfoStatistic::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         download_speed_meter_.SubmitBytes(downloaded_bytes);
     }
 
-    inline void SpeedInfoStatistic::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    inline void SpeedInfoStatistic::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         upload_speed_meter_.SubmitBytes(uploaded_bytes);
     }

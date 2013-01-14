@@ -21,21 +21,21 @@ namespace storage
 
         void Parse(const boost::uint8_t* buffer, int length);
 
-        uint32_t GetDurationInSeconds() const;
+        boost::uint32_t GetDurationInSeconds() const;
 
     public:
-        uint32_t AtomSize;
+        boost::uint32_t AtomSize;
         char   Type[5];
         boost::uint8_t  Version;
         char   Flags[3];
-        uint32_t CreationTime;
-        uint32_t ModificationTime;
-        uint32_t TimeScale;
-        uint32_t Duration;
+        boost::uint32_t CreationTime;
+        boost::uint32_t ModificationTime;
+        boost::uint32_t TimeScale;
+        boost::uint32_t Duration;
 
     private:
 
-        static uint32_t GetUINT32(const boost::uint8_t* buffer);
+        static boost::uint32_t GetUINT32(const boost::uint8_t* buffer);
 
     };
 

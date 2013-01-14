@@ -38,10 +38,10 @@ namespace p2sp
     public:
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
-        virtual void Start(uint32_t start_possition);
+        virtual void Start(boost::uint32_t start_possition);
         virtual void Stop();
     public:
-        virtual uint32_t GetPlayingPosition() const { return 0; }
+        virtual boost::uint32_t GetPlayingPosition() const { return 0; }
         virtual void SendHttpRequest();
         virtual void ResetPlayingPosition() {}
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
@@ -49,29 +49,29 @@ namespace p2sp
     public:
         // network::HttpServer
         virtual void OnHttpRecvSucced(network::HttpRequest::p http_request);
-        virtual void OnHttpRecvFailed(uint32_t error_code);
+        virtual void OnHttpRecvFailed(boost::uint32_t error_code);
         virtual void OnHttpRecvTimeout();
-        virtual void OnTcpSendSucced(uint32_t length);
+        virtual void OnTcpSendSucced(boost::uint32_t length);
         virtual void OnTcpSendFailed();
         virtual void OnClose();
         // HttpClient
         virtual void OnConnectSucced();
-        virtual void OnConnectFailed(uint32_t error_code);
+        virtual void OnConnectFailed(boost::uint32_t error_code);
         virtual void OnConnectTimeout();
         virtual void OnRecvHttpHeaderSucced(network::HttpResponse::p http_response);
-        virtual void OnRecvHttpHeaderFailed(uint32_t error_code);
-        virtual void OnRecvHttpDataSucced(base::SubPieceContent buffer, uint32_t file_offset, uint32_t content_offset);
-        virtual void OnRecvHttpDataPartial(base::SubPieceContent buffer, uint32_t file_offset, uint32_t content_offset);
-        virtual void OnRecvHttpDataFailed(uint32_t error_code);
+        virtual void OnRecvHttpHeaderFailed(boost::uint32_t error_code);
+        virtual void OnRecvHttpDataSucced(base::SubPieceContent buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
+        virtual void OnRecvHttpDataPartial(base::SubPieceContent buffer, boost::uint32_t file_offset, boost::uint32_t content_offset);
+        virtual void OnRecvHttpDataFailed(boost::uint32_t error_code);
         virtual void OnRecvTimeout();
         virtual void OnComplete();
-        virtual void OnDownloadDriverError(uint32_t error_code);
-        virtual void OnAsyncGetSubPieceSucced(uint32_t start_position, base::SubPieceContent& buffer);
-        virtual void OnAsyncGetSubPieceFailed(uint32_t start_position, int failed_code);
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
+        virtual void OnDownloadDriverError(boost::uint32_t error_code);
+        virtual void OnAsyncGetSubPieceSucced(boost::uint32_t start_position, base::SubPieceContent& buffer);
+        virtual void OnAsyncGetSubPieceFailed(boost::uint32_t start_position, int failed_code);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
         virtual void OnNotice403Header();
 
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
     private:
         network::HttpServer::pointer http_server_socket_;
         network::HttpClient::p http_client_;

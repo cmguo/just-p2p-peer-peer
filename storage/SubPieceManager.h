@@ -18,8 +18,8 @@ namespace storage
     {
     public:
         typedef boost::shared_ptr<SubPieceManager> p;
-        static const uint32_t SUBPIECE_SIZE = 1024;
-        static p Create(uint32_t file_length, bool b_full_file);
+        static const boost::uint32_t SUBPIECE_SIZE = 1024;
+        static p Create(boost::uint32_t file_length, bool b_full_file);
         static p Create(const protocol::RidInfo& rid_info, bool b_full_file);
         static p Parse(base::AppBuffer cfgfile_buf, const protocol::RidInfo& ridinfo);
         bool ToBuffer(base::AppBuffer & resource_desc_buf) const;
@@ -33,12 +33,12 @@ namespace storage
         protocol::RidInfo& GetRidInfo() {return rid_info_;}
         bool HasRID() const {return rid_info_.HasRID();}
         RID GetRID() const {return rid_info_.GetRID();}
-        uint32_t GetBlockCount() const {return rid_info_.GetBlockCount();}
-        uint32_t GetBlockSize() const {return rid_info_.GetBlockSize();}
-        uint32_t GetFileLength() const {return rid_info_.GetFileLength();}
+        boost::uint32_t GetBlockCount() const {return rid_info_.GetBlockCount();}
+        boost::uint32_t GetBlockSize() const {return rid_info_.GetBlockSize();}
+        boost::uint32_t GetFileLength() const {return rid_info_.GetFileLength();}
 
-        bool IsBlockDataInMemCache(uint32_t block_index) const;
-        void RemoveBlockDataFromMemCache(Resource::p resource_p, uint32_t block_index);
+        bool IsBlockDataInMemCache(boost::uint32_t block_index) const;
+        void RemoveBlockDataFromMemCache(Resource::p resource_p, boost::uint32_t block_index);
 
         bool AddSubPiece(const protocol::SubPieceInfo &in, const protocol::SubPieceBuffer& buffer);
         bool LoadSubPiece(const protocol::SubPieceInfo &in, protocol::SubPieceContent::pointer con);
@@ -46,25 +46,25 @@ namespace storage
         bool HasSubPieceInMem(const protocol::SubPieceInfo &in) const;
         bool HasPiece(const protocol::PieceInfo& piece_info) const;
         protocol::SubPieceBuffer GetSubPiece(const protocol::SubPieceInfo& in) const;
-        bool SetBlockReading(const uint32_t block_index);
+        bool SetBlockReading(const boost::uint32_t block_index);
         bool IsSubPieceValid(const protocol::SubPieceInfo &in) const { return in <= last_subpiece_info_;}
         protocol::SubPieceInfo GetMaxSubPieceInfo() {return last_subpiece_info_;}
 
         protocol::BlockMap::p GetBlockMap() const {return block_bit_map_;}
-        uint32_t GetDownloadedBlockCount() const {return block_bit_map_->GetCount();}
-        bool HasFullBlock(uint32_t block_index) const {
+        boost::uint32_t GetDownloadedBlockCount() const {return block_bit_map_->GetCount();}
+        bool HasFullBlock(boost::uint32_t block_index) const {
             return block_bit_map_->HasBlock(block_index);
         }
-        void RemoveBlockInfo(uint32_t block_index);
-        void OnWriteBlockFinish(uint32_t block_index);
+        void RemoveBlockInfo(boost::uint32_t block_index);
+        void OnWriteBlockFinish(boost::uint32_t block_index);
 
         bool GetNextNullSubPiece(const protocol::SubPieceInfo& subpiece_info, protocol::SubPieceInfo& subpiece_for_download) const;
 #ifdef DISK_MODE
-        void WriteBlockToResource(Resource::p resource_p, uint32_t block_index);
+        void WriteBlockToResource(Resource::p resource_p, boost::uint32_t block_index);
 #endif
         void SaveAllBlock(Resource::p resource_p);
 
-        uint32_t GetDownloadBytes() {
+        boost::uint32_t GetDownloadBytes() {
             return download_bytes_;
         }
 
@@ -75,7 +75,7 @@ namespace storage
             return blocks_count_ == 0;
         }
 
-        bool DownloadingBlock(uint32_t block_id) const 
+        bool DownloadingBlock(boost::uint32_t block_id) const 
         {
             if(block_id < blocks_.size() && blocks_[block_id])
             {
@@ -89,7 +89,7 @@ namespace storage
 
     public:
 
-        bool PosToSubPieceInfo(uint32_t position, protocol::SubPieceInfo&subpiec_info)
+        bool PosToSubPieceInfo(boost::uint32_t position, protocol::SubPieceInfo&subpiec_info)
         {
             if (position >= rid_info_.GetFileLength())
             {
@@ -100,7 +100,7 @@ namespace storage
             return true;
         }
 
-        bool PosToPieceInfo(uint32_t position, protocol::PieceInfo &piece_info)
+        bool PosToPieceInfo(boost::uint32_t position, protocol::PieceInfo &piece_info)
         {
             if (position >= rid_info_.GetFileLength())
             {
@@ -111,7 +111,7 @@ namespace storage
             return true;
         }
 
-        bool PosToPieceInfoEx(uint32_t position, protocol::PieceInfoEx &piece_info)
+        bool PosToPieceInfoEx(boost::uint32_t position, protocol::PieceInfoEx &piece_info)
         {
             if (position >= rid_info_.GetFileLength())
             {
@@ -142,13 +142,13 @@ namespace storage
             subpiece_info.subpiece_index_ = piece_info.piece_index_ * subpiece_num_per_piece_g_ + piece_info.subpiece_index_;
         }
 
-        uint32_t SubPieceInfoToPosition(const protocol::SubPieceInfo &subpiec_info)
+        boost::uint32_t SubPieceInfoToPosition(const protocol::SubPieceInfo &subpiec_info)
         {
             return subpiec_info.block_index_ * rid_info_.GetBlockSize() + subpiec_info.subpiece_index_
                 * bytes_num_per_subpiece_g_;
         }
 
-        int GetBlockSubPieceCount(uint32_t block_index)
+        int GetBlockSubPieceCount(boost::uint32_t block_index)
         {
             if (block_index == last_subpiece_info_.block_index_)
             {
@@ -157,7 +157,7 @@ namespace storage
             return rid_info_.GetBlockSize() / bytes_num_per_subpiece_g_;
         }
 
-        void GetBlockPosition(uint32_t block_index, uint32_t &offset, uint32_t &length)
+        void GetBlockPosition(boost::uint32_t block_index, boost::uint32_t &offset, boost::uint32_t &length)
         {
             assert(block_index <= last_subpiece_info_.block_index_);
             offset = block_index * rid_info_.GetBlockSize();
@@ -172,7 +172,7 @@ namespace storage
             return;
         }
 
-        void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length)
+        void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, boost::uint32_t &offset, boost::uint32_t &length)
         {
             assert(subpiec_info <= last_subpiece_info_);
             if (subpiec_info == last_subpiece_info_)
@@ -206,7 +206,7 @@ namespace storage
              return true;
         }
 
-        uint32_t GetTotalSubpieceCountInBlock(uint16_t block_index)
+        boost::uint32_t GetTotalSubpieceCountInBlock(boost::uint16_t block_index)
         {
             if (blocks_[block_index])
                 return blocks_[block_index]->GetTotalSubpieceCountInBlock();
@@ -217,15 +217,15 @@ namespace storage
 
     private:
         protocol::RidInfo rid_info_;
-        uint32_t total_subpiece_count_;      // 总的subpiece
-        uint32_t last_block_capacity_;       // �最后一个block的容
+        boost::uint32_t total_subpiece_count_;      // 总的subpiece
+        boost::uint32_t last_block_capacity_;       // �最后一个block的容
         protocol::SubPieceInfo last_subpiece_info_;    // �最后一片subpiece的位
-        uint32_t last_subpiece_size_;        // �最后一片subpiece的容
+        boost::uint32_t last_subpiece_size_;        // �最后一片subpiece的容
 
         std::vector<BlockNode::p> blocks_;
         protocol::BlockMap::p block_bit_map_;
-        uint32_t blocks_count_;              // �非空的block
-        uint32_t download_bytes_;            // �已下载字节数
+        boost::uint32_t blocks_count_;              // �非空的block
+        boost::uint32_t download_bytes_;            // �已下载字节数
     };
 }
 

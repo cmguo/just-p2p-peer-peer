@@ -13,7 +13,7 @@ namespace p2sp
         const protocol::LiveSubPieceInfo & subpiece_info, 
         boost::uint32_t timeout, 
         LivePeerConnection__p peer_connection,
-        uint32_t transaction_id)
+        boost::uint32_t transaction_id)
     {
         LiveSubPieceRequestTask::p live_subpiece_request_task = 
             LiveSubPieceRequestTask::create(timeout, peer_connection, transaction_id);
@@ -68,7 +68,7 @@ namespace p2sp
             request_tasks_.erase(iter++);
         }
 
-        std::multimap<uint32_t, protocol::LiveSubPieceInfo> to_delete;
+        std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo> to_delete;
         if (matched_task)
         {
             matched_task->peer_connection_->DeleteLostPackets(packet.transaction_id_, to_delete);
@@ -86,9 +86,9 @@ namespace p2sp
             (*task_iter)->peer_connection_->OnSubPieceTimeout();
         }
 
-        uint32_t loss_count = 0;
+        boost::uint32_t loss_count = 0;
 
-        for(std::multimap<uint32_t, protocol::LiveSubPieceInfo>::iterator lost_iter = to_delete.begin();
+        for(std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo>::iterator lost_iter = to_delete.begin();
             lost_iter != to_delete.end(); ++lost_iter)
         {
             std::pair<std::multimap<protocol::LiveSubPieceInfo, LiveSubPieceRequestTask::p>::iterator,
@@ -112,7 +112,7 @@ namespace p2sp
             }
         }
 
-        for(uint32_t k = 0; k < loss_count; k++)
+        for(boost::uint32_t k = 0; k < loss_count; k++)
         {
             matched_task->peer_connection_->OnSubPieceTimeout();
         }
@@ -120,7 +120,7 @@ namespace p2sp
     }
 
     // 每秒执行一次
-    void LiveSubPieceRequestManager::OnP2PTimer(uint32_t times)
+    void LiveSubPieceRequestManager::OnP2PTimer(boost::uint32_t times)
     {
         // 检查超时
         CheckExternalTimeout();
@@ -140,7 +140,7 @@ namespace p2sp
         return false;
     }
 
-    uint32_t LiveSubPieceRequestManager::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info) const
+    boost::uint32_t LiveSubPieceRequestManager::GetRequestingCount(const protocol::LiveSubPieceInfo & subpiece_info) const
     {
         return request_tasks_.count(subpiece_info);
     }

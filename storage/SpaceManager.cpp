@@ -60,9 +60,9 @@ namespace storage
 
         store_path_ = store_p.file_string();
         hidden_sub_path_ = (store_p / ("InvisibleFolder")).file_string();
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         TCHAR old_dir[MAX_PATH];
-        uint32_t pathname_len = GetCurrentDirectory(MAX_PATH, old_dir);
+        boost::uint32_t pathname_len = GetCurrentDirectory(MAX_PATH, old_dir);
         assert(pathname_len<MAX_PATH);
 #endif
         if (STORAGE_MODE_NORMAL == Storage::Inst_Storage()->GetStorageMode())
@@ -70,11 +70,11 @@ namespace storage
             OpenAndCreateStoreDir();
             Storage::Inst_Storage()->CreateHiddenDir(hidden_sub_path_);
         }
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         SetCurrentDirectory(old_dir);
 #endif
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         framework::configure::Config conf;
         framework::configure::ConfigModule & storage_conf =
             conf.register_module("Storage");
@@ -88,7 +88,7 @@ namespace storage
 #endif
     }
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     __int64 SpaceManager::GetDirectoryAvialbeSize(string DirPathName)
     {
         ULARGE_INTEGER ulDiskFreeSize;
@@ -145,7 +145,7 @@ namespace storage
         StorageThread::Inst().Post(boost::bind(&Resource::FreeDiskSpace, resource_p, need_remove_file));
     }
 
-    void SpaceManager::OnFreeDiskSpaceFinish(uint32_t filesize, Resource::p resource_p)
+    void SpaceManager::OnFreeDiskSpaceFinish(boost::uint32_t filesize, Resource::p resource_p)
     {
         if (removing_fileresource_set_.find(resource_p) == removing_fileresource_set_.end())
         {
@@ -212,7 +212,7 @@ namespace storage
         }
     }
 
-    void SpaceManager::AddToRemoveResourceList(Resource::p resource_p, uint32_t disk_file_size)
+    void SpaceManager::AddToRemoveResourceList(Resource::p resource_p, boost::uint32_t disk_file_size)
     {
         assert(resource_p);
         if (removing_fileresource_set_.find(resource_p) != removing_fileresource_set_.end())
@@ -243,7 +243,7 @@ namespace storage
             != pending_instance_need_resource_set.end(); ++it)
         {
             Instance::p resource_inst = (*it);
-            boost::uint64_t inst_init_size = std::min((uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
+            boost::uint64_t inst_init_size = std::min((boost::uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
             if (0 == min_init_size)
             {
                 min_init_size = inst_init_size;
@@ -284,7 +284,7 @@ namespace storage
                 continue;
             }
 
-            uint32_t init_size = std::min((uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
+            boost::uint32_t init_size = std::min((boost::uint32_t)(2 * 1024 * 1024), resource_inst->GetResourceLength());
 
             LOG4CPLUS_DEBUG_LOG(logger_space_manager, "curr_free_disk_size = " << curr_free_disk_size << 
                 ", init_size = " << init_size << ", free_size_ = " << free_size_ << ", reult: " << 
@@ -328,14 +328,14 @@ namespace storage
 
     void SpaceManager::RequestResource(Instance::p resource_inst)
     {
-        // uint32_t resource_length = resource_inst->GetResourceLength();
+        // boost::uint32_t resource_length = resource_inst->GetResourceLength();
         assert(pending_instance_need_resource_set.find(resource_inst) == pending_instance_need_resource_set.end());
         pending_instance_need_resource_set.insert(resource_inst);
         DiskSpaceMaintain();
         return;
     }
 
-    bool SpaceManager::OnCreateResource(Instance::p resource_inst, uint32_t init_size)
+    bool SpaceManager::OnCreateResource(Instance::p resource_inst, boost::uint32_t init_size)
     {
         if (false == b_use_disk_)
         {
@@ -345,7 +345,7 @@ namespace storage
         assert(resource_inst->GetStatus() == INSTANCE_APPLY_RESOURCE);
         string filename = resource_inst->GetResourceName();
         assert(filename.size()>0);
-        uint32_t file_size = resource_inst->GetResourceLength();
+        boost::uint32_t file_size = resource_inst->GetResourceLength();
         assert(file_size>0);
         LOG4CPLUS_DEBUG_LOG(logger_space_manager, " try create resource_name_" << (filename));
         string full_file_name;
@@ -395,7 +395,7 @@ namespace storage
         return false;
     }
 
-    FILE* SpaceManager::TryCreateFile(string filename, string &last_filename, uint32_t file_size)
+    FILE* SpaceManager::TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size)
     {
         if (false == b_use_disk_)
         {
@@ -538,7 +538,7 @@ namespace storage
         }
     }
 
-    void SpaceManager::OnAllocDiskSpace(uint32_t alloc_space, unsigned char down_mode)
+    void SpaceManager::OnAllocDiskSpace(boost::uint32_t alloc_space, unsigned char down_mode)
     {
         if (DM_BY_ACCELERATE == down_mode)
         {
@@ -551,7 +551,7 @@ namespace storage
         }
     }
 
-    void SpaceManager::OnReleaseDiskSpace(uint32_t alloc_space, unsigned char down_mode)
+    void SpaceManager::OnReleaseDiskSpace(boost::uint32_t alloc_space, unsigned char down_mode)
     {
         if (DM_BY_ACCELERATE == down_mode)
         {

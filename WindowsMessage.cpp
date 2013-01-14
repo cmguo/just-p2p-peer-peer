@@ -4,7 +4,7 @@
 
 #include "Common.h"
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "WindowsMessage.h"
 
 WindowsMessage::p WindowsMessage::windows_message_ ;

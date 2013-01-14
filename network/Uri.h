@@ -5,7 +5,7 @@
 #ifndef FRAMEWORK_NETWORK_URI_H
 #define FRAMEWORK_NETWORK_URI_H
 
-const uint32_t NOPOS = (uint32_t)-1;
+const boost::uint32_t NOPOS = (boost::uint32_t)-1;
 
 //            synacast:  // www.pplive.com:554/xxxx/xxx/xx.exe?y1 = a&y2 = b#poiasdygopaisdugopasidjfopi
 //                      |     domain   |   |        |      |         |
@@ -155,7 +155,7 @@ namespace network
         string getparameter(const string& key) const
         {
             string para = getparameter();
-            uint32_t startp_, endp_;
+            boost::uint32_t startp_, endp_;
 
             para = "&" + para;
             string key1 = "&" + key + "=";
@@ -290,20 +290,20 @@ namespace network
 
     private:
         string url_;
-        uint32_t protcalpos_;
-        uint32_t host_start_pos_;
-        uint32_t host_end_pos_;
-        uint32_t domain_end_pos_;
-        uint32_t port_start_pos_;
-        uint32_t port_end_pos_;
-        uint32_t path_start_pos_;
-        uint32_t path_end_pos_;
-        uint32_t file_start_pos_;
-        uint32_t file_end_pos_;
-        uint32_t param_start_pos_;
-        uint32_t param_end_pos_;
-        uint32_t request_start_pos_;
-        uint32_t request_end_pos_;
+        boost::uint32_t protcalpos_;
+        boost::uint32_t host_start_pos_;
+        boost::uint32_t host_end_pos_;
+        boost::uint32_t domain_end_pos_;
+        boost::uint32_t port_start_pos_;
+        boost::uint32_t port_end_pos_;
+        boost::uint32_t path_start_pos_;
+        boost::uint32_t path_end_pos_;
+        boost::uint32_t file_start_pos_;
+        boost::uint32_t file_end_pos_;
+        boost::uint32_t param_start_pos_;
+        boost::uint32_t param_end_pos_;
+        boost::uint32_t request_start_pos_;
+        boost::uint32_t request_end_pos_;
     };
 }
 

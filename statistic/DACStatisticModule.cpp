@@ -9,7 +9,7 @@
 #include "p2sp/p2p/P2PModule.h"
 #include "storage/Storage.h"
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #include "WindowsMessage.h"
 #endif
 #include "p2sp/stun/StunModule.h"
@@ -228,8 +228,8 @@ namespace statistic
         log_stream << "&R=" << (boost::uint32_t)info.uUploadDataAvgSpeedInBytes;
         log_stream << "&S=" << info.PeerGuid.to_string();
         log_stream << "&T=" << (boost::uint32_t)info.uUploadMaxSpeed;
-        log_stream << "&U=" << (uint32_t)info.total_report_request_packet_count;
-        log_stream << "&V=" << (uint32_t)info.total_report_response_packet_count;
+        log_stream << "&U=" << (boost::uint32_t)info.total_report_request_packet_count;
+        log_stream << "&V=" << (boost::uint32_t)info.total_report_response_packet_count;
         log_stream << "&W=" << info.query_vod_tracker_for_list_request_count;
         log_stream << "&X=" << info.query_vod_tracker_for_list_response_count;
         log_stream << "&Y=" << info.query_vod_tracker_for_report_request_count;

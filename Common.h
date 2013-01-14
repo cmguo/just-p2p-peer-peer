@@ -16,6 +16,7 @@
 #define D_SCL_SECURE_NO_WARNINGS
 
 // StdAfx.h
+#include <boost/asio/error.hpp>
 #include <boost/asio.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/shared_ptr.hpp>
@@ -24,10 +25,8 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/function.hpp>
 
-#ifdef BOOST_WINDOWS_API
 #ifdef PEER_PC_CLIENT
 #define NEED_TO_POST_MESSAGE
-#endif
 #endif
 
 #include <framework/Framework.h>
@@ -54,6 +53,7 @@
 #endif
 
 #if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
+#ifndef WINRT
 #include <log4cplus/logger.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/configurator.h>
@@ -61,15 +61,18 @@
 #define LOG_ENABLE
 using namespace log4cplus;
 #endif
+#endif
 
 #define  STRINGIFY(x) #x
 #define  TOSTRING(x) STRINGIFY(x)
 
 #if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
+#ifndef WINRT
 #define LOG4CPLUS_DEBUG_LOG(logger,msg) LOG4CPLUS_DEBUG(logger,msg)
 #define LOG4CPLUS_INFO_LOG(logger,msg) LOG4CPLUS_INFO(logger,msg)
 #define LOG4CPLUS_WARN_LOG(logger,msg) LOG4CPLUS_WARN(logger,msg)
 #define LOG4CPLUS_ERROR_LOG(logger,msg) LOG4CPLUS_ERROR(logger,msg)
+#endif
 #else
 #define LOG4CPLUS_DEBUG_LOG(logger,msg)
 #define LOG4CPLUS_INFO_LOG(logger,msg)
@@ -93,17 +96,13 @@ typedef framework::string::Uuid Guid;
 using std::string;
 using std::map;
 using std::vector;
-using boost::uint8_t;
-using boost::uint16_t;
-using boost::uint32_t;
-using boost::int32_t;
 
 // herain:2011-1-4:内核向播放器推送数据的默认限速值
-const int32_t DEFAULT_CLIENT_SEND_SPEED_LIMIT = 2048;
-const int32_t DEFAULT_SEND_SPEED_LIMIT = 512;
+const boost::int32_t DEFAULT_CLIENT_SEND_SPEED_LIMIT = 2048;
+const boost::int32_t DEFAULT_SEND_SPEED_LIMIT = 512;
 
-const int32_t MAX_HTTP_DOWNLOADER_COUNT = 100;
-const int32_t MAX_P2P_DOWNLOADER_COUNT = 100;
+const boost::int32_t MAX_HTTP_DOWNLOADER_COUNT = 100;
+const boost::int32_t MAX_P2P_DOWNLOADER_COUNT = 100;
 
 #include "macro.h"
 #include "protocol/Protocol.h"

@@ -165,8 +165,8 @@ public:
 
     boost::uint8_t GetIdleTimeInMins();
 
-    std::set<RID> GetVodResource(uint32_t mod_number, uint32_t group_count);
-    std::set<RID> GetLiveResource(uint32_t mod_number, uint32_t group_count);
+    std::set<RID> GetVodResource(boost::uint32_t mod_number, boost::uint32_t group_count);
+    std::set<RID> GetLiveResource(boost::uint32_t mod_number, boost::uint32_t group_count);
 
     Guid GetPeerGuid() const
     {
@@ -179,17 +179,17 @@ public:
         return unique_guid_;
     }
 
-    uint32_t GetPeerVersion() const
+    boost::uint32_t GetPeerVersion() const
     {
         return protocol::PEER_VERSION;
     }
 
-    uint32_t GetPeerState() const
+    boost::uint32_t GetPeerState() const
     {
         return peer_state_;
     }
 
-    void SetPeerState(uint32_t ps)
+    void SetPeerState(boost::uint32_t ps)
     {
         peer_state_ = ps;
     }
@@ -276,7 +276,7 @@ public:
 
     volatile bool is_running_;
 
-    uint32_t peer_state_;
+    boost::uint32_t peer_state_;
 
     boost::shared_ptr<statistic::StatisticsCollectionController> statistics_collection_controller_;
 

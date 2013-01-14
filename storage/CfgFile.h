@@ -18,7 +18,7 @@ namespace storage
 #ifdef DISK_MODE
     struct FileResourceInfo;
     // ----------------------------------------------------------------------------
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
     #pragma pack(push, 1)
 #endif
     struct SecFileHead
@@ -31,13 +31,13 @@ namespace storage
         {
         }
        ;
-        inline static uint32_t md5_offset()
+        inline static boost::uint32_t md5_offset()
         {
             return sizeof(int) + sizeof(boost::uint64_t);
         }
        ;
     };
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(pop)
 #endif
     // ----------------------------------------------------------------------------
@@ -54,15 +54,15 @@ namespace storage
           {
           }
          ;
-          SecFile(boost::uint8_t *key, uint32_t key_len) :
+          SecFile(boost::uint8_t *key, boost::uint32_t key_len) :
           md5_(key, key_len), crash_b_(true), sec_content_count_(0), only_read(false)
           {
           }
          ;
           virtual bool SecOpen(const char* path);
           virtual bool SecCreate(const char* path);
-          virtual bool SecWrite(const boost::uint8_t *buf, uint32_t buflen);
-          virtual uint32_t SecRead(boost::uint8_t *buf, uint32_t buflen);
+          virtual bool SecWrite(const boost::uint8_t *buf, boost::uint32_t buflen);
+          virtual boost::uint32_t SecRead(boost::uint8_t *buf, boost::uint32_t buflen);
           virtual void SecClose();
 
     protected:
@@ -70,49 +70,49 @@ namespace storage
         {
             return crash_b_;
         }
-        virtual uint32_t GetContentSize();
+        virtual boost::uint32_t GetContentSize();
         virtual bool IsCrash()
         {
             return crash_b_;
         }
 
-        uint32_t HeadVersion()
+        boost::uint32_t HeadVersion()
         {
             return head_.verison_;
         }
-        static uint32_t Version1()
+        static boost::uint32_t Version1()
         {
             return SecVerCtrl::sec_version1;
         }
-        static uint32_t Version2()
+        static boost::uint32_t Version2()
         {
             return SecVerCtrl::sec_version2;
         }
-        static uint32_t Version3()
+        static boost::uint32_t Version3()
         {
             return SecVerCtrl::sec_version3;
         }
-        static uint32_t Version4()
+        static boost::uint32_t Version4()
         {
             return SecVerCtrl::sec_version4;
         }
-        static uint32_t Version5()
+        static boost::uint32_t Version5()
         {
             return SecVerCtrl::sec_version5;
         }
-        static uint32_t Version6()
+        static boost::uint32_t Version6()
         {
             return SecVerCtrl::sec_version6;
         }
-        static uint32_t Version7()
+        static boost::uint32_t Version7()
         {
             return SecVerCtrl::sec_version7;
         }
-        static uint32_t Version8()
+        static boost::uint32_t Version8()
         {
             return SecVerCtrl::sec_version8;
         }
-        static uint32_t VersionNow()
+        static boost::uint32_t VersionNow()
         {
             return Version8();
         }
@@ -120,16 +120,16 @@ namespace storage
     private:
         bool DoSign();
         bool DoVerify();
-        bool CheckVersion(uint32_t ver)
+        bool CheckVersion(boost::uint32_t ver)
         {
             return ver == Version1() || ver == Version2() || ver == Version3() || ver == Version4() || ver == Version5() || ver == Version6() || ver == Version7() || ver == Version8();
         }
 
     private:
         CHmacMD5 md5_;
-        static const uint32_t max_sec_file_size = 32 * 1024 * 1024;  // 32M
+        static const boost::uint32_t max_sec_file_size = 32 * 1024 * 1024;  // 32M
         bool crash_b_;
-        uint32_t sec_content_count_;
+        boost::uint32_t sec_content_count_;
         SecFileHead head_;
         bool only_read;
     };
@@ -147,12 +147,12 @@ namespace storage
           {
           }
           virtual bool SecOpen(const string& resource_file_path);
-          virtual bool SecCreate(const string &respurce_file_name, uint32_t respurce_file_size);
+          virtual bool SecCreate(const string &respurce_file_name, boost::uint32_t respurce_file_size);
           virtual void SecClose();
           bool AddContent(base::AppBuffer const & buf);
           base::AppBuffer GetContent();
     public:
-        uint32_t resource_file_size_;
+        boost::uint32_t resource_file_size_;
         string resource_file_name_;
     private:
         int cfg_head_len_;

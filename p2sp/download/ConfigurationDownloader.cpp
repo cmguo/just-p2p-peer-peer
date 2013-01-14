@@ -50,7 +50,7 @@ namespace p2sp
         head.path = path_;
         head["Accept"] = "{*/*}";
         head.host = server_;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         head.connection = util::protocol::http_filed::Connection::close;
 #else
         head.connection = util::protocol::http_field::Connection::close;

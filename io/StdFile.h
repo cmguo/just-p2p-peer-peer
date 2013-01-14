@@ -32,9 +32,9 @@ namespace io
 
         bool Open(const char* path, const char* mode = "r");
 
-        uint32_t Read(void* buf, uint32_t size);
+        boost::uint32_t Read(void* buf, boost::uint32_t size);
 
-        uint32_t Write(const void* data, uint32_t size);
+        boost::uint32_t Write(const void* data, boost::uint32_t size);
 
         bool Seek(long offset, int origin = SEEK_SET)
         {
@@ -57,7 +57,7 @@ namespace io
         return EOF != fflush(m_handle);
     }
 
-    inline uint32_t StdFile::Write(const void* data, uint32_t size)
+    inline boost::uint32_t StdFile::Write(const void* data, boost::uint32_t size)
     {
         assert(data != NULL && size > 0);
         assert(IsOpen());
@@ -68,7 +68,7 @@ namespace io
         return fwrite(data, size, 1, m_handle) * size;
     }
 
-    inline uint32_t StdFile::Read(void* buf, uint32_t size)
+    inline boost::uint32_t StdFile::Read(void* buf, boost::uint32_t size)
     {
         assert(buf != NULL && size > 0);
         assert(IsOpen());

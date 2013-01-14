@@ -95,7 +95,7 @@ namespace p2sp
             upload_bandwidth = (boost::int32_t)p2sp::P2PModule::Inst()->GetUploadBandWidthInKBytes();
         }
 
-        uint32_t announce_copies;
+        boost::uint32_t announce_copies;
         if (this->no_response_time_ >= BootStrapGeneralConfig::Inst()->GetEnhancedAnnounceThresholdInMillseconds())
         {
             announce_copies = BootStrapGeneralConfig::Inst()->GetEnhancedAnnounceCopies();
@@ -112,7 +112,7 @@ namespace p2sp
             p2p_downloader_->GetRid(), request_block_id, upload_bandwidth, end_point_);
 
         ++announce_requests_;
-        for(int32_t i = 0; i < announce_copies; i++)
+        for(boost::int32_t i = 0; i < announce_copies; i++)
         {
             p2p_downloader_->DoSendPacket(live_request_annouce_packet);
         }
@@ -185,7 +185,7 @@ namespace p2sp
         no_response_time_ = 0;        
     }
 
-    uint32_t LivePeerConnection::GetBitmapEmptyTimeInMillseconds()
+    boost::uint32_t LivePeerConnection::GetBitmapEmptyTimeInMillseconds()
     {
         if (!block_bitmap_.empty())
         {
@@ -212,7 +212,7 @@ namespace p2sp
         temp_task_set_.insert(subpiece_info);
     }
 
-    void LivePeerConnection::UpdateLastReceived(uint32_t transaction_id)
+    void LivePeerConnection::UpdateLastReceived(boost::uint32_t transaction_id)
     {
         if (transaction_id > last_received_packet_)
         {
@@ -226,7 +226,7 @@ namespace p2sp
         ++total_received_packet_count_;
     }
 
-    void LivePeerConnection::OnSubPiece(uint32_t subpiece_rtt, uint32_t buffer_length)
+    void LivePeerConnection::OnSubPiece(boost::uint32_t subpiece_rtt, boost::uint32_t buffer_length)
     {
         no_response_time_ = 0;        
 
@@ -262,12 +262,12 @@ namespace p2sp
         }
     }
 
-    void LivePeerConnection::DeleteLostPackets(uint32_t transaction_id, std::multimap<uint32_t, protocol::LiveSubPieceInfo>& to_delete)
+    void LivePeerConnection::DeleteLostPackets(boost::uint32_t transaction_id, std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo>& to_delete)
     {
-        for(std::multimap<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = request_map_.begin();
+        for(std::multimap<boost::uint32_t, protocol::LiveSubPieceInfo>::iterator iter = request_map_.begin();
             iter != request_map_.end();)
         {
-            uint32_t current_id = iter->first;
+            boost::uint32_t current_id = iter->first;
             if (current_id >= transaction_id)
             {
                 return;
@@ -285,7 +285,7 @@ namespace p2sp
         RequestTillFullWindow();
     }
 
-    void LivePeerConnection::RequestSubPieces(uint32_t block_count, bool need_check)
+    void LivePeerConnection::RequestSubPieces(boost::uint32_t block_count, bool need_check)
     {
         if (block_count == 0 || task_set_.empty())
         {
@@ -298,7 +298,7 @@ namespace p2sp
         }
 
         std::vector<protocol::LiveSubPieceInfo> subpieces;
-        for (uint32_t i = 0; i < block_count; ++i)
+        for (boost::uint32_t i = 0; i < block_count; ++i)
         {
             if (task_set_.empty())
             {
@@ -350,7 +350,7 @@ namespace p2sp
         p2p_downloader_->SubmitAllRequestSubPieceCount(copy_count * packet.sub_piece_infos_.size());
         p2p_downloader_->SubmitRequestSubPieceCount(packet.sub_piece_infos_.size());
 
-        for (uint32_t i = 0; i < subpieces.size(); ++i)
+        for (boost::uint32_t i = 0; i < subpieces.size(); ++i)
         {
             LOG4CPLUS_DEBUG_LOG(logger_live_peer_connection, "request subpiece " << subpieces[i]);
             p2p_downloader_->AddRequestingSubpiece(subpieces[i], rtt_avg_ + GetTimeoutAdjustment(),
@@ -425,7 +425,7 @@ namespace p2sp
             }
             else
             {
-                uint32_t piece_index = ((subpiece.GetSubPieceIndex() - 1) >> 4) + 1;
+                boost::uint32_t piece_index = ((subpiece.GetSubPieceIndex() - 1) >> 4) + 1;
 
                 if (piece_index < block_bitmap_[subpiece.GetBlockId()].size())
                 {
@@ -460,7 +460,7 @@ namespace p2sp
         }
     }
 
-    void LivePeerConnection::EliminateElapsedBlockBitMap(uint32_t block_id)
+    void LivePeerConnection::EliminateElapsedBlockBitMap(boost::uint32_t block_id)
     {
         bool block_bitmap_empty_before_update = block_bitmap_.empty();
         for (map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::iterator 
@@ -500,21 +500,21 @@ namespace p2sp
         return speed_info_.GetSpeedInfoEx();
     }
 
-    uint32_t LivePeerConnection::Get75PercentPointInBitmap(uint32_t live_interval)
+    boost::uint32_t LivePeerConnection::Get75PercentPointInBitmap(boost::uint32_t live_interval)
     {
         if (block_bitmap_.empty())
         {
             return 0;
         }
 
-        uint32_t first_block_id = block_bitmap_.begin()->first;
-        uint32_t last_block_id = block_bitmap_.rbegin()->first;
+        boost::uint32_t first_block_id = block_bitmap_.begin()->first;
+        boost::uint32_t last_block_id = block_bitmap_.rbegin()->first;
 
         // 需要是live_interval的倍数
         return (first_block_id + (last_block_id - first_block_id) * 3 / 4) / live_interval * live_interval;
     }
 
-    uint32_t LivePeerConnection::GetSubPieceCountInBitmap(uint32_t block_id)
+    boost::uint32_t LivePeerConnection::GetSubPieceCountInBitmap(boost::uint32_t block_id)
     {
         if (block_bitmap_.find(block_id) == block_bitmap_.end())
         {
@@ -565,7 +565,7 @@ namespace p2sp
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()
     {
-        uint32_t rest_time = p2p_downloader_->GetRestTimeInSeconds();
+        boost::uint32_t rest_time = p2p_downloader_->GetRestTimeInSeconds();
 
         if (rest_time > 10)
         {
@@ -586,7 +586,7 @@ namespace p2sp
         return connect_type_;
     }
 
-    uint32_t LivePeerConnection::GetConnectedTimeInMillseconds()
+    boost::uint32_t LivePeerConnection::GetConnectedTimeInMillseconds()
     {
         return connect_tick_counter_.elapsed();
     }

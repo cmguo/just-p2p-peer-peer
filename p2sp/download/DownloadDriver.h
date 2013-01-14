@@ -214,15 +214,15 @@ namespace p2sp
         bool IsRunning() const { return is_running_; }
 
     public:
-        // void OnPlayTimer(uint32_t times);
+        // void OnPlayTimer(boost::uint32_t times);
 
         boost::shared_ptr<storage::Instance> GetInstance() const { return instance_; }
 
         void SetDownloaderToDeath(VodDownloader__p downloader);
 
-        void OnNoticePragmaInfo(string server_mod, uint32_t head_length);
+        void OnNoticePragmaInfo(string server_mod, boost::uint32_t head_length);
 
-        void OnNoticeConnentLength(uint32_t file_length, VodDownloader__p downloader, network::HttpResponse::p http_response);
+        void OnNoticeConnentLength(boost::uint32_t file_length, VodDownloader__p downloader, network::HttpResponse::p http_response);
 
         void OnNotice304Header(VodDownloader__p downloader, network::HttpResponse::p http_response);
 
@@ -259,9 +259,9 @@ namespace p2sp
         void SetSpeedLimitInKBps(boost::int32_t speed_limit_in_KBps);
         boost::int32_t GetSpeedLimitInKBps();
 
-        void SetOpenServiceStartPosition(uint32_t start_position);
+        void SetOpenServiceStartPosition(boost::uint32_t start_position);
 
-        void SetOpenServiceHeadLength(uint32_t head_length);
+        void SetOpenServiceHeadLength(boost::uint32_t head_length);
 
         void SetOpenServiceRange(bool is_openservice_range);
         void SetIsDrag(bool is_drag);
@@ -276,11 +276,11 @@ namespace p2sp
         void SetOpenServiceFileName(const string& filename) { openservice_file_name_ = filename; }
         string GetOpenServiceFileName() const { return openservice_file_name_; }
 
-        void SetSourceType(uint32_t source_type) { source_type_ = source_type; }
+        void SetSourceType(boost::uint32_t source_type) { source_type_ = source_type; }
 
         void SetIsHeadOnly(bool head_only) { is_head_only_ = head_only; }
 
-        uint32_t GetOpenServiceHeadLength() {return openservice_head_length_;}
+        boost::uint32_t GetOpenServiceHeadLength() {return openservice_head_length_;}
         void SetBWType(JumpBWType bwtype) {bwtype_ = bwtype;}
 
         bool IsSaveMode() const;
@@ -301,9 +301,9 @@ namespace p2sp
         void SetVipLevel(VIP_LEVEL vip) {vip_level_ = vip;}
 
         void SetRidInfo(const protocol::RidInfo & ridinfo);
-        void ReportDragFetchResult(uint32_t drag_fetch_result, uint32_t is_fetch_tinydrag_success, 
-            uint32_t is_fetch_tinydrag_from_udp, uint32_t is_parse_tinydrag_success, 
-            uint32_t fetch_tinydrag_count, uint32_t fetch_tinydrag_time)
+        void ReportDragFetchResult(boost::uint32_t drag_fetch_result, boost::uint32_t is_fetch_tinydrag_success, 
+            boost::uint32_t is_fetch_tinydrag_from_udp, boost::uint32_t is_parse_tinydrag_success, 
+            boost::uint32_t fetch_tinydrag_count, boost::uint32_t fetch_tinydrag_time)
         { 
             drag_fetch_result_ = drag_fetch_result;
             is_fetch_tinydrag_success_ = is_fetch_tinydrag_success;
@@ -317,20 +317,20 @@ namespace p2sp
 
         void ReportDragHttpStatus(boost::uint32_t tiny_drag_http_status);
 
-        void RestrictSendListLength(uint32_t postion,vector<protocol::SubPieceBuffer>&buffers);
+        void RestrictSendListLength(boost::uint32_t postion,vector<protocol::SubPieceBuffer>&buffers);
         void SetPreroll(bool is_preroll) {is_preroll_ = is_preroll;}
 
     public:
         //////////////////////////////////////////////////////////////////////////
         // IGlobalControlTarget
 
-        virtual uint32_t GetBandWidth();
-        virtual uint32_t GetFileLength();
-        virtual uint32_t GetDataRate();
-        virtual uint32_t GetPlayElapsedTimeInMilliSec();
-        virtual uint32_t GetDownloadingPosition();
-        virtual uint32_t GetDownloadedBytes();
-        virtual uint32_t GetDataDownloadSpeed();
+        virtual boost::uint32_t GetBandWidth();
+        virtual boost::uint32_t GetFileLength();
+        virtual boost::uint32_t GetDataRate();
+        virtual boost::uint32_t GetPlayElapsedTimeInMilliSec();
+        virtual boost::uint32_t GetDownloadingPosition();
+        virtual boost::uint32_t GetDownloadedBytes();
+        virtual boost::uint32_t GetDataDownloadSpeed();
         virtual bool IsStartFromNonZero();
         virtual bool IsDrag();
         virtual bool IsHeadOnly();
@@ -344,7 +344,7 @@ namespace p2sp
         virtual JumpBWType GetBWType() {return bwtype_;}
         virtual void NoticeLeave2300();
         virtual void NoticeLeave2000();
-        virtual void SetDragHttpStatus(int32_t status);
+        virtual void SetDragHttpStatus(boost::int32_t status);
         virtual std::vector<IHTTPControlTarget::p> GetAllHttpControlTargets();
         virtual void ReportUseBakHost() {bak_host_status_ = BAK_HOST_GREAT;}
         virtual void ReportBakHostFail() {bak_host_status_ = BAK_HOST_USELESS;}
@@ -352,13 +352,13 @@ namespace p2sp
         virtual IHTTPControlTarget::p GetHTTPControlTarget();
         virtual IP2PControlTarget::p GetP2PControlTarget();
 
-        virtual void OnStateMachineType(uint32_t state_machine_type);
+        virtual void OnStateMachineType(boost::uint32_t state_machine_type);
         virtual void OnStateMachineState(const string& state_machine_state);
 
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
-        virtual uint32_t GetVipLevel() {return vip_level_;}
+        virtual boost::uint32_t GetVipLevel() {return vip_level_;}
 
-        uint32_t GetSourceType() const { return source_type_; }
+        boost::uint32_t GetSourceType() const { return source_type_; }
     private:
         HttpDownloader__p AddHttpDownloader(const protocol::UrlInfo& url_info, bool is_orginal = false);
 
@@ -401,15 +401,15 @@ namespace p2sp
         // 通知 DownloadDriver 下载完成
         virtual void OnNoticeDownloadComplete();
         // 通知 DownloadDriver 一个Block检验成功
-        virtual void OnNoticeMakeBlockSucced(uint32_t block_info);
+        virtual void OnNoticeMakeBlockSucced(boost::uint32_t block_info);
         // 通知 DownloadDriver 一个Block检验失败
-        virtual void OnNoticeMakeBlockFailed(uint32_t block_info);
+        virtual void OnNoticeMakeBlockFailed(boost::uint32_t block_info);
         // 通知获得文件名
         virtual void OnNoticeGetFileName(const string& file_name);
 
-        virtual void OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer);
+        virtual void OnRecvSubPiece(boost::uint32_t position, const protocol::SubPieceBuffer& buffer);
 
-        virtual uint32_t GetPlayingPosition() const;
+        virtual boost::uint32_t GetPlayingPosition() const;
 
         virtual bool IsHeaderResopnsed();
     private:
@@ -460,10 +460,10 @@ namespace p2sp
         ProxyConnection__p proxy_connection_;
         statistic::DownloadDriverStatistic::p statistic_;
         boost::shared_ptr<statistic::BufferringMonitor> bufferring_monitor_;
-        uint32_t max_rest_playable_time_;
+        boost::uint32_t max_rest_playable_time_;
 
         protocol::UrlInfo original_url_info_;
-        uint32_t block_check_faild_times_;
+        boost::uint32_t block_check_faild_times_;
         boost::int32_t id_;
         static boost::int32_t s_id_;
         bool is_support_start_;
@@ -490,12 +490,12 @@ namespace p2sp
         boost::int32_t speed_limit_in_KBps_;
 
         // openservice
-        uint32_t openservice_start_position_;
-        uint32_t openservice_head_length_;
+        boost::uint32_t openservice_start_position_;
+        boost::uint32_t openservice_head_length_;
         bool is_pragmainfo_noticed_;
         string openservice_file_name_;
-        uint32_t init_local_data_bytes_;
-        uint32_t source_type_;
+        boost::uint32_t init_local_data_bytes_;
+        boost::uint32_t source_type_;
         string session_id_;
         bool is_head_only_;
         boost::uint32_t rest_play_time_;
@@ -507,9 +507,9 @@ namespace p2sp
         bool disable_smart_speed_limit_;
 
         framework::timer::PeriodicTimer second_timer_;
-        int32_t avg_download_speed_before_limit_;
-        int32_t avg_http_download_speed_in2300_;
-        int32_t drag_http_status_;
+        boost::int32_t avg_download_speed_before_limit_;
+        boost::int32_t avg_http_download_speed_in2300_;
+        boost::int32_t drag_http_status_;
 
         HttpDragDownloader__p http_drag_downloader_;
         // drag_fetch_result 位字段定义，第0位为最高位
@@ -519,7 +519,7 @@ namespace p2sp
         // 2：是否解析成功(成功:1,失败:0)
         // 4-7: 获取次数(无论是否获取成功都有)
         // 8-31：获取时间(ms)(仅仅在获取成功时设置)
-        uint32_t drag_fetch_result_;
+        boost::uint32_t drag_fetch_result_;
         boost::uint32_t       is_fetch_tinydrag_success_;      // 是否获取成功(成功:1,失败:0)
         boost::uint32_t       is_fetch_tinydrag_from_udp_;     // 获取来源(http:0, udp:1)
         boost::uint32_t       is_parse_tinydrag_success_;      // 是否解析成功(成功:1,失败:0)

@@ -4,9 +4,11 @@
 #include "PingClient.h"
 #include "ipv4_header.h"
 
+#include <framework/process/Process.h>
+
 namespace network
 {
-    uint16_t PingClient::sequence_num_ = 0;
+    boost::uint16_t PingClient::sequence_num_ = 0;
 
     PingClient::p PingClient::Create(boost::asio::io_service & io_svc)
     {
@@ -22,7 +24,7 @@ namespace network
     {
     }
 
-    uint16_t PingClient::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
+    boost::uint16_t PingClient::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
     {
         static string ping_request_body("Hello");
 
@@ -80,7 +82,7 @@ namespace network
         }
     }
 
-    void PingClient::HandleReceive(const boost::system::error_code & error_code, uint32_t bytes_transfered)
+    void PingClient::HandleReceive(const boost::system::error_code & error_code, boost::uint32_t bytes_transfered)
     {
         if (!error_code)
         {
@@ -139,14 +141,14 @@ namespace network
 
     unsigned short PingClient::GetIdentifier()
     {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         return static_cast<unsigned short>(::GetCurrentProcessId());
 #else
-        return static_cast<unsigned short>(::getpid());
+        return static_cast<unsigned short>(framework::this_process::id());
 #endif
     }
 
-    bool PingClient::SetTtl(int32_t ttl)
+    bool PingClient::SetTtl(boost::int32_t ttl)
     {
         if (!is_ttl_support_tested_)
         {
@@ -159,7 +161,7 @@ namespace network
         if (is_ttl_supported_)
         {
             // windows and linux both have the setsockopt api with the same parameter definition.
-            if(setsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(int32_t)) != 0)
+            if(setsockopt(socket_.native(), IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(boost::int32_t)) != 0)
             {
                 return false;
             }
@@ -179,7 +181,7 @@ namespace network
     bool PingClient::TryGetCurrentTtl(int & ttl)
     {
         // windows and linux both have the getsockopt api with the similar parameter definition.
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
         int opt_len = sizeof(int);
 #else
         socklen_t opt_len = sizeof(int);

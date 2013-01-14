@@ -40,13 +40,13 @@ namespace storage
         }
 
 
-        uint32_t MaximumPacketSizeAllowed() const;
+        boost::uint32_t MaximumPacketSizeAllowed() const;
 
     private:
         LiveCacheManager& cache_manager_;
         protocol::LiveAnnounceMap& announce_map_;
-        uint32_t accumulated_packet_size_;
-        uint32_t additional_bits_beyond_the_last_byte_;
+        boost::uint32_t accumulated_packet_size_;
+        boost::uint32_t additional_bits_beyond_the_last_byte_;
     };
 }
 

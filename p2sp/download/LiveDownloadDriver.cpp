@@ -98,8 +98,8 @@ namespace p2sp
         }
     }
 
-    void LiveDownloadDriver::Start(const string & url, const vector<RID>& rids, uint32_t start_position, uint32_t live_interval,  bool replay,
-        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, uint32_t unique_id,
+    void LiveDownloadDriver::Start(const string & url, const vector<RID>& rids, boost::uint32_t start_position, boost::uint32_t live_interval,  bool replay,
+        const vector<boost::uint32_t>& data_rate_s, const RID& channel_id, boost::uint32_t source_type, JumpBWType bwtype, boost::uint32_t unique_id,
         bool is_too_near_from_last_vv_of_same_channel)
     {
         data_rate_manager_.Start(rids, data_rate_s);
@@ -263,8 +263,8 @@ namespace p2sp
         return live_streams_[data_rate_manager_.GetCurrentDataRatePos()]->GetP2PDownloader();
     } 
 
-    bool LiveDownloadDriver::OnRecvLivePiece(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
-        uint8_t progress_percentage)
+    bool LiveDownloadDriver::OnRecvLivePiece(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> const & buffs,
+        boost::uint8_t progress_percentage)
     {
         LOG4CPLUS_DEBUG_LOG(logger_live_download, "Recv piece_id " << block_id);
 
@@ -356,11 +356,11 @@ namespace p2sp
                 if (elapsed_seconds_since_started_ > 10 &&
                     GetRestPlayableTime() <= 1)
                 {
-                    uint32_t data_rate = GetDataRate();
+                    boost::uint32_t data_rate = GetDataRate();
                     if (data_rate > 0)
                     {
                         storage::LivePosition live_position = GetPlayingPosition();
-                        uint32_t bufferring_position_in_seconds = live_position.GetBlockId()*GetInstance()->GetLiveInterval() + 
+                        boost::uint32_t bufferring_position_in_seconds = live_position.GetBlockId()*GetInstance()->GetLiveInterval() + 
                             live_position.GetSubPieceIndex()*storage::HeaderSubPiece::Constants::SubPieceSizeInBytes/data_rate;
                         bufferring_monitor_->BufferringOccurs(bufferring_position_in_seconds);
                     }
@@ -1236,8 +1236,8 @@ namespace p2sp
 
             http_download_start_time << http_download_statistic_[i]->GetStartTime();
             http_download_stop_time << http_download_statistic_[i]->GetStopTime();
-            http_download_start_reason << (uint32_t)http_download_statistic_[i]->GetStartReason();
-            http_download_stop_reason << (uint32_t)http_download_statistic_[i]->GetStopReason();
+            http_download_start_reason << (boost::uint32_t)http_download_statistic_[i]->GetStartReason();
+            http_download_stop_reason << (boost::uint32_t)http_download_statistic_[i]->GetStopReason();
             http_download_download_byte << http_download_statistic_[i]->GetDownloadedBytes();
         }
 

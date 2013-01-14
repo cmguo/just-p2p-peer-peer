@@ -22,7 +22,7 @@ namespace p2sp
     }
 
     bool GzipDecompresser::OnRecvData(protocol::SubPieceBuffer const & buffer, 
-        uint32_t file_offset, uint32_t content_offset)
+        boost::uint32_t file_offset, boost::uint32_t content_offset)
     {
         assert(!is_decompress_complete_);
 

@@ -20,13 +20,13 @@ namespace p2sp
 
     bool PieceTask::IsTimeout() const
     {
-        uint32_t get_elapsed_ = start_time_.elapsed();
+        boost::uint32_t get_elapsed_ = start_time_.elapsed();
         return get_elapsed_ > timeout_;
     }
 
     bool PieceTask::IsTimeout(VodDownloader__p downloader, const protocol::PieceInfoEx& piece_info) const
     {
-        uint32_t get_elapsed_ = start_time_.elapsed();
+        boost::uint32_t get_elapsed_ = start_time_.elapsed();
 
         if (downloader != downloader_)
         {
@@ -195,7 +195,7 @@ namespace p2sp
         return true;
     }
 
-    bool PieceRequestManager::HasNextPieceForDownload(uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader)
+    bool PieceRequestManager::HasNextPieceForDownload(boost::uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader)
     {
         if (false == is_running_)
             return false;
@@ -212,9 +212,9 @@ namespace p2sp
         LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::HasNextPieceForDownload   playing_possition:" 
             << playing_possition);
 
-        uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
+        boost::uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
 
-        uint32_t possition_for_download = playing_possition;
+        boost::uint32_t possition_for_download = playing_possition;
 
         while (true)
         {
@@ -237,14 +237,14 @@ namespace p2sp
                     return true;
                 }
 
-                uint32_t piece_start = piece_info_ex.GetPosition(block_size);
-                uint32_t piece_end = piece_info_ex.GetEndPosition(block_size);
-                std::map<uint32_t, uint32_t>::iterator it;
+                boost::uint32_t piece_start = piece_info_ex.GetPosition(block_size);
+                boost::uint32_t piece_end = piece_info_ex.GetEndPosition(block_size);
+                std::map<boost::uint32_t, boost::uint32_t>::iterator it;
                 bool good_piece = false;
                 for (it = task_range_map_.begin(); it != task_range_map_.end() && false == good_piece; ++it)
                 {
-                    uint32_t range_start = it->first;
-                    uint32_t range_end = it->second;
+                    boost::uint32_t range_start = it->first;
+                    boost::uint32_t range_end = it->second;
                     if (range_end == 0) {
                         if (piece_end > range_start) {
                             good_piece = true;
@@ -293,7 +293,7 @@ namespace p2sp
         return false;
     }
 
-    bool PieceRequestManager::GetNextPieceForDownload(uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader)
+    bool PieceRequestManager::GetNextPieceForDownload(boost::uint32_t playing_possition, protocol::PieceInfoEx &piece_info_ex, VodDownloader__p downloader)
     {
         if (false == is_running_)
             return false;
@@ -310,9 +310,9 @@ namespace p2sp
         LOG4CPLUS_INFO_LOG(logger_piece_request, "PieceRequestManager::GetNextPieceForDownload   playing_possition:" 
             << playing_possition);
 
-        uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
+        boost::uint32_t block_size = download_driver_->GetInstance()->GetBlockSize();
 
-        uint32_t possition_for_download = playing_possition;
+        boost::uint32_t possition_for_download = playing_possition;
 
         while (true)
         {
@@ -335,14 +335,14 @@ namespace p2sp
                     return true;
                 }
 
-                uint32_t piece_start = piece_info_ex.GetPosition(block_size);
-                uint32_t piece_end = piece_info_ex.GetEndPosition(block_size);
-                std::map<uint32_t, uint32_t>::iterator it;
+                boost::uint32_t piece_start = piece_info_ex.GetPosition(block_size);
+                boost::uint32_t piece_end = piece_info_ex.GetEndPosition(block_size);
+                std::map<boost::uint32_t, boost::uint32_t>::iterator it;
                 bool good_piece = false;
                 for (it = task_range_map_.begin(); it != task_range_map_.end() && false == good_piece; ++it)
                 {
-                    uint32_t range_start = it->first;
-                    uint32_t range_end = it->second;
+                    boost::uint32_t range_start = it->first;
+                    boost::uint32_t range_end = it->second;
                     if (range_end == 0) {
                         if (piece_end > range_start) {
                             good_piece = true;
@@ -465,7 +465,7 @@ namespace p2sp
     }
 
     // make sure the ranges do not overlap
-    void PieceRequestManager::AddTaskRange(uint32_t start, uint32_t end)
+    void PieceRequestManager::AddTaskRange(boost::uint32_t start, boost::uint32_t end)
     {
         if (false == is_running_) {
             return;

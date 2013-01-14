@@ -43,7 +43,7 @@ namespace p2sp
     {
         assert(0);
     }
-    void OpenServiceProxySender::Start(uint32_t start_offset)  // should be a correct key_frame_position
+    void OpenServiceProxySender::Start(boost::uint32_t start_offset)  // should be a correct key_frame_position
     {
         if (true == is_running_)
             return;
@@ -58,7 +58,7 @@ namespace p2sp
 
         start_offset_ = start_offset;
 
-        head_length_ = (uint32_t)-1;  // init
+        head_length_ = (boost::uint32_t)-1;  // init
 
         file_length_ = 0;
 
@@ -89,9 +89,9 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void OpenServiceProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
+    void OpenServiceProxySender::OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
-        for (uint32_t i = 0; i < buffers.size(); ++i)
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i)
         {
             if (playing_position_ == position)
             {
@@ -101,7 +101,7 @@ namespace p2sp
         }
     }
     // 播放数据
-    void OpenServiceProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, base::AppBuffer buffer)
+    void OpenServiceProxySender::OnAsyncGetSubPieceSucced(boost::uint32_t start_position, base::AppBuffer buffer)
     {
         if (false == is_running_)
             return;
@@ -110,7 +110,7 @@ namespace p2sp
         assert(playing_position_ < file_length_);
         assert(playing_position_ == start_position);
 
-        if (head_length_ == (uint32_t)-1)
+        if (head_length_ == (boost::uint32_t)-1)
         {
             LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "head_length==-1 start_position=" << start_position 
                 << " buffer_length=" << buffer.Length());
@@ -127,7 +127,7 @@ namespace p2sp
             else if (head_length_ >= start_position && head_length_ <= start_position + buffer.Length())
             {
                 // store rest of the head
-                uint32_t remain_length = (head_length_ - start_position);
+                boost::uint32_t remain_length = (head_length_ - start_position);
                 if (remain_length > 0) {
                     base::util::memcpy2(head_buffer_.Data() + start_position, head_buffer_.Length() - start_position, buffer.Data(), remain_length);
                 }
@@ -136,7 +136,7 @@ namespace p2sp
                 header_offset_in_first_piece_ = (key_frame_position_ % 1024);
 
                 // calc content length
-                uint32_t content_length = file_length_ - key_frame_position_ + media_header.Length();
+                boost::uint32_t content_length = file_length_ - key_frame_position_ + media_header.Length();
 
                 LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "media_header_length=" << media_header.Length() 
                     << " content_length=" << content_length);
@@ -200,7 +200,7 @@ namespace p2sp
     }
 
     // 获得Contentlength
-    void OpenServiceProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void OpenServiceProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (false == is_running_)
             return;
@@ -218,13 +218,13 @@ namespace p2sp
         else {
             LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, " rid_content_length=" << file_length_ 
                 << " server_content_length=" << content_length);
-            // uint32_t i = file_length_;
+            // boost::uint32_t i = file_length_;
         }
 
         LOG4CPLUS_DEBUG_LOG(logger_open_service_proxy, "file_length=" << file_length_);
     }
 
-    void OpenServiceProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void OpenServiceProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;

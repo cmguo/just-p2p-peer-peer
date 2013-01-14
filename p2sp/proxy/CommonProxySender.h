@@ -32,29 +32,29 @@ namespace p2sp
         // 方法
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
-        virtual void Start(uint32_t start_possition);
+        virtual void Start(boost::uint32_t start_possition);
         virtual void Stop();  // do not stop http_server_socket
     public:
         // 属性
-        virtual uint32_t GetPlayingPosition() const { return playing_position_; }
+        virtual boost::uint32_t GetPlayingPosition() const { return playing_position_; }
         virtual void SendHttpRequest() {assert(0);}
         virtual void ResetPlayingPosition() { playing_position_ = 0; }
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
 
     public:
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers);
         // 获得Contentlength
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
 
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
 
     private:
         boost::asio::io_service & io_svc_;
         network::HttpServer::pointer http_server_socket_;
         volatile bool is_running_;
-        uint32_t playing_position_;
+        boost::uint32_t playing_position_;
         bool is_response_header_;
-        uint32_t file_length_;
+        boost::uint32_t file_length_;
 
         // FILE* fp_;
     private:

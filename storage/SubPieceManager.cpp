@@ -19,7 +19,7 @@ namespace storage
 #endif
     //////////////////////////////////////////////////////////////////////////
 
-    SubPieceManager::p SubPieceManager::Create(uint32_t file_length, bool b_full_file)
+    SubPieceManager::p SubPieceManager::Create(boost::uint32_t file_length, bool b_full_file)
     {
         protocol::RidInfo rid_info;
         rid_info.InitByFileLength(file_length);
@@ -35,7 +35,7 @@ namespace storage
         bool b_full_file)
     {
         rid_info_ = rid_info;
-        for (uint32_t i = rid_info_.block_md5_s_.size(); i < rid_info_.GetBlockCount(); i++)
+        for (boost::uint32_t i = rid_info_.block_md5_s_.size(); i < rid_info_.GetBlockCount(); i++)
         {
             rid_info_.block_md5_s_.push_back(MD5());
         }
@@ -55,7 +55,7 @@ namespace storage
 
     SubPieceManager::~SubPieceManager()
     {
-        for (uint32_t i = 0; i < blocks_.size(); ++i) {
+        for (boost::uint32_t i = 0; i < blocks_.size(); ++i) {
             if (blocks_[i])
                 blocks_[i].reset();
         }
@@ -70,7 +70,7 @@ namespace storage
             return false;
         }
         framework::string::Md5 hash;
-        for (uint32_t i = 0; i < rid_info_.GetBlockCount(); i++) {
+        for (boost::uint32_t i = 0; i < rid_info_.GetBlockCount(); i++) {
             if (rid_info_.block_md5_s_[i].is_empty()) {
                 LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, 
                     " false: rid_info_.block_md5_s_[i].IsEmpty() " << rid_info_);
@@ -104,7 +104,7 @@ namespace storage
         }
 
         if (!blocks_[in.block_index_]) {
-            uint32_t block_cap = last_block_capacity_;
+            boost::uint32_t block_cap = last_block_capacity_;
             if (in.block_index_ != blocks_.size()-1) {
                 block_cap = rid_info_.GetBlockSize() / bytes_num_per_subpiece_g_;
             }
@@ -157,7 +157,7 @@ namespace storage
         return false;
     }
 
-    bool SubPieceManager::IsBlockDataInMemCache(uint32_t block_index) const
+    bool SubPieceManager::IsBlockDataInMemCache(boost::uint32_t block_index) const
     {
         BlockNode::p node = blocks_[block_index];
         //TODO, ericzheng, BlockNode->IsEmpty在DiskMode下并不确切表示内存是否为空
@@ -165,7 +165,7 @@ namespace storage
         return node && false == node->IsEmpty();
     }
 
-    void SubPieceManager::RemoveBlockDataFromMemCache(Resource::p resource_p, uint32_t block_index)
+    void SubPieceManager::RemoveBlockDataFromMemCache(Resource::p resource_p, boost::uint32_t block_index)
     {
         BlockNode::p& node = blocks_[block_index];
 
@@ -205,7 +205,7 @@ namespace storage
 #endif
     }
 
-    bool SubPieceManager::SetBlockReading(const uint32_t block_index)
+    bool SubPieceManager::SetBlockReading(const boost::uint32_t block_index)
     {
         BlockNode::p & node = blocks_[block_index];
         if (!node) {
@@ -214,7 +214,7 @@ namespace storage
                 return false;
 
             // block_capacity indicating subpiece count in block @herain
-            uint32_t block_capacity = 0;
+            boost::uint32_t block_capacity = 0;
             if (block_index == last_subpiece_info_.block_index_)
                 block_capacity = last_subpiece_info_.subpiece_index_ + 1;
             else
@@ -247,13 +247,13 @@ namespace storage
     bool SubPieceManager::GetNextNullSubPiece(
         const protocol::SubPieceInfo& start_subpiece_info, protocol::SubPieceInfo& subpiece_for_download) const
     {
-        for (uint32_t bidx = start_subpiece_info.block_index_;
+        for (boost::uint32_t bidx = start_subpiece_info.block_index_;
             bidx < blocks_.size(); ++bidx)
         {
             if (block_bit_map_->HasBlock(bidx))
                 continue;
 
-            uint32_t start_sidx = (bidx == start_subpiece_info.block_index_) ?
+            boost::uint32_t start_sidx = (bidx == start_subpiece_info.block_index_) ?
                 start_subpiece_info.subpiece_index_ : 0;
 
             const BlockNode::p & node = blocks_[bidx];
@@ -265,7 +265,7 @@ namespace storage
             }
             else if (false == node->IsFull())
             {
-                uint32_t sidx_for_download;
+                boost::uint32_t sidx_for_download;
 
                 if (node->GetNextNullSubPiece(start_sidx, sidx_for_download))
                 {
@@ -282,7 +282,7 @@ namespace storage
         return false;
     }
 
-    void SubPieceManager::RemoveBlockInfo(uint32_t block_index) {
+    void SubPieceManager::RemoveBlockInfo(boost::uint32_t block_index) {
         if (block_bit_map_->HasBlock(block_index))
             block_bit_map_->Reset(block_index);
 
@@ -295,7 +295,7 @@ namespace storage
         assert(false);
     }
 
-    void SubPieceManager::OnWriteBlockFinish(uint32_t block_index) {
+    void SubPieceManager::OnWriteBlockFinish(boost::uint32_t block_index) {
         BlockNode::p & node = blocks_[block_index];
         if (node) {
             node->OnWriteFinish();
@@ -308,7 +308,7 @@ namespace storage
     }
 
 #ifdef DISK_MODE
-    void SubPieceManager::WriteBlockToResource(Resource::p resource_p, uint32_t block_index)
+    void SubPieceManager::WriteBlockToResource(Resource::p resource_p, boost::uint32_t block_index)
     {
         LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "block " << block_index);
         BlockNode::p & node = blocks_[block_index];
@@ -337,7 +337,7 @@ namespace storage
 
     void SubPieceManager::SaveAllBlock(Resource::p resource_p)
     {
-        for (uint32_t bidx = 0; bidx < blocks_.size(); ++bidx)
+        for (boost::uint32_t bidx = 0; bidx < blocks_.size(); ++bidx)
         {
             RemoveBlockDataFromMemCache(resource_p, bidx);
 
@@ -352,14 +352,14 @@ namespace storage
 
     SubPieceManager::p SubPieceManager::Parse(base::AppBuffer cfgfile_buf, const protocol::RidInfo &rid_info)
     {
-        uint32_t curr_null_subpiece_count = 0;
+        boost::uint32_t curr_null_subpiece_count = 0;
         SubPieceManager::p pointer;
 
         // 假定没有信息的block都是完整的 @herain
         pointer = SubPieceManager::p(new SubPieceManager(rid_info, true));
         pointer->block_bit_map_->SetAll(true);
         byte * buf = cfgfile_buf.Data();
-        uint32_t offset = 0;
+        boost::uint32_t offset = 0;
 
         while (offset < cfgfile_buf.Length())
         {
@@ -368,8 +368,8 @@ namespace storage
                 assert(false);
                 return SubPieceManager::p();
             }
-            uint32_t block_index;
-            memcpy2(&block_index, sizeof(block_index), buf + offset, sizeof(uint32_t));
+            boost::uint32_t block_index;
+            memcpy2(&block_index, sizeof(block_index), buf + offset, sizeof(boost::uint32_t));
             offset += 4;
 
             if (block_index >= pointer->blocks_.size())
@@ -378,8 +378,8 @@ namespace storage
                 return SubPieceManager::p();
             }
 
-            uint32_t blockbuflen;
-            memcpy2(&blockbuflen, sizeof(blockbuflen), buf + offset, sizeof(uint32_t));
+            boost::uint32_t blockbuflen;
+            memcpy2(&blockbuflen, sizeof(blockbuflen), buf + offset, sizeof(boost::uint32_t));
             offset += 4;
 
             if (blockbuflen == 0)
@@ -429,18 +429,18 @@ namespace storage
 
     bool SubPieceManager::ToBuffer(base::AppBuffer & resource_desc_buf) const
     {
-        uint32_t tmp_buffer_size = 16 * 1024;
+        boost::uint32_t tmp_buffer_size = 16 * 1024;
         byte *tmpbuf = new byte[tmp_buffer_size];
-        uint32_t buflen = 0;
+        boost::uint32_t buflen = 0;
 
         // 只记录空block、空或半空的piece
-        for (uint32_t bidx = 0; bidx < blocks_.size(); ++bidx)
+        for (boost::uint32_t bidx = 0; bidx < blocks_.size(); ++bidx)
         {
             if (block_bit_map_->HasBlock(bidx))
                 continue;
 
             // index
-            memcpy2(tmpbuf + buflen, tmp_buffer_size - buflen, &bidx, sizeof(uint32_t));
+            memcpy2(tmpbuf + buflen, tmp_buffer_size - buflen, &bidx, sizeof(boost::uint32_t));
             buflen += 4;
             // blockbuf
             base::AppBuffer block_buf;
@@ -453,8 +453,8 @@ namespace storage
                 block_buf = blocks_[bidx]->ToBuffer();
             }
 
-            uint32_t block_buf_len = block_buf.Length();
-            memcpy2(tmpbuf + buflen, tmp_buffer_size - buflen, &block_buf_len, sizeof(uint32_t));
+            boost::uint32_t block_buf_len = block_buf.Length();
+            memcpy2(tmpbuf + buflen, tmp_buffer_size - buflen, &block_buf_len, sizeof(boost::uint32_t));
             buflen += 4;
 
             if (tmp_buffer_size < buflen + block_buf_len + 256)

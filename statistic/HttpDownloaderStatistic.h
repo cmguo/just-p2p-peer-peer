@@ -75,9 +75,9 @@ namespace statistic
 
         SPEED_INFO_EX GetSpeedInfoEx();
 
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
 
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
         //////////////////////////////////////////////////////////////////////////
         // Events
@@ -95,7 +95,7 @@ namespace statistic
 
         void SetSupportRange(bool is_support_range);
 
-        void SetHttpStatusCode(uint32_t http_status_code);
+        void SetHttpStatusCode(boost::uint32_t http_status_code);
 
         //////////////////////////////////////////////////////////////////////////
         // death

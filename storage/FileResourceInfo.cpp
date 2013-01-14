@@ -20,26 +20,26 @@ namespace storage
 
 //临时关闭以下ToBuffer函数的优化，以方便我们调试其中的crash问题。
 //TODO, ericzheng, 记得以后恢复这里的优化
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma optimize("", off)
 #endif
 
     base::AppBuffer FileResourceInfo::ToBuffer() const
     {
         AppBuffer tmp(1024);
-        uint32_t total_len = sizeof(uint32_t);  // reserver 4 bytes for total_len
-        uint32_t data_len = 0;
-        // uint32_t &len = *(uint32_t*) p;
+        boost::uint32_t total_len = sizeof(boost::uint32_t);  // reserver 4 bytes for total_len
+        boost::uint32_t data_len = 0;
+        // boost::uint32_t &len = *(boost::uint32_t*) p;
 
         // file name!
-        uint32_t len = file_path_.size();
+        boost::uint32_t len = file_path_.size();
         data_len = len + 4;
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
         }
-        memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, &len, sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, &len, sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, (boost::uint8_t*) file_path_.c_str(), len);
         total_len += len;
 
@@ -66,7 +66,7 @@ namespace storage
         {
             tmp.Extend(tmp.Length());
         }
-        uint32_t i = 0;
+        boost::uint32_t i = 0;
         for (; i < rid_info_.block_md5_s_.size(); i++)
         {
             // *(MD5*) p = rid_info_.block_md5_s_[i];
@@ -82,18 +82,18 @@ namespace storage
             total_len += sizeof(MD5);
         }
         // URL
-        data_len = sizeof(uint32_t);
+        data_len = sizeof(boost::uint32_t);
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
         }
-        uint32_t url_len = url_info_.size();
-        // *(uint32_t*) p = url_info_.size();
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        boost::uint32_t url_len = url_info_.size();
+        // *(boost::uint32_t*) p = url_info_.size();
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         for (i = 0; i < url_info_.size(); i++)
         {
-            data_len = sizeof(boost::uint16_t) + sizeof(uint32_t) + url_info_[i].url_.size() + sizeof(uint32_t) + url_info_[i].refer_url_.size();
+            data_len = sizeof(boost::uint16_t) + sizeof(boost::uint32_t) + url_info_[i].url_.size() + sizeof(boost::uint32_t) + url_info_[i].refer_url_.size();
             while (total_len + data_len + 256 > tmp.Length())
             {
                 tmp.Extend(tmp.Length());
@@ -102,44 +102,44 @@ namespace storage
             boost::uint16_t url_type = url_info_[i].type_;
             memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_type), sizeof(boost::uint16_t));
             total_len += sizeof(boost::uint16_t);
-            // *(uint32_t*) p = url_info_[i].url_.size();
+            // *(boost::uint32_t*) p = url_info_[i].url_.size();
             url_len = url_info_[i].url_.size();
-            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(uint32_t));
-            total_len += sizeof(uint32_t);
+            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(boost::uint32_t));
+            total_len += sizeof(boost::uint32_t);
             memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, url_info_[i].url_.c_str(), url_info_[i].url_.size());
             total_len += url_info_[i].url_.size();
-            // *(uint32_t*) p = url_info_[i].refer_url_.size();
+            // *(boost::uint32_t*) p = url_info_[i].refer_url_.size();
             url_len = url_info_[i].refer_url_.size();
-            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(uint32_t));
-            total_len += sizeof(uint32_t);
+            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&url_len), sizeof(boost::uint32_t));
+            total_len += sizeof(boost::uint32_t);
             memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, url_info_[i].refer_url_.c_str(), url_info_[i].refer_url_.size());
             total_len += url_info_[i].refer_url_.size();
         }
         // ----------------------------------------------
         // version2
-        // *(uint32_t*) p = last_push_time_;
-        data_len = sizeof(uint32_t) + sizeof(uint32_t) + traffic_list_.size()*sizeof(uint32_t);
+        // *(boost::uint32_t*) p = last_push_time_;
+        data_len = sizeof(boost::uint32_t) + sizeof(boost::uint32_t) + traffic_list_.size()*sizeof(boost::uint32_t);
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
         }
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&last_push_time_), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
-        // *(uint32_t*) p = traffic_list_.size();
-        uint32_t traff_size = traffic_list_.size();
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&traff_size), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
-        for (std::list<uint32_t>::const_iterator it = traffic_list_.begin(); it != traffic_list_.end(); ++it)
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&last_push_time_), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
+        // *(boost::uint32_t*) p = traffic_list_.size();
+        boost::uint32_t traff_size = traffic_list_.size();
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&traff_size), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
+        for (std::list<boost::uint32_t>::const_iterator it = traffic_list_.begin(); it != traffic_list_.end(); ++it)
         {
-            // *(uint32_t*) p = *it;
-            uint32_t v = *it;
-            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&v), sizeof(uint32_t));
-            total_len += sizeof(uint32_t);
+            // *(boost::uint32_t*) p = *it;
+            boost::uint32_t v = *it;
+            memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&v), sizeof(boost::uint32_t));
+            total_len += sizeof(boost::uint32_t);
         }
         // ----------------------------------------------
         // version3
         // *(unsigned char*) p = down_mode_;
-        data_len = sizeof(unsigned char) + sizeof(uint32_t) + web_url_.length() + sizeof(uint32_t) + sizeof(boost::uint64_t) + sizeof(uint32_t);
+        data_len = sizeof(unsigned char) + sizeof(boost::uint32_t) + web_url_.length() + sizeof(boost::uint32_t) + sizeof(boost::uint64_t) + sizeof(boost::uint32_t);
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
@@ -147,48 +147,48 @@ namespace storage
         memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&down_mode_), sizeof(unsigned char));
         total_len += sizeof(unsigned char);
         // web url
-        // *(uint32_t*) p = web_url_.length();
-        uint32_t web_url_len = web_url_.length();
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&web_url_len), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        // *(boost::uint32_t*) p = web_url_.length();
+        boost::uint32_t web_url_len = web_url_.length();
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&web_url_len), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, web_url_.c_str(), web_url_.length());
         total_len += web_url_.length();
         // file duration
-        // *(uint32_t*) p = file_duration_in_sec_;
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&file_duration_in_sec_), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        // *(boost::uint32_t*) p = file_duration_in_sec_;
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&file_duration_in_sec_), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         // last write time
         // *(boost::uint64_t*) p = last_write_time_;
         memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&last_write_time_), sizeof(boost::uint64_t));
         total_len += sizeof(boost::uint64_t);
         // data rate
-        // *(uint32_t*) p = data_rate_;
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&data_rate_), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        // *(boost::uint32_t*) p = data_rate_;
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&data_rate_), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         // ----------------------------------------------
         // version4
-        // *(uint32_t*) p = file_name_.length();
-        data_len = sizeof(uint32_t) + file_name_.length();
+        // *(boost::uint32_t*) p = file_name_.length();
+        data_len = sizeof(boost::uint32_t) + file_name_.length();
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
         }
         web_url_len = file_name_.length();
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&web_url_len), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&web_url_len), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
         memcpy2((tmp.Data() + total_len), tmp.Length() - total_len, (boost::uint8_t*) file_name_.c_str(), file_name_.length());
         total_len += file_name_.length();
 
         // ----------------------------------------------
         // version 5
-        // *(uint32_t*) p = is_open_service_;
-        data_len = sizeof(uint32_t);
+        // *(boost::uint32_t*) p = is_open_service_;
+        data_len = sizeof(boost::uint32_t);
         while (total_len + data_len + 256 > tmp.Length())
         {
             tmp.Extend(tmp.Length());
         }
-        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&is_open_service_), sizeof(uint32_t));
-        total_len += sizeof(uint32_t);
+        memcpy2((void*)(tmp.Data() + total_len), tmp.Length() - total_len, (void*)(&is_open_service_), sizeof(boost::uint32_t));
+        total_len += sizeof(boost::uint32_t);
 
         // version 6
         // add is_push
@@ -202,17 +202,17 @@ namespace storage
 
         // ----------------------------------------------
         // total_len = p - tmp.Data();
-        // *(uint32_t*) tmp.Data() = total_len;
-        memcpy2((void*)tmp.Data(), sizeof(uint32_t), (void*)(&total_len), sizeof(uint32_t));
+        // *(boost::uint32_t*) tmp.Data() = total_len;
+        memcpy2((void*)tmp.Data(), sizeof(boost::uint32_t), (void*)(&total_len), sizeof(boost::uint32_t));
         base::AppBuffer r_buf(tmp.Data(), total_len);
         return r_buf;
     }
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma optimize("", on)
 #endif
 
-    bool FileResourceInfo::Parse(const AppBuffer buf, uint32_t version)
+    bool FileResourceInfo::Parse(const AppBuffer buf, boost::uint32_t version)
     {
         if ((buf.Length() >= 2 * 1024 * 1024) || (buf.Length() < 4))
         {
@@ -222,22 +222,22 @@ namespace storage
         }
 
         boost::uint8_t *p = buf.Data();
-        uint32_t offset = 0;
+        boost::uint32_t offset = 0;
 
         if (offset + 4 > buf.Length())
         {
             assert(false);
             return false;
         }
-        uint32_t total_len = 0;
-        memcpy2(&total_len, sizeof(total_len), p + offset, sizeof(uint32_t));
+        boost::uint32_t total_len = 0;
+        memcpy2(&total_len, sizeof(total_len), p + offset, sizeof(boost::uint32_t));
         if (total_len != buf.Length())
         {
             LOG4CPLUS_ERROR_LOG(logger_file_resource, "FileResourceInfo::Parse length error! buf.Length():" 
                 << buf.Length() << " total_len:" << total_len);
             return false;
         }
-        offset += sizeof(uint32_t);
+        offset += sizeof(boost::uint32_t);
 
         if (offset + 4 > buf.Length())
         {
@@ -374,8 +374,8 @@ namespace storage
             assert(false);
             return false;
         }
-        memcpy2((void*)(&last_push_time_), sizeof(last_push_time_), p + offset, sizeof(uint32_t));
-        offset += sizeof(uint32_t);
+        memcpy2((void*)(&last_push_time_), sizeof(last_push_time_), p + offset, sizeof(boost::uint32_t));
+        offset += sizeof(boost::uint32_t);
         boost::int32_t list_size;
         memcpy2((void*)(&list_size), sizeof(list_size), p + offset, sizeof(boost::int32_t));
         offset += sizeof(boost::int32_t);
@@ -388,9 +388,9 @@ namespace storage
         traffic_list_.clear();
         for (boost::int32_t i = 0; i < list_size; i++)
         {
-            uint32_t unit_traffic;
-            memcpy2((void*)(&unit_traffic), sizeof(unit_traffic), p + offset, sizeof(uint32_t));
-            offset += sizeof(uint32_t);
+            boost::uint32_t unit_traffic;
+            memcpy2((void*)(&unit_traffic), sizeof(unit_traffic), p + offset, sizeof(boost::uint32_t));
+            offset += sizeof(boost::uint32_t);
             traffic_list_.push_back(unit_traffic);
         }
 
@@ -412,7 +412,7 @@ namespace storage
         offset += sizeof(unsigned char);
 
         // web url
-        if (offset + sizeof(uint32_t) > buf.Length())
+        if (offset + sizeof(boost::uint32_t) > buf.Length())
         {
             assert(false);
             return false;
@@ -436,12 +436,12 @@ namespace storage
             assert(false);
             return false;
         }
-        memcpy2((void*)(&file_duration_in_sec_), sizeof(file_duration_in_sec_), p + offset, sizeof(uint32_t));
-        offset += sizeof(uint32_t);
+        memcpy2((void*)(&file_duration_in_sec_), sizeof(file_duration_in_sec_), p + offset, sizeof(boost::uint32_t));
+        offset += sizeof(boost::uint32_t);
         memcpy2((void*)(&last_write_time_), sizeof(last_write_time_), p + offset, sizeof(boost::uint64_t));
         offset += sizeof(boost::uint64_t);
-        memcpy2((void*)(&data_rate_), sizeof(data_rate_), p + offset, sizeof(uint32_t));
-        offset += sizeof(uint32_t);
+        memcpy2((void*)(&data_rate_), sizeof(data_rate_), p + offset, sizeof(boost::uint32_t));
+        offset += sizeof(boost::uint32_t);
         // version
         if (version == SecVerCtrl::sec_version3)
         {
@@ -494,8 +494,8 @@ namespace storage
             assert(false);
             return false;
         }
-        memcpy2((void*)(&is_open_service_), sizeof(is_open_service_), p + offset, sizeof(uint32_t));
-        offset += sizeof(uint32_t);
+        memcpy2((void*)(&is_open_service_), sizeof(is_open_service_), p + offset, sizeof(boost::uint32_t));
+        offset += sizeof(boost::uint32_t);
 
         // version
         if (version == SecVerCtrl::sec_version5)
@@ -548,7 +548,7 @@ namespace storage
         return this->file_path_.rfind(tpp_extname) != string::npos;
     }
 
-    bool FileResourceInfo::CheckFileSize(uint32_t size) const
+    bool FileResourceInfo::CheckFileSize(boost::uint32_t size) const
     {
         return this->rid_info_.GetFileLength() == size;
     }

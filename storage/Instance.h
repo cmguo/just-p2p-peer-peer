@@ -28,9 +28,9 @@ namespace storage
         : public count_object_allocate<MetaData>
 #endif
     {
-        uint32_t Duration;  // total duration of file in seconds
-        uint32_t FileLength;  // file length in bytes
-        uint32_t VideoDataRate;  // bytes per second
+        boost::uint32_t Duration;  // total duration of file in seconds
+        boost::uint32_t FileLength;  // file length in bytes
+        boost::uint32_t VideoDataRate;  // bytes per second
         boost::uint16_t Width;  // width
         boost::uint16_t Height;  // height
         string FileFormat;  // lower case file extension
@@ -102,22 +102,22 @@ namespace storage
         void OnRenameFinish(const string newname);
 
         // 如果某个block已被鉴定，则将该block交给upload_driver，否则...
-        void AsyncGetBlock(uint32_t block_index, IUploadListener::p listener);
+        void AsyncGetBlock(boost::uint32_t block_index, IUploadListener::p listener);
 
-        bool GetSubPieceForPlay(boost::shared_ptr<IDownloadDriver> dd, uint32_t start_postion, std::vector<protocol::SubPieceBuffer> & buffers);
+        bool GetSubPieceForPlay(boost::shared_ptr<IDownloadDriver> dd, boost::uint32_t start_postion, std::vector<protocol::SubPieceBuffer> & buffers);
         // 从pending_subpiece_manager中或文件中找到某个subpiece，然后merge到merge_to_instance_p
         void MergeSubPiece(const protocol::SubPieceInfo& subpiece_info, Instance::p merge_to_instance_p);
         // 将subpiece添加到准备写入的队列，检查是否该写入文件，检查block, 上传等, (针对merge_to_instance_p)
         void OnMergeSubPieceSuccess(const protocol::SubPieceInfo& subpiece_info, protocol::SubPieceBuffer buffer);
 
         bool GetNextPieceForDownload(const protocol::PieceInfoEx &start_piece_index, protocol::PieceInfoEx& piece_for_download);
-        bool GetNextPieceForDownload(uint32_t start_position, protocol::PieceInfoEx& piece_for_download);
+        bool GetNextPieceForDownload(boost::uint32_t start_position, protocol::PieceInfoEx& piece_for_download);
 
         // 将subpiece添加到准备写入的队列，并检查是否该写入文件，并检查block, 上传等操作
         void AsyncAddSubPiece(const protocol::SubPieceInfo& subpiece_info, const protocol::SubPieceBuffer& buffer);
 
         // 根据file_length创建文件资源
-        void SetFileLength(uint32_t file_length);
+        void SetFileLength(boost::uint32_t file_length);
 
         // 告诉instance上传了一个subpiece，用于上传流量统计
         void UploadOneSubPiece();
@@ -129,24 +129,24 @@ namespace storage
         // -----------------------------------------------------------------
         //  一系列获取属性信息的函数
         RID GetRID();
-        uint32_t GetBlockSize();
-        uint32_t GetBlockCount();
-        uint32_t GetFileLength();  // 等价于GetResourceLength()
-        uint32_t GetResourceLength();
-        uint32_t GetDiskFileSize();
+        boost::uint32_t GetBlockSize();
+        boost::uint32_t GetBlockCount();
+        boost::uint32_t GetFileLength();  // 等价于GetResourceLength()
+        boost::uint32_t GetResourceLength();
+        boost::uint32_t GetDiskFileSize();
         string GetResourceName();
-        uint32_t GetDownloadBytes();
+        boost::uint32_t GetDownloadBytes();
         float GetInstanceValue();
         string GetFileName(){return file_name_;}
 
-        uint32_t GetDDNum() { return download_driver_s_.size();}
+        boost::uint32_t GetDDNum() { return download_driver_s_.size();}
         int GetStatus() { return instance_state_;}
         unsigned char GetResDownMode() const { return down_mode_;}
         bool IsSaveMode() const;
         void SetSaveMode(bool save_mode);
 
         bool HasPiece(const protocol::PieceInfo& piece_info);
-        bool HasPiece(uint32_t start_postion);
+        bool HasPiece(boost::uint32_t start_postion);
         bool HasSubPiece(const protocol::SubPieceInfo& subpiece_info);
         bool IsComplete();
         bool IsFileComplete();
@@ -166,7 +166,7 @@ namespace storage
         protocol::BlockMap::p GetBlockMap() const;
         MetaData& GetMetaData() { return meta_data_;}
         bool ParseMetaData(base::AppBuffer const & buffer);
-        uint32_t GetDownloadedBlockCount() const;
+        boost::uint32_t GetDownloadedBlockCount() const;
         void SetIsOpenService(bool is_open_service) { is_open_service_ = is_open_service;}
         bool IsOpenService() const { return is_open_service_ > 0;}
         void SetIsPush(bool is_push) { is_push_ = is_push;}
@@ -203,20 +203,20 @@ namespace storage
 
     public:
         // 通知DownloadDriver makeblock成功或失败
-        void OnNotifyHashBlock(uint32_t block_index, bool b_success);
+        void OnNotifyHashBlock(boost::uint32_t block_index, bool b_success);
 
-        void OnWriteBlockFinish(uint32_t block_index);
+        void OnWriteBlockFinish(boost::uint32_t block_index);
 
         // 通知Storage做相应操作，通知appmodule发AddRidUrlRequestPacket包，通知download_driver下载完毕
         void OnHashResourceFinish();
 
         // block写入完毕，赋予MD5值，检查文件是否写入完毕，完毕则通知其他模块下载完毕
         // 读取需要上传的block，上传
-        void OnPendingHashBlockFinish(uint32_t block_index, MD5 hash_val);
+        void OnPendingHashBlockFinish(boost::uint32_t block_index, MD5 hash_val);
 
-        void OnReadBlockForUploadFinishWithHash(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener,
+        void OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener,
             MD5 hash_val);
-        void OnReadBlockForUploadFinish(uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener);
+        void OnReadBlockForUploadFinish(boost::uint32_t block_index, base::AppBuffer& buf, IUploadListener::p listener);
 
         // 通知storage关闭instance，释放资源空间
         void OnResourceCloseFinish(Resource::p resource_p, bool need_remove_file);
@@ -227,16 +227,16 @@ namespace storage
         // 资源文件改名，通知storage将文件信息写入资源信息文件
         void OnDiskFileNameChange(string file_name);
         void OnFileWriteFinish();
-        void GetBlockPosition(uint32_t block_index, uint32_t &offset, uint32_t &length);
-        void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length);
+        void GetBlockPosition(boost::uint32_t block_index, boost::uint32_t &offset, boost::uint32_t &length);
+        void GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, boost::uint32_t &offset, boost::uint32_t &length);
         void OnThreadReadSubPieceSucced(const protocol::SubPieceInfo & subpiece_info, protocol::SubPieceBuffer buff);
 
-        map<uint32_t, boost::dynamic_bitset<uint32_t> > GetSubPiecesBitMap();
+        map<boost::uint32_t, boost::dynamic_bitset<boost::uint32_t> > GetSubPiecesBitMap();
 
     protected:
         // 从资源描述, subpiece_manager_中删除block
         // 通知upload_listener获取subpiece失败，通知download_driver，makeblock失败
-        void OnRemoveResourceBlockFinish(uint32_t block_index);
+        void OnRemoveResourceBlockFinish(boost::uint32_t block_index);
 
     private:
         // 从Url中获取文件名，如果获取失败，则生成一串随机数表示文件名, 生成的文件名写入resource_name_中
@@ -257,9 +257,9 @@ namespace storage
         void OnMergeTimerElapsed(framework::timer::Timer * pointer);
         void OnDeAttachTimerElapsed(framework::timer::Timer * pointer);
 
-        void UpdateBlockHashTime(uint32_t block_index);
+        void UpdateBlockHashTime(boost::uint32_t block_index);
 #ifdef DISK_MODE
-        bool CheckBlockNeedHash(uint32_t block_index);
+        bool CheckBlockNeedHash(boost::uint32_t block_index);
 #endif
 
     protected:
@@ -278,29 +278,29 @@ namespace storage
 
         std::set<IDownloadDriver::p> download_driver_s_;
         string resource_name_;  // 初始状态应为"x.flv"，创建资源后应为完整路径文件名，且为.tpp文件
-        uint32_t disk_file_size_;
+        boost::uint32_t disk_file_size_;
         std::set<protocol::UrlInfo> url_info_s_;
         protocol::UrlInfo origanel_url_info_;
         Resource::p resource_p_;
         SubPieceManager::p subpiece_manager_;
         Instance::p merge_to_instance_p_;
-        uint32_t last_push_time_;
-        std::list<uint32_t> traffic_list_;
+        boost::uint32_t last_push_time_;
+        std::list<boost::uint32_t> traffic_list_;
         // version 3
         unsigned char down_mode_;           // 资源下载方式
         string web_url_;                    // 页面地址
-        uint32_t file_duration_in_sec_;       // 时长
+        boost::uint32_t file_duration_in_sec_;       // 时长
         boost::uint64_t last_write_time_;   // 该资源上一次写磁盘的时间
-        uint32_t data_rate_;                  // 码流率
+        boost::uint32_t data_rate_;                  // 码流率
         // version 4
         string file_name_;  //
         // version 5
-        uint32_t is_open_service_;  // is_open_service
+        boost::uint32_t is_open_service_;  // is_open_service
         // version 6
         bool is_push_;
         //version 7
         boost::int64_t filesystem_last_write_time_;    //操作系统获取的资源文件最后修改时间
-        std::map<uint32_t, boost::int64_t> block_hash_time_map_; //每个block的最近校验时间
+        std::map<boost::uint32_t, boost::int64_t> block_hash_time_map_; //每个block的最近校验时间
 
         //
         string qname_;
@@ -315,8 +315,8 @@ namespace storage
         int flag_rid_origin_;
         bool is_have_rename_;
 
-        uint32_t send_speed_limit_;
-        uint32_t send_count_;
+        boost::uint32_t send_speed_limit_;
+        boost::uint32_t send_count_;
         bool have_upload_at_least_one_subpiece_;
     };
 
@@ -338,14 +338,14 @@ namespace storage
             rid_info = protocol::RidInfo();
     }
 
-    inline uint32_t Instance::GetFileLength()
+    inline boost::uint32_t Instance::GetFileLength()
     {
         if (is_running_ == false)
             return 0;
         return GetResourceLength();
     }
 
-    inline uint32_t Instance::GetResourceLength()
+    inline boost::uint32_t Instance::GetResourceLength()
     {
         if (subpiece_manager_)
             return subpiece_manager_->GetFileLength();
@@ -353,12 +353,12 @@ namespace storage
             return 0;
     }
 
-    inline uint32_t Instance::GetDiskFileSize()
+    inline boost::uint32_t Instance::GetDiskFileSize()
     {
         return disk_file_size_;
     }
 
-    inline uint32_t Instance::GetDownloadBytes()
+    inline boost::uint32_t Instance::GetDownloadBytes()
     {
         if (!subpiece_manager_)
         {
@@ -367,7 +367,7 @@ namespace storage
         return subpiece_manager_->GetDownloadBytes();
     }
 
-    inline uint32_t Instance::GetBlockSize()
+    inline boost::uint32_t Instance::GetBlockSize()
     {
         if (subpiece_manager_)
             return subpiece_manager_->GetBlockSize();
@@ -375,7 +375,7 @@ namespace storage
             return 0;  // 怪异！
     }
 
-    inline uint32_t Instance::GetBlockCount()
+    inline boost::uint32_t Instance::GetBlockCount()
     {
         if (subpiece_manager_)
             return subpiece_manager_->GetBlockCount();
@@ -405,7 +405,7 @@ namespace storage
         return subpiece_manager_->GetBlockMap();
     }
 
-    inline uint32_t Instance::GetDownloadedBlockCount() const
+    inline boost::uint32_t Instance::GetDownloadedBlockCount() const
     {
         if (is_running_ == false)
             return 0;
@@ -416,7 +416,7 @@ namespace storage
         return subpiece_manager_->GetDownloadedBlockCount();
     }
 
-    inline void Instance::GetBlockPosition(uint32_t block_index, uint32_t &offset, uint32_t &length)
+    inline void Instance::GetBlockPosition(boost::uint32_t block_index, boost::uint32_t &offset, boost::uint32_t &length)
     {
         if (subpiece_manager_)
         {
@@ -429,7 +429,7 @@ namespace storage
         }
     }
 
-    inline void Instance::GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, uint32_t &offset, uint32_t &length)
+    inline void Instance::GetSubPiecePosition(const protocol::SubPieceInfo &subpiec_info, boost::uint32_t &offset, boost::uint32_t &length)
     {
         if (subpiece_manager_)
         {
@@ -475,7 +475,7 @@ namespace storage
         return subpiece_manager_->HasPiece(piece_info);
     }
 
-    inline bool Instance::HasPiece(uint32_t start_postion)
+    inline bool Instance::HasPiece(boost::uint32_t start_postion)
     {
         if (is_running_ == false)
             return false;

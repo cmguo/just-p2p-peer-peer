@@ -32,25 +32,25 @@ namespace p2sp
         // 方法
         virtual void Start();
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection);
-        virtual void Start(uint32_t start_possition);
+        virtual void Start(boost::uint32_t start_possition);
         virtual void Stop();
 
     public:
         // 属性
-        virtual uint32_t GetPlayingPosition() const { return playing_position_; }
+        virtual boost::uint32_t GetPlayingPosition() const { return playing_position_; }
         virtual void SendHttpRequest() {assert(0);}
         virtual void ResetPlayingPosition() { playing_position_ = 0; }
         virtual bool IsHeaderResopnsed() const { return is_response_header_; }
 
     public:
         // 获得Contentlength
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response);
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response);
         // 失败
         virtual void OnNotice403Header();
 
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length);
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length);
 
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers);
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers);
 
     private:
         ProxyConnection__p proxy_connection_;
@@ -58,8 +58,8 @@ namespace p2sp
         volatile bool is_running_;
         volatile bool is_response_header_;
 
-        uint32_t file_length_;
-        volatile uint32_t playing_position_;
+        boost::uint32_t file_length_;
+        volatile boost::uint32_t playing_position_;
 
     private:
         NullProxySender(ProxyConnection__p proxy_connection);

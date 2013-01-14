@@ -34,7 +34,7 @@ namespace network
             shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
     }
 
-    void HttpServer::HandleHttpRecv(const boost::system::error_code& err, uint32_t bytes_transferred)
+    void HttpServer::HandleHttpRecv(const boost::system::error_code& err, boost::uint32_t bytes_transferred)
     {
         if (is_open_ == false)
         {
@@ -98,7 +98,7 @@ namespace network
         }
     }
 
-    void HttpServer::HandleTcpSend(const boost::system::error_code& err, uint32_t bytes_transferred)
+    void HttpServer::HandleTcpSend(const boost::system::error_code& err, boost::uint32_t bytes_transferred)
     {
         if (is_open_ == false)
         {
@@ -207,7 +207,7 @@ namespace network
         }
     }
 
-    void HttpServer::HttpSendHeader(uint32_t content_length, string content_type)
+    void HttpServer::HttpSendHeader(boost::uint32_t content_length, string content_type)
     {
         LOG4CPLUS_DEBUG_LOG(logger_httpserver, "content_length: " << content_length << ", type " << content_type);
 
@@ -228,7 +228,7 @@ namespace network
         TcpSend(buffer);
     }
 
-    void HttpServer::HttpSendBuffer(const boost::uint8_t* data, uint32_t length)
+    void HttpServer::HttpSendBuffer(const boost::uint8_t* data, boost::uint32_t length)
     {
         base::AppBuffer buffer(data, length);
         TcpSend(buffer);
@@ -245,7 +245,7 @@ namespace network
         TcpSend(app_buf);
     }
 
-    void HttpServer::HttpSendContent(const boost::uint8_t* data, uint32_t length, string content_type)
+    void HttpServer::HttpSendContent(const boost::uint8_t* data, boost::uint32_t length, string content_type)
     {
         HttpSendHeader(length, content_type);
         HttpSendBuffer(data, length);

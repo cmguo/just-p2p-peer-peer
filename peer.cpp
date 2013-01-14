@@ -46,12 +46,12 @@ using p2sp::ProxyModule;
 static log4cplus::Logger logger_peer = log4cplus::Logger::getInstance("[peer]");
 #endif
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 
 #pragma managed(push, off)
 
 BOOL APIENTRY DllMain(HMODULE hModule,
-    uint32_t ul_reason_for_call,
+    boost::uint32_t ul_reason_for_call,
     void * lpReserved
 )
 {
@@ -68,7 +68,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 #pragma managed(pop)
 
-#endif  // BOOST_WINDOWS_API
+#endif  // PEER_PC_CLIENT
 
 static boost::mutex peer_mu_;
 
@@ -244,7 +244,7 @@ void PEER_API SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed)
         MaxUploadP2PSpeed));
 }
 
-void PEER_API OpenUPNPSucced(uint32_t ip, boost::uint16_t udp_port, boost::uint16_t tcp_port)
+void PEER_API OpenUPNPSucced(boost::uint32_t ip, boost::uint16_t udp_port, boost::uint16_t tcp_port)
 {
     // Modified by jeffrey 2011/6/8
     // 在原来的TrackerManger::OpenUPNPSucced, 直接return
@@ -333,7 +333,7 @@ void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, ch
 #endif
 }
 
-void PEER_API StopDownload(char const * lpszUrl, uint32_t nUrlLength)
+void PEER_API StopDownload(char const * lpszUrl, boost::uint32_t nUrlLength)
 {
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
@@ -358,12 +358,12 @@ void PEER_API ResetCompleteCount()
     return;
 }
 
-void PEER_API RemoveDownloadFile(char const * lpszUrl, uint32_t nUrlLength)
+void PEER_API RemoveDownloadFile(char const * lpszUrl, boost::uint32_t nUrlLength)
 {
     return;
 }
 
-void PEER_API StartDownloadAll(void * lpBuffer, uint32_t nLength)
+void PEER_API StartDownloadAll(void * lpBuffer, boost::uint32_t nLength)
 {
     return;
 }
@@ -727,7 +727,7 @@ void PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLeng
  *  告诉内核当前状态
  *  nPeerState: 当前状态
  */
-void PEER_API SetPeerState(uint32_t nPeerState)
+void PEER_API SetPeerState(boost::uint32_t nPeerState)
 {
     if (!IsProxyModuleStarted())
     {

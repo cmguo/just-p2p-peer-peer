@@ -31,7 +31,7 @@ namespace statistic
         void Start(p2sp::LiveDownloadDriver__p live_download_driver);
         void Stop();
 
-        uint32_t GetLiveDownloadDriverId() const { return download_driver_id_; }
+        boost::uint32_t GetLiveDownloadDriverId() const { return download_driver_id_; }
 
 #ifndef STATISTIC_OFF
         void UpdateShareMemory();
@@ -46,14 +46,14 @@ namespace statistic
         // Shared Memory
         bool CreateSharedMemory();
         string GetSharedMemoryName();
-        uint32_t GetSharedMemorySize();
+        boost::uint32_t GetSharedMemorySize();
         void Clear();
 
     private:
 
         volatile bool is_running_;
         LIVE_DOWNLOADDRIVER_STATISTIC_INFO download_driver_statistic_info_;
-        uint32_t download_driver_id_;
+        boost::uint32_t download_driver_id_;
         interprocess::SharedMemory shared_memory_;
         p2sp::LiveDownloadDriver__p live_download_driver_;
     };

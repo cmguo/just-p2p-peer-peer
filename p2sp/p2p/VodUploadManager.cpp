@@ -193,7 +193,7 @@ namespace p2sp
 
         protocol::SubPieceInfo sub_piece_info;
         std::vector<protocol::SubPieceInfo> request_subpieces = packet.subpiece_infos_;
-        for (uint32_t i = 0; i < request_subpieces.size(); i ++)
+        for (boost::uint32_t i = 0; i < request_subpieces.size(); i ++)
         {
             sub_piece_info = request_subpieces[i];
             if (sub_piece_info.GetPosition(inst->GetBlockSize()) > inst->GetFileLength())

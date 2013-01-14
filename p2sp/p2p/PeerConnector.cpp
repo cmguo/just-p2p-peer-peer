@@ -46,7 +46,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void PeerConnector::OnP2PTimer(uint32_t times)
+    void PeerConnector::OnP2PTimer(boost::uint32_t times)
     {
         if (is_running_ == false) return;
 
@@ -75,7 +75,7 @@ namespace p2sp
         // 用 protocol::CandidatePeerInfo 构造出 ConnectingPeer::p
         // 将 (ep, ConnectingPeer::p)  添加到 connecting_peers_ 中
 
-        uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
+        boost::uint32_t local_detected_ip = AppModule::Inst()->GetCandidatePeerInfo().DetectIP;
         boost::asio::ip::udp::endpoint end_point = candidate_peer_info.GetConnectEndPoint(local_detected_ip);
         boost::asio::ip::udp::endpoint end_point_detected = candidate_peer_info.GetConnectEndPoint(0);
     

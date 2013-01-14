@@ -113,7 +113,7 @@ namespace p2sp
     {
         if (false == is_running_)
             return;
-        uint32_t times = pointer->times();
+        boost::uint32_t times = pointer->times();
         if (pointer == &control_timer_)
         {
             // dododo

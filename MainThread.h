@@ -23,8 +23,8 @@ class MainThread
     public:
     static void Start();
     static void Stop();
-    static uint32_t GetThreadId() {return id_;}
-    static void SetThreadId(uint32_t id) {id_ = id;}
+    static boost::uint32_t GetThreadId() {return id_;}
+    static void SetThreadId(boost::uint32_t id) {id_ = id;}
     static bool IsRunning() {return instance_ != NULL;}
 
     protected:
@@ -34,10 +34,10 @@ class MainThread
     virtual void StopThread() = 0;
 
     static MainThread* instance_;
-    static uint32_t id_;
+    static boost::uint32_t id_;
 };
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 
 #include<windows.h>
 
@@ -73,7 +73,7 @@ class BoostMainThread
     boost::thread* ios_thread;
 };
 
-#endif  // BOOST_WINDOWS_API
+#endif  // PEER_PC_CLIENT
 
 #endif  // _PEER_MAIN_THREAD_H_
 

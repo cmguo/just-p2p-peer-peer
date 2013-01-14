@@ -20,7 +20,7 @@ namespace network
     string UrlCodec::Decode(const string& encoded_url)
     {
         string url;
-        for (uint32_t i = 0; i < encoded_url.length(); ++i)
+        for (boost::uint32_t i = 0; i < encoded_url.length(); ++i)
         {
             if (encoded_url[i] == '+')
             {
@@ -45,7 +45,7 @@ namespace network
     {
         const static char hex_map[] = "0123456789ABCDEF";
         string encoded_url;
-        for (uint32_t i = 0; i < url.length(); ++i)
+        for (boost::uint32_t i = 0; i < url.length(); ++i)
         {
             char c = url[i];
             // is alpha

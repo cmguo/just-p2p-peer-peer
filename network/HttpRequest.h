@@ -69,8 +69,8 @@ namespace network
         string host_;
         string path_;
         string refer_url_;
-        uint32_t range_begin_;
-        uint32_t range_end_;
+        boost::uint32_t range_begin_;
+        boost::uint32_t range_end_;
         string ip_;
         string user_agent_;
         boost::uint16_t port_;

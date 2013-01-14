@@ -13,7 +13,7 @@ namespace storage
     {
         typedef boost::shared_ptr<IMemoryConsumer> ConsumerPointer;
     public:
-        MemoryConsumptionMonitor(uint32_t overall_quota_in_bytes)
+        MemoryConsumptionMonitor(boost::uint32_t overall_quota_in_bytes)
             : overall_quota_in_bytes_(overall_quota_in_bytes)
         {
         }
@@ -31,7 +31,7 @@ namespace storage
 
     private:
         std::vector<ConsumerPointer> memory_consumers_;
-        uint32_t overall_quota_in_bytes_;
+        boost::uint32_t overall_quota_in_bytes_;
     };
 }
 

@@ -51,7 +51,7 @@ namespace storage
             boost::uint64_t ullDiskLimit,   // 使用磁盘上限
             string DiskPathName,            // 磁盘使用路径
             string ConfigPath,
-            uint32_t storage_mode);  // storage mode
+            boost::uint32_t storage_mode);  // storage mode
 
         virtual void Stop();
 
@@ -82,8 +82,8 @@ namespace storage
         virtual void AttachRidByUrl(const string& url, const protocol::RidInfo& rid);
 
         // 根据mod_number和group_count获取rid_inst_map中的rid
-        virtual void GetVodResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count);
-        virtual void GetLiveResources(std::set<RID>& rid_s, uint32_t mod_number, uint32_t group_count);
+        virtual void GetVodResources(std::set<RID>& rid_s, boost::uint32_t mod_number, boost::uint32_t group_count);
+        virtual void GetLiveResources(std::set<RID>& rid_s, boost::uint32_t mod_number, boost::uint32_t group_count);
 
         // 从url对应的instance和url_map中删除某个Url
         virtual void RemoveUrlInfo(const protocol::UrlInfo& url_info);

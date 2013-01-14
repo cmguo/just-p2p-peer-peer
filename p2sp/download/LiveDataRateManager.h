@@ -9,8 +9,8 @@ namespace p2sp
         void Start(const vector<RID>& rids, const vector<boost::uint32_t>& data_rate_s);
         RID GetCurrentRID();
         
-        bool SwitchToHigherDataRateIfNeeded(uint32_t rest_time_in_seconds);
-        bool SwitchToLowerDataRateIfNeeded(uint32_t rest_time_in_seconds);
+        bool SwitchToHigherDataRateIfNeeded(boost::uint32_t rest_time_in_seconds);
+        bool SwitchToLowerDataRateIfNeeded(boost::uint32_t rest_time_in_seconds);
 
         boost::uint32_t GetLastDataRatePos() const;
         boost::uint32_t GetCurrentDataRatePos() const;

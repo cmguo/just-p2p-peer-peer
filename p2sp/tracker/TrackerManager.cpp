@@ -60,9 +60,9 @@ namespace p2sp
     void TrackerManager::LoadTrackerList()
     {
         LOG4CPLUS_DEBUG_LOG(logger_tracker, "");
-        uint32_t save_group_count;
+        boost::uint32_t save_group_count;
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
-        uint32_t info_size = 0;
+        boost::uint32_t info_size = 0;
 
         try
         {
@@ -86,7 +86,7 @@ namespace p2sp
 
 
 
-            for (uint32_t i = 0; i != info_size; ++i)
+            for (boost::uint32_t i = 0; i != info_size; ++i)
             {
                 protocol::TRACKER_INFO ti;
 
@@ -118,7 +118,7 @@ namespace p2sp
     void TrackerManager::SaveTrackerList()
     {
         LOG4CPLUS_DEBUG_LOG(logger_tracker, "");
-        uint32_t save_group_count = list_mod_indexer_.size();
+        boost::uint32_t save_group_count = list_mod_indexer_.size();
         std::vector<protocol::TRACKER_INFO> save_tracker_info;
 
         for (ModIndexer::iterator it = list_mod_indexer_.begin();
@@ -143,7 +143,7 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+    void TrackerManager::SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
         bool is_got_tracker_list_from_bs, TrackerType tracker_type)
     {
         if (tracker_type == p2sp::LIST)
@@ -159,7 +159,7 @@ namespace p2sp
         }
     }
 
-    void TrackerManager::SetTrackerList(uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
+    void TrackerManager::SetTrackerList(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO> & trackers,
         bool is_got_tracker_list_from_bs, ModIndexer & mod_indexer, EndpointIndexer & endpoint_indexer,
         TrackerType tracker_type)
     {
@@ -255,7 +255,7 @@ namespace p2sp
 
         // 根据 rid % group_count_ 从 mod_indexer_ 中定位出 TrackerGroup,
         // 然后 该 group 做 DoList
-        uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
+        boost::uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
         
         boost::shared_ptr<TrackerGroup> tracker_group = list_mod_indexer_[group_key];
 
@@ -390,7 +390,7 @@ namespace p2sp
             return;
         }
 
-        uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
+        boost::uint32_t group_key = base::util::GuidMod(rid, list_mod_indexer_.size());
 
         boost::shared_ptr<TrackerGroup> tracker_group = list_mod_indexer_[group_key];
 

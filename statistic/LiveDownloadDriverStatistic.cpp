@@ -100,7 +100,7 @@ namespace statistic
         return CreateLiveDownloadDriverModuleSharedMemoryName(GetCurrentProcessID(), download_driver_id_);
     }
 
-    uint32_t LiveDownloadDriverStatistic::GetSharedMemorySize()
+    boost::uint32_t LiveDownloadDriverStatistic::GetSharedMemorySize()
     {
         return sizeof(download_driver_statistic_info_);
     }

@@ -32,7 +32,7 @@ namespace p2sp
         assert(false);
     }
 
-    void LiveProxySender::Start(uint32_t start_position)
+    void LiveProxySender::Start(boost::uint32_t start_position)
     {
         assert(false);
     }
@@ -60,17 +60,17 @@ namespace p2sp
         assert(false);
     }
 
-    void LiveProxySender::OnRecvSubPiece(uint32_t start_position, std::vector<base::AppBuffer> const & buffers)
+    void LiveProxySender::OnRecvSubPiece(boost::uint32_t start_position, std::vector<base::AppBuffer> const & buffers)
     {
         OnNoticeGetContentLength(0, network::HttpResponse::p());
 
-        for (uint32_t i = 0; i < buffers.size(); ++i) 
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i) 
         {
             http_server_socket_->HttpSendBuffer(buffers[i]);
         }
     }
 
-    void LiveProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void LiveProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false )
         {
@@ -89,7 +89,7 @@ namespace p2sp
         is_response_header_ = true;
     }
 
-    void LiveProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void LiveProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         assert(false);
     }

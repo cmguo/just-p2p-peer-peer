@@ -23,7 +23,7 @@ namespace storage
 
     bool LiveCacheManager::HasSubPiece(const protocol::LiveSubPieceInfo & subpiece) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(subpiece.GetBlockId());
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(subpiece.GetBlockId());
         if (iter != block_nodes_.end())
         {
             return iter->second->HasSubPiece(subpiece.GetSubPieceIndex());
@@ -32,10 +32,10 @@ namespace storage
         return false;
     }
 
-    void LiveCacheManager::GetBlock(uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const
+    void LiveCacheManager::GetBlock(boost::uint32_t block_id, std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const
     {
         subpiece_buffers.clear();
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             LiveBlockNode::p target_block_node = iter->second;
@@ -47,7 +47,7 @@ namespace storage
 
     void LiveCacheManager::GetSubPiece(protocol::LiveSubPieceInfo subpiece_info, protocol::LiveSubPieceBuffer & subpiece_buffer) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(subpiece_info.GetBlockId());
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(subpiece_info.GetBlockId());
         if (iter != block_nodes_.end())
         {
             iter->second->GetBuffer(subpiece_info.GetSubPieceIndex(), subpiece_buffer);
@@ -58,7 +58,7 @@ namespace storage
         }
     }
 
-    void LiveCacheManager::GetSubPieces(uint32_t block_id, uint16_t start_subpiece_index, uint16_t last_subpiece_index, 
+    void LiveCacheManager::GetSubPieces(boost::uint32_t block_id, boost::uint16_t start_subpiece_index, boost::uint16_t last_subpiece_index, 
                                         std::vector<protocol::LiveSubPieceBuffer> & subpiece_buffers) const
     {
         assert(last_subpiece_index >= start_subpiece_index);
@@ -70,10 +70,10 @@ namespace storage
             return;
         }
 
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
-            for(uint16_t subpiece_index = start_subpiece_index; subpiece_index <= last_subpiece_index; ++subpiece_index)
+            for(boost::uint16_t subpiece_index = start_subpiece_index; subpiece_index <= last_subpiece_index; ++subpiece_index)
             {
                 protocol::LiveSubPieceBuffer subpiece;    
                 iter->second->GetBuffer(subpiece_index, subpiece);
@@ -89,9 +89,9 @@ namespace storage
         }
     }
 
-    bool LiveCacheManager::HasCompleteBlock(uint32_t block_id) const
+    bool LiveCacheManager::HasCompleteBlock(boost::uint32_t block_id) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             return iter->second->IsComplete();
@@ -100,9 +100,9 @@ namespace storage
         return false;
     }
 
-    bool LiveCacheManager::IsPieceComplete(uint32_t block_id, uint16_t piece_index) const
+    bool LiveCacheManager::IsPieceComplete(boost::uint32_t block_id, boost::uint16_t piece_index) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             return iter->second->IsPieceComplete(piece_index);
@@ -111,9 +111,9 @@ namespace storage
         return false;
     }
 
-    bool LiveCacheManager::IsPieceValid(uint32_t block_id, uint16_t piece_index) const
+    bool LiveCacheManager::IsPieceValid(boost::uint32_t block_id, boost::uint16_t piece_index) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             return iter->second->IsPieceValid(piece_index);
@@ -122,9 +122,9 @@ namespace storage
         return false;
     }
 
-    bool LiveCacheManager::IsBlockHeaderValid(uint32_t block_id) const
+    bool LiveCacheManager::IsBlockHeaderValid(boost::uint32_t block_id) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             return iter->second->IsHeaderValid();
@@ -133,9 +133,9 @@ namespace storage
         return false;
     }
 
-    uint32_t LiveCacheManager::GetBlockSizeInBytes(uint32_t block_id) const
+    boost::uint32_t LiveCacheManager::GetBlockSizeInBytes(boost::uint32_t block_id) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter == block_nodes_.end())
         {
             return 0;
@@ -144,9 +144,9 @@ namespace storage
         return iter->second->GetBlockSizeInBytes();
     }
 
-    uint32_t LiveCacheManager::GetSubPiecesCount(uint32_t block_id) const
+    boost::uint32_t LiveCacheManager::GetSubPiecesCount(boost::uint32_t block_id) const
     {
-        map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+        map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
         if (iter != block_nodes_.end())
         {
             return iter->second->GetSubPiecesCount();
@@ -157,12 +157,12 @@ namespace storage
 
     //Note - 有可能出现开始返回的missing subpiece的位置在后一次调用返回的missing subpiece之后
     //这是因为在piece validation不通过时，会发生DropPiece
-    void LiveCacheManager::GetNextMissingSubPiece(uint32_t start_block_id, protocol::LiveSubPieceInfo & missing_subpiece) const
+    void LiveCacheManager::GetNextMissingSubPiece(boost::uint32_t start_block_id, protocol::LiveSubPieceInfo & missing_subpiece) const
     {
-        uint32_t block_id = start_block_id;
+        boost::uint32_t block_id = start_block_id;
         while(true)
         {
-            map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
+            map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.find(block_id);
             if (iter == block_nodes_.end())
             {
                 missing_subpiece = protocol::LiveSubPieceInfo(block_id, 0);
@@ -179,7 +179,7 @@ namespace storage
         }
     }
 
-    void LiveCacheManager::EnsureBlockExists(uint32_t block_id)
+    void LiveCacheManager::EnsureBlockExists(boost::uint32_t block_id)
     {
         if (block_nodes_.find(block_id) == block_nodes_.end())
         {
@@ -201,7 +201,7 @@ namespace storage
 
         boost::uint32_t data_rate = 0;
 
-        for (map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.begin();
+        for (map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.begin();
             iter != block_nodes_.end(); 
             ++iter)
         {
@@ -238,7 +238,7 @@ namespace storage
         return 0;
     }
 
-    bool LiveCacheManager::RemoveBlock(uint32_t block_id)
+    bool LiveCacheManager::RemoveBlock(boost::uint32_t block_id)
     {
         size_t elements_removed = block_nodes_.erase(block_id);
         return elements_removed > 0;
@@ -247,7 +247,7 @@ namespace storage
     boost::uint32_t LiveCacheManager::GetChecksumFailedTimes() const
     {
         boost::uint32_t checksum_failed_times = 0;
-        for (map<uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.begin();
+        for (map<boost::uint32_t, LiveBlockNode::p>::const_iterator iter = block_nodes_.begin();
             iter != block_nodes_.end(); ++iter)
         {
             if (iter->second->GetChecksumFailedTimes() != 0)
@@ -255,7 +255,7 @@ namespace storage
                 block_checksum_failed_times_[iter->first] = iter->second->GetChecksumFailedTimes();
             }
         }
-        for (map<uint32_t, uint32_t>::iterator iter = block_checksum_failed_times_.begin();
+        for (map<boost::uint32_t, boost::uint32_t>::iterator iter = block_checksum_failed_times_.begin();
             iter != block_checksum_failed_times_.end(); ++iter)
         {
             checksum_failed_times += iter->second;

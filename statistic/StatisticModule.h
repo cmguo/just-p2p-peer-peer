@@ -29,8 +29,8 @@ namespace statistic
 
         void Stop();
 
-        DownloadDriverStatistic::p AttachDownloadDriverStatistic(uint32_t id, bool is_create_shared_memory = true);
-        LiveDownloadDriverStatistic::p AttachLiveDownloadDriverStatistic(uint32_t id);
+        DownloadDriverStatistic::p AttachDownloadDriverStatistic(boost::uint32_t id, bool is_create_shared_memory = true);
+        LiveDownloadDriverStatistic::p AttachLiveDownloadDriverStatistic(boost::uint32_t id);
 
         bool DetachLiveDownloadDriverStatistic(const LiveDownloadDriverStatistic::p live_download_driver_statistic);
         bool DetachDownloadDriverStatistic(const DownloadDriverStatistic::p download_driver_statistic);
@@ -40,7 +40,7 @@ namespace statistic
         bool DetachP2PDownloaderStatistic(const P2PDownloaderStatistic::p p2p_downloader_statistic);
 
         // framework::timer::Timer
-        void OnShareMemoryTimer(uint32_t times);
+        void OnShareMemoryTimer(boost::uint32_t times);
 
         bool IsRunning() const
         {
@@ -66,34 +66,34 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Speed Info
 
-        void SubmitDownloadedBytes(uint32_t downloaded_bytes);
+        void SubmitDownloadedBytes(boost::uint32_t downloaded_bytes);
 
-        void SubmitUploadedBytes(uint32_t uploaded_bytes);
+        void SubmitUploadedBytes(boost::uint32_t uploaded_bytes);
 
         SPEED_INFO GetSpeedInfo();
 
         SPEED_INFO_EX GetSpeedInfoEx();
 
-        uint32_t GetMaxHttpDownloadSpeed() const;
+        boost::uint32_t GetMaxHttpDownloadSpeed() const;
 
-        uint32_t GetTotalDownloadSpeed();
+        boost::uint32_t GetTotalDownloadSpeed();
 
-        uint32_t GetBandWidth();
+        boost::uint32_t GetBandWidth();
         int GetBandWidthInKBps();
 
-        uint32_t GetUploadBandWidth();
+        boost::uint32_t GetUploadBandWidth();
 
         //////////////////////////////////////////////////////////////////////////
         // Upload
 
-        void SubmitUploadDataBytes(uint32_t uploaded_bytes);
+        void SubmitUploadDataBytes(boost::uint32_t uploaded_bytes);
 
-        uint32_t GetUploadDataSpeed();
-        uint32_t GetUploadDataSpeedInKBps();
-        uint32_t GetRecentMinuteUploadDataSpeedInKBps();
-        uint32_t GetMinuteUploadDataSpeed();
-        uint32_t GetUploadDataBytes() const;
-        uint32_t GetOnlinePercent() const;
+        boost::uint32_t GetUploadDataSpeed();
+        boost::uint32_t GetUploadDataSpeedInKBps();
+        boost::uint32_t GetRecentMinuteUploadDataSpeedInKBps();
+        boost::uint32_t GetMinuteUploadDataSpeed();
+        boost::uint32_t GetUploadDataBytes() const;
+        boost::uint32_t GetOnlinePercent() const;
         void SubmitDurationOnline();
 
         //////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ namespace statistic
 
         // 设置 和 获取 Local PeerInfo 中的 Local 部分
 
-        void SetLocalPeerIp(uint32_t ip);
+        void SetLocalPeerIp(boost::uint32_t ip);
 
         void SetLocalPeerUdpPort(boost::uint16_t udp_port);
 
@@ -148,14 +148,14 @@ namespace statistic
 
         boost::uint8_t GetLocalIdleTime();
 
-        void SetLocalIPs(const std::vector<uint32_t>& local_ips);
+        void SetLocalIPs(const std::vector<boost::uint32_t>& local_ips);
 
-        void GetLocalIPs(std::vector<uint32_t>& local_ips);
+        void GetLocalIPs(std::vector<boost::uint32_t>& local_ips);
 
         //////////////////////////////////////////////////////////////////////////
         // Peer Info
 
-        void SetLocalPeerVersion(uint32_t local_peer_version);
+        void SetLocalPeerVersion(boost::uint32_t local_peer_version);
 
         //////////////////////////////////////////////////////////////////////////
         // Bootstrap Server
@@ -169,7 +169,7 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // Tracker Server
 
-        void SetTrackerInfo(uint32_t group_count, const std::vector<protocol::TRACKER_INFO>& tracker_infos);
+        void SetTrackerInfo(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO>& tracker_infos);
 
         void SetIsSubmitTracker(const protocol::TRACKER_INFO& tracker_info, bool is_submit_tracker);
 
@@ -183,14 +183,14 @@ namespace statistic
 
         void SubmitListRequest(const protocol::TRACKER_INFO& tracker_info, const RID &rid);
 
-        void SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count, const RID &rid);
+        void SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, boost::uint32_t peer_count, const RID &rid);
 
         void SubmitErrorCode(const protocol::TRACKER_INFO& tracker_info, boost::uint8_t error_code);
 
         //////////////////////////////////////////////////////////////////////////
         // Index Server
 
-        void SetIndexServerInfo(uint32_t ip, boost::uint16_t port, boost::uint8_t type = 0);
+        void SetIndexServerInfo(boost::uint32_t ip, boost::uint16_t port, boost::uint8_t type = 0);
 
         void SetIndexServerInfo(const protocol::SocketAddr& socket_addr, boost::uint8_t type = 0);
 
@@ -219,16 +219,16 @@ namespace statistic
 
         void SubmitTotalHttpOriginalDataBytes(boost::uint32_t bytes);     // 实时 原生下载的纯数据 字节数
 
-        uint32_t GetTotalDataBytes();
+        boost::uint32_t GetTotalDataBytes();
 
         boost::uint16_t GetTotalDataBytesInMB();
 
         //////////////////////////////////////////////////////////////////////////
         // Upload Cache
 
-        void SetUploadCacheRequest(uint32_t count);
+        void SetUploadCacheRequest(boost::uint32_t count);
 
-        void SetUploadCacheHit(uint32_t count);
+        void SetUploadCacheHit(boost::uint32_t count);
 
         float GetUploadCacheHitRate();
 
@@ -253,7 +253,7 @@ namespace statistic
 
         //////////////////////////////////////////////////////////////////////////
 
-        void SetMemoryPoolLeftSize(uint32_t memory_pool_left_size);
+        void SetMemoryPoolLeftSize(boost::uint32_t memory_pool_left_size);
 
         void QueryBasicPeerInfo(boost::function<void()> result_handler, BASICPEERINFO *para_bpi);
         void QueryPeerInfoByRid(RID rid, boost::function<void()> result_handler, boost::int32_t *iListCount, boost::int32_t *iConnectCount, boost::int32_t *iAverSpeed);
@@ -293,7 +293,7 @@ namespace statistic
 
         string GetSharedMemoryName();
 
-        uint32_t GetSharedMemorySize();
+        boost::uint32_t GetSharedMemorySize();
 
         void FlushSharedMemory();
 
@@ -304,9 +304,9 @@ namespace statistic
 
     private:
 
-        static const uint32_t HASH_SIZE = UINT8_MAX_VALUE;
+        static const boost::uint32_t HASH_SIZE = UINT8_MAX_VALUE;
 
-        static boost::uint8_t HashFunc(uint32_t value)
+        static boost::uint8_t HashFunc(boost::uint32_t value)
         {
             return value % HASH_SIZE;
         }
@@ -323,19 +323,19 @@ namespace statistic
         //////////////////////////////////////////////////////////////////////////
         // DownloaderDriverID Address
 
-        uint32_t Address(uint32_t id);
+        boost::uint32_t Address(boost::uint32_t id);
 
-        bool AddDownloadDriverID(uint32_t id);
-        bool RemoveDownloadDriverID(uint32_t id);
+        bool AddDownloadDriverID(boost::uint32_t id);
+        bool RemoveDownloadDriverID(boost::uint32_t id);
 
-        bool AddLiveDownloadDriverID(uint32_t id);
-        bool RemoveLiveDownloadDriverID(uint32_t id);
+        bool AddLiveDownloadDriverID(boost::uint32_t id);
+        bool RemoveLiveDownloadDriverID(boost::uint32_t id);
 
     private:
         // types
 
-        typedef std::map<uint32_t, DownloadDriverStatistic::p> DownloadDriverStatisticMap;
-        typedef std::map<uint32_t, LiveDownloadDriverStatistic::p> LiveDownloadDriverStatisticMap;
+        typedef std::map<boost::uint32_t, DownloadDriverStatistic::p> DownloadDriverStatisticMap;
+        typedef std::map<boost::uint32_t, LiveDownloadDriverStatistic::p> LiveDownloadDriverStatisticMap;
 
         typedef std::map<RID, P2PDownloaderStatistic::p> P2PDownloadDriverStatisticMap;
 
@@ -367,7 +367,7 @@ namespace statistic
         // Speed Info
         SpeedInfoStatistic speed_info_;
 
-        uint32_t history_bandwith_;
+        boost::uint32_t history_bandwith_;
         ByteSpeedMeter upload_speed_meter_;
 
         // config path
@@ -375,7 +375,7 @@ namespace statistic
 
         boost::uint16_t tcp_port_;
 
-        uint32_t duration_online_time_in_second_;
+        boost::uint32_t duration_online_time_in_second_;
         time_t time_push_stamp_;
 
     private:

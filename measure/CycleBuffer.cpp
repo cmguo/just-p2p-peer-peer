@@ -10,13 +10,13 @@ using namespace std;
 
 namespace measure
 {
-    CycleBuffer::CycleBuffer(uint32_t capacity)
+    CycleBuffer::CycleBuffer(boost::uint32_t capacity)
     {
         capacity_ = capacity;
     }
 
 
-    void CycleBuffer::Push(uint32_t val)
+    void CycleBuffer::Push(boost::uint32_t val)
     {
         if (data_.size() == capacity_)
         {
@@ -26,7 +26,7 @@ namespace measure
         data_.push_back(val);
     }
 
-    uint32_t CycleBuffer::Average() const
+    boost::uint32_t CycleBuffer::Average() const
     {
         if (data_.empty())
         {
@@ -36,7 +36,7 @@ namespace measure
         return std::accumulate(data_.begin(), data_.end(), 0) / data_.size();
     }
 
-    uint32_t CycleBuffer::MaxValue() const
+    boost::uint32_t CycleBuffer::MaxValue() const
     {
         if (data_.empty())
         {
@@ -46,7 +46,7 @@ namespace measure
         return *std::max_element(data_.begin(), data_.end());
     }
 
-    uint32_t CycleBuffer::MinValue() const
+    boost::uint32_t CycleBuffer::MinValue() const
     {
         if (data_.empty())
         {
@@ -56,12 +56,12 @@ namespace measure
         return *std::min_element(data_.begin(), data_.end());
     }
 
-    uint32_t CycleBuffer::Count() const
+    boost::uint32_t CycleBuffer::Count() const
     {
         return data_.size();
     }
 
-    uint32_t CycleBuffer::Sum() const
+    boost::uint32_t CycleBuffer::Sum() const
     {
         if (data_.empty())
         {

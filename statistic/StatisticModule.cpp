@@ -35,7 +35,7 @@ namespace statistic
     {
     }
 
-    void StatisticModule::Start(uint32_t flush_interval_in_seconds, string config_path)
+    void StatisticModule::Start(boost::uint32_t flush_interval_in_seconds, string config_path)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::Start [IN]");
         LOG4CPLUS_INFO_LOG(logger_statistic, "StatisticModule is starting.");
@@ -103,7 +103,7 @@ namespace statistic
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::Stop [OUT]");
     }
 
-    LiveDownloadDriverStatistic::p StatisticModule::AttachLiveDownloadDriverStatistic(uint32_t id)
+    LiveDownloadDriverStatistic::p StatisticModule::AttachLiveDownloadDriverStatistic(boost::uint32_t id)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachLiveDownloadDriverStatistic [IN]");
 
@@ -130,7 +130,7 @@ namespace statistic
     }
 
     DownloadDriverStatistic::p StatisticModule::AttachDownloadDriverStatistic(
-        uint32_t id,
+        boost::uint32_t id,
         bool is_create_shared_memory)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::AttachDownloadDriverStatistic [IN]");
@@ -232,7 +232,7 @@ namespace statistic
 
     bool StatisticModule::DetachLiveDownloadDriverStatistic(const LiveDownloadDriverStatistic::p live_download_driver_statistic)
     {
-        uint32_t id = live_download_driver_statistic->GetLiveDownloadDriverId();
+        boost::uint32_t id = live_download_driver_statistic->GetLiveDownloadDriverId();
 
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::DetachLiveDownloadDriverStatistic [IN]");
         LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule is detaching live download driver with id " << id);
@@ -457,7 +457,7 @@ namespace statistic
         UpdateBandWidth();
     }
 
-    void StatisticModule::OnShareMemoryTimer(uint32_t times)
+    void StatisticModule::OnShareMemoryTimer(boost::uint32_t times)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::OnShareMemoryTimer [IN], times: " << times); 
         LOG4CPLUS_INFO_LOG(logger_statistic,"StatisticModule::OnShareMemoryTimer, Writing data into shared memory.");
@@ -474,7 +474,7 @@ namespace statistic
         LOG4CPLUS_INFO_LOG(logger_statistic, "Updated Statistic Information has been written to shared memory.");
         FlushSharedMemory();
 
-        uint32_t upload_speed = (uint32_t) (statistic_info_.SpeedInfo.MinuteUploadSpeed / 1024.0 + 0.5);
+        boost::uint32_t upload_speed = (boost::uint32_t) (statistic_info_.SpeedInfo.MinuteUploadSpeed / 1024.0 + 0.5);
         DACStatisticModule::Inst()->SubmitP2PUploadSpeedInKBps(upload_speed);
 
         UploadStatisticModule::Inst()->OnShareMemoryTimer(times);
@@ -532,7 +532,7 @@ namespace statistic
         return CreateStatisticModuleSharedMemoryName(GetCurrentProcessID());
     }
 
-    inline uint32_t StatisticModule::GetSharedMemorySize()
+    inline boost::uint32_t StatisticModule::GetSharedMemorySize()
     {
         return sizeof(STASTISTIC_INFO);
     }
@@ -566,13 +566,13 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Speed Info
 
-    void StatisticModule::SubmitDownloadedBytes(uint32_t downloaded_bytes)
+    void StatisticModule::SubmitDownloadedBytes(boost::uint32_t downloaded_bytes)
     {
         speed_info_.SubmitDownloadedBytes(downloaded_bytes);
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SubmitDownloadedBytes added: " << downloaded_bytes);
     }
 
-    void StatisticModule::SubmitUploadedBytes(uint32_t uploaded_bytes)
+    void StatisticModule::SubmitUploadedBytes(boost::uint32_t uploaded_bytes)
     {
         speed_info_.SubmitUploadedBytes(uploaded_bytes);
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SubmitUploadedBytes added: " << uploaded_bytes);
@@ -589,14 +589,14 @@ namespace statistic
         return speed_info_.GetSpeedInfoEx();
     }
 
-    uint32_t StatisticModule::GetMaxHttpDownloadSpeed() const
+    boost::uint32_t StatisticModule::GetMaxHttpDownloadSpeed() const
     {
         return statistic_info_.MaxHttpDownloadSpeed;
     }
 
-    uint32_t StatisticModule::GetTotalDownloadSpeed()
+    boost::uint32_t StatisticModule::GetTotalDownloadSpeed()
     {
-        uint32_t total_speed = GetSpeedInfo().NowDownloadSpeed;
+        boost::uint32_t total_speed = GetSpeedInfo().NowDownloadSpeed;
         for (DownloadDriverStatisticMap::const_iterator it = download_driver_statistic_map_.begin(); it
             != download_driver_statistic_map_.end(); ++it)
         {
@@ -619,7 +619,7 @@ namespace statistic
         return total_speed;
     }
 
-    uint32_t StatisticModule::GetBandWidth()
+    boost::uint32_t StatisticModule::GetBandWidth()
     {
         return (std::max)(statistic_info_.BandWidth, history_bandwith_);
     }
@@ -700,12 +700,12 @@ namespace statistic
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::UpdateTrackerInfo [IN]");
 
         statistic_info_.TrackerCount = statistic_tracker_info_map_.size();
-        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Current Tracker Number: " << (uint32_t)statistic_info_.TrackerCount);
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Current Tracker Number: " << (boost::uint32_t)statistic_info_.TrackerCount);
 
         assert(statistic_info_.TrackerCount <= UINT8_MAX_VALUE - 1);
 
         StatisticTrackerInfoMap::iterator it = statistic_tracker_info_map_.begin();
-        for (uint32_t i = 0; it != statistic_tracker_info_map_.end(); it++, i++)
+        for (boost::uint32_t i = 0; it != statistic_tracker_info_map_.end(); it++, i++)
         {
             statistic_info_.TrackerInfos[i] = it->second;
         } LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::UpdateTrackerInfo [OUT]");
@@ -713,13 +713,13 @@ namespace statistic
 
     void StatisticModule::UpdateMaxHttpDownloadSpeed()
     {
-        uint32_t max_http_download_speed = 0;
+        boost::uint32_t max_http_download_speed = 0;
         STL_FOR_EACH_CONST(DownloadDriverStatisticMap, download_driver_statistic_map_, iter)
         {
             DownloadDriverStatistic::p dd_statistic_ = iter->second;
             if (dd_statistic_)
             {
-                uint32_t http_speed = dd_statistic_->GetHttpDownloadMaxSpeed();
+                boost::uint32_t http_speed = dd_statistic_->GetHttpDownloadMaxSpeed();
                 if (max_http_download_speed < http_speed)
                     max_http_download_speed = http_speed;
             }
@@ -729,7 +729,7 @@ namespace statistic
 
     void StatisticModule::UpdateBandWidth()
     {
-        uint32_t total_download_speed = GetTotalDownloadSpeed();  // max(0, storage::Performance::Inst()->GetDownloadKBps())*1024;
+        boost::uint32_t total_download_speed = GetTotalDownloadSpeed();  // max(0, storage::Performance::Inst()->GetDownloadKBps())*1024;
         if (total_download_speed > statistic_info_.BandWidth)
         {
             statistic_info_.BandWidth = total_download_speed;
@@ -757,7 +757,7 @@ namespace statistic
             << protocol::PeerAddr(peer_addr) << "].");
     }
 
-    void StatisticModule::SetLocalPeerIp(uint32_t ip)
+    void StatisticModule::SetLocalPeerIp(boost::uint32_t ip)
     {
         statistic_info_.LocalPeerInfo.IP = ip;
     }
@@ -830,25 +830,25 @@ namespace statistic
     {
         return statistic_info_.LocalPeerInfo.IdleTimeInMins;
     }
-    void StatisticModule::SetLocalIPs(const std::vector<uint32_t>& local_ips)
+    void StatisticModule::SetLocalIPs(const std::vector<boost::uint32_t>& local_ips)
     {
-        statistic_info_.LocalIpCount = (std::min)((uint32_t)MAX_IP_COUNT, (uint32_t)local_ips.size());
+        statistic_info_.LocalIpCount = (std::min)((boost::uint32_t)MAX_IP_COUNT, (boost::uint32_t)local_ips.size());
 
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "Local IP Count: " << local_ips.size() 
             << ", Max allowed count: " << MAX_IP_COUNT);
 
-        for (uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
+        for (boost::uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
         {
             statistic_info_.LocalIPs[i] = local_ips[i];
         }
-        LOG4CPLUS_DEBUG_LOG(logger_statistic,"All " << (uint32_t)statistic_info_.LocalIpCount << " IPs are stored.");
+        LOG4CPLUS_DEBUG_LOG(logger_statistic,"All " << (boost::uint32_t)statistic_info_.LocalIpCount << " IPs are stored.");
     }
 
-    void StatisticModule::GetLocalIPs(std::vector<uint32_t>& local_ips)
+    void StatisticModule::GetLocalIPs(std::vector<boost::uint32_t>& local_ips)
     {
         local_ips.clear();
-        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Local IP Count: " << (uint32_t)statistic_info_.LocalIpCount);
-        for (uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
+        LOG4CPLUS_DEBUG_LOG(logger_statistic, "Local IP Count: " << (boost::uint32_t)statistic_info_.LocalIpCount);
+        for (boost::uint32_t i = 0; i < statistic_info_.LocalIpCount; i++)
         {
             local_ips.push_back(statistic_info_.LocalIPs[i]);
         }
@@ -857,7 +857,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Peer Info
 
-    void StatisticModule::SetLocalPeerVersion(uint32_t local_peer_version)
+    void StatisticModule::SetLocalPeerVersion(boost::uint32_t local_peer_version)
     {
         statistic_info_.LocalPeerVersion = local_peer_version;
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetLocalPeerVersion " << local_peer_version);
@@ -893,18 +893,18 @@ namespace statistic
         return statistic_tracker_info_map_[tracker_info];
     }
 
-    void StatisticModule::SetTrackerInfo(uint32_t group_count, const std::vector<protocol::TRACKER_INFO>& tracker_infos)
+    void StatisticModule::SetTrackerInfo(boost::uint32_t group_count, const std::vector<protocol::TRACKER_INFO>& tracker_infos)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "StatisticModule::SetTrackerInfo [IN]");
         LOG4CPLUS_DEBUG_LOG(logger_statistic,"    Tracker Group Count: " << group_count << 
             ", Trackers Number: " << tracker_infos.size());
 
         statistic_info_.GroupCount = group_count;
-        statistic_info_.TrackerCount = (std::min)((uint32_t)tracker_infos.size(), (uint32_t)UINT8_MAX_VALUE);
+        statistic_info_.TrackerCount = (std::min)((boost::uint32_t)tracker_infos.size(), (boost::uint32_t)UINT8_MAX_VALUE);
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "    Statistic Tracker Count: " << statistic_info_.TrackerCount);
 
         statistic_tracker_info_map_.clear();
-        for (uint32_t i = 0; i < statistic_info_.TrackerCount; i++)
+        for (boost::uint32_t i = 0; i < statistic_info_.TrackerCount; i++)
         {
             const protocol::TRACKER_INFO& tracker_info = tracker_infos[i];
             statistic_tracker_info_map_[tracker_info] = STATISTIC_TRACKER_INFO(tracker_info);
@@ -948,7 +948,7 @@ namespace statistic
         }
     }
 
-    void StatisticModule::SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, uint32_t peer_count, const RID &rid)
+    void StatisticModule::SubmitListResponse(const protocol::TRACKER_INFO& tracker_info, boost::uint32_t peer_count, const RID &rid)
     {
         STATISTIC_TRACKER_INFO& tracker = GetTracker(tracker_info);
         tracker.ListResponseCount++;
@@ -967,7 +967,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Index Server
 
-    void StatisticModule::SetIndexServerInfo(uint32_t ip, boost::uint16_t port, boost::uint8_t type)
+    void StatisticModule::SetIndexServerInfo(boost::uint32_t ip, boost::uint16_t port, boost::uint8_t type)
     {
         statistic_info_.StatisticIndexInfo.IP = ip;
         statistic_info_.StatisticIndexInfo.Port = port;
@@ -1044,7 +1044,7 @@ namespace statistic
     boost::uint8_t StatisticModule::Address(const RID& rid)  // Be careful when buffer FULL
     {
         boost::uint8_t pos = HashFunc(boost::hash_value(rid));
-        uint32_t count = 0;
+        boost::uint32_t count = 0;
         while (statistic_info_.P2PDownloaderRIDs[pos] != Guid() && count < UINT8_MAX_VALUE)
         {
             if (statistic_info_.P2PDownloaderRIDs[pos] == rid)
@@ -1082,10 +1082,10 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // DownloaderDriverID Address
 
-    uint32_t StatisticModule::Address(uint32_t id)
+    boost::uint32_t StatisticModule::Address(boost::uint32_t id)
     {
         boost::uint8_t pos = HashFunc(id);
-        uint32_t count = 0;
+        boost::uint32_t count = 0;
         while (statistic_info_.DownloadDriverIDs[pos] != 0 && count < UINT8_MAX_VALUE)
         {
             if (statistic_info_.DownloadDriverIDs[pos] == id)
@@ -1096,7 +1096,7 @@ namespace statistic
         return pos;
     }
 
-    bool StatisticModule::AddDownloadDriverID(uint32_t id)
+    bool StatisticModule::AddDownloadDriverID(boost::uint32_t id)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddDownloadDriverID id = " << id);
         bool added = false;
@@ -1118,7 +1118,7 @@ namespace statistic
         return added;
     }
 
-    bool StatisticModule::AddLiveDownloadDriverID(uint32_t id)
+    bool StatisticModule::AddLiveDownloadDriverID(boost::uint32_t id)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "AddDownloadDriverID id = " << id);
         bool added = false;
@@ -1140,7 +1140,7 @@ namespace statistic
         return added;
     }
 
-    bool StatisticModule::RemoveDownloadDriverID(uint32_t id)
+    bool StatisticModule::RemoveDownloadDriverID(boost::uint32_t id)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveDownloadDriverID id = " << id);
         bool removed = false;
@@ -1162,7 +1162,7 @@ namespace statistic
         return removed;
     }
 
-    bool StatisticModule::RemoveLiveDownloadDriverID(uint32_t id)
+    bool StatisticModule::RemoveLiveDownloadDriverID(boost::uint32_t id)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "RemoveLiveDownloadDriverID id = " << id);
         bool removed = false;
@@ -1184,7 +1184,7 @@ namespace statistic
         return removed;
     }
 
-    uint32_t StatisticModule::GetTotalDataBytes()
+    boost::uint32_t StatisticModule::GetTotalDataBytes()
     {
         return statistic_info_.TotalP2PDataBytes + statistic_info_.TotalHttpOriginalDataBytes;
     }
@@ -1197,12 +1197,12 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Upload Cache 统计
 
-    void StatisticModule::SetUploadCacheRequest(uint32_t count)
+    void StatisticModule::SetUploadCacheRequest(boost::uint32_t count)
     {
         statistic_info_.TotalUploadCacheRequestCount = count;
     }
 
-    void StatisticModule::SetUploadCacheHit(uint32_t count)
+    void StatisticModule::SetUploadCacheHit(boost::uint32_t count)
     {
         statistic_info_.TotalUploadCacheHitCount = count;
     }
@@ -1254,7 +1254,7 @@ namespace statistic
     {
         if (ppva_config_path_.length() > 0)
         {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
             boost::filesystem::path configpath(ppva_config_path_);
             configpath /= ("ppvaconfig.ini");
             string filename = configpath.file_string();
@@ -1268,16 +1268,16 @@ namespace statistic
                     conf.register_module("PPVA_S");
 
                 // ip
-                uint32_t ip_local = 0;
+                boost::uint32_t ip_local = 0;
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("I", ip_local));
                 // date
                 time_t time_stamp = time(NULL);
-                uint32_t time_stamp_last = 0;
+                boost::uint32_t time_stamp_last = 0;
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("T", time_stamp_last));
-                uint32_t duration_in_sec = 10 * 3600;
+                boost::uint32_t duration_in_sec = 10 * 3600;
 
                 // 获得本机IP
-                uint32_t ip_local_now = base::util::GetLocalFirstIP();
+                boost::uint32_t ip_local_now = base::util::GetLocalFirstIP();
 
                 // 如果IP地址与原来的不同，则带宽从最低值512Kbps(64KB)开始
                 if (ip_local && ip_local == ip_local_now
@@ -1285,7 +1285,7 @@ namespace statistic
                     && time_stamp <= time_stamp_last + duration_in_sec)
                 {
                     // bandwidth
-                    uint32_t bandwith_load = 0;
+                    boost::uint32_t bandwith_load = 0;
                     ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("B", bandwith_load));
 
                     history_bandwith_ = bandwith_load;
@@ -1321,7 +1321,7 @@ namespace statistic
     {
         if (ppva_config_path_.length() > 0)
         {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 
             boost::filesystem::path configpath(ppva_config_path_);
             configpath /= ("ppvaconfig.ini");
@@ -1334,10 +1334,10 @@ namespace statistic
                     conf.register_module("PPVA_S");
 
                 // ip
-                uint32_t ip_local;
+                boost::uint32_t ip_local;
                 // date
                 time_t time_stamp;
-                uint32_t bandwidth;
+                boost::uint32_t bandwidth;
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("I", ip_local));
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("T", time_stamp));
                 ppva_s_conf(CONFIG_PARAM_NAME_RDONLY("B", bandwidth));
@@ -1377,7 +1377,7 @@ namespace statistic
 
     //////////////////////////////////////////////////////////////////////////
 
-    void StatisticModule::SetMemoryPoolLeftSize(uint32_t memory_pool_left_size)
+    void StatisticModule::SetMemoryPoolLeftSize(boost::uint32_t memory_pool_left_size)
     {
         statistic_info_.MemoryPoolLeftSize = memory_pool_left_size;
     }
@@ -1385,7 +1385,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Upload
 
-    void StatisticModule::SubmitUploadDataBytes(uint32_t uploaded_bytes)
+    void StatisticModule::SubmitUploadDataBytes(boost::uint32_t uploaded_bytes)
     {
         if (false == is_running_)
             return;
@@ -1393,7 +1393,7 @@ namespace statistic
         upload_speed_meter_.SubmitBytes(uploaded_bytes);
     }
 
-    uint32_t StatisticModule::GetUploadDataSpeed()
+    boost::uint32_t StatisticModule::GetUploadDataSpeed()
     {
         if (false == is_running_)
             return 0;
@@ -1401,7 +1401,7 @@ namespace statistic
         return upload_speed_meter_.CurrentByteSpeed(framework::timer::TickCounter::tick_count());
     }
 
-    uint32_t StatisticModule::GetMinuteUploadDataSpeed()
+    boost::uint32_t StatisticModule::GetMinuteUploadDataSpeed()
     {
         if (false == is_running_)
             return 0;
@@ -1409,17 +1409,17 @@ namespace statistic
         return upload_speed_meter_.RecentMinuteByteSpeed(framework::timer::TickCounter::tick_count());
     }
 
-    uint32_t StatisticModule::GetUploadDataSpeedInKBps()
+    boost::uint32_t StatisticModule::GetUploadDataSpeedInKBps()
     {
         return GetUploadDataSpeed() / 1024;
     }
 
-    uint32_t StatisticModule::GetRecentMinuteUploadDataSpeedInKBps()
+    boost::uint32_t StatisticModule::GetRecentMinuteUploadDataSpeedInKBps()
     {
         return upload_speed_meter_.RecentMinuteByteSpeed(framework::timer::TickCounter::tick_count()) / 1024;
     }
 
-    uint32_t StatisticModule::GetUploadDataBytes() const
+    boost::uint32_t StatisticModule::GetUploadDataBytes() const
     {
         return upload_speed_meter_.TotalBytes();
     }
@@ -1482,9 +1482,9 @@ namespace statistic
         duration_online_time_in_second_ ++;
     }
 
-    uint32_t StatisticModule::GetOnlinePercent() const
+    boost::uint32_t StatisticModule::GetOnlinePercent() const
     { 
         time_t time_push_current = time(NULL);
-        return duration_online_time_in_second_ * 100 / (uint32_t)(time_push_current - time_push_stamp_);
+        return duration_online_time_in_second_ * 100 / (boost::uint32_t)(time_push_current - time_push_stamp_);
     }
 }

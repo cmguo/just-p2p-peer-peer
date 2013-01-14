@@ -38,18 +38,18 @@ namespace storage
 
     inline const LivePosition LivePointTracker::GetCurrentLivePoint(bool adjustment_needed) const
     {
-        uint32_t current_live_point_block_id = live_point_start_.GetBlockId();
+        boost::uint32_t current_live_point_block_id = live_point_start_.GetBlockId();
         if (ticks_since_live_point_last_set_.running())
         {
             assert(live_interval_ > 0);
 
-            uint32_t ticks_ellapsed = ticks_since_live_point_last_set_.elapsed();
+            boost::uint32_t ticks_ellapsed = ticks_since_live_point_last_set_.elapsed();
             if (adjustment_needed)
             {
                 ticks_ellapsed += 500*live_interval_;
             }
 
-            uint32_t incremental_blocks = ticks_ellapsed / (live_interval_*1000);
+            boost::uint32_t incremental_blocks = ticks_ellapsed / (live_interval_*1000);
             current_live_point_block_id += live_interval_*incremental_blocks;
         }
 

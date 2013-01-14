@@ -19,7 +19,7 @@ namespace p2sp
 
     void LiveAssigner::PutBlockTask(const protocol::LiveSubPieceInfo & live_block)
     {
-        uint32_t block_id = live_block.GetBlockId();
+        boost::uint32_t block_id = live_block.GetBlockId();
         if (block_tasks_.find(block_id) == block_tasks_.end())
         {
             block_tasks_.insert(std::make_pair(block_id, live_block));
@@ -56,7 +56,7 @@ namespace p2sp
     {
         // 检查block是否完成
         std::set<protocol::LiveSubPieceInfo> completed_block_set;
-        for (std::map<uint32_t, protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
+        for (std::map<boost::uint32_t, protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin();
             iter != block_tasks_.end();
             iter++)
         {
@@ -114,13 +114,13 @@ namespace p2sp
 
         bool first_block_urgent_reassign = false;        
 
-        for (std::map<uint32_t,protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin(); 
+        for (std::map<boost::uint32_t,protocol::LiveSubPieceInfo>::iterator iter = block_tasks_.begin(); 
             iter != block_tasks_.end(); ++iter, ++block_task_index)
         {
-            uint32_t block_id = iter->first;
+            boost::uint32_t block_id = iter->first;
             total_unique_subpiece_count += AssignForMissingSubPieces(block_id, false);
 
-            uint32_t missing_subpieces = CountMissingSubPieces(block_id);
+            boost::uint32_t missing_subpieces = CountMissingSubPieces(block_id);
             bool reassign = false;
 
             if (urgent_)
@@ -187,7 +187,7 @@ namespace p2sp
                 if (!p2p_downloader_->GetInstance()->HasSubPiece(live_subpiece_info))
                 {
                     bool assign = false;
-                    uint32_t requesting = p2p_downloader_->GetRequestingCount(live_subpiece_info);
+                    boost::uint32_t requesting = p2p_downloader_->GetRequestingCount(live_subpiece_info);
                     if (requesting == 0)
                     {
                         assign = true;

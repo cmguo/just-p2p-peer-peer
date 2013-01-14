@@ -49,17 +49,17 @@ namespace measure
         return is_running_;
     }
 
-    uint32_t ByteSpeedMeter::TotalBytes() const
+    boost::uint32_t ByteSpeedMeter::TotalBytes() const
     {
         return total_bytes_;
     }
 
-    uint32_t ByteSpeedMeter::GetPositionFromSeconds(uint32_t seconds)
+    boost::uint32_t ByteSpeedMeter::GetPositionFromSeconds(boost::uint32_t seconds)
     {
         return seconds % HISTORY_INTERVAL_IN_SEC;
     }
 
-    uint32_t ByteSpeedMeter::AverageByteSpeed(boost::uint64_t tick_count) const
+    boost::uint32_t ByteSpeedMeter::AverageByteSpeed(boost::uint64_t tick_count) const
     {
         if (is_running_ == false)
             return 0;
@@ -67,22 +67,22 @@ namespace measure
         return 1000 * (boost::int64_t)total_bytes_ / GetElapsedTimeInMilliSeconds(tick_count);
     }
 
-    uint32_t ByteSpeedMeter::SecondByteSpeed(boost::uint64_t tick_count)  // 2 second
+    boost::uint32_t ByteSpeedMeter::SecondByteSpeed(boost::uint64_t tick_count)  // 2 second
     {
         return CalcSpeedInDuration(SECONDS_IN_SECOND, tick_count);
     }
 
-    uint32_t ByteSpeedMeter::CurrentByteSpeed(boost::uint64_t tick_count)  // 5 seconds
+    boost::uint32_t ByteSpeedMeter::CurrentByteSpeed(boost::uint64_t tick_count)  // 5 seconds
     {
         return CalcSpeedInDuration(SECONDS_IN_RECENT, tick_count);
     }
 
-    uint32_t ByteSpeedMeter::RecentByteSpeed(boost::uint64_t tick_count)  // 20 seconds
+    boost::uint32_t ByteSpeedMeter::RecentByteSpeed(boost::uint64_t tick_count)  // 20 seconds
     {
         return CalcSpeedInDuration(SECONDS_IN_RECENT_20SEC, tick_count);
     }
 
-    uint32_t ByteSpeedMeter::RecentMinuteByteSpeed(boost::uint64_t tick_count)  // 1 minute
+    boost::uint32_t ByteSpeedMeter::RecentMinuteByteSpeed(boost::uint64_t tick_count)  // 1 minute
     {
         return CalcSpeedInDuration(HISTORY_INTERVAL_IN_SEC, tick_count);
     }

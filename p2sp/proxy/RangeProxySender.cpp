@@ -52,9 +52,9 @@ namespace p2sp
         is_running_ = true;
     }
 
-    void RangeProxySender::Start(uint32_t start_possition)
+    void RangeProxySender::Start(boost::uint32_t start_possition)
     {
-        assert(!"RangeProxySender::Start(uint32_t start_possition)");
+        assert(!"RangeProxySender::Start(boost::uint32_t start_possition)");
     }
 
     void RangeProxySender::Stop()
@@ -79,7 +79,7 @@ namespace p2sp
         is_running_ = false;
     }
 
-    void RangeProxySender::OnAsyncGetSubPieceSucced(uint32_t start_position, const base::AppBuffer & buffer)
+    void RangeProxySender::OnAsyncGetSubPieceSucced(boost::uint32_t start_position, const base::AppBuffer & buffer)
     {
         if (is_running_ == false) return;
         assert(file_length_ > 0);
@@ -91,8 +91,8 @@ namespace p2sp
         // check
         if (range_info_)
         {
-            uint32_t range_begin = range_info_->GetRangeBegin();
-            uint32_t range_end = range_info_->GetRangeEnd();
+            boost::uint32_t range_begin = range_info_->GetRangeBegin();
+            boost::uint32_t range_end = range_info_->GetRangeEnd();
             LOG4CPLUS_DEBUG_LOG(logger_range_proxy, "RangeInfo, begin = " << range_begin << ", end = " << range_end 
                 << ", start_position = " << start_position << ", buffer.length = " << buffer.Length());
             if (start_position <= range_begin && range_begin < start_position + buffer.Length())
@@ -150,7 +150,7 @@ namespace p2sp
         }
     }
 
-    void RangeProxySender::OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response)
+    void RangeProxySender::OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response)
     {
         if (is_running_ == false) return;
 
@@ -184,13 +184,13 @@ namespace p2sp
         }
     }
 
-    void RangeProxySender::OnNoticeOpenServiceHeadLength(uint32_t head_length)
+    void RangeProxySender::OnNoticeOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;
     }
 
-    void RangeProxySender::OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers)
+    void RangeProxySender::OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers)
     {
         assert(!buffers.empty());
         if (!is_response_header_)
@@ -198,7 +198,7 @@ namespace p2sp
             SendHttpHeader(network::HttpResponse::p());
         }
 
-        for (uint32_t i = 0; i < buffers.size(); ++i)
+        for (boost::uint32_t i = 0; i < buffers.size(); ++i)
         {
             OnAsyncGetSubPieceSucced(position, buffers[i]);
             position += buffers[i].Length();
@@ -228,7 +228,7 @@ namespace p2sp
                     response_str << "Content-Type: " << http_response->GetContentType() << "\r\n";
                 }
                 response_str << "\r\n";
-                uint32_t header_length = 0;
+                boost::uint32_t header_length = 0;
                 http_response = network::HttpResponse::ParseFromBuffer(response_str.str(), header_length);
             }
 

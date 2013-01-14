@@ -12,7 +12,7 @@ namespace p2sp
 
     }
 
-    void RestTimeTracker::Start(uint32_t block_id, uint32_t live_interval)
+    void RestTimeTracker::Start(boost::uint32_t block_id, boost::uint32_t live_interval)
     {
         live_interval_ = live_interval;
         current_progress_ = Progress(block_id, 0, live_interval_);
@@ -20,13 +20,13 @@ namespace p2sp
         Reset();
     }
 
-    void RestTimeTracker::UpdateCurrentProgress(uint32_t current_block_id, uint32_t current_progress_percentage)
+    void RestTimeTracker::UpdateCurrentProgress(boost::uint32_t current_block_id, boost::uint32_t current_progress_percentage)
     {
         assert(current_progress_percentage <= 100);
         current_progress_ = Progress(current_block_id, current_progress_percentage, live_interval_);
     }
 
-    uint32_t RestTimeTracker::GetRestTimeInSeconds()
+    boost::uint32_t RestTimeTracker::GetRestTimeInSeconds()
     {
         if (need_calculate_rest_time_)
         {
@@ -46,11 +46,11 @@ namespace p2sp
 
     void RestTimeTracker::CalculateRestTime()
     {
-        uint32_t downloaded_data_in_seconds_since_reset = current_progress_.DistanceInSeconds(last_reset_progress_);
+        boost::uint32_t downloaded_data_in_seconds_since_reset = current_progress_.DistanceInSeconds(last_reset_progress_);
 
         downloaded_data_in_seconds_since_reset += accumulate_pausing_time_in_seconds_;
 
-        uint32_t elapsed_seconds_since_reset = ticks_since_last_progress_update_.elapsed() / 1000;
+        boost::uint32_t elapsed_seconds_since_reset = ticks_since_last_progress_update_.elapsed() / 1000;
         if (elapsed_seconds_since_reset >= downloaded_data_in_seconds_since_reset)
         {
             Reset();

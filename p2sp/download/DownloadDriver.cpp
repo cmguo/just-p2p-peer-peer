@@ -846,7 +846,7 @@ namespace p2sp
         info.avg_http_download_speed_in2300 = avg_http_download_speed_in2300_;
 
         // X: 不限速时的平均下载速度
-        info.avg_download_speed_before_limit = (uint32_t)avg_download_speed_before_limit_;
+        info.avg_download_speed_before_limit = (boost::uint32_t)avg_download_speed_before_limit_;
 
         // Y: HTTP总下载字节数（包含冗余）
         info.http_downloadbytes_with_redundance = statistic_->GetTotalHttpDataBytesWithRedundancy();
@@ -889,7 +889,7 @@ namespace p2sp
         
 
         // E1: bwtype
-        info.bwtype = (uint32_t)bwtype_;
+        info.bwtype = (boost::uint32_t)bwtype_;
 
         // F1: http 平均下载速度
 
@@ -1013,7 +1013,7 @@ namespace p2sp
         info.total_http_start_download_bytes = total_http_start_downloadbyte_;
 
         // V1: 记录导致http启动下载的原因
-        info.http_start_download_reason = (uint32_t)http_download_reason_;
+        info.http_start_download_reason = (boost::uint32_t)http_download_reason_;
        
 
         // W1: 是否是跨集预下载
@@ -1095,75 +1095,75 @@ namespace p2sp
         std::ostringstream log_stream;
 
         log_stream << "_C=" << info.gResourceID.to_string();
-        log_stream << "&_D=" << (uint32_t)info.aPeerVersion[0] << "." << 
-            (uint32_t)info.aPeerVersion[1] << "." << 
-            (uint32_t)info.aPeerVersion[2] << "." << 
-            (uint32_t)info.aPeerVersion[3];
+        log_stream << "&_D=" << (boost::uint32_t)info.aPeerVersion[0] << "." << 
+            (boost::uint32_t)info.aPeerVersion[1] << "." << 
+            (boost::uint32_t)info.aPeerVersion[2] << "." << 
+            (boost::uint32_t)info.aPeerVersion[3];
         log_stream << "&_E=" << info.szVideoName;
         log_stream << "&_F=" << info.szOriginalUrl;
         log_stream << "&_G=" << info.szOriginalReferUrl;
-        log_stream << "&_H=" << (uint32_t)info.uDiskBytes;
-        log_stream << "&_I=" << (uint32_t)info.uVideoBytes;
-        log_stream << "&_J=" << (uint32_t)info.peer_downloadbytes_without_redundance;
-        log_stream << "&_K=" << (uint32_t)info.http_downloadbytes_without_redundance;
-        log_stream << "&_L=" << (uint32_t)info.uAvgDownloadSpeed;
-        log_stream << "&_M=" << (uint32_t)info.bIsSaveMode;
-        log_stream << "&_N=" << (uint32_t)info.MaxHistoryDownloadSpeed;
-        log_stream << "&_O=" << (uint32_t)info.uAvgP2PDownloadSpeed;
-        log_stream << "&_P=" << (uint32_t)info.uMaxHttpDownloadSpeed;
-        log_stream << "&_Q=" << (uint32_t)info.uConnectedPeerCount;
-        log_stream << "&_R=" << (uint32_t)info.uFullPeerCount;
-        log_stream << "&_S=" << (uint32_t)info.uBakHostStatus;
-        log_stream << "&_T=" << (uint32_t)info.uQueriedPeerCount;
-        log_stream << "&_U=" << (uint32_t)info.uSourceType;
-        log_stream << "&_V=" << (uint32_t)info.uDataRate;
-        log_stream << "&_W=" << (uint32_t)info.avg_http_download_speed_in2300;
-        log_stream << "&_X=" << (uint32_t)info.avg_download_speed_before_limit;
-        log_stream << "&_Y=" <<  (uint32_t)info.http_downloadbytes_with_redundance;
-        log_stream << "&_Z=" << (uint32_t)info.peer_downloadbytes_with_redundance;
-        log_stream << "&_A1=" << (uint32_t)info.download_time;
-        log_stream << "&_B1=" << (uint32_t)info.tiny_drag_result;
-        log_stream << "&_C1=" << (uint32_t)info.is_got_rid;
-        log_stream << "&_D1=" << (uint32_t)info.sn_downloadbytes_with_redundance;
-        log_stream << "&_E1=" << (uint32_t)info.bwtype;
-        log_stream << "&_F1=" << (uint32_t)info.http_avg_speed_in_KBps;
-        log_stream << "&_G1=" << (uint32_t)info.p2p_avg_speed_in_KBps;
-        log_stream << "&_J1=" << (uint32_t)info.connect_full_time_in_seconds;
-        log_stream << "&_K1=" << (uint32_t)info.is_head_only;
-        log_stream << "&_L1=" << (uint32_t)info.avg_connect_rtt;
-        log_stream << "&_M1=" << (uint32_t)info.avg_lost_rate;
-        log_stream << "&_N1=" << (uint32_t)info.avg_http_download_byte;
-        log_stream << "&_O1=" << (uint32_t)info.retry_rate;
-        log_stream << "&_P1=" << (uint32_t)info.tiny_drag_http_status;
+        log_stream << "&_H=" << (boost::uint32_t)info.uDiskBytes;
+        log_stream << "&_I=" << (boost::uint32_t)info.uVideoBytes;
+        log_stream << "&_J=" << (boost::uint32_t)info.peer_downloadbytes_without_redundance;
+        log_stream << "&_K=" << (boost::uint32_t)info.http_downloadbytes_without_redundance;
+        log_stream << "&_L=" << (boost::uint32_t)info.uAvgDownloadSpeed;
+        log_stream << "&_M=" << (boost::uint32_t)info.bIsSaveMode;
+        log_stream << "&_N=" << (boost::uint32_t)info.MaxHistoryDownloadSpeed;
+        log_stream << "&_O=" << (boost::uint32_t)info.uAvgP2PDownloadSpeed;
+        log_stream << "&_P=" << (boost::uint32_t)info.uMaxHttpDownloadSpeed;
+        log_stream << "&_Q=" << (boost::uint32_t)info.uConnectedPeerCount;
+        log_stream << "&_R=" << (boost::uint32_t)info.uFullPeerCount;
+        log_stream << "&_S=" << (boost::uint32_t)info.uBakHostStatus;
+        log_stream << "&_T=" << (boost::uint32_t)info.uQueriedPeerCount;
+        log_stream << "&_U=" << (boost::uint32_t)info.uSourceType;
+        log_stream << "&_V=" << (boost::uint32_t)info.uDataRate;
+        log_stream << "&_W=" << (boost::uint32_t)info.avg_http_download_speed_in2300;
+        log_stream << "&_X=" << (boost::uint32_t)info.avg_download_speed_before_limit;
+        log_stream << "&_Y=" <<  (boost::uint32_t)info.http_downloadbytes_with_redundance;
+        log_stream << "&_Z=" << (boost::uint32_t)info.peer_downloadbytes_with_redundance;
+        log_stream << "&_A1=" << (boost::uint32_t)info.download_time;
+        log_stream << "&_B1=" << (boost::uint32_t)info.tiny_drag_result;
+        log_stream << "&_C1=" << (boost::uint32_t)info.is_got_rid;
+        log_stream << "&_D1=" << (boost::uint32_t)info.sn_downloadbytes_with_redundance;
+        log_stream << "&_E1=" << (boost::uint32_t)info.bwtype;
+        log_stream << "&_F1=" << (boost::uint32_t)info.http_avg_speed_in_KBps;
+        log_stream << "&_G1=" << (boost::uint32_t)info.p2p_avg_speed_in_KBps;
+        log_stream << "&_J1=" << (boost::uint32_t)info.connect_full_time_in_seconds;
+        log_stream << "&_K1=" << (boost::uint32_t)info.is_head_only;
+        log_stream << "&_L1=" << (boost::uint32_t)info.avg_connect_rtt;
+        log_stream << "&_M1=" << (boost::uint32_t)info.avg_lost_rate;
+        log_stream << "&_N1=" << (boost::uint32_t)info.avg_http_download_byte;
+        log_stream << "&_O1=" << (boost::uint32_t)info.retry_rate;
+        log_stream << "&_P1=" << (boost::uint32_t)info.tiny_drag_http_status;
 
-        log_stream << "&_Q1=" << (uint32_t)info.sn_downloadbytes_without_redundance;
-        log_stream << "&_R1=" << (uint32_t)info.is_push;
-        log_stream << "&_S1=" << (uint32_t)info.instance_is_push;
-        log_stream << "&_T1=" << (uint32_t)info.vip;
+        log_stream << "&_Q1=" << (boost::uint32_t)info.sn_downloadbytes_without_redundance;
+        log_stream << "&_R1=" << (boost::uint32_t)info.is_push;
+        log_stream << "&_S1=" << (boost::uint32_t)info.instance_is_push;
+        log_stream << "&_T1=" << (boost::uint32_t)info.vip;
 
-        log_stream << "&_U1=" << (uint32_t)info.total_http_start_download_bytes;
-        log_stream << "&_V1=" << (uint32_t)info.http_start_download_reason;
-        log_stream << "&_W1=" << (uint32_t)info.preroll;
+        log_stream << "&_U1=" << (boost::uint32_t)info.total_http_start_download_bytes;
+        log_stream << "&_V1=" << (boost::uint32_t)info.http_start_download_reason;
+        log_stream << "&_W1=" << (boost::uint32_t)info.preroll;
 
-        log_stream << "&_X1=" << (uint32_t)info.p2p_download_max_connect_count;
-        log_stream << "&_Y1=" << (uint32_t)info.p2p_download_min_connect_count;
+        log_stream << "&_X1=" << (boost::uint32_t)info.p2p_download_max_connect_count;
+        log_stream << "&_Y1=" << (boost::uint32_t)info.p2p_download_min_connect_count;
 
-        log_stream << "&_Z1=" << (uint32_t)info.uUsedDiskSizeInMB;
-        log_stream << "&_A2=" << (uint32_t)info.uTotalDiskSizeInMB;
-        log_stream << "&_B2=" << (uint16_t)info.http_port;
-        log_stream << "&_C2=" << (uint32_t)info.total_list_request_packet_count;
-        log_stream << "&_D2=" << (uint32_t)info.total_list_response_packet_count;
-        log_stream << "&_E2=" << (uint32_t)info.is_fetch_tinydrag_success;
-        log_stream << "&_F2=" << (uint32_t)info.is_fetch_tinydrag_from_udp;
-        log_stream << "&_G2=" << (uint32_t)info.is_parse_tinydrag_success;
-        log_stream << "&_H2=" << (uint32_t)info.fetch_tinydrag_count;
-        log_stream << "&_I2=" << (uint32_t)info.fetch_tinydrag_time;
+        log_stream << "&_Z1=" << (boost::uint32_t)info.uUsedDiskSizeInMB;
+        log_stream << "&_A2=" << (boost::uint32_t)info.uTotalDiskSizeInMB;
+        log_stream << "&_B2=" << (boost::uint16_t)info.http_port;
+        log_stream << "&_C2=" << (boost::uint32_t)info.total_list_request_packet_count;
+        log_stream << "&_D2=" << (boost::uint32_t)info.total_list_response_packet_count;
+        log_stream << "&_E2=" << (boost::uint32_t)info.is_fetch_tinydrag_success;
+        log_stream << "&_F2=" << (boost::uint32_t)info.is_fetch_tinydrag_from_udp;
+        log_stream << "&_G2=" << (boost::uint32_t)info.is_parse_tinydrag_success;
+        log_stream << "&_H2=" << (boost::uint32_t)info.fetch_tinydrag_count;
+        log_stream << "&_I2=" << (boost::uint32_t)info.fetch_tinydrag_time;
         log_stream << "&_J2=" << info.channel_name;
         log_stream << "&_K2=" << info.tracker_respons_info;
         log_stream << "&_L2=" << info.peer_connect_request_sucess_count;
         log_stream << "&M2=" << info.nat_type;
         log_stream << "&N2=" << info.nat_check_state;
-        log_stream << "&O2=" << (uint32_t)info.more_than_one_proxyconnections;
+        log_stream << "&O2=" << (boost::uint32_t)info.more_than_one_proxyconnections;
         log_stream << "&P2=" << info.bak_host_string;
 
         string log = log_stream.str();
@@ -1413,15 +1413,15 @@ namespace p2sp
         if (instance_->GetFileLength() != 0)
         {
             // notice
-            uint32_t max_header_length = 512;  // 2*1024*1024;  // 2MB
-            uint32_t default_header_length = instance_->GetFileLength() < max_header_length ? instance_->GetFileLength() / 2 : max_header_length;
+            boost::uint32_t max_header_length = 512;  // 2*1024*1024;  // 2MB
+            boost::uint32_t default_header_length = instance_->GetFileLength() < max_header_length ? instance_->GetFileLength() / 2 : max_header_length;
             proxy_connection_->OnNoticeGetContentLength(instance_->GetFileLength(), network::HttpResponse::p());
             proxy_connection_->OnNoticeOpenServiceHeadLength(default_header_length);
             statistic_->SetFileLength(instance_->GetFileLength());
         }
     }
 
-    void DownloadDriver::OnNoticeConnentLength(uint32_t file_length, VodDownloader__p downloader, network::HttpResponse::p http_response)
+    void DownloadDriver::OnNoticeConnentLength(boost::uint32_t file_length, VodDownloader__p downloader, network::HttpResponse::p http_response)
     {
         // if (http_response)
         // else
@@ -1610,7 +1610,7 @@ namespace p2sp
             }
         }
 
-        uint32_t content_length = instance_->GetFileLength();
+        boost::uint32_t content_length = instance_->GetFileLength();
         assert(content_length > 0);
 
         proxy_connection_->OnNoticeGetContentLength(content_length, network::HttpResponse::p());
@@ -1629,11 +1629,11 @@ namespace p2sp
             p2p_downloader_.reset();
         }
 
-        uint32_t time_count_in_millisec = download_time_counter_.elapsed();
+        boost::uint32_t time_count_in_millisec = download_time_counter_.elapsed();
         StatisticModule::Inst()->SubmitDownloadDurationInSec((boost::uint16_t) (time_count_in_millisec / 1000.0 + 0.5));
     }
 
-    void DownloadDriver::OnNoticeMakeBlockSucced(uint32_t block_info)
+    void DownloadDriver::OnNoticeMakeBlockSucced(boost::uint32_t block_info)
     {
         if (is_running_ == false)
             return;
@@ -1689,7 +1689,7 @@ namespace p2sp
         switch_controller_->Start(switch_control_mode_);
     }
 
-    void DownloadDriver::OnNoticeMakeBlockFailed(uint32_t block_info)
+    void DownloadDriver::OnNoticeMakeBlockFailed(boost::uint32_t block_info)
     {
         if (is_running_ == false)
             return;
@@ -1730,7 +1730,7 @@ namespace p2sp
         statistic_->SetFileName(file_name);
     }
 
-    void DownloadDriver::RestrictSendListLength(uint32_t position,vector<protocol::SubPieceBuffer>&buffers)
+    void DownloadDriver::RestrictSendListLength(boost::uint32_t position,vector<protocol::SubPieceBuffer>&buffers)
     {
         //用于将sendList控制在1024的以内
         int sendListLength = proxy_connection_->GetSendPendingCount();
@@ -1758,7 +1758,7 @@ namespace p2sp
         }
     }
      // 通知获得文件名
-    void DownloadDriver::OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer)
+    void DownloadDriver::OnRecvSubPiece(boost::uint32_t position, const protocol::SubPieceBuffer& buffer)
     {
         assert(buffer.Data() && (buffer.Length() <= bytes_num_per_piece_g_) && (buffer.Length()>0));
         
@@ -1770,7 +1770,7 @@ namespace p2sp
         }
     }
 
-    uint32_t DownloadDriver::GetPlayingPosition() const
+    boost::uint32_t DownloadDriver::GetPlayingPosition() const
     {
         if (proxy_connection_)
         {
@@ -1814,7 +1814,7 @@ namespace p2sp
         //      则说明下载可能已经完成
 
         protocol::PieceInfoEx piece_info_to_download;
-        uint32_t request_possition = proxy_connection_->GetPlayingPosition();
+        boost::uint32_t request_possition = proxy_connection_->GetPlayingPosition();
 
         statistic_->SetDataRate(GetDataRate());
 
@@ -1837,7 +1837,7 @@ namespace p2sp
             else
             {
                 // 改成跳一个block
-                uint32_t block_size = instance_->GetBlockSize();
+                boost::uint32_t block_size = instance_->GetBlockSize();
                 if (block_size == 0)
                 {
                     break;
@@ -1858,7 +1858,7 @@ namespace p2sp
         //      则说明下载可能已经完成
         std::deque<protocol::PieceInfoEx> piece_info_ex_s;
         protocol::PieceInfoEx piece_info_to_download;
-        uint32_t request_possition = proxy_connection_->GetPlayingPosition();
+        boost::uint32_t request_possition = proxy_connection_->GetPlayingPosition();
 
         statistic_->SetDataRate(GetDataRate());
 
@@ -1872,14 +1872,14 @@ namespace p2sp
             else if (downloader->CanDownloadPiece(piece_info_to_download.GetPieceInfo()))
             {
 #ifdef USE_MEMORY_POOL
-                uint32_t block_size = instance_->GetBlockSize();
+                boost::uint32_t block_size = instance_->GetBlockSize();
                 if (block_size == 0)
                 {
                     return true;
                 }
 
-                uint32_t play_position = proxy_connection_->GetPlayingPosition();
-                uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
+                boost::uint32_t play_position = proxy_connection_->GetPlayingPosition();
+                boost::uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
                 if (protocol::SubPieceContent::get_left_capacity() < 128 || 
                     download_position - play_position > (protocol::SubPieceContent::get_left_capacity() - 128) * 1024)
                 {
@@ -1920,14 +1920,14 @@ namespace p2sp
                             if (downloader->CanDownloadPiece(piece_info_to_download.GetPieceInfo()))
                             {
 #ifdef USE_MEMORY_POOL
-                                uint32_t block_size = instance_->GetBlockSize();
+                                boost::uint32_t block_size = instance_->GetBlockSize();
                                 if (block_size == 0)
                                 {
                                     return true;
                                 }
 
-                                uint32_t play_position = proxy_connection_->GetPlayingPosition();
-                                uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
+                                boost::uint32_t play_position = proxy_connection_->GetPlayingPosition();
+                                boost::uint32_t download_position = piece_info_to_download.GetEndPosition(block_size);
                                 if (protocol::SubPieceContent::get_left_capacity() < 128 || 
                                     download_position - play_position > (protocol::SubPieceContent::get_left_capacity() - 128) * 1024)
                                 {
@@ -1953,7 +1953,7 @@ namespace p2sp
             else
             {
             // 改成跳一个block
-                uint32_t block_size = instance_->GetBlockSize();
+                boost::uint32_t block_size = instance_->GetBlockSize();
                 if (block_size == 0)
                 {
                     break;
@@ -1968,56 +1968,56 @@ namespace p2sp
     //////////////////////////////////////////////////////////////////////////
     // IGlobalDataProvider
 
-    uint32_t DownloadDriver::GetBandWidth()
+    boost::uint32_t DownloadDriver::GetBandWidth()
     {
         if (false == is_running_)
             return 0;
-        uint32_t total_download_speed = StatisticModule::Inst()->GetBandWidth();
+        boost::uint32_t total_download_speed = StatisticModule::Inst()->GetBandWidth();
         return total_download_speed;
     }
 
-    uint32_t DownloadDriver::GetFileLength()
+    boost::uint32_t DownloadDriver::GetFileLength()
     {
         if (false == is_running_)
             return 0;
         return instance_->GetFileLength();
     }
 
-    uint32_t DownloadDriver::GetDataRate()
+    boost::uint32_t DownloadDriver::GetDataRate()
     {
         if (false == is_running_)
             return 0;
-        uint32_t data_rate = instance_->GetMetaData().VideoDataRate;
-        uint32_t default_rate = (is_open_service_ ? 60 * 1024 : 30 * 1024);
+        boost::uint32_t data_rate = instance_->GetMetaData().VideoDataRate;
+        boost::uint32_t default_rate = (is_open_service_ ? 60 * 1024 : 30 * 1024);
         return data_rate == 0 ? default_rate : data_rate;
     }
 
-    uint32_t DownloadDriver::GetPlayElapsedTimeInMilliSec()
+    boost::uint32_t DownloadDriver::GetPlayElapsedTimeInMilliSec()
     {
         if (false == is_running_)
             return 0;
         return download_time_counter_.elapsed();
     }
 
-    uint32_t DownloadDriver::GetDownloadingPosition()
+    boost::uint32_t DownloadDriver::GetDownloadingPosition()
     {
         if (false == is_running_)
             return 0;
         return proxy_connection_->GetPlayingPosition();
     }
 
-    uint32_t DownloadDriver::GetDownloadedBytes()
+    boost::uint32_t DownloadDriver::GetDownloadedBytes()
     {
         if (false == is_running_)
             return 0;
         return instance_->GetDownloadBytes();
     }
 
-    uint32_t DownloadDriver::GetDataDownloadSpeed()
+    boost::uint32_t DownloadDriver::GetDataDownloadSpeed()
     {
         if (false == is_running_)
             return 0;
-        uint32_t data_download_speed = statistic_->GetHttpDownloadAvgSpeed();
+        boost::uint32_t data_download_speed = statistic_->GetHttpDownloadAvgSpeed();
         if (p2p_downloader_)
         {
             data_download_speed += p2p_downloader_->GetSpeedInfo().AvgDownloadSpeed;
@@ -2114,7 +2114,7 @@ namespace p2sp
             return IP2PControlTarget::p();
         return p2p_downloader_;
     }
-    void DownloadDriver::OnStateMachineType(uint32_t state_machine_type)
+    void DownloadDriver::OnStateMachineType(boost::uint32_t state_machine_type)
     {
         if (false == is_running_)
             return;
@@ -2140,7 +2140,7 @@ namespace p2sp
         piece_request_manager_->NoticePieceTaskTimeOut(piece_info_ex, downloader);
     }
 
-    void DownloadDriver::OnNoticePragmaInfo(string server_mod, uint32_t head_length)
+    void DownloadDriver::OnNoticePragmaInfo(string server_mod, boost::uint32_t head_length)
     {
         if (false == is_running_)
             return;
@@ -2168,7 +2168,7 @@ namespace p2sp
         {
             LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " start_position = " 
                 << openservice_start_position_);
-            uint32_t task_start_position = openservice_start_position_;
+            boost::uint32_t task_start_position = openservice_start_position_;
             if (true == is_head_only_)
             {
                 LOG4CPLUS_DEBUG_LOG(logger_download_driver, __FUNCTION__ << ":" << __LINE__ << " task_range = [0, " 
@@ -2219,7 +2219,7 @@ namespace p2sp
         return speed_limit_in_KBps_;
     }
 
-    void DownloadDriver::SetOpenServiceStartPosition(uint32_t start_position)
+    void DownloadDriver::SetOpenServiceStartPosition(boost::uint32_t start_position)
     {
         // no need to check is_running_;
         openservice_start_position_ = start_position;
@@ -2230,7 +2230,7 @@ namespace p2sp
         is_drag_ = is_drag;
     }
 
-    void DownloadDriver::SetOpenServiceHeadLength(uint32_t head_length)
+    void DownloadDriver::SetOpenServiceHeadLength(boost::uint32_t head_length)
     {
         if (head_length > 0 && head_length < 2 * 1024 * 1024)
         {
@@ -2496,10 +2496,10 @@ namespace p2sp
                 max_rest_playable_time_ > 2*1000 &&
                 GetRestPlayableTime() <= 1000)
             {
-                uint32_t data_rate = GetDataRate();
+                boost::uint32_t data_rate = GetDataRate();
                 if (data_rate > 0)
                 {
-                    uint32_t bufferring_position_in_seconds = GetPlayingPosition()/data_rate;
+                    boost::uint32_t bufferring_position_in_seconds = GetPlayingPosition()/data_rate;
                     bufferring_monitor_->BufferringOccurs(bufferring_position_in_seconds);
                 }
                 else
@@ -2536,11 +2536,11 @@ namespace p2sp
 
             SNStrategy();
                 
-            //当void DownloadDriver::OnRecvSubPiece(uint32_t position, const protocol::SubPieceBuffer& buffer)
+            //当void DownloadDriver::OnRecvSubPiece(boost::uint32_t position, const protocol::SubPieceBuffer& buffer)
             //得不到执行时，利用定时器发送
             std::vector<protocol::SubPieceBuffer> buffers;
 
-            uint32_t pp =   proxy_connection_->GetPlayingPosition();
+            boost::uint32_t pp =   proxy_connection_->GetPlayingPosition();
             instance_->GetSubPieceForPlay(shared_from_this(), pp ,buffers);
             RestrictSendListLength(pp,buffers);
 
@@ -2577,18 +2577,18 @@ namespace p2sp
                 DownloadDriverStatistic__p statistic = GetStatistic();
                 assert(statistic && download_time_counter_.elapsed() > 0);
 
-                int32_t p2p_download_bytes = 0, http_download_bytes = 0;
+                boost::int32_t p2p_download_bytes = 0, http_download_bytes = 0;
 
                 // P2P下载字节数
                 if (p2p_downloader_ && p2p_downloader_->GetStatistic())
                 {
-                    p2p_download_bytes = (int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytesWithoutRedundance());
+                    p2p_download_bytes = (boost::int32_t)(p2p_downloader_->GetStatistic()->GetTotalP2PPeerDataBytesWithoutRedundance());
                 }
 
-                http_download_bytes = (int32_t)(statistic->GetTotalHttpDataBytesWithoutRedundancy());
+                http_download_bytes = (boost::int32_t)(statistic->GetTotalHttpDataBytesWithoutRedundancy());
 
                 // 平均下载速度(AvgDownloadSpeed)
-                avg_download_speed_before_limit_ = (int32_t)((p2p_download_bytes + http_download_bytes) * 
+                avg_download_speed_before_limit_ = (boost::int32_t)((p2p_download_bytes + http_download_bytes) * 
                     1000.0  / download_time_counter_.elapsed());
             }
         }
@@ -2600,12 +2600,12 @@ namespace p2sp
         {
             assert(GetStatistic() && download_time_counter_.elapsed() > 0);
 
-            int32_t http_download_bytes = 0;
+            boost::int32_t http_download_bytes = 0;
 
-            http_download_bytes = (int32_t)(GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy());
+            http_download_bytes = (boost::int32_t)(GetStatistic()->GetTotalHttpDataBytesWithoutRedundancy());
 
             // 平均下载速度(AvgDownloadSpeed)
-            avg_http_download_speed_in2300_ = (int32_t)(http_download_bytes * 
+            avg_http_download_speed_in2300_ = (boost::int32_t)(http_download_bytes * 
                 1000.0  / download_time_counter_.elapsed());
         }
 
@@ -2625,7 +2625,7 @@ namespace p2sp
         }
     }
 
-    void DownloadDriver::SetDragHttpStatus(int32_t status)
+    void DownloadDriver::SetDragHttpStatus(boost::int32_t status)
     {
         if (drag_http_status_ == 0)
         {

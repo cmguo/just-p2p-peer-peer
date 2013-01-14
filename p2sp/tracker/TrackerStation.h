@@ -54,7 +54,7 @@ namespace p2sp
         void DeleteRidRecord(const RID & rid);
 
     private:
-        static const uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 60;
+        static const boost::uint32_t DEFAULT_INTERVAL_IN_SECONDS_ = 60;
 
     private:
         bool is_running_;

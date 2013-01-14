@@ -187,11 +187,11 @@ namespace p2sp
         assert(statistic_);
         if (statistic_)
         {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
             if (MainThread::IsRunning())
             {
-                uint32_t this_thread_id = ::GetCurrentThreadId();
-                uint32_t main_thread_id = MainThread::GetThreadId();
+                boost::uint32_t this_thread_id = ::GetCurrentThreadId();
+                boost::uint32_t main_thread_id = MainThread::GetThreadId();
                 if (this_thread_id != main_thread_id)
                 {
                     int random = Random::GetGlobal().Next();
@@ -284,7 +284,7 @@ namespace p2sp
 //        if (peers_.size() > 4 || peers_.size() > 0 && start_time_counter_.GetElapsed() > 2 * 1000)
         if (can_connect_) return true;
 
-        uint32_t elapsed = start_time_counter_.elapsed();
+        boost::uint32_t elapsed = start_time_counter_.elapsed();
 
         if (peers_.size() >= 1)
         {
@@ -512,7 +512,7 @@ namespace p2sp
 
         LOG4CPLUS_DEBUG_LOG(logger_p2p_downloader, "P2PDownloader: " << shared_from_this() << ", ConnectCount: " 
             << connect_count);
-        for (uint32_t i = 0; i < connect_count; ++i)
+        for (boost::uint32_t i = 0; i < connect_count; ++i)
         {
             protocol::CandidatePeerInfo candidate_peer_info;
             if (false == ippool_->GetForConnect(candidate_peer_info))
@@ -541,7 +541,7 @@ namespace p2sp
         }
 
         boost::int32_t kick_count = 0;
-        std::multimap<uint32_t, ConnectionBasePointer> peer_kick_map;
+        std::multimap<boost::uint32_t, ConnectionBasePointer> peer_kick_map;
 
         if (peer_connections.size() > p2p_max_connect_count_)
         {
@@ -556,7 +556,7 @@ namespace p2sp
         else if(peers_.size() > p2p_min_connect_count_)
         {
             kick_count = p2p_max_connect_count_ / 10;
-            if ((int32_t)peers_.size() - kick_count < p2p_min_connect_count_)
+            if ((boost::int32_t)peers_.size() - kick_count < p2p_min_connect_count_)
             {
                 kick_count = peers_.size() - p2p_min_connect_count_;
             }
@@ -578,16 +578,16 @@ namespace p2sp
         LOG4CPLUS_INFO_LOG(logger_p2p_downloader, "P2PDownloader::KickPeerConnection kick_count" << kick_count);
 
         // 往共享内存写入每秒踢掉的连接数
-        statistic_->SubmitKickCount(std::min(kick_count, (int32_t)peer_kick_map.size()));
+        statistic_->SubmitKickCount(std::min(kick_count, (boost::int32_t)peer_kick_map.size()));
 
-        std::multimap<uint32_t, ConnectionBasePointer>::iterator iter_kick = peer_kick_map.begin();
+        std::multimap<boost::uint32_t, ConnectionBasePointer>::iterator iter_kick = peer_kick_map.begin();
         for (boost::int32_t i = 0; i < kick_count && iter_kick != peer_kick_map.end(); ++i, ++iter_kick)
         {
             DelPeer(iter_kick->second);
         }
     }
 
-    uint32_t P2PDownloader::CalcConnectedFullBlockPeerCount()
+    boost::uint32_t P2PDownloader::CalcConnectedFullBlockPeerCount()
     {
         if (is_running_ == false)
             return 0;
@@ -603,7 +603,7 @@ namespace p2sp
         return connected_full_block_peer_count_;
     }
 
-    uint32_t P2PDownloader::CalcConnectedAvailableBlockPeerCount()
+    boost::uint32_t P2PDownloader::CalcConnectedAvailableBlockPeerCount()
     {
         if (false == is_running_)
             return 0;
@@ -611,7 +611,7 @@ namespace p2sp
         connected_available_block_peer_count_ = 0;
         if (piece_tasks_.size() == 0)
             return 0;
-        uint32_t block_index = (piece_tasks_.begin()->first).block_index_;
+        boost::uint32_t block_index = (piece_tasks_.begin()->first).block_index_;
         for (std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer>::iterator iter = peers_.begin(); iter != peers_.end(); ++iter)
         {
             if (iter->second->HasBlock(block_index))
@@ -622,7 +622,7 @@ namespace p2sp
         return connected_available_block_peer_count_;
     }
 
-    void P2PDownloader::OnP2PTimer(uint32_t times)
+    void P2PDownloader::OnP2PTimer(boost::uint32_t times)
     {
         // P2PModule调用，250ms执行一次
         if (!is_running_)
@@ -940,7 +940,7 @@ namespace p2sp
             if (peers_.find(packet.end_point) != peers_.end())
             {
                 assert(peers_[packet.end_point]);
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
                 boost::intrusive_ptr<PeerConnection> peer_connection = boost::dynamic_pointer_cast<PeerConnection>(peers_[packet.end_point]);
 #else
                 boost::intrusive_ptr<PeerConnection> peer_connection = boost::static_pointer_cast<PeerConnection>(peers_[packet.end_point]);
@@ -1051,13 +1051,13 @@ namespace p2sp
             return;
 
         assert(candidate_peers.size() == 0);
-        uint32_t peer_left = peers_.size();
-        uint32_t cand_left = P2SPConfigs::P2P_MAX_EXCHANGE_PEER_COUNT;
+        boost::uint32_t peer_left = peers_.size();
+        boost::uint32_t cand_left = P2SPConfigs::P2P_MAX_EXCHANGE_PEER_COUNT;
         std::map<boost::asio::ip::udp::endpoint, ConnectionBasePointer> ::iterator iter;
         for (iter = peers_.begin(); iter != peers_.end();iter++)
         {
             Random random;
-            if ((uint32_t)random.Next(peer_left) < cand_left)
+            if ((boost::uint32_t)random.Next(peer_left) < cand_left)
             {
                 candidate_peers.push_back(iter->second->GetCandidatePeerInfo());
                 cand_left--;
@@ -1066,7 +1066,7 @@ namespace p2sp
         }
     }
 
-    uint32_t P2PDownloader::GetDataRate()
+    boost::uint32_t P2PDownloader::GetDataRate()
     {
         if (false == is_running_)
             return 0;
@@ -1075,8 +1075,8 @@ namespace p2sp
             if (instance_)
             {
                 storage::MetaData meta = instance_->GetMetaData();
-                uint32_t filelen = instance_->GetFileLength();
-                uint32_t duration = meta.Duration;
+                boost::uint32_t filelen = instance_->GetFileLength();
+                boost::uint32_t duration = meta.Duration;
                 if (duration != 0)
                     data_rate_ = filelen / duration;
             }
@@ -1085,7 +1085,7 @@ namespace p2sp
         return data_rate_ == 0 ? 30 * 1024 : data_rate_;
     }
 
-    uint32_t P2PDownloader::CalculateActivePeerCount()
+    boost::uint32_t P2PDownloader::CalculateActivePeerCount()
     {
         if (false == is_running_)
             return 0;
@@ -1140,19 +1140,19 @@ namespace p2sp
             return 0;
         return GetSpeedInfoEx().NowDownloadSpeed;
     }
-    uint32_t P2PDownloader::GetMinuteDownloadSpeed()
+    boost::uint32_t P2PDownloader::GetMinuteDownloadSpeed()
     {
         if (false == is_running_)
             return 0;
         return GetSpeedInfo().MinuteDownloadSpeed;
     }
-    uint32_t P2PDownloader::GetRecentDownloadSpeed()
+    boost::uint32_t P2PDownloader::GetRecentDownloadSpeed()
     {
         if (false == is_running_)
             return 0;
         return GetSpeedInfoEx().RecentDownloadSpeed;
     }
-    uint32_t P2PDownloader::GetPooledPeersCount()
+    boost::uint32_t P2PDownloader::GetPooledPeersCount()
     {
         if (false == is_running_)
             return 0;
@@ -1163,26 +1163,26 @@ namespace p2sp
         }
         return 0;
     }
-    uint32_t P2PDownloader::GetConnectedPeersCount()
+    boost::uint32_t P2PDownloader::GetConnectedPeersCount()
     {
         if (false == is_running_)
             return 0;
         return peers_.size();
     }
-    uint32_t P2PDownloader::GetFullBlockPeersCount()
+    boost::uint32_t P2PDownloader::GetFullBlockPeersCount()
     {
         if (false == is_running_)
             return 0;
         return connected_full_block_peer_count_;
     }
 
-    uint32_t P2PDownloader::GetActivePeersCount()
+    boost::uint32_t P2PDownloader::GetActivePeersCount()
     {
         if (false == is_running_)
             return 0;
         return active_peer_count_;
     }
-    uint32_t P2PDownloader::GetAvailableBlockPeerCount()
+    boost::uint32_t P2PDownloader::GetAvailableBlockPeerCount()
     {
         if (false == is_running_)
             return 0;
@@ -1238,9 +1238,9 @@ namespace p2sp
         }
         else
         {
-            uint32_t piece_end = SUB_PIECE_COUNT_PER_PIECE;
-            uint32_t end_position = piece.GetEndPosition(block_size_);
-            uint32_t file_length = instance_->GetFileLength();
+            boost::uint32_t piece_end = SUB_PIECE_COUNT_PER_PIECE;
+            boost::uint32_t end_position = piece.GetEndPosition(block_size_);
+            boost::uint32_t file_length = instance_->GetFileLength();
             if (end_position >= file_length)
             {
                 if (end_position < file_length + PIECE_SIZE) {
@@ -1251,7 +1251,7 @@ namespace p2sp
                 }
             }
 
-            uint32_t missing_subpiece_count = 0;
+            boost::uint32_t missing_subpiece_count = 0;
             for (boost::uint32_t i = piece.subpiece_index_; i < piece_end; i++)
             {
                 protocol::SubPieceInfo sub_piece(piece.block_index_, piece.piece_index_ * SUB_PIECE_COUNT_PER_PIECE + i);
@@ -1724,7 +1724,7 @@ namespace p2sp
 
     boost::uint32_t P2PDownloader::GetMinRestTimeInMilliSecond()
     {
-        boost::uint32_t min_rest_time = std::numeric_limits<uint32_t>::max();
+        boost::uint32_t min_rest_time = std::numeric_limits<boost::uint32_t>::max();
         for (std::set<DownloadDriver::p>::iterator iter = download_driver_s_.begin();
             iter != download_driver_s_.end(); ++iter)
         {

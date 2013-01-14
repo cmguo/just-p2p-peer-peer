@@ -30,21 +30,21 @@ public:
         typedef boost::shared_ptr<ProxySender> p;
 
         virtual void Start() = 0;
-        virtual void Start(uint32_t start_possition) = 0;
+        virtual void Start(boost::uint32_t start_possition) = 0;
         virtual void Start(network::HttpRequest::p http_request, ProxyConnection__p proxy_connection) = 0;
         virtual void Stop() = 0;  // do not close http_server_socket
 
-        virtual uint32_t GetPlayingPosition() const = 0;
+        virtual boost::uint32_t GetPlayingPosition() const = 0;
         virtual void SendHttpRequest() = 0;
         virtual void ResetPlayingPosition() = 0;
         virtual bool IsHeaderResopnsed() const = 0;
 
         // 播放数据
-        virtual void OnRecvSubPiece(uint32_t position, std::vector<base::AppBuffer> const & buffers) = 0;
+        virtual void OnRecvSubPiece(boost::uint32_t position, std::vector<base::AppBuffer> const & buffers) = 0;
         // 获得Contentlength
-        virtual void OnNoticeGetContentLength(uint32_t content_length, network::HttpResponse::p http_response) = 0;
+        virtual void OnNoticeGetContentLength(boost::uint32_t content_length, network::HttpResponse::p http_response) = 0;
         // 失败
-        virtual void OnNoticeOpenServiceHeadLength(uint32_t head_length) = 0;
+        virtual void OnNoticeOpenServiceHeadLength(boost::uint32_t head_length) = 0;
     };
 }
 

@@ -96,7 +96,7 @@ namespace statistic
         return p2p_downloader_statistic_info_;
     }
 
-    void P2PDownloaderStatistic::OnShareMemoryTimer(uint32_t times)
+    void P2PDownloaderStatistic::OnShareMemoryTimer(boost::uint32_t times)
     {
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "P2PDownloaderStatistic::OnShareMemoryTimer [IN], times: " << times);
 
@@ -210,7 +210,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Misc
 
-    uint32_t P2PDownloaderStatistic::GetMaxP2PConnectionCount() const
+    boost::uint32_t P2PDownloaderStatistic::GetMaxP2PConnectionCount() const
     {
         return MAX_P2P_DOWNLOADER_COUNT;
     }
@@ -277,7 +277,7 @@ namespace statistic
         return sn_speed_info_.GetSpeedInfoEx();
     }
 
-    uint32_t P2PDownloaderStatistic::GetElapsedTimeInMilliSeconds()
+    boost::uint32_t P2PDownloaderStatistic::GetElapsedTimeInMilliSeconds()
     {
         if (false == is_running_)
         {
@@ -318,7 +318,7 @@ namespace statistic
         }
 
         PeerConnectionStatisticMap::iterator it = peer_connection_statistic_map_.begin();
-        for (uint32_t i = 0; it != peer_connection_statistic_map_.end(); it++, i++)
+        for (boost::uint32_t i = 0; it != peer_connection_statistic_map_.end(); it++, i++)
         {
             p2p_downloader_statistic_info_.P2PConnections[i] = it->second->GetPeerConnectionInfo();
         }
@@ -347,7 +347,7 @@ namespace statistic
     //////////////////////////////////////////////////////////////////////////
     // Resource Info
 
-    void P2PDownloaderStatistic::SetFileLength(uint32_t file_length)
+    void P2PDownloaderStatistic::SetFileLength(boost::uint32_t file_length)
     {
         p2p_downloader_statistic_info_.FileLength = file_length;
     }
@@ -465,7 +465,7 @@ namespace statistic
         std::map<boost::uint32_t, int>::iterator iter = tracker_list_request_count_.begin();
         for (iter; iter != tracker_list_request_count_.end();)
         {
-            tracker_string << (uint32_t)iter->first << ":";
+            tracker_string << (boost::uint32_t)iter->first << ":";
             tracker_string << (int)iter->second << ":";
 
             if (tracker_list_response_count_.find(iter->first) != tracker_list_response_count_.end())
@@ -501,12 +501,12 @@ namespace statistic
         return CreateP2PDownloaderModuleSharedMemoryName(GetCurrentProcessID(), GetResourceID());
     }
 
-    uint32_t P2PDownloaderStatistic::GetSharedMemorySize()
+    boost::uint32_t P2PDownloaderStatistic::GetSharedMemorySize()
     {
         return sizeof(p2p_downloader_statistic_info_);
     }
 
-    void P2PDownloaderStatistic::SetEmptySubpieceDistance(uint32_t empty_subpiece_distance)
+    void P2PDownloaderStatistic::SetEmptySubpieceDistance(boost::uint32_t empty_subpiece_distance)
     {
         p2p_downloader_statistic_info_.empty_subpiece_distance = empty_subpiece_distance;
     }
@@ -514,12 +514,12 @@ namespace statistic
     string P2PDownloaderStatistic::GetPeerConnectString() const
     {
         std::ostringstream os;
-        std::map<uint16_t, std::pair<uint32_t, uint32_t> >::const_iterator iter = nat_type_connection_statistic_.begin();
+        std::map<boost::uint16_t, std::pair<boost::uint32_t, boost::uint32_t> >::const_iterator iter = nat_type_connection_statistic_.begin();
         for (iter; iter != nat_type_connection_statistic_.end(); )
         {
-            os << (uint16_t)(iter->first) << ":"
-                << (uint32_t)iter->second.first << ":"
-                << (uint32_t)iter->second.second;
+            os << (boost::uint16_t)(iter->first) << ":"
+                << (boost::uint32_t)iter->second.first << ":"
+                << (boost::uint32_t)iter->second.second;
 
             if (++iter != nat_type_connection_statistic_.end())
             {

@@ -29,9 +29,9 @@ namespace p2sp
     private:
         std::vector<IHTTPControlTarget::p> http_targets_;
         //当前正在尝试的http target，如果全部尝试完毕，指向速度最好的http target
-        int32_t current_http_target_index_;
-        int32_t best_http_target_index_;
-        int32_t best_http_target_speed_;
+        boost::int32_t current_http_target_index_;
+        boost::int32_t best_http_target_index_;
+        boost::int32_t best_http_target_speed_;
         bool trying_http_targets_;
     };
 }

@@ -20,9 +20,9 @@ namespace network
 
         virtual bool Bind(const string & destination_ip);
 
-        virtual uint16_t AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler);
+        virtual boost::uint16_t AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler);
 
-        virtual bool SetTtl(int32_t ttl);
+        virtual bool SetTtl(boost::int32_t ttl);
 
         virtual ~PingClientWithAPI();
 
@@ -36,9 +36,9 @@ namespace network
         HANDLE hIcmpFile_;
 
         char * reply_buffer_;
-        uint32_t reply_buffer_size_;
+        boost::uint32_t reply_buffer_size_;
 
-        static uint16_t sequence_num_;
+        static boost::uint16_t sequence_num_;
         static string ping_body_;
     };
 }

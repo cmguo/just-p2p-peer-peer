@@ -18,19 +18,19 @@ namespace storage
             static const int BlockHashSizeInBytes = 16;
             static const int SubPiecesPerPiece = 16;
             static const int SubPieceSizeInBytes = 1400;
-            static const int PiecesCheckSumOffset = 4*sizeof(uint32_t) + sizeof(RID) + SubPiecesPerPiece;
-            static const int MaximumPiecesPerBlock = (Constants::SubPieceSizeInBytes - PiecesCheckSumOffset)/sizeof(uint32_t);
+            static const int PiecesCheckSumOffset = 4*sizeof(boost::uint32_t) + sizeof(RID) + SubPiecesPerPiece;
+            static const int MaximumPiecesPerBlock = (Constants::SubPieceSizeInBytes - PiecesCheckSumOffset)/sizeof(boost::uint32_t);
         };
 
         bool IsValid() const;
 
-        uint32_t GetBlockId() const { return block_id_; }
+        boost::uint32_t GetBlockId() const { return block_id_; }
 
         const RID& GetRID() const { return rid_; }
 
-        uint32_t GetDataLength() const { return data_length_; }
+        boost::uint32_t GetDataLength() const { return data_length_; }
 
-        uint32_t GetPieceChecksum(uint16_t piece_index) const 
+        boost::uint32_t GetPieceChecksum(boost::uint16_t piece_index) const 
         { 
             assert(piece_index < Constants::MaximumPiecesPerBlock);
             return pieces_checksum_[piece_index]; 
@@ -45,11 +45,11 @@ namespace storage
     private:
         unsigned char block_hash_[Constants::BlockHashSizeInBytes];
         RID rid_;
-        uint32_t  block_header_length_;
-        uint32_t  data_length_;
-        uint32_t  block_id_;
-        uint32_t  version_;
-        uint32_t  pieces_checksum_[Constants::MaximumPiecesPerBlock];
+        boost::uint32_t  block_header_length_;
+        boost::uint32_t  data_length_;
+        boost::uint32_t  block_id_;
+        boost::uint32_t  version_;
+        boost::uint32_t  pieces_checksum_[Constants::MaximumPiecesPerBlock];
     };
 }
 

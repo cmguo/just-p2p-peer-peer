@@ -48,7 +48,7 @@ namespace storage
         assert(block_header_length_ > Constants::BlockHashSizeInBytes);
 
         framework::string::Md5 message_digest;
-        const uint8_t* buffer_header = reinterpret_cast<const uint8_t *>(this) + Constants::BlockHashSizeInBytes;
+        const boost::uint8_t* buffer_header = reinterpret_cast<const boost::uint8_t *>(this) + Constants::BlockHashSizeInBytes;
         message_digest.update(buffer_header, block_header_length_ - Constants::BlockHashSizeInBytes);
         message_digest.final();
 
