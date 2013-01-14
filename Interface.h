@@ -5,7 +5,7 @@
 #ifndef PEER_H
 #define PEER_H
 
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #  include <windows.h>
 #  ifndef __MINGW32__
 #    define PEER_API WINAPI
@@ -14,7 +14,7 @@
 #  endif
 #else
 #define PEER_API
-#endif  // BOOST_WINDOWS_API
+#endif  // PEER_PC_CLIENT
 
 #ifdef BOOST_HAS_DECLSPEC
 
@@ -29,7 +29,7 @@
 #endif
 
 // 内核启动参数结构体
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(push, 1)
 #endif
 
@@ -674,7 +674,7 @@ typedef struct _NETINTERFACE{
     LPQUERYPROGRESSBITMAP QueryProgressBitmap;
     boost::uint32_t                Reserved4[37];
 } NETINTERFACE, *LPNETINTERFACE;
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
 #pragma pack(pop)
 #endif
 
