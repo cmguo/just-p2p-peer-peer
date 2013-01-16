@@ -687,6 +687,8 @@ namespace p2sp
         }
         else if (pointer == &notify_timer_)
         {
+            bool need_keep_alive = false;
+
             // 每秒任务 rest_time 更新，不管状态
             for (std::map<boost::uint32_t, TASK_RECORD>::iterator iter = task_map_.begin();
                 iter != task_map_.end();)
@@ -709,8 +711,8 @@ namespace p2sp
                             CalPeerOnline();
                             // 统计在线任务数
                             CalTaskComplete();
-                            // 发送KeepAlive包
-                            DoSendKeepAlive();
+                            // 需要发送KeepAlive包
+                            need_keep_alive = true;
                         }
                         else if (iter->second.rest_time_ <= 15 && iter->second.rest_time_ % 3 == 0)
                         {
@@ -718,8 +720,8 @@ namespace p2sp
                             CalPeerOnline();
                             // 统计在线任务数
                             CalTaskComplete();
-                            // 发送KeepAlive包
-                            DoSendKeepAlive();
+                            // 需要发送KeepAlive包
+                            need_keep_alive = true;
                         }
                     }
                     ++iter;
@@ -834,8 +836,8 @@ namespace p2sp
 
                 if (pointer->times() % KEEPALIVE_INTERVAL == 20)
                 {
-                    // 发送KeepAlive包
-                    DoSendKeepAlive();
+                    // 需要发送KeepAlive包
+                    need_keep_alive = true;
                 }
             }
             else
@@ -846,6 +848,11 @@ namespace p2sp
                     LOG4CPLUS_DEBUG_LOG(logger_notify, "定时器驱动加入网络 ");
                     JoinNotifyNetwork();
                 }
+            }
+
+            if (need_keep_alive)
+            {
+                DoSendKeepAlive();
             }
         }
     }

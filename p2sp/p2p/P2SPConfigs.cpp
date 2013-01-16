@@ -94,8 +94,6 @@ namespace p2sp
                         else if (key == "PEERCONNECTION_MIN_DELTA_SIZE")
                             PEERCONNECTION_MIN_DELTA_SIZE = boost::lexical_cast<boost::uint32_t>(value);
                         // http
-                        else if (key == "HTTP_DOWNLOAD_SPEED_LIMIT")
-                            HTTP_DOWNLOAD_SPEED_LIMIT = boost::lexical_cast<boost::uint32_t>(value);
                         else if (key == "HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL")
                             HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL = boost::lexical_cast<boost::uint32_t>(value);
                         // p2p
@@ -122,8 +120,6 @@ namespace p2sp
                             P2P_DOWNLOAD_MULTI_SUBPIECES_COUNT = boost::lexical_cast<boost::uint32_t>(value);
                         else if (key == "P2P_DOWNLOAD_MULTI_SUBPIECES_REQUEST_COUNT")
                             P2P_DOWNLOAD_MULTI_SUBPIECES_REQUEST_COUNT = boost::lexical_cast<boost::uint32_t>(value);
-                        else if (key == "P2P_DOWNLOAD_SPEED_LIMIT")
-                            P2P_DOWNLOAD_SPEED_LIMIT = boost::lexical_cast<boost::uint32_t>(value);
                         // upload limiter
                         else if (key == "UPLOAD_LIMITER_MAX_DATA_QUEUE_SIZE")
                             UPLOAD_LIMITER_MAX_DATA_QUEUE_SIZE = boost::lexical_cast<boost::uint32_t>(value);
@@ -226,8 +222,6 @@ namespace p2sp
     boost::uint32_t P2SPConfigs::ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT = 800;
 
     //
-    boost::uint32_t P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT = 2048;
-    //
     boost::uint32_t P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL = 0;
 
     //
@@ -263,8 +257,6 @@ namespace p2sp
     boost::uint32_t P2SPConfigs::P2P_MAX_TOTAL_WINDOW_SIZE = 400;
     //
     boost::uint32_t P2SPConfigs::P2P_MIN_TOTAL_WINDOW_SIZE = 40;
-    //
-    boost::uint32_t P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT = 2048;
     //
     boost::uint32_t P2SPConfigs::PEERCONNECTION_CAN_KICK_TIME_IN_MILLISEC = 6 * 1000;
     //

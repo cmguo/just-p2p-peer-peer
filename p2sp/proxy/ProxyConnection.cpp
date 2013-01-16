@@ -677,6 +677,8 @@ namespace p2sp
                 send_speed_limit_ = DEFAULT_CLIENT_SEND_SPEED_LIMIT;
             }
 
+            // 用于在ikan预下载的时候内核自己估算剩余时间
+            rest_time = play_info->GetRestTimeInMillisecond();
             // download driver
             download_driver_ = DownloadDriver::create(io_svc_, shared_from_this());
 
@@ -691,6 +693,7 @@ namespace p2sp
             download_driver_->SetBakHosts(play_info->GetBakHosts());
             download_driver_->SetVipLevel((VIP_LEVEL)play_info->GetVip());
             download_driver_->SetPreroll(play_info->GetPreroll());
+            download_driver_->SetDownloadLevel((PlayInfo::DownloadLevel)play_info->GetLevel());
             P();
             P();
 
@@ -722,46 +725,11 @@ namespace p2sp
 #endif
             if (false == save_mode_)
             {
-                int lastsegno = ProxyModule::Inst()->GetLastSegno(play_info->GetPlayerId());
-                int nowsegno = atoi(segno.c_str());
-                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "lastsegno = " << lastsegno << " nowsegno = " << nowsegno);
-
-                if (download_driver_->IsPPLiveClient())
-                {
-                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "IsPPLiveClient");
-                    download_driver_->SetIsDrag(play_info->GetIsDrag() == 1 ? true : false);
-                }
-                else
-                {
-                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Is NOT PPLiveClient");
-                    if (lastsegno + 1 == nowsegno)
-                    {
-                        if (start_position == 0)
-                        {
-                            P();
-                            LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "GetDragPrecent = " <<
-                                ProxyModule::Inst()->GetDragPrecent() << ", download_driver = " << download_driver_);
-                            if (ProxyModule::Inst()->GetDragPrecent() > 96)
-                            {
-                                download_driver_->SetIsDrag(true);
-                            }
-                            else
-                            {
-                                download_driver_->SetIsDrag(false);
-                            }
-                        }
-                        else
-                        {
-                            P();
-                            download_driver_->SetIsDrag(true);
-                        }
-                    }
-                    else
-                    {
-                        download_driver_->SetIsDrag(play_info->GetIsDrag() == 1 ? true : false);
-                    }
-                    ProxyModule::Inst()->SetSegno(play_info->GetPlayerId(), nowsegno);
-                }
+                download_driver_->SetIsDrag(play_info->GetIsDrag() == 1 ? true : false);
+            }
+            else
+            {
+                download_driver_->SetIsDrag(false);
             }
 
             if (play_info->HasRidInfo())
@@ -778,20 +746,6 @@ namespace p2sp
                 download_driver_->Start(url_info, false, true);
             }
 
-            if (false == save_mode_)
-            {
-                if (file_length_ != 0)
-                {
-                    LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "Start = " << start_position << "filelength = " 
-                        << file_length_ << " SetLastDragPrecent = " << start_position * 100 / file_length_);
-                    ProxyModule::Inst()->SetLastDragPrecent(start_position * 100 / file_length_);
-                }
-            }
-            else
-            {
-                LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "save_mode_ = " << save_mode_);
-                download_driver_->SetIsDrag(false);
-            }
             P();
 
             // rename

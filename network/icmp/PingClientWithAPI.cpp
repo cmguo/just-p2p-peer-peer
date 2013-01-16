@@ -15,6 +15,7 @@ namespace network
 {
     boost::uint16_t PingClientWithAPI::sequence_num_ = 0;
     string PingClientWithAPI::ping_body_ = "Hello PPLive";
+    base::CommonThread PingClientWithAPI::ping_request_thread_;
 
     PingClientWithAPI::p PingClientWithAPI::Create()
     {
@@ -29,12 +30,14 @@ namespace network
 
         memset(&ip_option_, 0, sizeof(ip_option_));
         ip_option_.Ttl = 255;
+        ping_request_thread_.Start();
     }
 
     PingClientWithAPI::~PingClientWithAPI()
     {
         IcmpCloseHandle(hIcmpFile_);
         free(reply_buffer_);
+        ping_request_thread_.Stop();
     }
 
     boost::uint16_t PingClientWithAPI::AsyncRequest(boost::function<void(unsigned char, string, boost::uint32_t)> handler)
@@ -54,8 +57,8 @@ namespace network
 
         AddHandler(sequence_num_, handler);
 
-        _beginthread(&AsyncRequestThread, 0, this);
-       
+        ping_request_thread_.Post(boost::bind(AsyncRequestThread, this));
+
         return sequence_num_;
     }
 

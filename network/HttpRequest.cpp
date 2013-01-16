@@ -193,7 +193,7 @@ namespace network
 
     string HttpRequest::GetRefererUrl()
     {
-        return GetProperty("Referer");
+        return (GetProperty("Referer").empty() ? GetProperty("referer") : GetProperty("Referer"));
     }
 
     string HttpRequest::GetRequestString()

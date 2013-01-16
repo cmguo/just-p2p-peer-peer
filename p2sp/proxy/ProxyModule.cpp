@@ -40,6 +40,7 @@ namespace p2sp
         , proxy_timer_(global_250ms_timer(), 250, boost::bind(&ProxyModule::OnTimerElapsed, this, &proxy_timer_))
         , speed_query_counter_(false)
         , is_running_(false)
+        , is_download_speed_limited_(false)
     {
     }
 
@@ -242,12 +243,6 @@ namespace p2sp
             statistic::StatisticModule::Inst()->SetLocalUploadPriority(AppModule::Inst()->GenUploadPriority());
             statistic::StatisticModule::Inst()->SetLocalIdleTime(AppModule::Inst()->GetIdleTimeInMins());
             statistic::StatisticModule::Inst()->SetLocalNatType(StunModule::Inst()->GetPeerNatType() & 0xFFu);
-
-            // 10 min
-            if (times % (4 * 60 * 10) == 0)
-            {
-                ExpireSegno();
-            }
         }
 
     }
@@ -1222,57 +1217,6 @@ namespace p2sp
         return IsDownloadingMovie();
     }
 
-    int ProxyModule::GetLastSegno(string sessionid)
-    {
-        std::map< string, std::pair<int, time_t> >::iterator iter;
-        for (iter = drag_record_.begin(); iter != drag_record_.end(); ++iter)
-        {
-            if (iter->first == sessionid)
-            {
-                return iter->second.first;
-            }
-        }
-        return -1;
-    }
-
-    void ProxyModule::SetSegno(string sessionid, int segno)
-    {
-        time_t now = time(NULL);
-
-        drag_record_.insert(std::make_pair(sessionid, std::make_pair(segno, now)));
-    }
-
-    void ProxyModule::ExpireSegno()
-    {
-        LOG4CPLUS_DEBUG_LOG(logger_proxy, "ExpireSegno");
-        time_t now = time(NULL);
-        std::map< string, std::pair<int, time_t> >::iterator iter;
-        for (iter = drag_record_.begin(); iter != drag_record_.end();)
-        {
-            int elapsed_time = now - iter->second.second;
-            LOG4CPLUS_DEBUG_LOG(logger_proxy, "elapsed time = " << elapsed_time);
-            if (elapsed_time > 600)
-            {
-                drag_record_.erase(iter++);
-                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ExpireSegno bingo");
-            }
-            else
-            {
-                ++iter;
-            }
-        }
-    }
-
-    boost::uint32_t ProxyModule::GetDragPrecent()
-    {
-        return last_drag_precent;
-    }
-
-    void ProxyModule::SetLastDragPrecent(boost::uint32_t drag_precent)
-    {
-        last_drag_precent = drag_precent;
-    }
-
     void ProxyModule::LoadHistoricalMaxDownloadSpeed()
     {
         if (false == is_running_)
@@ -1366,7 +1310,6 @@ namespace p2sp
     // 全局限速管理
     void ProxyModule::GlobalSpeedLimit()
     {
-        bool is_watch_live = (AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING;
         std::set<ProxyConnection::p> download_connections;
         std::set<ProxyConnection::p> play_vod_connections;
         ProxyConnection::p vod_connection;
@@ -1425,7 +1368,8 @@ namespace p2sp
                 {
                     if ((*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::FAST_MODE ||
                         (*iter)->GetDownloadDriver()->GetDownloadMode() == IGlobalControlTarget::SMART_MODE &&
-                        (*iter)->GetDownloadDriver()->GetRestPlayableTime() < 30*1000)
+                        (*iter)->GetDownloadDriver()->GetRestPlayableTime() <= 
+                        (*iter)->GetDownloadDriver()->GetRestTimeNeedLimitSpeed())
                     {
                         // 存在高速模式
                         is_exist_fast_mode = true;
@@ -1441,7 +1385,7 @@ namespace p2sp
                 if (is_exist_fast_mode)
                 {
                     // 高速模式
-                    download_speed_limit_in_KBps = 1;
+                    download_speed_limit_in_KBps = 5;
                 }
                 else
                 {
@@ -1453,23 +1397,11 @@ namespace p2sp
                     }
                     else
                     {
-                        LIMIT_MIN(download_speed_limit_in_KBps, 1);
+                        LIMIT_MIN(download_speed_limit_in_KBps, 5);
                     }
                 }
                 material_download_speed_limit_inKBps = download_speed_limit_in_KBps;
-            }
-            else if (is_watch_live)
-            {
-                // 正在看直播
-                if (bandwidth / 1024 > 70)
-                {
-                    download_speed_limit_in_KBps = (bandwidth / 1024 - 70) / download_connections.size();
-                }
-                else
-                {
-                    LIMIT_MIN(download_speed_limit_in_KBps, 1);
-                }
-                material_download_speed_limit_inKBps = download_speed_limit_in_KBps;
+                is_download_speed_limited_ = true;
             }
             else
             {
@@ -1480,6 +1412,7 @@ namespace p2sp
                     material_download_speed_limit_inKBps = bandwidth * 3 / 4 / 1024 / material_download_count;
                     LimitMinMax(material_download_speed_limit_inKBps, 10, 30);
                 }
+                is_download_speed_limited_ = false;
             }
         }
 
@@ -1565,8 +1498,8 @@ namespace p2sp
     string ProxyModule::ParseOpenServiceFileName(const network::Uri & uri)
     {
         string filename = uri.getfile();
-#ifdef PEER_PC_CLIENT
-        // TODO(herain):2011-4-14:why PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
+        // TODO(herain):2011-4-14:why BOOST_WINDOWS_API
         filename = network::UrlCodec::Decode(filename);
 #endif
         string segno = base::util::GetSegno(uri);
@@ -1767,9 +1700,47 @@ namespace p2sp
                 StopProxyConnection(stop_download_packet.stop_url_);
             }
             break;
+        case protocol::TcpQuerySpeedPacket::Action:
+            {
+                protocol::TcpQuerySpeedPacket const & query_speed_packet = (protocol::TcpQuerySpeedPacket const &)packet;
+                QuerySpeedInfoByTcpPacket(query_speed_packet);
+            }
+            break;
         default:
             break;
         }
+    }
+
+    void ProxyModule::QuerySpeedInfoByTcpPacket(protocol::TcpQuerySpeedPacket const &packet)
+    {
+        boost::uint32_t download_speed = 0;
+        boost::uint32_t sn_speed = 0;
+        for (std::set<ProxyConnection__p>::iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            ProxyConnection::p proxy_conn = *iter;
+            if (!proxy_conn) 
+            {
+                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL!!");
+                continue;
+            }
+
+            DownloadDriver::p dd = proxy_conn->GetDownloadDriver();
+            if (dd && dd->GetStatistic() && dd->GetStatistic()->GetResourceID() == packet.request.rid_)
+            {                        
+                download_speed += dd->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
+                if (dd->GetP2PDownloader() && dd->GetP2PDownloader()->GetStatistic())
+                {
+                    download_speed += dd->GetP2PDownloader()->GetStatistic()->GetSpeedInfo().NowDownloadSpeed;
+                    sn_speed += dd->GetP2PDownloader()->GetStatistic()->GetSnSpeedInfo().NowDownloadSpeed;
+                }
+                
+                break;
+            }
+        }
+
+        protocol::TcpQuerySpeedPacket response_packet(download_speed, sn_speed);
+        packet.tcp_connection_->DoSend(response_packet);
     }
 
     void ProxyModule::UpdateStopTime(const RID & channel_id)

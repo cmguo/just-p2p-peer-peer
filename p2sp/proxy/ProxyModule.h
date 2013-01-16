@@ -100,19 +100,18 @@ namespace p2sp
             boost::function<void()> result_handler, PEERSTATEMACHINE *peer_state);
         void QueryDragState(RID rid, boost::int32_t *state, boost::function<void ()> fun);
         void QueryDragStateByUrl(const char * url, boost::int32_t *state, boost::function<void ()> fun);
+
+        void QuerySpeedInfoByTcpPacket(protocol::TcpQuerySpeedPacket const & packet);
         bool IsHttpDownloading();
         bool IsP2PDownloading();
         bool IsWatchingMovie();
         bool IsDownloadingMovie();
+        bool IsDownloadSpeedLimited() const
+        {
+            return is_download_speed_limited_;
+        }
 
         bool IsDownloadWithSlowMode();
-        int GetLastSegno(string sessionid);
-        void SetSegno(string sessionid, int segno);
-        void ExpireSegno();
-
-        void SetLastDragPrecent(boost::uint32_t drag_precent);
-        boost::uint32_t GetDragPrecent();
-
         boost::uint32_t GetHistoryMaxDwonloadSpeed() {return history_max_download_speed_ini_;}
         void LoadHistoricalMaxDownloadSpeed();
         void SaveHistoricalMaxDownloadSpeed();
@@ -165,9 +164,8 @@ namespace p2sp
         framework::timer::PeriodicTimer proxy_timer_;
         framework::timer::TickCounter speed_query_counter_;
 
-        std::map<string, std::pair<int, time_t> > drag_record_;
-
         boost::uint32_t last_drag_precent;
+        bool is_download_speed_limited_;
 
         string ppva_config_path_;
         boost::uint32_t local_ip_from_ini_;

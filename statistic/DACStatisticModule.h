@@ -46,6 +46,12 @@ namespace statistic
         std::string           nat_name_;                        //I1:从upnp模块获取到的路由器信息
         std::string           invalid_ip_count_;                // J1: 非法IP发送包的个数
         boost::int8_t         upnp_check_result;                       //K1:upnp成功之后，会触发一次natcheck的检测，这里记录检测的结果。0成功，1失败。默认值-1
+        std::string           nat_manufacturer_;                        //L1:nat厂商
+        std::string           http_tracker_list_ip_code;        // M1: Http做Tracker List时所用的IP以及得到的响应状态码
+
+        boost::uint32_t       uP2PUploadKBytesByNomalTcp;              // N1: 普通P2P的tcp上传字节数，单位kb
+        boost::uint32_t       uP2PUploadKBytesByPushTcp;               // O1: PUSH P2P的tcp上传字节数，单位kb
+
     } PERIOD_DAC_STATISTIC_INFO_STRUCT;
 
     class DACStatisticModule
@@ -59,7 +65,7 @@ namespace statistic
 
         void SubmitHttpDownloadBytes(boost::uint32_t http_download_bytes);
         void SubmitP2PDownloadBytes(boost::uint32_t p2p_download_bytes);
-        void SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push);
+        void SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push,bool isTcp);
         void SubmitP2PUploadSpeedInKBps(boost::uint32_t p2p_upload_KBps);
         void SubmitP2PUploadSpeedLimitInKBps(boost::uint32_t p2p_upload_limit_KBps);
         void SubmitP2PUploadDisCardBytes(boost::uint32_t p2p_upload_discard_bytes);
@@ -80,11 +86,14 @@ namespace statistic
         }
         void SubmitStunHandShakeRequestCount(boost::uint32_t stun_ip);
         void SubmitStunHandShakeResponseCount(boost::uint32_t stun_ip);
+        void SubmitHttpTrackerListIpCodeString(boost::asio::ip::udp::endpoint const & end_point, 
+            boost::uint32_t const & status_code);
         std::string GetStunHandShakeInfoString() const;
         void SubmitUpnpStat(boost::uint8_t stat);
         void SubmitUpnpPortMapping(bool isTcp,bool isSucc);
         std::string GetUpnpPortMappingString() const;
-        void SetNatName(std::string &natName);
+        void SetNatName(const std::string &natName);
+        void SetNatManufacturer(const std::string& manufacturer);
         void SetUpnpCheckResult(boost::int8_t upnp_check_result);
 
         void SetIntervalTime(boost::uint8_t interval_time);
@@ -136,6 +145,11 @@ namespace statistic
         // P2P上传字节
         boost::uint64_t p2p_upload_byte_by_normal_;
         boost::uint64_t p2p_upload_byte_by_push_;
+
+        //tcp上传
+        boost::uint64_t p2p_upload_byte_by_normal_tcp_;
+        boost::uint64_t p2p_upload_byte_by_push_tcp_;
+ 
         // P2P上传最大速度
         boost::uint32_t max_peer_upload_kbps_;
 
@@ -166,8 +180,14 @@ namespace statistic
         //nat的名称
         std::string           nat_name_;
 
+        //nat的厂商
+        std::string           nat_manufacturer_;
+
         //upnp的natcheck的结果
         boost::int8_t        upnp_check_result_;
+
+        //Http请求Tracker所用的IP以及取得的响应码
+        std::string http_tracker_list_ip_code_;
     };
 
     inline void DACStatisticModule::SubmitHttpDownloadBytes(boost::uint32_t http_download_kbps)
@@ -180,15 +200,29 @@ namespace statistic
         p2p_download_byte_ += p2p_download_kbps;
     }
 
-    inline void DACStatisticModule::SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push)
+    inline void DACStatisticModule::SubmitP2PUploadBytes(boost::uint32_t p2p_upload_bytes, bool is_push,bool isTcp)
     {
         if (is_push)
         {
-            p2p_upload_byte_by_push_ += p2p_upload_bytes;
+            if(isTcp)
+            {
+                p2p_upload_byte_by_push_tcp_ += p2p_upload_bytes;
+            }
+            else
+            {
+                 p2p_upload_byte_by_push_ += p2p_upload_bytes;
+            }           
         }
         else
         {
-            p2p_upload_byte_by_normal_ += p2p_upload_bytes;
+            if(isTcp)
+            {
+                p2p_upload_byte_by_normal_tcp_ += p2p_upload_bytes;
+            }
+            else
+            {
+                p2p_upload_byte_by_normal_ += p2p_upload_bytes;
+            }
         }
     }
 
@@ -332,9 +366,14 @@ namespace statistic
        return os.str();
     }   
 
-    inline void DACStatisticModule::SetNatName(std::string &natName) 
+    inline void DACStatisticModule::SetNatName(const std::string &natName) 
     {
         nat_name_ = natName;
+    }
+
+    inline void DACStatisticModule::SetNatManufacturer(const std::string& manufacturer)
+    {
+        nat_manufacturer_ = manufacturer;
     }
 
     inline void DACStatisticModule::SetUpnpCheckResult(boost::int8_t upnp_check_result)
@@ -342,6 +381,13 @@ namespace statistic
         upnp_check_result_ = upnp_check_result;
     }
 
+    inline void DACStatisticModule::SubmitHttpTrackerListIpCodeString(boost::asio::ip::udp::endpoint const & end_point, 
+        boost::uint32_t const & status_code)
+    {
+        std::ostringstream os;
+        os << end_point.address().to_string() << ":" << status_code << ",";
+        http_tracker_list_ip_code_ += os.str();
+    }
 }
 
 #endif

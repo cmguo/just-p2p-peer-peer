@@ -5,7 +5,7 @@
 #ifndef STORAGE_SPACE_MANAGER_H
 #define STORAGE_SPACE_MANAGER_H
 
-#ifndef PEER_PC_CLIENT
+#ifndef BOOST_WINDOWS_API
 #pragma once
 #endif
 
@@ -52,7 +52,7 @@ class SpaceManager: public boost::noncopyable, public boost::enable_shared_from_
     void OnRemoveResourceFinish(Resource::p resource_p, bool need_remove_file);
     void OnFreeDiskSpaceFinish(boost::uint32_t filesize, Resource::p resource_p);
     // void OnFreeDiskSpaceFinish(boost::uint32_t filesize, Resource::p resource_p);
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
     boost::int64_t GetDirectoryAvialbeSize(string DirPathName);
 #endif
     void OnAllocDiskSpace(boost::uint32_t alloc_space, unsigned char down_mode);
@@ -70,7 +70,7 @@ class SpaceManager: public boost::noncopyable, public boost::enable_shared_from_
     bool OpenAndCreateStoreDir();
     bool GetDiskFreeSpace(string path, boost::uintmax_t &free_space_size);
     boost::uintmax_t GetMinDiskFreeSpace(const string& path);
-    FILE* TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size);
+    FILE* TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size, bool is_openservice);
 
     private:
     boost::asio::io_service & io_svc_;

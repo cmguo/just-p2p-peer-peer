@@ -50,7 +50,6 @@ namespace storage
     private:
         static bool CheckBuf(base::AppBuffer inbuf, boost::uint32_t &max_num_subpiece, boost::uint32_t &pieces_buffer_size);
         bool IsPieceFull(boost::uint32_t piece_index) const;
-        bool IsBlockSavedOnDisk() const { return node_state_ == BlockNode::ALL || node_state_ == BlockNode::DISK || node_state_ == READING;}
 
     public:
         // subpiece management function @herain
@@ -60,6 +59,8 @@ namespace storage
         bool HasSubPieceInMem(const boost::uint32_t subpiece_index) const;
         bool SetBlockReading();
         protocol::SubPieceBuffer GetSubPiece(boost::uint32_t subpiece_index);
+        bool IsBlockSavedOnDisk() const { return node_state_ == BlockNode::ALL || node_state_ == BlockNode::DISK || node_state_ == READING;}
+        void ResetForReDownload();
 
         // property query
         bool HasPiece (const boost::uint32_t piece_index) const;

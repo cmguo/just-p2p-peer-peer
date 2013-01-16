@@ -32,6 +32,7 @@ namespace p2sp
         boost::asio::io_service & io_svc)
         : io_svc_(io_svc)
         , stun_timer_(global_second_timer(), 10 * 1000, boost::bind(&StunModule::OnTimerElapsed, this, &stun_timer_))
+        , handshake_timer_(global_second_timer(), 2 * 1000, boost::bind(&StunModule::OnTimerElapsed, this, &handshake_timer_))
         , is_running_(false)
         , is_select_stunserver_(false)
         , is_needed_stun_(true)
@@ -39,12 +40,13 @@ namespace p2sp
         , nat_check_client_(io_svc)
         , nat_check_returned_(false)
         , upnp_ex_udp_port_(0)
+        , cur_stun_score_(0)
     {
     }
 
     void StunModule::Start(const string& config_path)
     {
-        if (is_running_ == true) return;
+        if (is_running_) return;
 
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::Start ");
 
@@ -55,8 +57,6 @@ namespace p2sp
 
         stun_timer_.start();
 
-        // IndexManager::Inst()->DoQueryStunServerList();
-
         nat_check_timer_.reset();
         nat_check_client_.Start(ppva_config_path_);
         is_running_ = true;
@@ -64,12 +64,13 @@ namespace p2sp
 
     void StunModule::Stop()
     {
-        if (is_running_ == false) return;
+        if (!is_running_) return;
 
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::Stop ");
         // 停止 Stun 脉冲定时器
 
         stun_timer_.stop();
+        handshake_timer_.stop();
         nat_check_client_.Stop();
 
         is_running_ = false;
@@ -117,7 +118,7 @@ namespace p2sp
             is_needed_stun_ = false;
 
                   //成功设置为0，失败设置为1
-             statistic::DACStatisticModule::Inst()->SetUpnpCheckResult(0);
+            statistic::DACStatisticModule::Inst()->SetUpnpCheckResult(0);
         }
         else
         {
@@ -128,31 +129,82 @@ namespace p2sp
 
     void StunModule::ClearStunInfo()
     {
-        if (false == is_running_)
+        if (!is_running_)
             return;
         is_select_stunserver_ = false;
+        cur_stun_score_ = 0;
         stun_server_info_.clear();
-        stun_server_index_ = 0;
     }
 
     void StunModule::GetStunEndpoint(boost::uint32_t &ip, boost::uint16_t &port)
     {
-        if (is_running_ == false)
+        if (!is_running_)
             return;
-        if (is_select_stunserver_ == false)
+        if (!is_select_stunserver_)
         {
-            ip = 0; port = 0;
+            ip = 0; 
+            port = 0;
             return;
         }
-        ip = stun_server_info_[stun_server_index_].IP;
-        port = stun_server_info_[stun_server_index_].Port;
+        ip = stun_endpoint_.address().to_v4().to_ulong();
+        port = stun_endpoint_.port();
+
         return;
     }
 
+    void StunModule::PickStunAnotherIp()
+    {
+        //尽量选择没有失败过的ip，如果找不到，那只好随便选一个了。
+        cur_stun_score_ = 0;
+
+        boost::uint32_t i=0;
+
+        for (i = 0; i < stun_server_info_.size(); ++i)
+        {
+            if (failed_ips_.find(stun_server_info_[i].GetIP()) == failed_ips_.end())
+            {
+                stun_endpoint_ =framework::network::Endpoint(stun_server_info_[i].IP, stun_server_info_[i].Port);  
+                return;
+            }
+        }
+
+        if(i == stun_server_info_.size())
+        {
+            //既然所有的ip都失败过，那么就清空失败列表，大家再重来。
+            failed_ips_.clear();
+            int picknum = rand() % stun_server_info_.size();
+            //有小概率还会选到原来用的，但是没有关系
+            stun_endpoint_ = framework::network::Endpoint(stun_server_info_[picknum].IP, stun_server_info_[picknum].Port);
+        }         
+    }
+
+    void StunModule::OnHandShakeTimeOut()
+    {
+        //分数减少到原来的1/2
+        if(cur_stun_score_ > 4)
+        {
+            cur_stun_score_ = 2;
+        }
+        else
+        {
+            cur_stun_score_ /=2;
+        }
+
+        if(cur_stun_score_ <1)
+        {
+            //当前的stun不好了，要换一个。
+            is_select_stunserver_ = false;
+            failed_ips_.insert(stun_endpoint_.address().to_v4().to_ulong());
+        }
+        else
+        {
+            //当前的stun，虽然刚丢包了，但是以前几次还不错，所以再试试
+        }
+    }
 
     void StunModule::OnTimerElapsed(framework::timer::Timer * pointer)
     {
-        if (is_running_ == false) return;
+        if (!is_running_) return;
 
         if (pointer == &stun_timer_)
         {
@@ -162,32 +214,36 @@ namespace p2sp
                 {
                     // IndexManager::Inst()->DoQueryStunServerList();
                 }
-                else if (false == is_select_stunserver_)
+                else if (!is_select_stunserver_)
                 {
                     assert(stun_server_info_.size() != 0);
-                    stun_server_index_++;
-                    if (stun_server_index_ == stun_server_info_.size())
-                        stun_server_index_ = 0;
-                    stun_endpoint_ = framework::network::Endpoint(stun_server_info_[stun_server_index_].IP, stun_server_info_[stun_server_index_].Port);
+                    PickStunAnotherIp();
                     DoHandShake();
                 }
                 else
                 {
-                    if (pointer->times() % 20 == 19)
+                    const int KPLTIMES = 4;
+                    if (pointer->times() % (KPLTIMES +1) == KPLTIMES)
                         DoHandShake();
                     else
                         DoKPL();
                 }
             }
-        } else
+        } 
+        else if(pointer == &handshake_timer_)
+        {
+            //丢包了
+            OnHandShakeTimeOut();
+        }
+        else 
         {
             assert(0);
         }
     }
 
-    void StunModule::SetStunServerList(std::vector<STUN_SERVER_INFO> stun_servers)
+    void StunModule::SetStunServerList(const std::vector<STUN_SERVER_INFO>& stun_servers)
     {
-        if (is_running_ == false) return;
+        if (!is_running_) return;
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::SetStunServerList size=" << stun_servers.size());
         STL_FOR_EACH_CONST (std::vector<STUN_SERVER_INFO>, stun_servers, server)
         {
@@ -201,18 +257,15 @@ namespace p2sp
             assert(0);
             return;
         }
-
-        // random shuffle
-        std::random_shuffle(stun_servers.begin(), stun_servers.end());
-
-        if (is_select_stunserver_ && stun_server_index_ < stun_server_info_.size())
+   
+        if (is_select_stunserver_)
         {
             for (boost::uint32_t i = 0; i < stun_servers.size(); ++i)
             {
-                if (stun_servers[i] == stun_server_info_[stun_server_index_])
+                if (stun_servers[i].GetIP() == stun_endpoint_.address().to_v4().to_ulong() && 
+                    stun_servers[i].Port == stun_endpoint_.port())
                 {
-                    // 正在使用的stun_server在新的stun_server_list中，更新index
-                    stun_server_index_ = i;
+                    // 正在使用的stun_server在新的stun_server_list中,更换一下stun列表
                     stun_server_info_ = stun_servers;
                     return;
                 }
@@ -220,14 +273,33 @@ namespace p2sp
         }
 
         // 当前没有使用stun_server或者使用的stun_server不在新的stun_server_list中
-        ClearStunInfo();
+        ClearStunInfo();    
         stun_server_info_ = stun_servers;
+        
+
+        //需要尽可能选一个和当前stun_endpoint_相同ip的，因为当前的ip，很可能是经过淘汰后优胜的。
+        for (boost::uint32_t i = 0; i < stun_server_info_.size(); ++i)
+        {
+            if (stun_server_info_[i].GetIP() == stun_endpoint_.address().to_v4().to_ulong())
+            {
+                stun_endpoint_.port(stun_server_info_[i].Port);
+                is_select_stunserver_ = true;
+                break;
+            }
+        }
+
+        if(!is_select_stunserver_)
+        {
+            //如果没有找到，也没有关系，因为在 OnTimerElapse的 PickStunAnotherIp 里，会进行选择的。
+            LOG4CPLUS_INFO_LOG(logger_stun,"not find same ip stun");
+        }
+
         statistic::StatisticModule::Inst()->SetStunInfo(stun_server_info_);
     }
 
     void StunModule::OnUdpRecv(protocol::Packet const & packet_header)
     {
-        if (is_running_ == false) return;
+        if (!is_running_) return;
 
         switch (packet_header.PacketAction)
         {
@@ -357,8 +429,17 @@ namespace p2sp
 
     void StunModule::OnStunHandShakePacket(protocol::StunHandShakePacket const & packet)
     {
-        if (is_running_ == false)
+        if (!is_running_)
             return;
+
+        if(packet.end_point != stun_endpoint_)
+        {
+            LOG4CPLUS_INFO_LOG(logger_stun,"recv handshake packet and the packet is not mine");
+            return;
+        }
+
+        //收到了handshake的回包，消除handshake的超时定时器
+        handshake_timer_.stop();
 
         statistic::DACStatisticModule::Inst()->SubmitStunHandShakeResponseCount(packet.end_point.address().to_v4().to_ulong());
 
@@ -391,6 +472,9 @@ namespace p2sp
             protocol::SocketAddr detect_socket_addr(packet.response.detected_ip_, packet.response.detect_udp_port_);
             statistic::StatisticModule::Inst()->SetLocalDetectSocketAddress(detect_socket_addr);
             is_select_stunserver_ = true;
+
+            //这个stun的得分加1
+            ++cur_stun_score_;
             stun_timer_.interval(packet.response.keep_alive_interval_ * 1000);
             stun_timer_.start();
         }
@@ -399,7 +483,7 @@ namespace p2sp
 
     void StunModule::OnStunInvokePacket(protocol::StunInvokePacket const & packet)
     {
-        if (is_running_ == false)
+        if (!is_running_)
             return;
 
         protocol::ConnectPacket connect_packet(
@@ -433,23 +517,26 @@ namespace p2sp
 
     void StunModule::DoHandShake()
     {
-        if (is_running_ == false)
+        if (!is_running_)
             return;
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::DoHandShake " << stun_endpoint_);
 
         protocol::StunHandShakePacket stun_handshake_packet;
         stun_handshake_packet.end_point = stun_endpoint_;
-        is_select_stunserver_ = false;
 
         LOG4CPLUS_INFO_LOG(logger_stun, "DoHandShake " << stun_endpoint_);
         AppModule::Inst()->DoSendPacket(stun_handshake_packet);
 
         statistic::DACStatisticModule::Inst()->SubmitStunHandShakeRequestCount(stun_endpoint_.address().to_v4().to_ulong());
+
+        //添加一个定时器，检查有没有丢包,收到回包之后将会清除
+        handshake_timer_.start();
+
     }
 
     void StunModule::DoKPL()
     {
-        if (is_running_ == false)
+        if (!is_running_)
             return;
         LOG4CPLUS_INFO_LOG(logger_stun, "StunModule::DoKPL " << stun_endpoint_);
 

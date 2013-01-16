@@ -12,6 +12,7 @@
 #include "p2sp/download/SwitchController.h"
 #include "network/HttpRequest.h"
 #include "network/HttpResponse.h"
+#include "p2sp/proxy/PlayInfo.h"
 #ifdef DUMP_OBJECT
 #include "count_object_allocate.h"
 #endif
@@ -162,8 +163,10 @@ namespace p2sp
         string                peer_connect_request_sucess_count;    // L2: 每种nat类型连接请求数以及成功数
         boost::uint32_t       nat_type;                             // M2: 获取NAT类型
         int                   nat_check_state;                      // N2: 当前nat检测状态
-        bool                  more_than_one_proxyconnections;       // O2: 是否某一个时段有多个proxyconnections在请求内容
-        string                bak_host_string;                       // P2: bak_host
+        string                p2p_location_bytes_with_redundance;   // O2: p2p下载的字节里，来自不同地域源的信息
+        string                vvid;                                 // P2: vvid
+        bool                  more_than_one_proxyconnections;       // Q2: 是否某一个时段有多个proxyconnections在请求内容
+        string                bak_host_string;                      // R2: bak_host
     };
 
     class VodDownloader;
@@ -299,6 +302,7 @@ namespace p2sp
         void SetBakHosts(const std::vector<std::string> & bak_hosts) {bak_hosts_ = bak_hosts;}
 
         void SetVipLevel(VIP_LEVEL vip) {vip_level_ = vip;}
+        void SetDownloadLevel(PlayInfo::DownloadLevel download_level) {download_level_ = download_level;}
 
         void SetRidInfo(const protocol::RidInfo & ridinfo);
         void ReportDragFetchResult(boost::uint32_t drag_fetch_result, boost::uint32_t is_fetch_tinydrag_success, 
@@ -319,6 +323,8 @@ namespace p2sp
 
         void RestrictSendListLength(boost::uint32_t postion,vector<protocol::SubPieceBuffer>&buffers);
         void SetPreroll(bool is_preroll) {is_preroll_ = is_preroll;}
+
+        boost::uint32_t GetRestTimeNeedLimitSpeed()const {return rest_play_time_need_to_limit_speed_;}
 
     public:
         //////////////////////////////////////////////////////////////////////////
@@ -357,6 +363,7 @@ namespace p2sp
 
         virtual void OnTimerElapsed(framework::timer::Timer * pointer);
         virtual boost::uint32_t GetVipLevel() {return vip_level_;}
+        virtual boost::uint32_t GetDownloadLevel() {return download_level_;}
 
         boost::uint32_t GetSourceType() const { return source_type_; }
     private:
@@ -499,6 +506,7 @@ namespace p2sp
         string session_id_;
         bool is_head_only_;
         boost::uint32_t rest_play_time_;
+        boost::uint32_t rest_play_time_need_to_limit_speed_;
         framework::timer::TickCounter rest_play_time_set_counter_;
         boost::int32_t download_mode_;
         JumpBWType bwtype_;
@@ -540,6 +548,7 @@ namespace p2sp
         bool is_sn_added_;
 
         boost::uint32_t vip_level_;
+        boost::uint32_t download_level_;
 
         enum Http_Start_Download_Reason
         {

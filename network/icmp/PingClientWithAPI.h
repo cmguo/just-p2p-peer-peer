@@ -7,6 +7,7 @@
 #include "PingClientBase.h"
 
 #include <iphlpapi.h>
+#include "base\CommonThread.h"
 
 namespace network
 {
@@ -40,6 +41,7 @@ namespace network
 
         static boost::uint16_t sequence_num_;
         static string ping_body_;
+        static base::CommonThread ping_request_thread_;
     };
 }
 

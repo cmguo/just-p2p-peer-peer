@@ -11,12 +11,13 @@ namespace p2sp
     // JumpBWType
     enum JumpBWType
     {
-        JBW_NORMAL = 0,  // 正常模式
-        JBW_HTTP_MORE = 1,   // 带宽充足，可以多用HTTP
+        JBW_NORMAL = 0,  // 正常模式，尽量节省服务器带宽
+        JBW_HTTP_MORE = 1,   // 带宽充足，可以多用HTTP。下载时应用场景：小ISP下载，策略：只要HTTP不挂，就2300状态
         JBW_HTTP_ONLY = 2,     // 强制使用纯HTTP模式
-        JBW_HTTP_PREFERRED = 3,  //只要带宽足够，优先使用HTTP
+        JBW_HTTP_PREFERRED = 3,  //只要带宽足够，优先使用HTTP。下载时应用场景：VIP，策略：不限速则2200，否则3200
         JBW_P2P_MORE = 4,  // 直播省带宽模式
-        JBW_VOD_P2P_ONLY = 5   // 强制点播使用纯P2P模式 
+        JBW_VOD_P2P_ONLY = 5,   // 强制点播使用纯P2P模式 
+        JBW_P2P_INCREASE_CONNECT = 6   // 下载时应用场景：多终端，策略：增加P2P连接数，尽量节省服务器带宽，保证下载速度
     };
     //////////////////////////////////////////////////////////////////////////
     // Control Target
@@ -130,6 +131,8 @@ namespace p2sp
         virtual boost::uint32_t GetBandWidth() = 0;
 
         virtual boost::uint32_t GetVipLevel() = 0;
+
+        virtual boost::uint32_t GetDownloadLevel() = 0;
 
         virtual boost::uint32_t GetFileLength() = 0;
 

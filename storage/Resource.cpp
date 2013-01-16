@@ -27,11 +27,13 @@ namespace storage
         boost::uint32_t file_length,
         string file_name,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t init_size)
+        boost::uint32_t init_size,
+        bool need_encrypt)
         : io_svc_(io_svc)
         , actual_size_(init_size)
         , instance_p_(inst_p)
         , is_running_(false)
+        , has_encrypted_(need_encrypt)
     {
 #ifdef DISK_MODE
         need_saveinfo_to_disk_ = false;
@@ -50,11 +52,13 @@ namespace storage
         boost::shared_ptr<SubPieceManager> subpiece_manager,
         string file_name,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t actual_size)
+        boost::uint32_t actual_size,
+        bool has_encrypted)
         : io_svc_(io_svc)
         , actual_size_(actual_size)
         , instance_p_(inst_p)
         , is_running_(false)
+        , has_encrypted_(has_encrypted)
     {
 #ifdef DISK_MODE
         need_saveinfo_to_disk_ = (false);
@@ -236,7 +240,10 @@ namespace storage
         instance_p->OnPendingHashBlockFinish(block_index, hash_val);
     }
 
-    void Resource::ThreadReadBufferForPlay(const protocol::SubPieceInfo subpiece_info, std::vector<protocol::SubPieceContent*> buffs)
+    void Resource::ThreadReadBufferForPlay(
+        const protocol::SubPieceInfo subpiece_info,
+        std::vector<protocol::SubPieceContent*> buffs,
+        const protocol::SubPieceInfo real_play_info)
     {
         if (false == is_running_)
         {
@@ -288,13 +295,13 @@ namespace storage
         {
             LOG4CPLUS_DEBUG_LOG(logger_resource, "ReadBufferArray succed!");
             io_svc_.post(boost::bind(&Resource::ThreadReadBufferForPlayHelper,
-                instance_p_, subpiece_manager_, subpiece_info, buffs));
+                instance_p_, subpiece_manager_, subpiece_info, buffs, real_play_info));
         }
         else
         {
             LOG4CPLUS_DEBUG_LOG(logger_resource, "ReadBufferArray failed!");
             io_svc_.post(boost::bind(&Resource::ReleaseSubPieceContentArray, buffs));
-            assert(false);
+            io_svc_.post(boost::bind(&SubPieceManager::OnReportBlockReadFailed, subpiece_manager_, subpiece_info));
         }
     }
 
@@ -302,7 +309,8 @@ namespace storage
         Instance::p instance_p,
         SubPieceManager::p subpiece_manager_p,
         const protocol::SubPieceInfo& subpiece_info,
-        std::vector<protocol::SubPieceContent*> buffs)
+        std::vector<protocol::SubPieceContent*> buffs,
+        const protocol::SubPieceInfo& real_play_info)
     {
         protocol::SubPieceInfo tmp_subpiece_info(subpiece_info);
         for (boost::uint16_t i = 0; i < buffs.size(); ++i)
@@ -312,11 +320,11 @@ namespace storage
                 break;
         }
 
-        protocol::SubPieceBuffer buff = subpiece_manager_p->GetSubPiece(subpiece_info);
+        protocol::SubPieceBuffer buff = subpiece_manager_p->GetSubPiece(real_play_info);
         if (buff.IsValid(SUB_PIECE_SIZE))
         {
             LOG4CPLUS_DEBUG_LOG(logger_resource, "ThreadReadBufferForPlayHelper " << subpiece_info);
-            instance_p->OnThreadReadSubPieceSucced(subpiece_info, buff);
+            instance_p->OnThreadReadSubPieceSucced(real_play_info, buff);
         }
     }
 
@@ -390,7 +398,7 @@ namespace storage
 
         LOG4CPLUS_DEBUG_LOG(logger_resource, "Enter!");
         DebugLog("hash: ThreadReadBlockForUpload index:%d, need_hash:%d", block_index, need_hash);
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
         std::ostringstream oss;
         oss << "read block" << block_index << " " << need_hash << std::endl;
         OutputDebugString(oss.str().c_str());
@@ -414,9 +422,7 @@ namespace storage
             return;
         }
 
-        boost::uint32_t startoffset, length;
-        subpiece_manager_->GetBlockPosition(block_index, startoffset, length);
-        base::AppBuffer buff = ReadBuffer(startoffset, length);
+        base::AppBuffer buff = GetBlockBufferFromMemoryOrDisk(block_index);
         CloseFileHandle();
 
         if (need_hash)
@@ -454,6 +460,32 @@ namespace storage
         }
         
         return;
+    }
+
+    base::AppBuffer Resource::GetBlockBufferFromMemoryOrDisk(const boost::uint32_t block_index)
+    {
+        boost::uint32_t startoffset, length;
+        subpiece_manager_->GetBlockPosition(block_index, startoffset, length);
+        base::AppBuffer buff(length);
+
+        if (!subpiece_manager_->IsBlockSavedOnDisk(block_index))
+        {
+            unsigned char *p_buf = buff.Data();
+            //当前block不在硬盘上，而block_map关于该block又是满的，所以block应该在内存中
+            for (int i = 0; i < subpiece_manager_->GetTotalSubpieceCountInBlock(block_index); i++)
+            {
+                protocol::SubPieceInfo subpiece_info(block_index, i);
+                protocol::SubPieceBuffer subpiece_buf = subpiece_manager_->GetSubPiece(subpiece_info);
+                base::util::memcpy2(p_buf, buff.Length() - (p_buf - buff.Data()), subpiece_buf.Data(), subpiece_buf.Length());
+                p_buf += subpiece_buf.Length();
+            }
+        }
+        else
+        {
+            buff = ReadBuffer(startoffset, length);
+        }
+
+        return buff;
     }
 
     void Resource::CheckFileDownComplete(boost::uint32_t start_pos, boost::uint32_t length)

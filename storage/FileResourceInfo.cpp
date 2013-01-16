@@ -20,7 +20,7 @@ namespace storage
 
 //临时关闭以下ToBuffer函数的优化，以方便我们调试其中的crash问题。
 //TODO, ericzheng, 记得以后恢复这里的优化
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
 #pragma optimize("", off)
 #endif
 
@@ -208,7 +208,7 @@ namespace storage
         return r_buf;
     }
 
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
 #pragma optimize("", on)
 #endif
 
@@ -548,9 +548,9 @@ namespace storage
         return this->file_path_.rfind(tpp_extname) != string::npos;
     }
 
-    bool FileResourceInfo::CheckFileSize(boost::uint32_t size) const
+    bool FileResourceInfo::CheckFileSize(boost::uint32_t size, bool has_encrypted) const
     {
-        return this->rid_info_.GetFileLength() == size;
+        return this->rid_info_.GetFileLength() == (has_encrypted ? size - ENCRYPT_HEADER_LENGTH : size);
     }
 #endif
 }

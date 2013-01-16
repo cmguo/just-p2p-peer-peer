@@ -117,7 +117,7 @@ namespace base
 
         bool Add(const byte* data, boost::uint32_t length)
         {
-            if (offset_ + length >= length_)
+            if (offset_ + length > length_)
             {
                 return false;
             }

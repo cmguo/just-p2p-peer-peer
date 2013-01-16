@@ -24,9 +24,6 @@ enum PeerState
 {
     PEERSTATE_MAIN_STATE    = 0x00010000,   // 主力形态
     PEERSTATE_RESIDE_STATE  = 0x00020000,   // 驻留形态
-
-    PEERSTATE_LIVE_NONE     = 0x00000001,   // 直播内核无工作
-    PEERSTATE_LIVE_WORKING  = 0x00000002,   // 直播内核在工作
 };
 
 boost::asio::io_service & global_io_svc();

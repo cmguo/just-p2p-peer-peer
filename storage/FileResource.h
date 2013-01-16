@@ -9,6 +9,30 @@ namespace storage
 {
 #ifdef DISK_MODE
 
+struct EncryptHeader
+{
+    char id_[4];            //pptv
+    boost::uint32_t version_;    //版本号
+    unsigned char Reserved_[1024 - 4 - 4];
+
+    EncryptHeader()
+    {
+        base::util::memcpy2(id_, 4, "pptv", 4);
+        version_ = VersionNow();
+        memset(Reserved_, 0, sizeof(Reserved_));
+    }
+
+    boost::uint32_t VersionNow()
+    {
+        return 0x00000001;
+    }
+
+    bool IsValidEncryptHeader()
+    {
+        return (0 == memcmp(id_, "pptv", sizeof(id_)) && version_ == VersionNow());
+    }
+};
+
 class FileResource: public Resource
 #ifdef DUMP_OBJECT
     , public count_object_allocate<FileResource>
@@ -24,7 +48,8 @@ class FileResource: public Resource
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t init_size);
+        boost::uint32_t init_size,
+        bool need_encrypt);
 
     // 根据资源信息创建资源对象实例
     static p CreateResource(
@@ -37,7 +62,11 @@ class FileResource: public Resource
     static bool OpenResourceFile(
         const FileResourceInfo &resource_info,
         FILE* &resource_file_handle,
-        boost::uint32_t &actual_size);
+        boost::uint32_t &actual_size,
+        bool &has_encrypted);
+
+    void BufEncrypt(unsigned char * buf_to_encrypted, boost::uint32_t length);
+    void BufDecrypt(unsigned char * buf_to_decrypt, boost::uint32_t length);
 
     protected:
     FileResource(
@@ -46,7 +75,8 @@ class FileResource: public Resource
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t init_size);
+        boost::uint32_t init_size,
+        bool need_encrypt);
 
     FileResource(
         boost::asio::io_service & io_svc,
@@ -54,7 +84,8 @@ class FileResource: public Resource
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t actual_size);
+        boost::uint32_t actual_size,
+        bool has_encrypted);
 
     protected:
 #ifdef DISK_MODE

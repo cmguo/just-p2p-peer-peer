@@ -5,7 +5,7 @@
 #ifndef STORAGE_RESOURCE_H
 #define STORAGE_RESOURCE_H
 
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
 #pragma once
 #endif
 
@@ -45,15 +45,17 @@ namespace storage
             boost::uint32_t file_length,                 // 文件大小
             string file_name,                   // 完整文件名
             boost::shared_ptr<Instance> inst_p,
-            boost::uint32_t init_size);
+            boost::uint32_t init_size,
+            bool need_encrypt);
 
         Resource(
             boost::asio::io_service & io_svc,
             boost::shared_ptr<SubPieceManager> subpiece_manager,             // 关联的文件描述
             string file_name,                                               // 完整文件名
             boost::shared_ptr<Instance> inst_p,                             // 关联的instance
-            boost::uint32_t actual_size                                              // 占用空间
-           );
+            boost::uint32_t actual_size,                                              // 占用空间
+            bool has_encrypted);                                               // 文件是否被加密
+           
 
     public:
         // 绑定某个instance
@@ -93,14 +95,18 @@ namespace storage
             bool need_hash);
 
         // 从某个subpiece处读取不超过n个的连续subpiece，然后交给player_listener
-        virtual void ThreadReadBufferForPlay(const protocol::SubPieceInfo subpiece_info, std::vector<protocol::SubPieceContent*> buffs);
+        virtual void ThreadReadBufferForPlay(
+            const protocol::SubPieceInfo subpiece_info,
+            std::vector<protocol::SubPieceContent*> buffs,
+            const protocol::SubPieceInfo real_play_info);
 
         // 以Helper结尾的函数均为辅助函数，为了保证内存池和intrusive_ptr不被跨线程访问@herain
         static void ThreadReadBufferForPlayHelper(
             boost::shared_ptr<Instance> instance_p,
             boost::shared_ptr<SubPieceManager> subpiece_manager_p,
             const protocol::SubPieceInfo& subpiece_info,
-            std::vector<protocol::SubPieceContent*> buffs);
+            std::vector<protocol::SubPieceContent*> buffs,
+            const protocol::SubPieceInfo& real_play_info);
 
         // 从文件中读取指定的subpiece，然后交给Instance merge
         virtual void ThreadMergeSubPieceToInstance(const protocol::SubPieceInfo subpiece_info, protocol::SubPieceContent* buff,
@@ -159,6 +165,8 @@ namespace storage
             }
         }
 
+        base::AppBuffer GetBlockBufferFromMemoryOrDisk(const boost::uint32_t block_index);
+
     protected:
         boost::asio::io_service & io_svc_;
 
@@ -171,6 +179,7 @@ namespace storage
         string file_name_;                              // 完整文件名
         boost::shared_ptr<Instance> instance_p_;        // 关联的instance
         volatile bool is_running_;                      // 该值可能会被其他线程被改变
+        bool has_encrypted_;                             // 文件是否已经被加密
     };  // class Resource
 
 }  // namespace storage

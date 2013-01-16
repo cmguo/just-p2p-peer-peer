@@ -63,8 +63,6 @@ namespace p2sp
         static boost::uint32_t ASSIGN_CONTINUOUS_REDUNTANT_DECISION_TIMEOUT;
 
         //
-        static boost::uint32_t HTTP_DOWNLOAD_SPEED_LIMIT;
-        //
         static boost::uint32_t HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL;
 
         //
@@ -93,8 +91,6 @@ namespace p2sp
         static boost::uint32_t P2P_DOWNLOAD_MULTI_SUBPIECES_COUNT;
         //
         static boost::uint32_t P2P_DOWNLOAD_MULTI_SUBPIECES_REQUEST_COUNT;
-        //
-        static boost::uint32_t P2P_DOWNLOAD_SPEED_LIMIT;
         //
         static boost::uint32_t P2P_MAX_EXCHANGE_PEER_COUNT;
         //

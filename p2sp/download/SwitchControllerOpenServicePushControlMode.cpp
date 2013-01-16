@@ -43,11 +43,12 @@ namespace p2sp
         assert(GetHTTPControlTarget());
         assert(GetP2PControlTarget());
 
-        GetP2PControlTarget()->SetDownloadPriority(protocol::RequestSubPiecePacket::PUSH_PRIORITY);
-        GetP2PControlTarget()->SetDownloadMode(IP2PControlTarget::FAST_MODE);
+        if (GetP2PControlTarget())
+        {
+            GetP2PControlTarget()->SetDownloadPriority(protocol::RequestSubPiecePacket::PUSH_PRIORITY);
+            GetP2PControlTarget()->SetDownloadMode(IP2PControlTarget::FAST_MODE);
+        }
 
-        // next
-        // Next(0);
         OnControlTimer(0);
     }
 

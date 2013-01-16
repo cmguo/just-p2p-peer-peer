@@ -151,6 +151,8 @@ namespace statistic
 
         void SubmitP2PPeerDataBytesWithRedundance(boost::uint32_t p2p_data_bytes);
 
+        void SubmitP2pLocationDataBytesWithRedundance(boost::uint8_t location,boost::uint32_t bytes);
+
         void SubmitP2PPeerDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes);
 
         void SubmitP2PSnDataBytesWithRedundance(boost::uint32_t p2p_data_bytes);
@@ -166,6 +168,8 @@ namespace statistic
         boost::uint32_t GetTotalP2PSnDataBytesWithRedundance();
 
         boost::uint32_t GetTotalP2PSnDataBytesWithoutRedundance();
+
+        std::string GetP2PLocationDataBytesWithRedundance();
 
         void SetEmptySubpieceDistance(boost::uint32_t empty_subpiece_distance);
 
@@ -246,6 +250,11 @@ namespace statistic
         p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance += p2p_data_bytes;
     }
 
+    inline void P2PDownloaderStatistic::SubmitP2pLocationDataBytesWithRedundance(boost::uint8_t location,boost::uint32_t bytes)
+    {
+        p2p_downloader_statistic_info_.SubmitP2pLocationDataBytesWithRedundance(location,bytes);
+    }
+
     inline void P2PDownloaderStatistic::SubmitP2PPeerDataBytesWithoutRedundance(boost::uint32_t p2p_data_bytes)
     {
         p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance += p2p_data_bytes;
@@ -267,11 +276,40 @@ namespace statistic
         p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithoutRedundance = 0;
         p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithRedundance = 0;
         p2p_downloader_statistic_info_.TotalP2PSnDataBytesWithoutRedundance = 0;
+        memset(p2p_downloader_statistic_info_.P2pLocationDataBytesWithRedundance,
+            0,sizeof(p2p_downloader_statistic_info_.P2pLocationDataBytesWithRedundance));
     }
 
     inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithRedundance()
     {
         return p2p_downloader_statistic_info_.TotalP2PPeerDataBytesWithRedundance;
+    }
+
+    inline std::string P2PDownloaderStatistic::GetP2PLocationDataBytesWithRedundance()
+    {
+        std::ostringstream location_ss; 
+        //格式: 0:1024,1:4096,2:34892,4:34380,(地域分类):(下载字节数)
+        //如果某一个地域分类的下载字节数为0，就不上报了。
+
+        boost::uint32_t * location_bytes = &p2p_downloader_statistic_info_.P2pLocationDataBytesWithRedundance[0];
+       
+        for (int i=0; 
+            i<(sizeof(p2p_downloader_statistic_info_.P2pLocationDataBytesWithRedundance) / sizeof(p2p_downloader_statistic_info_.P2pLocationDataBytesWithRedundance[0]));
+            ++i)
+        {
+            if(location_bytes[i] != 0)
+            {
+                location_ss << i<<":"<<location_bytes[i]<<",";
+            }          
+        }
+
+        std::string location_str = location_ss.str();
+        if(location_str.size() > 0  && (','==location_str[location_str.size()-1] ))
+        {
+            //去掉最后一个 ，
+            location_str = location_str.substr(0,location_str.size()-1);
+        }
+        return location_str;
     }
 
     inline boost::uint32_t P2PDownloaderStatistic::GetTotalP2PPeerDataBytesWithoutRedundance()

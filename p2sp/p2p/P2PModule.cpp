@@ -111,7 +111,7 @@ namespace p2sp
         return UploadModule::Inst()->GetMaxUploadLimitSize();
     }
 
-    P2PDownloader::p P2PModule::CreateP2PDownloader(const RID& rid, boost::uint32_t vip)
+    P2PDownloader::p P2PModule::CreateP2PDownloader(const RID& rid, boost::uint32_t vip, JumpBWType bwtype)
     {
 		if (is_running_ == false)
         {
@@ -137,7 +137,7 @@ namespace p2sp
         }
 
         // 如果 在 rid_indexer_ 没有找到 这个 P2P 创建RID对应的 P2PDownloader
-        P2PDownloader::p downloader = P2PDownloader::create(rid, vip);
+        P2PDownloader::p downloader = P2PDownloader::create(rid, vip, bwtype);
         rid_indexer_[rid] = downloader;
         downloader->Start();
         return downloader;

@@ -46,6 +46,99 @@ namespace p2sp
         last_response_rid_count_ = rid_count;
     }
 
+    void TrackerClient::HttpTrackerList(string const & server, RID const & rid)
+    {
+        boost::shared_ptr<util::protocol::HttpClient> http_client(new util::protocol::HttpClient(global_io_svc()));
+        boost::system::error_code error;
+        http_client->bind_host(end_point_.address().to_string(error), error);
+        if (error)
+        {
+            return;
+        }
+        std::ostringstream http_request_path;
+        http_request_path << "/trackeragcgi?rid=" << rid;
+        string http_request_url;
+        http_request_url = "http://" + end_point_.address().to_string(error) + http_request_path.str();
+
+        http_client->async_fetch(http_request_url, boost::bind(& TrackerClient::HandleFetchResult, 
+            shared_from_this(), http_client, boost::asio::placeholders::error));
+    }
+
+    void TrackerClient::HandleFetchResult(boost::shared_ptr<util::protocol::HttpClient> http_client, 
+        const boost::system::error_code & err)
+    {
+        if (err)
+        {
+            LOG4CPLUS_INFO_LOG(logger_tracker_client, "HandleFetchResult err: "<< err);
+            statistic::DACStatisticModule::Inst()->SubmitHttpTrackerListIpCodeString(end_point_, err.value());
+            return;
+        }
+        else
+        {
+            boost::uint32_t status_code = http_client->get_response_head().err_code;
+            statistic::DACStatisticModule::Inst()->SubmitHttpTrackerListIpCodeString(end_point_, status_code);
+            if (status_code != 200)
+            {
+                LOG4CPLUS_INFO_LOG(logger_tracker_client, "HandleFetchResult get status_code: "<< status_code);
+                return;
+            }
+            boost::asio::streambuf & response = http_client->get_response().data();
+            std::string response_content((std::istreambuf_iterator<char>(& response)), 
+                std::istreambuf_iterator<char>());
+            if (!response_content.size() || response_content.size() % 2)
+            {
+                return;
+            }
+            boost::uint32_t check_sum = 0;
+            boost::uint8_t action = 0;
+            std::istringstream iss;;
+            iss.str(Hex2Bin(response_content));
+            iss.read((char *)&check_sum, sizeof(boost::uint32_t));
+            action = iss.get();
+            if (action != protocol::ListWithIpPacket::Action)
+            {
+                return;
+            }
+            protocol::ListWithIpPacket http_response_list;
+            util::archive::LittleEndianBinaryIArchive<> iarchive(iss);
+            iarchive >> http_response_list;
+
+            UpdatePeerInfo(http_response_list.response.peer_infos_);
+            p2sp::AppModule::Inst()->AddCandidatePeers(http_response_list.response.resource_id_, 
+                http_response_list.response.peer_infos_, is_tracker_for_live_udpserver_);
+            statistic::StatisticModule::Inst()->SubmitListResponse(tracker_info_, 
+                http_response_list.response.peer_infos_.size(), http_response_list.response.resource_id_);
+        }
+    }
+
+    std::string TrackerClient::Hex2Bin(string const & hex_string)
+    {
+        std::string s;
+        int i = 0;
+        while(hex_string[i] != '\0')
+        {
+            int temp[2];
+            for(int j = 0; j <= 1; j ++)
+            {
+                if (hex_string[i+j] >= '0' && hex_string[i+j] <= '9')
+                {
+                    temp[j] = hex_string[i+j] - '0';
+                }
+                else if (hex_string[i+j] >= 'A' && hex_string[i+j] <= 'F')
+                {
+                    temp[j] = hex_string[i+j] -'A' + 10;
+                }
+                else if (hex_string[i+j] >= 'a' && hex_string[i+j] <= 'f')
+                {
+                    temp[j] = hex_string[i+j] - 'a' + 10;
+                }
+            }
+            s += temp[0] * 16 + temp[1];
+            i += 2;
+        }
+        return s;
+    }
+
     void TrackerClient::DoList(const RID& rid, bool list_for_live_udpserver)
     {
         if (list_for_live_udpserver != IsTrackerForLiveUdpServer())
@@ -69,16 +162,23 @@ namespace p2sp
         statistic::StatisticModule::Inst()->SubmitListRequest(tracker_info_, rid);
     }
 
+    void TrackerClient::UpdatePeerInfo(std::vector<protocol::CandidatePeerInfo> & peer_infos_)
+    {
+        for (boost::uint32_t i = 0; i < peer_infos_.size(); ++ i)
+        {
+            if (peer_infos_[i].UploadPriority < 255 && peer_infos_[i].UploadPriority > 0)
+            {
+                peer_infos_[i].UploadPriority ++;
+            }
+        }
+    }
+
     void TrackerClient::OnListResponsePacket(protocol::ListPacket const & packet)
     {
         // 讲List到的peer加入ip pool
         // 将packet解析出 vector<PeerInfo::p> peers
         std::vector<protocol::CandidatePeerInfo> peers = packet.response.peer_infos_;
-        for (boost::uint32_t i = 0; i < peers.size(); ++i) {
-            if (peers[i].UploadPriority < 255 && peers[i].UploadPriority > 0) {
-                peers[i].UploadPriority++;
-            }
-        }
+        UpdatePeerInfo(peers);
 
         p2sp::AppModule::Inst()->AddCandidatePeers(packet.response.resource_id_, peers, is_tracker_for_live_udpserver_);
 
@@ -310,7 +410,7 @@ namespace p2sp
         //TODO:设置到tracker的路由ip。5个就够了。
         std::vector<boost::uint32_t> traceroute_ips;
 
-        boost::uint16_t upnp_tcp_port = 0;//UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
+        boost::uint16_t upnp_tcp_port = UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
 
         // request
         protocol::ReportPacket report_request(

@@ -510,7 +510,7 @@ namespace storage
         // Try Rename!
         if (IsSaveMode())
         {
-            Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, web_url_, qname_);
+            Storage::Inst()->AttachSaveModeFilenameByUrl(url_info.url_, web_url_, file_name_);
         }
 #endif
         return;
@@ -654,7 +654,7 @@ namespace storage
         }
     }
 
-void Instance::OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, base::AppBuffer& buf, 
+    void Instance::OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, base::AppBuffer& buf, 
         IUploadListener::p listener, MD5 hash_val)
     {
         if (false == is_running_)
@@ -770,11 +770,11 @@ void Instance::OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, b
         OnNotifyHashBlock(block_index, false);
     }
 
-    void Instance::UploadOneSubPiece()
+    void Instance::UploadOneSubPiece(bool isTcp)
     {
         if (is_open_service_)
         {
-            statistic::DACStatisticModule::Inst()->SubmitP2PUploadBytes(SUB_PIECE_SIZE, is_push_);
+            statistic::DACStatisticModule::Inst()->SubmitP2PUploadBytes(SUB_PIECE_SIZE, is_push_,isTcp);
         }
         if (traffic_list_.size() == 0 && TRAFFIC_T0 > 0)
         {
@@ -1587,7 +1587,7 @@ void Instance::OnReadBlockForUploadFinishWithHash(boost::uint32_t block_index, b
             if (buffs.size() > 0)
             {
                 assert(buffs.size() == subpiece_count_in_block);
-                StorageThread::Inst().Post(boost::bind(&Resource::ThreadReadBufferForPlay, resource_p_, iter_sub_piece, buffs));
+                StorageThread::Inst().Post(boost::bind(&Resource::ThreadReadBufferForPlay, resource_p_, iter_sub_piece, buffs, start_s_info));
                 LOG4CPLUS_DEBUG_LOG(logger_instance, "ReadFromDisk " << (int)buffs.size());
                 LOG4CPLUS_DEBUG_LOG(logger_instance, "post ThreadReadBufferForPlay. size=" << (int)buffs.size());
             }

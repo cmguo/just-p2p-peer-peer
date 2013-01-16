@@ -31,7 +31,8 @@ namespace storage
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t init_size)
+        boost::uint32_t init_size,
+        bool need_encrypt)
     {
         assert(file_handle != NULL);
         FileResource::p pointer(new FileResource(
@@ -40,7 +41,8 @@ namespace storage
             file_name,
             file_handle,
             inst_p,
-            init_size));
+            init_size,
+            need_encrypt));
 
         return pointer;
     }
@@ -51,8 +53,9 @@ namespace storage
     {
         FILE* resource_file_handle = NULL;
         boost::uint32_t actual_size;
+        bool has_encrypted;
 
-        if (false == OpenResourceFile(resource_info, resource_file_handle, actual_size))
+        if (false == OpenResourceFile(resource_info, resource_file_handle, actual_size, has_encrypted))
         {
             return FileResource::p();
         }
@@ -63,10 +66,11 @@ namespace storage
         SubPieceManager::p subpiece_manager;
         if (false == resource_info.IsTempFile())
         {
-            if (resource_info.CheckFileSize(actual_size))
+            if (resource_info.CheckFileSize(actual_size, has_encrypted))
             {
                 // 若资源已经下载完毕，资源文件的实际大小必须和资源信息符合
-                subpiece_manager = SubPieceManager::Create(actual_size, true);
+                boost::uint32_t used_file_length = has_encrypted ? actual_size - ENCRYPT_HEADER_LENGTH : actual_size;
+                subpiece_manager = SubPieceManager::Create(used_file_length, true);
                 is_valid = true;
             }
         }
@@ -121,7 +125,8 @@ namespace storage
             resource_info.file_path_,
             resource_file_handle,
             Instance::p(),
-            actual_size));
+            actual_size,
+            has_encrypted));
 
         return resource_p;
     }
@@ -132,8 +137,9 @@ namespace storage
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t init_size)
-        : Resource(io_svc, file_length, file_name, inst_p, init_size)
+        boost::uint32_t init_size,
+        bool need_encrypt)
+        : Resource(io_svc, file_length, file_name, inst_p, init_size, need_encrypt)
         , file_handle_(file_handle)
     {
         need_saveinfo_to_disk_ = (true);
@@ -145,8 +151,9 @@ namespace storage
         string file_name,
         FILE* file_handle,
         boost::shared_ptr<Instance> inst_p,
-        boost::uint32_t actual_size)
-        : Resource(io_svc, subpiece_manager, file_name, inst_p, actual_size)
+        boost::uint32_t actual_size,
+        bool has_encrypted)
+        : Resource(io_svc, subpiece_manager, file_name, inst_p, actual_size, has_encrypted)
         , file_handle_(file_handle)
     {
         need_saveinfo_to_disk_ = (true);
@@ -159,7 +166,8 @@ namespace storage
     bool FileResource::OpenResourceFile(
         const FileResourceInfo &resource_info,
         FILE* &resource_file_handle,
-        boost::uint32_t &actual_size)
+        boost::uint32_t &actual_size,
+        bool &has_encrypted)
     {
         namespace fs = boost::filesystem;
 
@@ -174,6 +182,25 @@ namespace storage
 
         // open existing
         resource_file_handle = fopen(resource_info.file_path_.c_str(), "r+b");
+        if (!resource_file_handle)
+        {
+            return false;
+        }
+
+        fseek(resource_file_handle, 0, SEEK_SET);
+        EncryptHeader encrypt_header;
+        fread(&encrypt_header, sizeof(EncryptHeader), 1, resource_file_handle);
+
+        // 与之前版本兼容
+        if (encrypt_header.IsValidEncryptHeader())
+        {
+            has_encrypted = true;
+        }
+        else
+        {
+            has_encrypted = false;
+        }
+
         if (NULL == resource_file_handle)
         {
             return false;
@@ -202,12 +229,15 @@ namespace storage
         }
 
         assert(file_handle_ != NULL);
+
+        boost::uint32_t new_startpos = has_encrypted_ ? startpos + ENCRYPT_HEADER_LENGTH : startpos;
+
         assert(startpos + length <= subpiece_manager_->GetFileLength());
         if (startpos + length <= subpiece_manager_->GetFileLength())
         {
             std::vector<AppBuffer> buffs;
 
-            fseek(file_handle_, startpos, SEEK_SET);
+            fseek(file_handle_, new_startpos, SEEK_SET);
             boost::uint32_t subpiece_cnt = (length % SUB_PIECE_SIZE) ?
                 (length/SUB_PIECE_SIZE + 1) : (length/SUB_PIECE_SIZE);
             boost::uint32_t last_subpiece_length = (length % SUB_PIECE_SIZE) ?
@@ -247,10 +277,13 @@ namespace storage
         }
 
         assert(file_handle_ != NULL);
+
+        boost::uint32_t new_startpos = has_encrypted_ ? startpos + ENCRYPT_HEADER_LENGTH : startpos;
+
         assert(startpos + length <= subpiece_manager_->GetFileLength());
         if (startpos + length <= subpiece_manager_->GetFileLength())
         {
-            fseek(file_handle_, startpos, SEEK_SET);
+            fseek(file_handle_, new_startpos, SEEK_SET);
             boost::uint32_t subpiece_cnt = (length % SUB_PIECE_SIZE) ?
                 (length/SUB_PIECE_SIZE + 1) : (length/SUB_PIECE_SIZE);
             boost::uint32_t last_subpiece_length = (length % SUB_PIECE_SIZE) ?
@@ -268,7 +301,7 @@ namespace storage
                     readlen = fread(buffs[i]->get_buffer(), 1, subpiece_len, file_handle_);
                     if (readlen != subpiece_len)
                     {
-                        assert(false);
+                        assert(readlen == 0);
                         return false;
                     }
                 }
@@ -279,6 +312,7 @@ namespace storage
                     return false;
                 }
             }
+
             return true;
         }
         else
@@ -297,13 +331,19 @@ namespace storage
             }
         }
 
+        boost::uint32_t new_pos = has_encrypted_? startpos + ENCRYPT_HEADER_LENGTH : startpos;
+
         assert(file_handle_ != NULL);
         assert(startpos + length <= subpiece_manager_->GetFileLength());
         if (startpos + length <= subpiece_manager_->GetFileLength())
         {
             base::AppBuffer buff(length);
-            fseek(file_handle_, startpos, SEEK_SET);
+            if (0 != fseek(file_handle_, new_pos, SEEK_SET))
+            {
+                return base::AppBuffer();
+            }
             boost::uint32_t readlen = fread(buff.Data(), 1, length, file_handle_);
+
             if (readlen != length)
             {
                 assert(false);
@@ -328,6 +368,8 @@ namespace storage
             }
         }
 
+        boost::uint32_t new_startpos = has_encrypted_? startpos + ENCRYPT_HEADER_LENGTH : startpos;
+
         boost::uint64_t total_bufsize = 0;
         for (std::vector<const protocol::SubPieceBuffer*>::const_iterator cit = buffers.begin();
             cit != buffers.end(); ++cit)
@@ -336,11 +378,12 @@ namespace storage
         }
 
         // extend file
-        if (startpos + total_bufsize > actual_size_)
+        if (new_startpos + total_bufsize > actual_size_)
         {
             boost::uint64_t block_size = 2*1024*1024;
-            boost::uint64_t delta_size = ((startpos + total_bufsize - actual_size_ + block_size - 1) / block_size) * block_size;
-            boost::uint64_t new_size = std::min(actual_size_ + delta_size, (boost::uint64_t)subpiece_manager_->GetFileLength());
+            boost::uint64_t delta_size = ((new_startpos + total_bufsize - actual_size_ + block_size - 1) / block_size) * block_size;
+            boost::uint32_t encrypted_ext_size = has_encrypted_ ? ENCRYPT_HEADER_LENGTH : 0;
+            boost::uint64_t new_size = std::min(actual_size_ + delta_size, (boost::uint64_t)subpiece_manager_->GetFileLength() + encrypted_ext_size);
 
             if (new_size > actual_size_)
             {
@@ -358,7 +401,7 @@ namespace storage
             }
         }
 
-        fseek(file_handle_, startpos, SEEK_SET);
+        fseek(file_handle_, new_startpos, SEEK_SET);
         base::AppBuffer total_buf(total_bufsize);
         unsigned char *p_buf = total_buf.Data();
         for (std::vector<const protocol::SubPieceBuffer*>::const_iterator cit = buffers.begin();
@@ -378,6 +421,30 @@ namespace storage
         }
         need_saveinfo_to_disk_ = true;
         return true;
+    }
+
+    void FileResource::BufEncrypt(unsigned char * buf_to_encrypt, boost::uint32_t length)
+    {
+        if (buf_to_encrypt == NULL || length == 0)
+            return;
+        boost::uint32_t i = 0;
+        while(i < length && buf_to_encrypt[i])
+        {
+            buf_to_encrypt[i] ^= 'q';
+            i++;
+        }
+    }
+
+    void FileResource::BufDecrypt(unsigned char * buf_to_decrypt, boost::uint32_t length)
+    {
+        if (buf_to_decrypt == NULL || length == 0)
+            return;
+        boost::uint32_t i = 0;
+        while(i < length && buf_to_decrypt[i])
+        {
+            buf_to_decrypt[i] = 'q' ^ buf_to_decrypt[i];
+            i++;
+        }
     }
 
     void FileResource::Erase(const boost::uint32_t startpos, const boost::uint32_t length)

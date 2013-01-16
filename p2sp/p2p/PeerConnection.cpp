@@ -63,12 +63,16 @@ namespace p2sp
         longest_rtt_ = rtt_ + 500;
 
         peer_version_ = reconnect_packet.peer_version_;
-        candidate_peer_info_ = reconnect_packet.peer_info_;
-        if (candidate_peer_info_.IP == peer_info.IP && candidate_peer_info_.UdpPort == peer_info.UdpPort)
+        //candidate_peer_info_ = reconnect_packet.peer_info_;
+        //在PeerConnector::OnReConectPacket 已经判断过包来源的合法性了。这里不做新的检查，直接赋值
+        //不能使用 reconnect_packet.peer_info_ 的信息，因为这个信息可能为空
+        //（例如，上报tracker后，core了，重新上报tracker前被connect）,且不会设置trackerpriority
+        //if (candidate_peer_info_.IP == peer_info.IP && candidate_peer_info_.UdpPort == peer_info.UdpPort)
         {
             LOG4CPLUS_INFO_LOG(logger_peer_connection, "SET CANDIDATE_PEER_INFO: " << peer_info);
             candidate_peer_info_ = peer_info;
         }
+
         peer_download_info_ = reconnect_packet.peer_download_info_;
         end_point_ = end_point;
 
@@ -532,6 +536,18 @@ namespace p2sp
     void PeerConnection::SubmitP2PDataBytesWithRedundance(boost::uint32_t length)
     {
         p2p_downloader_->GetStatistic()->SubmitP2PPeerDataBytesWithRedundance(length);
+
+        //添加分地域下载统计信息,目前tracker设置了优先级的时候，把个位数作为了地域信息
+        if(255 == candidate_peer_info_.TrackerPriority)
+        {
+            //遇到同一子网的节点
+            p2p_downloader_->GetStatistic()->SubmitP2pLocationDataBytesWithRedundance(9,length);
+        }
+        else
+        {
+            p2p_downloader_->GetStatistic()->SubmitP2pLocationDataBytesWithRedundance(
+                candidate_peer_info_.TrackerPriority %10,length);
+        }
     }
 
     boost::uint32_t PeerConnection::GetConnectRTT() const

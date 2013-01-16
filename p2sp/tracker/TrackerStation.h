@@ -84,6 +84,7 @@ namespace p2sp
 
         //前一项是查询到的rid，后一项是查询到的时间。
         std::map<RID,boost::uint32_t> list_get_response_;
+        std::map<RID,boost::uint32_t> udp_tracker_list_times_;   //后一项表示用UDP Tracker DoList的次数
     };
 }
 

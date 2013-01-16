@@ -60,7 +60,7 @@ namespace storage
 
         store_path_ = store_p.file_string();
         hidden_sub_path_ = (store_p / ("InvisibleFolder")).file_string();
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
         TCHAR old_dir[MAX_PATH];
         boost::uint32_t pathname_len = GetCurrentDirectory(MAX_PATH, old_dir);
         assert(pathname_len<MAX_PATH);
@@ -70,11 +70,11 @@ namespace storage
             OpenAndCreateStoreDir();
             Storage::Inst_Storage()->CreateHiddenDir(hidden_sub_path_);
         }
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
         SetCurrentDirectory(old_dir);
 #endif
 
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
         framework::configure::Config conf;
         framework::configure::ConfigModule & storage_conf =
             conf.register_module("Storage");
@@ -88,7 +88,7 @@ namespace storage
 #endif
     }
 
-#ifdef PEER_PC_CLIENT
+#ifdef BOOST_WINDOWS_API
     __int64 SpaceManager::GetDirectoryAvialbeSize(string DirPathName)
     {
         ULARGE_INTEGER ulDiskFreeSize;
@@ -375,18 +375,18 @@ namespace storage
             {
                 string full_realname;
                 boost::filesystem::path file_path(store_path_);
-                Storage::Inst_Storage()->DoVerifyName(realname, file_path, full_realname);
+                Storage::Inst_Storage()->DoVerifyName(realname, file_path, full_realname, resource_inst->IsOpenService());
                 full_file_name = full_realname;
             }
         }
 
         string last_filename;
-        FILE* file_handle = TryCreateFile(full_file_name, last_filename, init_size);
+        FILE* file_handle = TryCreateFile(full_file_name, last_filename, init_size, resource_inst->IsOpenService());
         if (file_handle != NULL)
         {
             LOG4CPLUS_DEBUG_LOG(logger_space_manager, " success! full_file_name" << (full_file_name));
             Resource::p resource_p = FileResource::CreateResource(io_svc_, file_size, last_filename, file_handle, Instance::p(),
-                init_size);
+                init_size + (resource_inst->IsOpenService() ? ENCRYPT_HEADER_LENGTH : 0), resource_inst->IsOpenService());
             assert(resource_p);
             Storage::Inst_Storage()->OnCreateResourceSuccess(resource_p, resource_inst);
             return true;
@@ -395,7 +395,7 @@ namespace storage
         return false;
     }
 
-    FILE* SpaceManager::TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size)
+    FILE* SpaceManager::TryCreateFile(string filename, string &last_filename, boost::uint32_t file_size, bool is_openservice)
     {
         if (false == b_use_disk_)
         {
@@ -419,7 +419,16 @@ namespace storage
         }
 
         fs::path source_file_name(filename);
-        string ext = source_file_name.extension();
+        string ext;
+        if (!is_openservice)
+        {
+            ext = source_file_name.extension();
+        }
+        else
+        {
+            // 将openservice影片后缀名统一改为ppplay
+            ext = ".pp";
+        }
         string stem = (source_file_name.parent_path()/"/").file_string() + source_file_name.stem();
 
         string file_name(stem);
@@ -441,7 +450,7 @@ namespace storage
             ++i;
             filename = file_name + change_str + ext;
         }
-        last_filename = filename + tpp_extname;
+        last_filename = file_name + ext + tpp_extname;
         file_handle = fopen(last_filename.c_str(), "w+b");
         if (NULL == file_handle)
         {
@@ -471,13 +480,22 @@ namespace storage
                 return NULL;
             }
         }
+
         // resize
         if (file_size > 0)
         {
             if (0 == fseek(file_handle, file_size - 1, SEEK_SET) &&
                 1 == fwrite("", 1, 1, file_handle) &&
                 0 == fseek(file_handle, 0, SEEK_SET))
+            {
+                if (is_openservice)
+                {
+                    //在文件头部插入1KB数据，防止缓冲文件被直接拿到播放器中播放
+                    EncryptHeader encrypt_header;
+                    int write_count = fwrite(&encrypt_header, sizeof(EncryptHeader), 1, file_handle);
+                }
                 return file_handle;
+            }
         }
         fclose(file_handle);
         file_handle = NULL;

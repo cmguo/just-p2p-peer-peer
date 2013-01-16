@@ -10,6 +10,7 @@
 #include <protocol/PeerPacket.h>
 #include <p2sp/bootstrap/BootStrapGeneralConfig.h>
 #include <p2sp/p2p/UploadModule.h>
+#include "p2sp/download/SwitchControllerInterface.h"
 
 namespace storage
 {
@@ -42,7 +43,7 @@ namespace p2sp
         void Stop();
 
         // 操作
-        P2PDownloader__p CreateP2PDownloader(const RID& rid, boost::uint32_t vip);
+        P2PDownloader__p CreateP2PDownloader(const RID& rid, boost::uint32_t vip, JumpBWType bwtype);
         // 消息
         void SetMaxUploadSpeedInKBps(boost::int32_t MaxUploadP2PSpeed);
 

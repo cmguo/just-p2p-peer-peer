@@ -43,7 +43,7 @@ namespace boost
     typedef unsigned char       uint8_t;
     typedef short               int16_t;
     typedef unsigned short      uint16_t;
-    typedef long                int32_t;
+    typedef long                boost::int32_t;
     typedef unsigned long       boost::uint32_t;
     typedef __int64             int64_t;
     typedef unsigned __int64    uint64_t;

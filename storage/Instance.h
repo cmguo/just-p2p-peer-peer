@@ -120,7 +120,7 @@ namespace storage
         void SetFileLength(boost::uint32_t file_length);
 
         // 告诉instance上传了一个subpiece，用于上传流量统计
-        void UploadOneSubPiece();
+        void UploadOneSubPiece(bool isTcp);
 
         // 如果资源描述为空(正常情况)，则根据rid_info创建资源描述符，进而创建文件资源
         bool SetRidInfo(const protocol::RidInfo& rid_info);

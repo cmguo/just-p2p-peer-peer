@@ -36,7 +36,7 @@ namespace storage
         string file_name,
         boost::shared_ptr<Instance> inst_p,
         boost::uint32_t init_size)
-        : Resource(io_svc, file_length, file_name, inst_p, init_size)
+        : Resource(io_svc, file_length, file_name, inst_p, init_size, false)
     {
     }
 
@@ -47,7 +47,7 @@ namespace storage
         string file_name,
         boost::shared_ptr<Instance> inst_p,
         boost::uint32_t actual_size)
-        : Resource(io_svc, subpiece_manager_p, file_name, inst_p, actual_size)
+        : Resource(io_svc, subpiece_manager_p, file_name, inst_p, actual_size, false)
     {
     }
 

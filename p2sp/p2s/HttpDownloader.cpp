@@ -9,6 +9,7 @@
 #include "p2sp/p2s/HttpConnection.h"
 #include "p2sp/p2p/P2SPConfigs.h"
 #include "statistic/DownloadDriverStatistic.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace p2sp
 {
@@ -203,7 +204,7 @@ namespace p2sp
 
         if (P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT_ENABEL)
         {
-            http_speed_limiter_.SetSpeedLimitInKBps(P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT);
+            http_speed_limiter_.SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->GetHttpDownloadSpeedLimitInKBps());
             return;
         }
 

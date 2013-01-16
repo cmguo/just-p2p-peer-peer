@@ -97,7 +97,7 @@ namespace p2sp
         LOG4CPLUS_DEBUG_LOG(logger_appmodule, "PeerVersion " << PEER_KERNEL_VERSION_STR);
         LOG4CPLUS_DEBUG_LOG(logger_appmodule, "AppModule::Start");
 
-        peer_state_ = (PEERSTATE_MAIN_STATE | PEERSTATE_LIVE_NONE);
+        peer_state_ = PEERSTATE_MAIN_STATE;
 
         // config
         P2SPConfigs::LoadConfig();
@@ -630,6 +630,7 @@ namespace p2sp
         tcp_server_->RegisterPacket<protocol::TcpReportStatusPacket>();
         tcp_server_->RegisterPacket<protocol::TcpStartDownloadPacket>();
         tcp_server_->RegisterPacket<protocol::TcpStopDownLoadPacket>();
+        tcp_server_->RegisterPacket<protocol::TcpQuerySpeedPacket>();
     }
 
     boost::uint16_t AppModule::GetUpnpPortForTcpUpload()

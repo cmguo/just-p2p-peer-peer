@@ -55,7 +55,10 @@ namespace p2sp
         friend class Assigner;
     public:
         typedef boost::shared_ptr<P2PDownloader> p;
-        static p create(const RID& rid, boost::uint32_t vip) { return p(new P2PDownloader(rid, vip)); }
+        static p create(const RID& rid, boost::uint32_t vip, JumpBWType bwtype)
+        {
+            return p(new P2PDownloader(rid, vip, bwtype));
+        }
         virtual ~P2PDownloader();
     public:
 
@@ -235,6 +238,7 @@ namespace p2sp
         boost::uint32_t p2p_max_connect_count_;
         boost::uint32_t p2p_min_connect_count_;
 
+        JumpBWType bwtype_;
         // download speed limiter
         DownloadSpeedLimiter download_speed_limiter_;
 
@@ -260,7 +264,7 @@ namespace p2sp
         boost::uint32_t vip_level_;
 
     private:
-        P2PDownloader(const RID& rid, boost::uint32_t vip);
+        P2PDownloader(const RID& rid, boost::uint32_t vip, JumpBWType bwtype);
     };
 
     template <typename PacketType>

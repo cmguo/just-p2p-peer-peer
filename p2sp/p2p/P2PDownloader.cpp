@@ -30,7 +30,7 @@ namespace p2sp
 
     const boost::uint32_t VIP_URGENT_TIME_IN_SECOND = 15*1000;
 
-    P2PDownloader::P2PDownloader(const RID& rid, boost::uint32_t vip_level)
+    P2PDownloader::P2PDownloader(const RID& rid, boost::uint32_t vip_level, JumpBWType bwtype)
         : rid_(rid)
         , is_connected_(false)
         , start_time_counter_(0)
@@ -51,6 +51,7 @@ namespace p2sp
         , is_sn_enable_(false)
         , vip_level_(vip_level)
         , connected_available_block_peer_count_(0)
+        , bwtype_(bwtype)
     {
     }
 
@@ -77,6 +78,10 @@ namespace p2sp
 
         p2p_max_connect_count_ = BootStrapGeneralConfig::Inst()->GetMaxPeerConnectionCount();
         p2p_min_connect_count_ = BootStrapGeneralConfig::Inst()->GetMinPeerConnectionCount();
+        if (bwtype_ == p2sp::JBW_P2P_INCREASE_CONNECT)
+        {
+            p2p_max_connect_count_ += 20;
+        }
 
         instance_ = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid_));
         assert(instance_);
@@ -1318,7 +1323,7 @@ namespace p2sp
         }
 
         // p2p被某个策略限速了，向downloaddriver汇报
-        if (speed_limit_in_KBps != P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT &&
+        if (speed_limit_in_KBps != BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps() &&
             speed_limit_in_KBps != -1 )
         {
             STL_FOR_EACH(std::set<DownloadDriver__p>, download_driver_s_, iter)
@@ -1347,7 +1352,7 @@ namespace p2sp
             speed_limit = speed_limit_in_KBps / 0.75;
         }
 
-        LIMIT_MAX(speed_limit, P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT);
+        LIMIT_MAX(speed_limit, BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
 
         download_speed_limiter_.SetSpeedLimitInKBps(speed_limit);
 

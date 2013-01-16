@@ -57,7 +57,7 @@ namespace storage
         bool IsTempFile() const;
 
         // 文件大小是否等于输入参数
-        bool CheckFileSize(boost::uint32_t size) const;
+        bool CheckFileSize(boost::uint32_t size, bool has_encrypted) const;
     };
 }
 

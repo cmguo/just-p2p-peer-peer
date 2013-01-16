@@ -751,20 +751,6 @@ void PEER_API SetPeerState(boost::uint32_t nPeerState)
         peer_state |= PEERSTATE_MAIN_STATE;
         LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_MAIN_STATE (default)");
     }
-    switch (nPeerState & 0x0000ffff)
-    {
-    case PEERSTATE_LIVE_NONE:
-        peer_state |= PEERSTATE_LIVE_NONE;
-        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_NONE");
-        break;
-    case PEERSTATE_LIVE_WORKING:
-        peer_state |= PEERSTATE_LIVE_WORKING;
-        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_WORKING");
-        break;
-    default:
-        peer_state |= PEERSTATE_LIVE_NONE;
-        LOG4CPLUS_DEBUG_LOG(logger_peer, "nPeerState | PEERSTATE_LIVE_NONE (default)");
-    }
 
     global_io_svc().post(boost::bind(&p2sp::AppModule::SetPeerState, p2sp::AppModule::Inst(), peer_state));
     LOG4CPLUS_DEBUG_LOG(logger_peer, "global_io_svc().post");

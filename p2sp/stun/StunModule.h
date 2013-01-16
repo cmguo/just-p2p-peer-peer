@@ -38,7 +38,7 @@ namespace p2sp
         //获取upnp映射的外网端口，如果upnp映射失败或者映射的端口不可用，这个函数返回0
         boost::uint16_t GetUpnpExUdpport(){return upnp_ex_udp_port_;}
 
-        void SetStunServerList(std::vector<protocol::STUN_SERVER_INFO> stun_servers);
+        void SetStunServerList(const std::vector<protocol::STUN_SERVER_INFO>& stun_servers);
 
         void OnUdpRecv(protocol::Packet const & packet_header);
 
@@ -56,22 +56,40 @@ namespace p2sp
         // 清理StunServer信息
         void ClearStunInfo();
 
+        void PickStun();
         void DoHandShake();
         void DoKPL();
 
         void OnStunHandShakePacket(protocol::StunHandShakePacket const & packet);
         void OnStunInvokePacket(protocol::StunInvokePacket const & packet);
+        void OnHandShakeTimeOut();
+        void PickStunAnotherIp();
 
 
     private:
         boost::asio::io_service & io_svc_;
         boost::asio::ip::udp::endpoint stun_endpoint_;
         framework::timer::PeriodicTimer stun_timer_;
+
+        //判断握手包是否超时的定时器
+        framework::timer::OnceTimer handshake_timer_;
+        //因为丢包，被淘汰的ip
+        std::set<unsigned> failed_ips_;
+        //统计当前stun的评分，换stun的时候，需要清0，收到handshake回复的时候+1，收不到回复的时候减少
+        boost::uint32_t cur_stun_score_;
+
+
         std::vector<protocol::STUN_SERVER_INFO> stun_server_info_;
-        boost::uint32_t stun_server_index_;
+
+        //这个变量本来是用来记录选择时候的指针的，由于改变了选择方法，加了PickStun的函数，所以这个变量也不要了。
+        //boost::uint32_t stun_server_index_;
+
         // 状态
         volatile bool is_running_;
+
+        //这个值的含义是这个ip的stun，是否收到过handshake的回包
         volatile bool is_select_stunserver_;
+
         volatile bool is_needed_stun_;
         protocol::MY_STUN_NAT_TYPE nat_type_;
         string ppva_config_path_;
@@ -79,6 +97,8 @@ namespace p2sp
         framework::timer::TickCounter nat_check_timer_;
         bool nat_check_returned_;
         boost::uint16_t upnp_ex_udp_port_;
+
+
     private:
         static StunModule::p inst_;
         StunModule(

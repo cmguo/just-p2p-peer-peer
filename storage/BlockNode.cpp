@@ -471,6 +471,17 @@ namespace storage
             return piece_count_[piece_index] == subpiece_num_per_piece_g_;
     }
 
+    void BlockNode::ResetForReDownload()
+    {
+        assert(node_state_ == BlockNode::READING);
+
+        node_state_ = BlockNode::EMPTY;
+        for (int i = 0; i < piece_count_.size(); ++i)
+        {
+            piece_count_[i] = 0;
+        }
+    }
+
     std::ostream& operator << (std::ostream& os, const BlockNode& node)
     {
         for (boost::uint32_t pidx = 0; pidx < node.piece_count_.size(); pidx++)

@@ -62,7 +62,8 @@ namespace p2sp
         // HTTP限速
         if (GetHTTPControlTarget())
         {
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT);
+            GetHTTPControlTarget()->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->
+                GetHttpDownloadSpeedLimitInKBps());
         }
 
         // GetP2PControlTarget()->Resume();
@@ -910,6 +911,7 @@ namespace p2sp
         case JBW_HTTP_MORE:
         case JBW_P2P_MORE:
         case JBW_VOD_P2P_ONLY:
+        case JBW_P2P_INCREASE_CONNECT:
             return true;
         case JBW_HTTP_ONLY:
         case JBW_HTTP_PREFERRED:

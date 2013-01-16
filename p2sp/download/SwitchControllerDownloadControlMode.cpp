@@ -6,6 +6,7 @@
 #include "p2sp/download/SwitchController.h"
 #include "DownloadDriver.h"
 #include "../bootstrap/BootStrapGeneralConfig.h"
+#include "p2sp/proxy/ProxyModule.h"
 
 
 namespace p2sp
@@ -38,6 +39,10 @@ namespace p2sp
         state_.rid_ = (GetGlobalDataProvider()->GetP2PControlTarget() ? State::RID_GOT : State::RID_NONE);
         state_.timer_ = State::TIMER_NONE;
         state_.timer_using_ = State::TIMER_USING_NONE;
+        is_tiny_drag_timer_reset_ = false;
+        is_p2p_timer_reset_ = false;
+        is_http_timer_reset_ = false;
+        is_p2p_connected_timer_reset_ = false;
 
         LOG4CPLUS_DEBUG_LOG(logger_switch, string(20, '-'));
 
@@ -53,50 +58,80 @@ namespace p2sp
         ControlMode::Stop();
     }
 
-    bool SwitchController::DownloadControlMode::CanP2PDownloadStably()
+    void SwitchController::DownloadControlMode::ChangeTo0200()
     {
-        if (false == IsRunning())
-            return false;
-
-        // download stably
-        assert(state_.p2p_ == State::P2P_DOWNLOADING);
-        assert(GetP2PControlTarget());
-
-        // boost::uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
-        // boost::uint32_t active_peers_count = GetP2PControlTarget()->GetActivePeersCount();
-        boost::uint32_t full_block_peers_count = GetP2PControlTarget()->GetFullBlockPeersCount();
-        boost::uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
-
-        if (now_speed >= 8 * 1024 && full_block_peers_count >= 1)
-        {
-            return true;
-        }
-        return false;
+        assert(!GetHTTPControlTarget());
+        GetP2PControlTarget()->Resume();
+        state_.p2p_ = State::P2P_DOWNLOADING;
     }
 
-    bool SwitchController::DownloadControlMode::IsP2PBad()
+    void SwitchController::DownloadControlMode::ChangeTo2000()
+    {
+        assert(!GetP2PControlTarget());
+        GetHTTPControlTarget()->Resume();
+        state_.http_ = State::HTTP_DOWNLOADING;
+    }
+
+    void SwitchController::DownloadControlMode::ChangeTo2200()
+    {
+        GetHTTPControlTarget()->Resume();
+        GetP2PControlTarget()->Resume();
+        state_.http_ = State::HTTP_DOWNLOADING;
+        state_.p2p_ = State::P2P_DOWNLOADING;
+    }
+
+    void SwitchController::DownloadControlMode::ChangeTo2300()
+    {
+        GetHTTPControlTarget()->Resume();
+        GetP2PControlTarget()->Pause();
+        state_.http_ = State::HTTP_DOWNLOADING;
+        state_.p2p_ = State::P2P_PAUSING;
+    }
+
+    void SwitchController::DownloadControlMode::ChangeTo3200()
+    {
+        GetHTTPControlTarget()->Pause();
+        GetP2PControlTarget()->Resume();
+        state_.http_ = State::HTTP_PAUSING;
+        state_.p2p_ = State::P2P_DOWNLOADING;
+    }
+
+    bool SwitchController::DownloadControlMode::IsP2PBad(bool is_current_p2p_bad)
     {
         if (false == IsRunning())
             return false;
 
         assert(state_.p2p_ == State::P2P_DOWNLOADING);
-        assert(state_.timer_ == State::TIMER_NONE);
         assert(GetP2PControlTarget());
-
-        boost::uint32_t minute_speed = GetP2PControlTarget()->GetMinuteDownloadSpeed();
         boost::uint32_t now_speed = GetP2PControlTarget()->GetCurrentDownloadSpeed();
+        boost::uint32_t threshold_speed = 0;
 
-         if (GetGlobalDataProvider()->GetVipLevel() == p2sp::VIP)
-        {
-            boost::uint32_t vip_download_min_p2p_speed = BootStrapGeneralConfig::Inst()->GetVipDownloadMinP2PSpeed();
-            return now_speed < vip_download_min_p2p_speed * 1024;
-        }
+        //当前状态Good时判断P2P是否BAD的阈值比当前BAD状态下大10KBps
 
-        if (minute_speed < 5 * 1024)
+        if (GetGlobalDataProvider()->GetBWType() == JBW_P2P_INCREASE_CONNECT)
         {
-            return true;
+            boost::uint32_t MT_min_speed = BootStrapGeneralConfig::Inst()->GetMinDownloadSpeedToBeEnsuredInKBps();
+            threshold_speed = is_current_p2p_bad ? (MT_min_speed + 10) * 1024 :MT_min_speed * 1024;
         }
-        return false;
+        else
+        {
+            threshold_speed = is_current_p2p_bad ? 30 * 1024 : 20 * 1024;
+        }
+        //保持状态机不变的条件
+        if ((!is_current_p2p_bad && now_speed > threshold_speed) || (is_current_p2p_bad && now_speed < threshold_speed))
+        {
+            return is_current_p2p_bad;
+        }
+        else
+        {
+            return !is_current_p2p_bad;
+        }
+    }
+
+    bool SwitchController::DownloadControlMode::IsHTTPNormal()
+    {
+        boost::uint32_t http_speed = GetHTTPControlTarget()->GetCurrentDownloadSpeed();
+        return http_speed > 0;
     }
 
     void SwitchController::DownloadControlMode::OnControlTimer(boost::uint32_t times)
@@ -117,253 +152,294 @@ namespace p2sp
 
             //////////////////////////////////////////////////////////////////////////
             // Initial State
-            // <0300*1>
-            if (state_.http_ == State::HTTP_NONE && state_.p2p_ == State::P2P_PAUSING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            // <0000*0>
+            if (state_.http_ ==State::HTTP_NONE && state_.p2p_ == State::P2P_NONE)
             {
-                // asserts
-                assert(state_.timer_ == State::TIMER_NONE);
-                assert(state_.timer_using_ == State::TIMER_USING_NONE);
-                assert(!GetHTTPControlTarget());
-                assert(GetP2PControlTarget());
-                // action
-                GetP2PControlTarget()->Resume();
-                // state
-                state_.p2p_ = State::P2P_DOWNLOADING;
-                // next
-                // Next(times);
-                continue;
-            }
-            // <3300*1>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_PAUSING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
-            {
-                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
+                if (!GetHTTPControlTarget() && !GetP2PControlTarget())
                 {
-                    assert(GetHTTPControlTarget());
-                    GetHTTPControlTarget()->Resume();
-                    state_.http_ = State::HTTP_DOWNLOADING;
-
-                    continue;
+                    break;
                 }
-                // asserts
-                assert(GetGlobalDataProvider()->HasRID());
-                assert(GetP2PControlTarget());
-                assert(GetP2PControlTarget()->IsPausing());
-                // action
-                GetP2PControlTarget()->Resume();
-                time_counter_x_.reset();
-                // state
-                state_.p2p_ = State::P2P_DOWNLOADING;
-                state_.timer_ = State::TIMER_STARTED;
-                state_.timer_using_ = State::TIMER_USING_X;
-                // next
-                // Next(times);
-                continue;
-            }
-            // <3000*0>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_NONE
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
-            {
-                // asserts
-                assert(state_.timer_using_ == State::TIMER_USING_NONE);
-
-                // 在BWTYPE=HTTP_PREFERED的情况下，不会转向p2p下载
-                if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY && 
-                    GetGlobalDataProvider()->GetBWType() != JBW_HTTP_PREFERRED)
+                if (GetHTTPControlTarget())
                 {
-                    // action
-                    time_counter_h_.reset();
-                    // state
-                    state_.timer_ = State::TIMER_STARTED;
-                    state_.timer_using_ = State::TIMER_USING_H;
+                    GetHTTPControlTarget()->Pause();
+                    state_.http_ = State::HTTP_PAUSING;
                 }
-                else
-                {
-                    // action
-                    GetHTTPControlTarget()->Resume();
-                    // state
-                    state_.http_ = State::HTTP_DOWNLOADING;
-                }
-
-                // next
-                continue;
-            }
-            //////////////////////////////////////////////////////////////////////////
-            // Unstable State
-            // <3041*0>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_NONE
-                && state_.timer_ == State::TIMER_STARTED && state_.timer_using_ == State::TIMER_USING_H)
-            {
                 if (GetP2PControlTarget())
                 {
-                    assert(GetP2PControlTarget());
-                    GetP2PControlTarget()->Resume();
-                    state_.rid_ = State::RID_GOT;
-                    state_.p2p_ = State::P2P_DOWNLOADING;
-                    state_.timer_ = State::TIMER_STARTED;
-                    state_.timer_using_ = State::TIMER_USING_X;
-                    time_counter_x_.reset();
-                    // next
-                    // Next(times);
-                    continue;
+                    GetP2PControlTarget()->Pause();
+                    state_.p2p_ = State::P2P_PAUSING;
                 }
-                else if (time_counter_h_.elapsed() > BootStrapGeneralConfig::Inst()->GetWaitTimeForTinydragInDownloadMode()  * 1000)
-                {
-                    // 超时
-                    GetHTTPControlTarget()->Resume();
-                    state_.http_ = State::HTTP_DOWNLOADING;
-                    state_.timer_ = State::TIMER_NONE;
-                    state_.timer_using_ = State::TIMER_USING_NONE;
-                    // next
-                    // Next(times);
-                    continue;
-                }
+            }
+            // <0300*1>
+            if (state_.http_ == State::HTTP_NONE && state_.p2p_ == State::P2P_PAUSING)
+            {
+                assert(!GetHTTPControlTarget());
+                assert(GetP2PControlTarget());
+                assert(GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY);
+                ChangeTo0200();
                 break;
             }
-            // <3211*1>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_DOWNLOADING
-                && state_.timer_ == State::TIMER_STARTED && state_.timer_using_ == State::TIMER_USING_X)
+            // <3300*1>
+            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_PAUSING)
             {
-                // check
-                if (time_counter_x_.elapsed() > 10 * 1000)
+                assert(GetGlobalDataProvider()->HasRID());
+                assert(GetP2PControlTarget());
+                assert(GetGlobalDataProvider()->GetBWType() != JBW_HTTP_ONLY);
+                assert(GetGlobalDataProvider()->GetBWType() != JBW_VOD_P2P_ONLY);
+
+                //不限速时，vip 追求最大速度，直接转入2200
+                if (!p2sp::ProxyModule::Inst()->IsDownloadSpeedLimited() && 
+                    GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
                 {
-                    // state
-                    state_.timer_ = State::TIMER_STOPPED;
-                    // next
-                    // Next(times);
-                    continue;
+                    ChangeTo2200();
+                    break;
                 }
-                break;
-            }
-            // <3212*1>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_DOWNLOADING
-                && state_.timer_ == State::TIMER_STOPPED && state_.timer_using_ == State::TIMER_USING_X)
-            {
-                if (CanP2PDownloadStably())
+
+                //对于isp用户，尽量多用HTTP，从2300开始下载
+                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
                 {
-                    // state
-                    state_.timer_ = State::TIMER_NONE;
-                    state_.timer_using_ = State::TIMER_USING_NONE;
-                    state_.rid_ = State::RID_GOT;
-                    // stable
+                    ChangeTo2300();
+                    break;
+                }
+                //限速且bwtype!=JBW_HTTP_MORE,则从3200开始下载
+                else if (p2sp::ProxyModule::Inst()->IsDownloadSpeedLimited())
+                {
+                    ChangeTo3200();
+                    continue;
                 }
                 else
                 {
-                    // action
-                    GetP2PControlTarget()->Pause();
-                    GetHTTPControlTarget()->Resume();
-                    // state
-                    state_.http_ = State::HTTP_DOWNLOADING;
-                    state_.p2p_ = State::P2P_PAUSING;
-                    state_.timer_ = State::TIMER_NONE;
-                    state_.timer_using_ = State::TIMER_USING_NONE;
-                    // stable
+                    if (is_p2p_connected_timer_reset_)
+                    {
+                        // 不限速，如果有P2P连接，则转入3200开始下载
+                        if (GetP2PControlTarget()->GetConnectedPeersCount() >= 1)
+                        {
+                            is_p2p_connected_timer_reset_ = false;
+                            ChangeTo3200();
+                            continue;
+                        }
+                        // 不限速，如果超过2S都没有建立P2P连接，则转入2300开始下载
+                        if (waiting_p2p_connected_timer_counter_.elapsed() >= 2 * 1000)
+                        {
+                            is_p2p_connected_timer_reset_ = false;
+                            ChangeTo2300();
+                            break;
+                        }
+                        break;
+                    }
+                    waiting_p2p_connected_timer_counter_.reset();
+                    is_p2p_connected_timer_reset_ = true;
+                    break;
                 }
-                // next
-                // Next(times);
-                continue;
+            }
+            // <3000*0>
+            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_NONE)
+            {
+                assert(GetGlobalDataProvider()->GetBWType() != JBW_VOD_P2P_ONLY);
+
+                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_ONLY || 
+                    GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
+                {
+                    ChangeTo2000();
+                }
+                else
+                {
+                    if (GetP2PControlTarget())
+                    {
+                        //如果存在P2P,则转向3300
+                        GetP2PControlTarget()->Pause();
+                        state_.p2p_ = State::P2P_PAUSING;
+                    }
+                    else
+                    {
+                        //超时未获取到tinydrag，则转向2000，否则若获取到tinydrag,则转向3300，若未超时，则仍3000
+                        if (is_tiny_drag_timer_reset_)
+                        {
+                            if (waiting_tinydrag_timer_counter_.elapsed() >= BootStrapGeneralConfig::Inst()->
+                                GetWaitTimeForTinydragInDownloadMode() * 1000)
+                            {
+                                ChangeTo2000();
+                                is_tiny_drag_timer_reset_ = false;
+                            }
+                            break;
+                        }
+                        waiting_tinydrag_timer_counter_.reset();
+                        is_tiny_drag_timer_reset_ = true;
+                    }
+                }
+                break;
             }
             //////////////////////////////////////////////////////////////////////////
             // Stable State
             // <0200*1>
-            else if (state_.http_ == State::HTTP_NONE && state_.p2p_ == State::P2P_DOWNLOADING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            else if (state_.http_ == State::HTTP_NONE && state_.p2p_ == State::P2P_DOWNLOADING)
             {
-                assert(state_.timer_ == State::TIMER_NONE);
                 break;
             }
             // <2000*0>
-            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_NONE
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_NONE)
             {
-                assert(state_.timer_ == State::TIMER_NONE);
+                //若获取到tinydrag，则转向2300
                 if (GetP2PControlTarget())
                 {
-                    if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
-                    {
-                        state_.p2p_ = State::P2P_PAUSING;
-                        state_.rid_ = State::RID_GOT;
-
-                        GetP2PControlTarget()->Pause();
-                    }
-
-                    if (GetGlobalDataProvider()->GetBWType() == JBW_NORMAL ||
-                        GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
-                    {
-                        state_.http_ = State::HTTP_PAUSING;
-                        state_.p2p_ = State::P2P_DOWNLOADING;
-
-                        //action
-                        GetHTTPControlTarget()->Pause();
-                        GetP2PControlTarget()->Resume();
-                    }
-
-                    continue;
+                    ChangeTo2300();
                 }
                 break;
             }
             // <2300*1>
-            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_PAUSING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_PAUSING)
             {
-                assert(state_.timer_ == State::TIMER_NONE);
-                // check Peer Number
-                if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_PREFERRED &&
-                    GetP2PControlTarget()->GetConnectedPeersCount() >= 5) {
-                    // resume
-                    GetP2PControlTarget()->Resume();
-                    // state
-                    state_.p2p_ = State::P2P_DOWNLOADING;
-                    // next
-                    // Next(times);
-                    continue;
+                //若HTTP挂掉，若广告素材则转入3200，否则转入2200
+                if (!IsHTTPNormal())
+                {
+                    if (GetGlobalDataProvider()->GetDownloadLevel() == PlayInfo::PASSIVE_DOWNLOAD_LEVEL)
+                    {
+                        ChangeTo3200();
+                        break;
+                    }
+                    else
+                    {
+                        ChangeTo2200();
+                        //直接在while循环中,进入2200状态
+                        continue;
+                    }
                 }
+                // 有P2P节点时，若广告素材则转入3200，否则若bwtype!=JBW_HTTP_MORE，则转入2200
+                else if (GetP2PControlTarget()->GetConnectedPeersCount() >= 1)
+                {
+                    if (GetGlobalDataProvider()->GetDownloadLevel() == PlayInfo::PASSIVE_DOWNLOAD_LEVEL)
+                    {
+                        ChangeTo3200();
+                        break;
+                    }
+                    else if (GetGlobalDataProvider()->GetBWType() != JBW_HTTP_MORE)
+                    {
+                        ChangeTo2200();
+                        continue;
+                    }
+                }
+                //其他情况，保持2300
                 break;
             }
             // <3200*1>
-            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_DOWNLOADING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            else if (state_.http_ == State::HTTP_PAUSING && state_.p2p_ == State::P2P_DOWNLOADING)
             {
                 // assert
                 assert(GetHTTPControlTarget());
+                //若限速，则保持3200状态
+                if (p2sp::ProxyModule::Inst()->IsDownloadSpeedLimited())
+                {
+                    break;
+                }
+                //vip不限速时，直接转入2200
+                else if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED)
+                {
+                    ChangeTo2200();
+                    break;
+                }
+                else if (GetGlobalDataProvider()->GetDownloadLevel() == PlayInfo::PASSIVE_DOWNLOAD_LEVEL)
+                {
+                    //若广告素材不限速时，P2P节点数为0，则转入2200
+                    if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
+                    {
+                        ChangeTo2300();
+                    }
+                    //广告素材，有P2P节点，则保持3200
+                    break;
+                }
 
-                // 最近一分钟的p2p速度小于 5KBps
-                if (IsP2PBad())
+                //若在连续 10S 的时间内，P2P速度都不理想，则转入2200，用HTTP提升速度
+                if (is_p2p_timer_reset_)
                 {
-                    // action
-                    GetHTTPControlTarget()->Resume();
-                    // state
-                    state_.http_ = State::HTTP_DOWNLOADING;
+                    if (!IsP2PBad(false))
+                    {
+                        waiting_p2p_stable_timer_counter_.reset();
+                    }
+                    if (waiting_p2p_stable_timer_counter_.elapsed() >= 10 * 1000)
+                    {
+                        ChangeTo2200();
+                        is_p2p_timer_reset_ = false;
+                        //直接在while循环中,进入2200状态
+                        continue;
+                    }
+                    break;
                 }
-                else
-                {
-                    // nothing
-                }
+                waiting_p2p_stable_timer_counter_.reset();
+                is_p2p_timer_reset_ = true;
                 break;
             }
             // <2200*1>
-            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_DOWNLOADING
-                && state_.timer_ == State::TIMER_NONE && state_.timer_using_ == State::TIMER_USING_NONE)
+            else if (state_.http_ == State::HTTP_DOWNLOADING && state_.p2p_ == State::P2P_DOWNLOADING)
             {
                 // asserts
-                assert(state_.timer_ == State::TIMER_NONE);
                 assert(GetHTTPControlTarget());
                 assert(GetP2PControlTarget());
 
-                // p2p 能稳定下载
-                if (!IsP2PBad())
+                //若vip且不限速，则保留在2200状态
+                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_PREFERRED && 
+                    !p2sp::ProxyModule::Inst()->IsDownloadSpeedLimited())
                 {
-                    // action
-                    GetHTTPControlTarget()->Pause();
-                    // state
-                    state_.http_ = State::HTTP_PAUSING;
+                    break;
+                }
+
+                //bwtype为JBW_HTTP_MORE时，若HTTP正常则转入2300，否则继续2200
+                if (GetGlobalDataProvider()->GetBWType() == JBW_HTTP_MORE)
+                {
+                    if (IsHTTPNormal())
+                    {
+                        ChangeTo2300();
+                    }
+                    break;
+                }
+                //bwtype不是JBW_HTTP_MORE，若限速则转入3200
+                else if (p2sp::ProxyModule::Inst()->IsDownloadSpeedLimited())
+                {
+                    ChangeTo3200();
+                    break;
+                }
+                //不限速，bwtype!=JBW_HTTP_MORE，P2P没有节点，则转入2300
+                else if (GetP2PControlTarget()->GetConnectedPeersCount() == 0)
+                {
+                    ChangeTo2300();
+                    break;
                 }
                 else
                 {
-                    // nothing
+                    //不限速，bwt!= JBW_HTTP_MORE,HTTP连续2s速度为0，则认为HTTP挂掉，转入3200
+                    if (is_http_timer_reset_)
+                    {
+                        if (IsHTTPNormal())
+                        {
+                            waiting_http_stable_timer_counter_.reset();
+                        }
+                        if (waiting_http_stable_timer_counter_.elapsed() >= 2 * 1000)
+                        {
+                            ChangeTo3200();
+                            is_http_timer_reset_ = false;
+                            continue;
+                        }
+                        //HTTP正常、非vip、bwtype!=JBW_HTTP_MORE、不限速时，若连续5秒P2P速度理想，则转入3200
+                        else
+                        {
+                            if (IsP2PBad(true))
+                            {
+                                waiting_p2p_stable_timer_counter_.reset();
+                            }
+                            if (waiting_p2p_stable_timer_counter_.elapsed() >= 5 * 1000)
+                            {
+                                ChangeTo3200();
+                                is_p2p_timer_reset_ = false;
+                                //直接在while循环中,进入3200状态
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+                    waiting_p2p_stable_timer_counter_.reset();
+                    waiting_http_stable_timer_counter_.reset();
+                    is_http_timer_reset_ = true;
+                    break;
                 }
-                break;
             }
             else
             {

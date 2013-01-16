@@ -612,7 +612,8 @@ namespace storage
             || fileext == (".f4v")
             || fileext == (".mp3")
             || fileext == (".wma")
-            || fileext == (".tpp"))
+            || fileext == (".tpp")
+            || fileext == (".pp"))
         {
             return false;
         }
@@ -1271,22 +1272,25 @@ namespace storage
         // save mode
         inst->SetSaveMode(true);
         inst->web_url_ = web_url;
-        inst->qname_ = q_name;
+        // qname用于保存验证存在本地实际的文件名
+        inst->qname_ = GetFullName(q_name, inst->IsOpenService());
+        // file_name用于保存原本的文件名
         inst->file_name_ = file_name;
 
         // notify download driver
         inst->NotifyGetFileName(file_name);
 
-        string qq_filename = q_name;
+        string qq_filename = inst->qname_;
         if (false == inst->IsComplete())
         {
             qq_filename = qq_filename + tpp_extname;
         }
 
+        // resource_name用于保存存到本地的实际文件名
         if (inst->resource_name_ != qq_filename)
         {
             string full_name;
-            DoVerifyName(file_name, file_path, full_name);
+            DoVerifyName(file_name, file_path, full_name, inst->IsOpenService());
             if (false == inst->IsComplete())
             {
                 full_name = full_name + tpp_extname;
@@ -1351,7 +1355,7 @@ namespace storage
         // notify download driver
         inst->NotifyGetFileName(filename);
 #ifdef DISK_MODE
-        string full_name = GetFullName(file_name);
+        string full_name = GetFullName(file_name, inst->IsOpenService());
         if (false == inst->IsComplete())
         {
             full_name = full_name + tpp_extname;
@@ -1370,7 +1374,7 @@ namespace storage
         if (inst->resource_name_ != full_name)
         {
             boost::filesystem::path file_path(space_manager_->store_path_);
-            DoVerifyName(file_name, file_path, full_name);
+            DoVerifyName(file_name, file_path, full_name, inst->IsOpenService());
             if (false == inst->IsComplete())
             {
                 full_name = full_name + tpp_extname;
@@ -1389,7 +1393,7 @@ namespace storage
 
 #ifdef DISK_MODE
 
-    string Storage::GetFullName(string filename)
+    string Storage::GetFullName(string filename, bool is_openservice)
     {
         const static string sample("CON|PRN|AUX|NUL|COM1|COM2|COM3|COM4|COM5|COM6|COM7|COM8|COM9|LPT1|LPT2|LPT3|LPT4|LPT5|LPT6|LPT7|LPT8|LPT9");
 
@@ -1423,6 +1427,10 @@ namespace storage
             file_name = (fs::path(space_manager_->store_path_) / file_name).file_string();
         }
 
+        if (is_openservice)
+        {
+            fn_ext = ".pp";
+        }
         filename = file_name + fn_ext;
 
         return filename;
@@ -1439,7 +1447,7 @@ namespace storage
 	}
 
     // 根据文件名判重，并返回最终文件名
-    void Storage::DoVerifyName(string filename, boost::filesystem::path filepath, string& lastname)
+    void Storage::DoVerifyName(string filename, boost::filesystem::path filepath, string& lastname, bool is_openservice)
     {
         // filename带".flv"
         // file_name不带".flv"
@@ -1448,6 +1456,10 @@ namespace storage
         string file_name = filename;
         fs::path fnpath(file_name);
         string fn_ext = fnpath.extension();
+        if (is_openservice)
+        {
+            fn_ext = ".pp";
+        }
         // fnpath.RemoveFileExtension();
         fnpath = fnpath.parent_path() / fnpath.stem();
         file_name = fnpath.filename();
@@ -2023,12 +2035,12 @@ namespace storage
         }
     }
 
-    void Storage::UploadOneSubPiece(const RID & rid)
+    void Storage::UploadOneSubPiece(const RID & rid,bool isTcp)
     {
         storage::Instance::p inst = boost::static_pointer_cast<storage::Instance>(storage::Storage::Inst()->GetInstanceByRID(rid, false));
         if (inst)
         {
-            inst->UploadOneSubPiece();
+            inst->UploadOneSubPiece(isTcp);
         }
     }
 

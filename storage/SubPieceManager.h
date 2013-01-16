@@ -59,8 +59,14 @@ namespace storage
         void OnWriteBlockFinish(boost::uint32_t block_index);
 
         bool GetNextNullSubPiece(const protocol::SubPieceInfo& subpiece_info, protocol::SubPieceInfo& subpiece_for_download) const;
+        bool IsBlockSavedOnDisk(boost::uint32_t block_index) 
+        { 
+            return (blocks_[block_index] != NULL) ? blocks_[block_index]->IsBlockSavedOnDisk() : HasFullBlock(block_index);
+        }
 #ifdef DISK_MODE
         void WriteBlockToResource(Resource::p resource_p, boost::uint32_t block_index);
+
+        void OnReportBlockReadFailed(const protocol::SubPieceInfo &subpiece_info);
 #endif
         void SaveAllBlock(Resource::p resource_p);
 

@@ -136,7 +136,6 @@ namespace p2sp
         , rest_time_enough_lauch_P2P_2300_0(30)
         , rest_time_enough_launch_P2P_2300_10(20)
         , rest_time_need_check_P2P(50)
-        , vip_download_min_p2p_speed_(50)
         , write_block_when_full_(false)
         , write_block_when_verified_(false)
         , max_upload_speed_used_in_network_check_(100)
@@ -173,6 +172,10 @@ namespace p2sp
         , http_protect_time2_when_start_in_saving_mode_(3000)
         , http_download_bytes_delim_when_start_(0)
         , http_download_bytes_delim_when_start_in_saving_mode_(0)
+        , http_download_speed_limit_(1024)
+        , p2p_download_speed_limit_(1024)
+        , max_udp_dolist_times_(5)
+        , min_download_speed_to_be_ensured_in_KBps_(100)
     {
     }
 
@@ -268,7 +271,6 @@ namespace p2sp
                 ("config.n", po::value<bool>()->default_value(should_use_bw_type_))
                 ("config.o", po::value<boost::uint32_t>()->default_value(udpserver_protect_time_when_start_))
                 ("config.osave", po::value<boost::uint32_t>()->default_value(udpserver_protect_time_when_start_in_saving_mode_))
-                ("config.peerinfointerval", po::value<boost::uint32_t>()->default_value(send_peer_info_packet_interval_in_second_))
                 ("config.rpt1", po::value<boost::uint32_t>()->default_value(urgent_rest_playable_time_delim_))
                 ("config.rpt1save", po::value<boost::uint32_t>()->default_value(urgent_rest_playable_time_delim_in_saving_mode_))
                 ("config.rpt2", po::value<boost::uint32_t>()->default_value(safe_rest_playable_time_delim_))
@@ -344,7 +346,6 @@ namespace p2sp
                 ("config.rel10", po::value<boost::uint32_t>()->default_value(rest_time_enough_launch_P2P_2300_10))
                 ("config.rel0", po::value<boost::uint32_t>()->default_value(rest_time_enough_lauch_P2P_2300_0))
                 ("config.rncp", po::value<boost::uint32_t>()->default_value(rest_time_need_check_P2P))
-                ("config.vdmps", po::value<boost::uint32_t>()->default_value(vip_download_min_p2p_speed_))
                 ("config.wbwf", po::value<boost::uint32_t>()->default_value(write_block_when_full_))
                 ("config.wbwv", po::value<boost::uint32_t>()->default_value(write_block_when_verified_))
                 ("config.musnc", po::value<boost::uint32_t>()->default_value(max_upload_speed_used_in_network_check_))
@@ -380,6 +381,10 @@ namespace p2sp
                 ("config.hpt2save", po::value<boost::uint32_t>()->default_value(http_protect_time2_when_start_in_saving_mode_))
                 ("config.hdbd", po::value<boost::uint32_t>()->default_value(http_download_bytes_delim_when_start_))
                 ("config.hdbdsave", po::value<boost::uint32_t>()->default_value(http_download_bytes_delim_when_start_in_saving_mode_))
+                ("config.hdsl", po::value<boost::uint32_t>()->default_value(http_download_speed_limit_))
+                ("config.pdsl", po::value<boost::uint32_t>()->default_value(p2p_download_speed_limit_))
+                ("config.mudt", po::value<boost::uint32_t>()->default_value(max_udp_dolist_times_))
+                ("config.mdse", po::value<boost::uint32_t>()->default_value(min_download_speed_to_be_ensured_in_KBps_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -507,7 +512,6 @@ namespace p2sp
             rest_time_enough_launch_P2P_2300_10 = vm["config.rel10"].as<boost::uint32_t>();
             rest_time_enough_lauch_P2P_2300_0 = vm["config.rel0"].as<boost::uint32_t>();
             rest_time_need_check_P2P = vm["config.rncp"].as<boost::uint32_t>();
-            vip_download_min_p2p_speed_ = vm["config.vdmps"].as<boost::uint32_t>();
             write_block_when_full_ = vm["config.wbwf"].as<boost::uint32_t>();
             write_block_when_verified_ = vm["config.wbwv"].as<boost::uint32_t>();
             max_upload_speed_used_in_network_check_ = vm["config.musnc"].as<boost::uint32_t>();
@@ -543,6 +547,10 @@ namespace p2sp
             http_protect_time2_when_start_in_saving_mode_ = vm["config.hpt2save"].as<boost::uint32_t>();
             http_download_bytes_delim_when_start_ = vm["config.hdbd"].as<boost::uint32_t>();
             http_download_bytes_delim_when_start_in_saving_mode_ = vm["config.hdbdsave"].as<boost::uint32_t>();
+            http_download_speed_limit_ = vm["config.hdsl"].as<boost::uint32_t>();
+            p2p_download_speed_limit_ = vm["config.pdsl"].as<boost::uint32_t>();
+            max_udp_dolist_times_ = vm["config.mudt"].as<boost::uint32_t>();
+            min_download_speed_to_be_ensured_in_KBps_ = vm["config.mdse"].as<boost::uint32_t>();
 
             if (save_to_disk)
             {

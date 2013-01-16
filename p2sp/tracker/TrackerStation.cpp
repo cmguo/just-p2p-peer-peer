@@ -5,6 +5,7 @@
 #include "Common.h"
 #include "TrackerStation.h"
 #include "TrackerClient.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 
 namespace p2sp
 {
@@ -159,7 +160,7 @@ namespace p2sp
         std::map<RID,boost::uint32_t>::iterator it = list_get_response_.find(rid);
         if (is_vod_ && it != list_get_response_.end() && (time(NULL) -it->second < 30))
         {
-             //如果有回复，超过30秒才可以重查
+             //如果没有回复，超过30秒才可以重查
             return;
         }
         boost::uint32_t x = Random::GetGlobal().Next(tracker_client_map_.size());
@@ -171,7 +172,17 @@ namespace p2sp
 
         std::advance(iter, x);
 
-        iter->second->DoList(rid, list_for_live_udpserver);
+        if (udp_tracker_list_times_[rid] < BootStrapGeneralConfig::Inst()->GetMaxUdpDoListTimes())
+        {
+            iter->second->DoList(rid, list_for_live_udpserver);
+            udp_tracker_list_times_[rid] ++;
+        }
+        else
+        {
+            boost::system::error_code err;
+            iter->second->HttpTrackerList(iter->first.address().to_string(err), rid);
+            udp_tracker_list_times_.erase(rid);
+        }
     }
 
     void TrackerStation::DoReport()
@@ -333,5 +344,6 @@ namespace p2sp
     void TrackerStation::DeleteRidRecord(const RID & rid)
     {
         list_get_response_.erase(rid);
+        udp_tracker_list_times_.erase(rid);
     }
 }

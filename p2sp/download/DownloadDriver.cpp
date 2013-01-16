@@ -20,6 +20,7 @@
 #include "p2sp/proxy/PlayInfo.h"
 #include "p2sp/proxy/ProxyModule.h"
 #include "p2sp/stun/StunModule.h"
+#include "p2sp/bootstrap/BootStrapGeneralConfig.h"
 #include "random.h"
 
 #include "storage/Storage.h"
@@ -108,7 +109,7 @@ namespace p2sp
         , drag_machine_state_(SwitchController::MS_WAIT)
         , is_pool_mode_(false)
         , is_push_(false)
-        , speed_limit_in_KBps_(P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT)
+        , speed_limit_in_KBps_(BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps())
         , is_pragmainfo_noticed_(false)
         , bwtype_(JBW_NORMAL)
         , http_download_reason_(INVALID)
@@ -145,6 +146,8 @@ namespace p2sp
         ,total_download_byte_2300_(-1)
         ,position_after_drag_(0)
         , has_effected_by_other_proxyconnections_(false)
+        ,rest_play_time_need_to_limit_speed_(120 * 1000)
+        , download_level_(PlayInfo::PASSIVE_DOWNLOAD_LEVEL)
     {
         source_type_ = PlayInfo::SOURCE_DEFAULT;  // default
         is_head_only_ = false;
@@ -243,7 +246,7 @@ namespace p2sp
 
         if (false == instance_->GetRID().is_empty() && false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_, bwtype_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -438,7 +441,7 @@ namespace p2sp
             force_mode != FORCE_MODE_HTTP_ONLY &&
             bwtype_ != p2sp::JBW_HTTP_ONLY)
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_, bwtype_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -567,7 +570,7 @@ namespace p2sp
         proxy_connection_->OnNoticeGetContentLength(rid_for_play.GetFileLength(), network::HttpResponse::p());
         if (false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_, bwtype_);
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -751,7 +754,6 @@ namespace p2sp
         // N1: HTTP平均下载的长度
         // O1: 冗余率
 		// P1: tinydrag HTTP 状态码
-
 		// R1: 是否是push任务
 
         DOWNLOADDRIVER_STOP_DAC_DATA_STRUCT info;
@@ -1083,12 +1085,23 @@ namespace p2sp
         // M2: 获取NAT类型
         info.nat_type = p2sp::StunModule::Inst()->GetPeerNatType();
 
+        // N2: 当前nat检测状态
         info.nat_check_state = p2sp::StunModule::Inst()->GetNatCheckState();
+        
+        // O2: p2p下载的字节里，来自不同地域源的信息
+        if (p2p_downloader_ && p2p_downloader_->GetStatistic())
+        {
+            info.p2p_location_bytes_with_redundance = p2p_downloader_->GetStatistic()->GetP2PLocationDataBytesWithRedundance();
+        }
 
-        // O2: 是否某一个时段有多个proxyconnections在请求内容
+        // P2:vvid
+        network::Uri original_uri(original_url_info_.url_);
+        info.vvid = original_uri.getparameter("vvid");
+
+        // Q2: 是否某一个时段有多个proxyconnections在请求内容
         info.more_than_one_proxyconnections = has_effected_by_other_proxyconnections_;
 
-        // P2: bak_host
+        // R2: bak_host
         info.bak_host_string = GetBakHostString();
 
         // herain:2010-12-31:创建提交DAC的日志字符串
@@ -1163,8 +1176,10 @@ namespace p2sp
         log_stream << "&_L2=" << info.peer_connect_request_sucess_count;
         log_stream << "&M2=" << info.nat_type;
         log_stream << "&N2=" << info.nat_check_state;
-        log_stream << "&O2=" << (boost::uint32_t)info.more_than_one_proxyconnections;
-        log_stream << "&P2=" << info.bak_host_string;
+        log_stream << "&O2=" << info.p2p_location_bytes_with_redundance;
+        log_stream << "&P2=" << info.vvid;
+        log_stream << "&Q2=" << (boost::uint32_t)info.more_than_one_proxyconnections;
+        log_stream << "&R2=" << info.bak_host_string;
 
         string log = log_stream.str();
 
@@ -1554,7 +1569,7 @@ namespace p2sp
         assert(false == instance_->GetRID().is_empty());
         if (false == instance_->IsComplete())
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);  // ! TODO SwitchController
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_, bwtype_);  // ! TODO SwitchController
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -1600,7 +1615,7 @@ namespace p2sp
 
         if (false == instance_->IsComplete() && bwtype_ != JBW_HTTP_ONLY)
         {
-            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_);  // ! TODO P2PControlTarget
+            p2p_downloader_ = P2PModule::Inst()->CreateP2PDownloader(instance_->GetRID(), vip_level_, bwtype_);  // ! TODO P2PControlTarget
             if (p2p_downloader_)
             {
                 p2p_downloader_-> AttachDownloadDriver(shared_from_this());
@@ -2321,7 +2336,8 @@ namespace p2sp
         if (GetHTTPControlTarget())
         {
             // HTTP默认限速1024
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(P2SPConfigs::HTTP_DOWNLOAD_SPEED_LIMIT);
+            GetHTTPControlTarget()->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()-> 
+                GetHttpDownloadSpeedLimitInKBps());
         }
 
         if (download_mode_ == IGlobalControlTarget::SMART_MODE)
@@ -2350,7 +2366,7 @@ namespace p2sp
             }
 
             // 时间设置
-            if (rest_play_time_ > 120 * 1000)
+            if (rest_play_time_ > GetRestTimeNeedLimitSpeed())
             {
                 // 60 秒以上
                 if (GetSessionID() == "")
@@ -2401,9 +2417,10 @@ namespace p2sp
             {
                 if (p2p_downloader_ && !p2p_downloader_->IsPausing())
                 {
-                    if (rest_play_time_ < 30 * 1000)
+                    if (rest_play_time_ <= GetRestTimeNeedLimitSpeed())
                     {
-                        p2p_downloader_->SetSpeedLimitInKBps(P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT);
+                        p2p_downloader_->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->
+                            GetP2PDownloadSpeedLimitInKBps());
                     }
                     else
                     {
@@ -2417,9 +2434,10 @@ namespace p2sp
             // P2P默认限速500
             if (p2p_downloader_)
             {
-                p2p_downloader_->SetSpeedLimitInKBps(P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT);
+                p2p_downloader_->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
             }
-            statistic_->SetSmartPara(rest_play_time_, -1, P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT);
+            statistic_->SetSmartPara(rest_play_time_, -1, BootStrapGeneralConfig::Inst()->
+                GetP2PDownloadSpeedLimitInKBps());
         }
         else if (download_mode_ == IGlobalControlTarget::SLOW_MODE)
         {

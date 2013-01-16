@@ -74,6 +74,9 @@ namespace p2sp
 
         void OnTimerElapsed(framework::timer::Timer * pointer);
 
+        //解析xml中的一些数据
+        std::string FindXmlValue(const std::string& xml,const std::string& key);
+
         //获取igd设备的厂商信息
         void GetManufacturer();
 
@@ -99,6 +102,8 @@ namespace p2sp
         std::string descUrl_;
         //路由器名称
         std::string idgModName_;
+        //路由器厂商
+        std::string idgManufacturer_;
         //是否正在映射中。
         bool isInMapping_;
 

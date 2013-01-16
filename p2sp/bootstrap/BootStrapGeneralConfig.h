@@ -464,10 +464,6 @@ namespace p2sp
             return rest_time_need_check_P2P;
         }
 
-        boost::uint32_t GetVipDownloadMinP2PSpeed() const
-        {
-            return vip_download_min_p2p_speed_;
-        }
         bool WriteBlockWhenFull() const
         {
             return write_block_when_full_;
@@ -616,6 +612,26 @@ namespace p2sp
         {
             return is_saving_mode ? http_download_bytes_delim_when_start_in_saving_mode_ :
                 http_download_bytes_delim_when_start_;
+        }
+
+        boost::uint32_t GetHttpDownloadSpeedLimitInKBps() const
+        {
+            return http_download_speed_limit_;
+        }
+
+        boost::uint32_t GetP2PDownloadSpeedLimitInKBps() const
+        {
+            return p2p_download_speed_limit_;
+        }
+
+        boost::uint32_t GetMaxUdpDoListTimes() const
+        {
+            return max_udp_dolist_times_;
+        }
+
+        boost::uint32_t GetMinDownloadSpeedToBeEnsuredInKBps() const
+        {
+            return min_download_speed_to_be_ensured_in_KBps_;
         }
 
     private:
@@ -773,9 +789,6 @@ namespace p2sp
 
         // 点播状态机判断剩余时间是否需要检查P2P下载速度
         boost::uint32_t rest_time_need_check_P2P;
-
-        // VIP用户下载影片最小P2P速度
-        boost::uint32_t vip_download_min_p2p_speed_;
 
         // 二代直播p2p最大连接数
         boost::uint32_t live_peer_max_connections_;
@@ -1012,6 +1025,15 @@ namespace p2sp
         // Http启动时的最小下载量（超过保护时间2，下载量小于这个值就切换到P2P）
         boost::uint32_t http_download_bytes_delim_when_start_;
         boost::uint32_t http_download_bytes_delim_when_start_in_saving_mode_;
+
+        boost::uint32_t http_download_speed_limit_;
+        boost::uint32_t p2p_download_speed_limit_;
+
+        //需要启动HTTP做DoList的条件：UDP进行DoList的最大次数
+        boost::uint32_t max_udp_dolist_times_;
+
+        //需保证的多终端最小下载速度
+        boost::uint32_t min_download_speed_to_be_ensured_in_KBps_;
     };
 }
 #endif

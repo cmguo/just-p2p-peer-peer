@@ -570,7 +570,11 @@ namespace statistic
         // SN 下载的字节数(包含冗余)
         boost::uint32_t TotalP2PSnDataBytesWithRedundance;
 
-        boost::uint8_t Reserved[886];                  // 保留
+        //peer按地域查询信息。暂定为： # 0: 不认识的ip# 1: 不同国家# 2: 不同ISP, 同国# 3: 相同ISP, 不同省
+        //# 4: 相同ISP, 同省不同市# 5: 相同ISP, 同省同市 9:同一子网
+        boost::uint32_t P2pLocationDataBytesWithRedundance[10];
+
+        boost::uint8_t Reserved[846];                  // 保留
 
         boost::uint16_t PeerCount;                     // Peer的
         P2P_CONNECTION_INFO P2PConnections[MAX_P2P_DOWNLOADER_COUNT];  // 变长; (连续存放)
@@ -578,6 +582,14 @@ namespace statistic
         void Clear()
         {
             memset(this, 0, sizeof(P2PDOWNLOADER_STATISTIC_INFO));
+        }
+
+        void SubmitP2pLocationDataBytesWithRedundance(boost::uint8_t location,boost::uint32_t bytes)
+        {
+            if(location < (sizeof(P2pLocationDataBytesWithRedundance) / sizeof(P2pLocationDataBytesWithRedundance[0])) )
+            {
+                P2pLocationDataBytesWithRedundance[location] += bytes;
+            }
         }
 
         template <typename Archive>
@@ -622,6 +634,8 @@ namespace statistic
             ar & TotalP2PPeerDataBytesWithRedundance;
             ar & TotalP2PSnDataBytesWithRedundance;
 
+            ar & framework::container::make_array(P2pLocationDataBytesWithRedundance, 
+                sizeof(P2pLocationDataBytesWithRedundance) / sizeof(P2pLocationDataBytesWithRedundance[0]));
             ar & framework::container::make_array(Reserved, sizeof(Reserved) / sizeof(Reserved[0]));
             ar & PeerCount;
             for (int i = 0; i<PeerCount; i++)

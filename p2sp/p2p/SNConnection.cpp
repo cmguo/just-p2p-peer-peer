@@ -84,9 +84,11 @@ namespace p2sp
     {
         is_subpiece_requested_ = true;
 
+        network::Uri uri(p2p_downloader_->GetInstance()->GetOriginalUrl().url_);
+        string url_type = uri.getparameter("type");
         protocol::RequestSubPiecePacketFromSN packet(protocol::Packet::NewTransactionID(),
             p2p_downloader_->GetRid(), p2p_downloader_->GetOpenServiceFileName(), subpieces,
-            endpoint_, protocol::RequestSubPiecePacket::DEFAULT_PRIORITY);
+            endpoint_, protocol::RequestSubPiecePacket::DEFAULT_PRIORITY, url_type);
 
         p2p_downloader_->GetStatistic()->SubmitRequestSubPieceCount(packet.subpiece_infos_.size());
 

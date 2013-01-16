@@ -333,6 +333,17 @@ namespace storage
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "will post to SecSaveResourceFileInfo");
         }
     }
+
+    void SubPieceManager::OnReportBlockReadFailed(const protocol::SubPieceInfo &subpiece_info)
+    {
+        block_bit_map_->Reset(subpiece_info.block_index_);
+        BlockNode::p node = blocks_[subpiece_info.block_index_];
+
+        if (node)
+        {
+            node->ResetForReDownload();
+        }
+    }
 #endif
 
     void SubPieceManager::SaveAllBlock(Resource::p resource_p)

@@ -182,9 +182,9 @@ namespace storage
         virtual void SaveResourceInfoToDisk();
 
         // 根据文件名判重，并返回最终文件名
-        void DoVerifyName(string filename, boost::filesystem::path filepath, string& lastname);
+        void DoVerifyName(string filename, boost::filesystem::path filepath, string& lastname, bool is_openservice);
 
-        string GetFullName(string filename);
+        string GetFullName(string filename, bool is_openservice);
 
 		void GetAllCompletedFiles(std::vector<std::string>& filename_vec) const;
 
@@ -218,7 +218,7 @@ namespace storage
         protocol::SubPieceBuffer GetSubPieceFromBlock(const protocol::SubPieceInfo& subpiece_info,
             const RID& rid, const base::AppBuffer& block_buf);
 
-        void UploadOneSubPiece(const RID & rid);
+        void UploadOneSubPiece(const RID & rid,bool isTcp = false);
 
     protected:
         virtual void DoMerge(Instance::p instance_old, Instance::p instance_new);

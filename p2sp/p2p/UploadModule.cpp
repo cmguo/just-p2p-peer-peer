@@ -155,9 +155,7 @@ namespace p2sp
 
     bool UploadModule::NeedUseUploadPingPolicy()
     {
-        bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
         if (upload_policy_ == BootStrapGeneralConfig::policy_ping
-            && !is_watching_live
             && network_quality_monitor_->IsRunning() && network_quality_monitor_->HasGateWay())
         {
             return true;
@@ -346,7 +344,6 @@ namespace p2sp
     void UploadModule::UploadControlOnIdleTimePolicy()
     {
         bool is_main_state = ((AppModule::Inst()->GetPeerState() & 0xFFFF0000) == PEERSTATE_MAIN_STATE);
-        bool is_watching_live = ((AppModule::Inst()->GetPeerState() & 0x0000ffff) == PEERSTATE_LIVE_WORKING);
         bool is_download_with_slowmode = p2sp::ProxyModule::Inst()->IsDownloadWithSlowMode();
         bool is_downloading_movie = p2sp::ProxyModule::Inst()->IsDownloadingMovie();
         bool is_http_downloading = p2sp::ProxyModule::Inst()->IsHttpDownloading();
@@ -380,11 +377,6 @@ namespace p2sp
         if (true == is_locking_)
         {
             UpdateSpeedLimit(-1);
-        }
-        // 1G-live
-        else if (true == is_watching_live)
-        {
-            UpdateSpeedLimit(0);
         }
         else if (true == is_watching_live_by_peer && 
                  false == BootStrapGeneralConfig::Inst()->LimitLive2UploadSpeed())

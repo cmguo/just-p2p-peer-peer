@@ -194,6 +194,13 @@ namespace p2sp
         FilterProcess(udpPorts,mappedUdpPort_,toDelUdpPorts,toAddUdpPorts);
 
         SetDelAddStat(toDelTcpPorts,toDelUdpPorts,toAddTcpPorts,toAddUdpPorts);
+
+        if(toAddUdpPorts.empty() && toAddTcpPorts.empty() && toDelTcpPorts.empty() && toDelUdpPorts.empty())
+        {
+            //都处理完成了，下次检查的时间可以设置长一些
+            upnp_timer_.interval(5*60*1000);
+            LOG4CPLUS_INFO_LOG(logger_upnp, "don't need to add or delete,so set timer interval:"<<upnp_timer_.interval());            
+        }
        
         for(std::multimap<boost::uint16_t,boost::uint16_t>::const_iterator it =  toDelTcpPorts.begin(); it != toDelTcpPorts.end();++it)
         {
@@ -397,6 +404,9 @@ namespace p2sp
                 LOG4CPLUS_INFO_LOG(logger_upnp, "UPNP_GetGenericPortMappingEntry failed:"<<ret);
                 break;
             }
+
+            //有可能这台机器映射过很多端口（其他程序干的），所以这里休息一下，别把路由器压死了。
+            boost::this_thread::sleep(boost::posix_time::milliseconds(1000));
         }
        
     }
@@ -494,6 +504,27 @@ namespace p2sp
         return ret == 0 ? toMapPort:0;
     }
 
+    std::string UpnpModule::FindXmlValue(const std::string& xml,const std::string& key)
+    {
+        string strStart = "<" +key+ ">";
+        string strEnd = "</" +key+ ">";
+        string retValue;
+
+        std::string::size_type start = xml.find(strStart);
+        std::string::size_type end = xml.find(strEnd);
+        if( start!= std::string::npos && end != std::string::npos)
+        {
+            assert(start<xml.size());
+            assert(end<xml.size());
+            if(end >= strStart.size() + start)
+            {
+                retValue = std::string(xml.c_str() + start + strStart.size(),end - start - strStart.size());
+                LOG4CPLUS_INFO_LOG(logger_upnp, "key:"<<key<<" value:"<<retValue);
+            }
+        }  
+        return retValue;
+    }
+
     void UpnpModule::GetManufacturer()
     {
         if(descUrl_.empty())
@@ -506,19 +537,13 @@ namespace p2sp
         if( (cXml = miniwget_getaddr(descUrl_.c_str(), &(xmlSize),lanaddr, sizeof(lanaddr))) != NULL)
         {
             std::string xml = string((char*)cXml,xmlSize);
-            std::string::size_type start = xml.find("<modelName>");
-            std::string::size_type end = xml.find("</modelName>");
-            if( start!= std::string::npos && end != std::string::npos)
-            {
-                assert(start<xmlSize);
-                assert(end<xmlSize);
-                if(end >= strlen("<modelName>") + start)
-                {
-                    idgModName_ = std::string(xml.c_str() + start + strlen("<modelName>"),end - start - strlen("<modelName>"));
-                    LOG4CPLUS_INFO_LOG(logger_upnp, "idgModName_:"<<idgModName_);
-                    statistic::DACStatisticModule::Inst()->SetNatName(idgModName_);
-                }
-            }            
+
+            idgModName_ = FindXmlValue(xml,"modelName");
+            statistic::DACStatisticModule::Inst()->SetNatName(idgModName_);
+
+            idgManufacturer_ = FindXmlValue(xml,"manufacturer");
+            statistic::DACStatisticModule::Inst()->SetNatManufacturer(idgManufacturer_);
+
             free(cXml);
         }
     }

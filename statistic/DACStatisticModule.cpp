@@ -31,6 +31,8 @@ namespace statistic
         , p2p_download_byte_(0)
         , p2p_upload_byte_by_normal_(0)
         , p2p_upload_byte_by_push_(0)
+        , p2p_upload_byte_by_normal_tcp_(0)
+        , p2p_upload_byte_by_push_tcp_(0)
         , max_peer_upload_kbps_(0)
         , upload_speed_limit_KBps_(0)
         , upload_limit_KBytes_(0)
@@ -202,6 +204,17 @@ namespace statistic
         // K1:统计upnp natcheck的结果
         info.upnp_check_result = upnp_check_result_;
 
+        // L1:路由器的厂商
+        info.nat_manufacturer_ = nat_manufacturer_;
+
+        // M1: Http做Tracker List时所用的IP以及得到的响应状态码
+        info.http_tracker_list_ip_code = http_tracker_list_ip_code_;
+
+        // N1: 普通P2P的tcp上传字节数，单位kb
+        info.uP2PUploadKBytesByNomalTcp = p2p_upload_byte_by_normal_tcp_ / 1024;
+        // O1: PUSH P2P的tcp上传字节数，单位kb
+        info.uP2PUploadKBytesByPushTcp = p2p_upload_byte_by_push_tcp_ / 1024;
+
 
         // herain:2010-12-31:创建提交DAC的日志字符串
         ostringstream log_stream;
@@ -245,7 +258,10 @@ namespace statistic
         log_stream << "&I1=" << info.nat_name_;
         log_stream << "&J1=" << info.invalid_ip_count_;
         log_stream << "&K1=" << (boost::int32_t)info.upnp_check_result;
-
+        log_stream << "&L1=" << info.nat_manufacturer_;
+        log_stream << "&M1=" << info.http_tracker_list_ip_code;
+        log_stream << "&N1=" << info.uP2PUploadKBytesByNomalTcp;
+        log_stream << "&O1=" << info.uP2PUploadKBytesByPushTcp;
 
         string log = log_stream.str();
 
@@ -271,6 +287,8 @@ namespace statistic
         p2p_download_byte_ = 0;
         p2p_upload_byte_by_normal_ = 0;
         p2p_upload_byte_by_push_ = 0;
+        p2p_upload_byte_by_normal_tcp_ = 0;
+        p2p_upload_byte_by_push_tcp_ = 0;
         max_peer_upload_kbps_ = 0;
         upload_limit_KBytes_ = 0;
         upload_limit_counter_.reset();
@@ -294,6 +312,7 @@ namespace statistic
         upnp_port_mapping_.first.second = 0;
         upnp_port_mapping_.second.first = 0;
         upnp_port_mapping_.second.second = 0;
+        http_tracker_list_ip_code_.clear();
 
         AppModule::Inst()->ClearInvalidIpCountMap();
     }

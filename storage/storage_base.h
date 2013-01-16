@@ -91,6 +91,7 @@ namespace storage
     static const boost::uint32_t TRAFFIC_UNIT_TIME = 6 * 60 * 60;
     static const boost::uint32_t TRAFFIC_T0 = 7;
     static const boost::uint32_t TRAFFIC_PROTECT_TIME = 2;
+    static const boost::uint32_t ENCRYPT_HEADER_LENGTH = 1024;
 }
 
 #endif  // STORAGE_STORAGEBASE_H

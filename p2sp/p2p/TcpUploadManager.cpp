@@ -172,7 +172,7 @@ namespace p2sp
     void TcpUploadManager::OnAsyncGetSubPieceSucced(const RID& rid, protocol::SubPieceInfo const& subpiece_info,
         const protocol::Packet & packet, const protocol::SubPieceBuffer & buffer)
     {
-        storage::Storage::Inst_Storage()->UploadOneSubPiece(rid);
+        storage::Storage::Inst_Storage()->UploadOneSubPiece(rid,true);
 
         protocol::TcpSubPieceResponsePacket tcp_subpiece_response_packet(packet.transaction_id_, rid, subpiece_info, buffer);
         tcp_subpiece_response_packet.tcp_connection_ = ((const protocol::TcpCommonPacket &)packet).tcp_connection_;

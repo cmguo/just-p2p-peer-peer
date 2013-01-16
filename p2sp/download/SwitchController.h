@@ -189,18 +189,33 @@ namespace p2sp
             virtual void Stop();
             virtual void OnControlTimer(boost::uint32_t times);
         protected:
-            bool CanP2PDownloadStably();
-            bool IsP2PBad();
+            //参数is_current_p2p_bad 为true时表示该函数执行前P2P的状态为Bad，状态机表现为已经开通HTTP
+            //is_current_p2p_bad为false时表示该函数执行前P2P的状态为Good,状态机表现为关闭HTTP下载
+            bool IsP2PBad(bool is_current_p2p_bad);
+            bool IsHTTPNormal();
+            void ChangeTo0200();
+            void ChangeTo2000();
+            void ChangeTo2200();
+            void ChangeTo2300();
+            void ChangeTo3200();
 
             DownloadControlMode(SwitchController::p controller)
                 : ControlMode(controller)
             {
             }
         private:
-            // 获取RID的定时器
-            framework::timer::TickCounter time_counter_h_;
-            // P2P尝试的定时器
-            framework::timer::TickCounter time_counter_x_;
+            // 获取RID的计时器
+            framework::timer::TickCounter waiting_tinydrag_timer_counter_;
+            bool is_tiny_drag_timer_reset_;
+            // P2P尝试的计时器
+            framework::timer::TickCounter waiting_p2p_stable_timer_counter_;
+            bool is_p2p_timer_reset_;
+            // HTTP稳定的计时器
+            framework::timer::TickCounter waiting_http_stable_timer_counter_;
+            bool is_http_timer_reset_;
+            // P2P可连接上的缓冲计时器
+            framework::timer::TickCounter waiting_p2p_connected_timer_counter_;
+            bool is_p2p_connected_timer_reset_;
         };
 
         //////////////////////////////////////////////////////////////////////////

@@ -6,6 +6,7 @@
 
 #include "p2sp/AppModule.h"
 #include <protocol/TrackerPacket.h>
+#include <util/protocol/http/HttpClient.h>
 
 namespace p2sp
 {
@@ -63,9 +64,15 @@ namespace p2sp
 
         bool IsTrackerForLiveUdpServer() const;
 
+        void HttpTrackerList(string const & server, RID const & rid);
+
     private:
 
         void UpdateIpStatistic(const protocol::SocketAddr& detected_addr);
+        void HandleFetchResult(boost::shared_ptr<util::protocol::HttpClient> http_client, 
+            const boost::system::error_code & err);
+        std::string Hex2Bin(string const & hex);
+        void UpdatePeerInfo(std::vector<protocol::CandidatePeerInfo> & peer_infos_);
 
     private:
         TrackerClient() {}

@@ -259,11 +259,12 @@ namespace p2sp
     {
         if (speed_limit_in_KBps_ < 0)
         {
-            return p2sp::P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT;
+            return BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps();
         }
         else
         {
-            return std::min(packet_number_per_tick_ - sent_count_ > 0 ? packet_number_per_tick_ - sent_count_ : 0, p2sp::P2SPConfigs::P2P_DOWNLOAD_SPEED_LIMIT);
+            return std::min(packet_number_per_tick_ - sent_count_ > 0 ? packet_number_per_tick_ - sent_count_ : 0, 
+                BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
         }
     }
 }

@@ -8,6 +8,7 @@
 #include "p2sp/proxy/RangeInfo.h"
 #include "statistic/StatisticModule.h"
 #include "network/UrlCodec.h"
+#include "p2sp/download/SwitchControllerInterface.h"
 
 #include <framework/string/Algorithm.h>
 
@@ -408,11 +409,33 @@ namespace p2sp
             {
                 play_info->bwtype_ = 0;
             }
+            else
+            {
+                switch(play_info->bwtype_)
+                {
+                case JBW_NORMAL:
+                case JBW_HTTP_MORE:
+                case JBW_HTTP_ONLY:
+                case JBW_HTTP_PREFERRED:
+                case JBW_P2P_MORE:
+                case JBW_VOD_P2P_ONLY:
+                case JBW_P2P_INCREASE_CONNECT:
+                    break;
+                default:
+                    play_info->bwtype_ = 0;
+                    break;
+                }
+            }
 
             // 解析客户端请求中的vip字段
             if (false == ParseUint32Value(uri, play_info->vip_, "vip"))
             {
                 play_info->vip_ = 0;
+            }
+
+            if (false == ParseDownloadLevel(uri, play_info->level_))
+            {
+                play_info->level_ = PASSIVE_DOWNLOAD_LEVEL;
             }
 
             if (false == ParseUint32Value(uri, play_info->is_vip_channel_, "vipchannel"))
