@@ -75,14 +75,14 @@ namespace p2sp
         }
         else
         {
-            boost::uint32_t status_code = http_client->get_response_head().err_code;
+            boost::uint32_t status_code = http_client->response_head().err_code;
             statistic::DACStatisticModule::Inst()->SubmitHttpTrackerListIpCodeString(end_point_, status_code);
             if (status_code != 200)
             {
                 LOG4CPLUS_INFO_LOG(logger_tracker_client, "HandleFetchResult get status_code: "<< status_code);
                 return;
             }
-            boost::asio::streambuf & response = http_client->get_response().data();
+            boost::asio::streambuf & response = http_client->response().data();
             std::string response_content((std::istreambuf_iterator<char>(& response)), 
                 std::istreambuf_iterator<char>());
             if (!response_content.size() || response_content.size() % 2)
