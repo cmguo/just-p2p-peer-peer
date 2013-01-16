@@ -69,6 +69,8 @@ class BoostMainThread
     virtual void StartThread();
     virtual void StopThread();
 
+    static void StartIoserviceThread();
+
     private:
     boost::thread* ios_thread;
 };
