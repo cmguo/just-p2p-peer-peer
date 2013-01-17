@@ -175,7 +175,7 @@ namespace p2sp
 
         last_live_response_time_.reset();
         statistic_->SubmitDownloadedBytes(sizeof(protocol::AnnouncePacket));
-        statistic_->SetBitmap(packet.block_map_);
+        //statistic_->SetBitmap(packet.block_map_);
         block_map_ = packet.block_map_;
         peer_download_info_ = packet.peer_download_info_;
         end_point_ = packet.end_point;

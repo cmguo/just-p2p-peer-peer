@@ -9,10 +9,7 @@
 #include <network/Uri.h>
 #include "random.h"
 
-#ifdef BOOST_WINDOWS_API
-
-// #include <shlwapi.h>
-// #pragma comment(lib. "shlwapi.lib")
+#ifdef PEER_PC_CLIENT
 #include <Iphlpapi.h>
 #pragma comment(lib, "Iphlpapi.lib")
 #else
