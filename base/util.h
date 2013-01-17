@@ -129,7 +129,7 @@ namespace base
 
         inline boost::uint32_t GetLocalFirstIP()
         {
-#ifdef BOOST_WINDOWS_API
+#ifdef PEER_PC_CLIENT
             // Ê¹ÓÃ ip helperº¯Êý
             boost::uint32_t nip = 0;
             PMIB_IPADDRTABLE pIPAddrTable;
