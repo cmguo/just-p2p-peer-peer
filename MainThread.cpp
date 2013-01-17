@@ -70,7 +70,7 @@ BoostMainThread::BoostMainThread()
 {
 }
 
-void StartIoserviceThread()
+void BoostMainThread::StartIoserviceThread()
 {
     global_io_svc().run();
 }
@@ -78,7 +78,7 @@ void StartIoserviceThread()
 void BoostMainThread::StartThread()
 {
     global_io_svc().reset();
-    ios_thread = new boost::thread(boost::bind(&BoostMainThread::StartThread, this));
+    ios_thread = new boost::thread(boost::bind(&BoostMainThread::StartIoserviceThread, this));
     // TODO(herain):2011-4-8:boost::thread没有直接获取thread id的接口，需要获取natvie handle后用natvie API获得
     // SetThreadId();
 }
