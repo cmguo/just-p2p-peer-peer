@@ -1321,6 +1321,18 @@ namespace p2sp
         for (std::set<ProxyConnection::p>::iterator i = proxy_connections_.begin();
             i != proxy_connections_.end(); ++i)
         {
+            if ((*i) &&
+                (*i)->GetPlayInfo() &&
+                (*i)->GetPlayInfo()->GetSpeedLimit() != -1 &&
+                (*i)->GetDownloadDriver())
+            {
+                // 设定固定限速值
+                (*i)->GetDownloadDriver()->SetSpeedLimitInKBps((*i)->GetPlayInfo()->GetSpeedLimit());
+
+                // 屏蔽全局限速
+                continue;
+            }
+
             // 观看点播
             if ((*i) &&
                 (*i)->GetPlayInfo() &&

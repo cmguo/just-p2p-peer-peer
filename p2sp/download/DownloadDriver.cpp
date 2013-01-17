@@ -114,13 +114,7 @@ namespace p2sp
         , bwtype_(JBW_NORMAL)
         , http_download_reason_(INVALID)
         , rest_play_time_(-1)
-#ifndef PEER_PC_CLIENT
-        // ppbox 版本默认高速模式
-        , download_mode_(IGlobalControlTarget::FAST_MODE)
-#else
-        // pc 版本默认智能限速模式
         , download_mode_(IGlobalControlTarget::SMART_MODE)
-#endif
         , init_local_data_bytes_(-1)
         , second_timer_(global_second_timer(), 1000, boost::bind(&DownloadDriver::OnTimerElapsed, this, &second_timer_))
         , disable_smart_speed_limit_(false)
@@ -2330,16 +2324,6 @@ namespace p2sp
         double alpha;
         boost::int32_t beta;
 
-        // 智能限速模式是不会对HTTP限速
-        // 所以这里需要设置默认限速
-        // 因为后可能切换到选节目模式之后，是限总速度的，这需要恢复过来
-        if (GetHTTPControlTarget())
-        {
-            // HTTP默认限速1024
-            GetHTTPControlTarget()->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()-> 
-                GetHttpDownloadSpeedLimitInKBps());
-        }
-
         if (download_mode_ == IGlobalControlTarget::SMART_MODE)
         {
             // 智能限速模式
@@ -2382,22 +2366,6 @@ namespace p2sp
                     beta = 40;
                 }
             }
-//             else if (rest_play_time_ > 30 * 1000)
-//             {
-//                 // 30 - 60 秒
-//                 if (GetSessionID() == "")
-//                 {
-//                     // pplive
-//                     alpha = 1.4;
-//                     beta = 40;
-//                 }
-//                 else
-//                 {
-//                     // ikan
-//                     alpha = 1.6;
-//                     beta = 60;
-//                 }
-//             }
             else
             {
                 alpha = 0;
@@ -2415,27 +2383,32 @@ namespace p2sp
 
             if (times % 5 == 0)
             {
-                if (p2p_downloader_ && !p2p_downloader_->IsPausing())
+                boost::int32_t smart_speed_limit;
+                if (rest_play_time_ <= GetRestTimeNeedLimitSpeed())
                 {
-                    if (rest_play_time_ <= GetRestTimeNeedLimitSpeed())
+                    smart_speed_limit = BootStrapGeneralConfig::Inst()->
+                        GetP2PDownloadSpeedLimitInKBps();
+                }
+                else
+                {
+                    smart_speed_limit = speed_limit;
+                }
+
+                if (proxy_connection_ && proxy_connection_->GetPlayInfo() &&
+                    proxy_connection_->GetPlayInfo()->GetSpeedLimit() != -1)
+                {
+                    if (smart_speed_limit > proxy_connection_->GetPlayInfo()->GetSpeedLimit())
                     {
-                        p2p_downloader_->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->
-                            GetP2PDownloadSpeedLimitInKBps());
-                    }
-                    else
-                    {
-                        p2p_downloader_->SetSpeedLimitInKBps(speed_limit);
+                        smart_speed_limit = proxy_connection_->GetPlayInfo()->GetSpeedLimit();
                     }
                 }
+
+                SetSpeedLimitInKBps(smart_speed_limit);
             }
         }
         else if (download_mode_ == IGlobalControlTarget::FAST_MODE)
         {
-            // P2P默认限速500
-            if (p2p_downloader_)
-            {
-                p2p_downloader_->SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
-            }
+            SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
             statistic_->SetSmartPara(rest_play_time_, -1, BootStrapGeneralConfig::Inst()->
                 GetP2PDownloadSpeedLimitInKBps());
         }
