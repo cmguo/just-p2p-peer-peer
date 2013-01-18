@@ -455,6 +455,11 @@ namespace p2sp
             LOG4CPLUS_DEBUG_LOG(logger_play_info, "Parse BWType = " << play_info->bwtype_);
 
             play_info->range_info_ = ParseRangeInfo(uri);
+
+            // speedlimit
+            if (false == ParseSpeedLimit(uri, play_info->speed_limit_)) {
+                play_info->speed_limit_ = -1;
+            }
         }
         // Download By Url
         // else if (uri.getpath() == "/ppvadownloadbyurl")
