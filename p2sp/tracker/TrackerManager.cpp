@@ -6,6 +6,8 @@
 #include "p2sp/tracker/TrackerManager.h"
 #include "p2sp/AppModule.h"
 #include <fstream>
+#include <util/archive/BinaryIArchive.h>
+#include <util/archive/BinaryOArchive.h>
 
 namespace p2sp
 {

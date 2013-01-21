@@ -9,6 +9,7 @@
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <fstream>
+#include <util/archive/BinaryIArchive.h>
 
 namespace statistic
 {
