@@ -2376,8 +2376,6 @@ namespace p2sp
             boost::int32_t speed_limit = std::max(std::min((boost::int32_t)(data_rate*alpha/1024), (boost::int32_t)(data_rate/1024 + beta)), b);
             speed_limit_in_KBps_ = speed_limit;
 
-            statistic_->SetSmartPara(rest_play_time_, bandwidth, speed_limit);
-
             LOG4CPLUS_DEBUG_LOG(logger_download_driver, "Rest Play Time = " << rest_play_time_ << " speed_limit = " 
                 << speed_limit << " alpha = " << alpha << " beta = " << beta);
 
@@ -2394,16 +2392,24 @@ namespace p2sp
                     smart_speed_limit = speed_limit;
                 }
 
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "smart_speed_limit1 = " << smart_speed_limit);
+
                 if (proxy_connection_ && proxy_connection_->GetPlayInfo() &&
                     proxy_connection_->GetPlayInfo()->GetSpeedLimit() != -1)
                 {
+                    LOG4CPLUS_DEBUG_LOG(logger_download_driver, "playinfo limit = " << 
+                        proxy_connection_->GetPlayInfo()->GetSpeedLimit());
+
                     if (smart_speed_limit > proxy_connection_->GetPlayInfo()->GetSpeedLimit())
                     {
                         smart_speed_limit = proxy_connection_->GetPlayInfo()->GetSpeedLimit();
                     }
                 }
 
+                LOG4CPLUS_DEBUG_LOG(logger_download_driver, "smart_speed_limit2 = " << smart_speed_limit);
+
                 SetSpeedLimitInKBps(smart_speed_limit);
+                statistic_->SetSmartPara(rest_play_time_, bandwidth, smart_speed_limit);
             }
         }
         else if (download_mode_ == IGlobalControlTarget::FAST_MODE)
