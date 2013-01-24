@@ -85,8 +85,6 @@ void BoostMainThread::StartThread()
 
 void BoostMainThread::StopThread()
 {
-    global_io_svc().stop();
-
     ios_thread->join();
     delete ios_thread;
 }
