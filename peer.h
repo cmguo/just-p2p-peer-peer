@@ -484,9 +484,9 @@ void (PEER_API * LPQUERYDOWNLOADPROGRESS2)(const char * url, boost::uint32_t url
                                       boost::uint32_t start_pos, boost::uint32_t * last_pos);
 
 
-boost::uint32_t PEER_API GetDumpBuffer(const char * buffer, boost::uint32_t buffer_length);
+boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_length);
 typedef
-boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(const char * buffer, boost::uint32_t buffer_length);
+boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(char * buffer, boost::uint32_t buffer_length);
 
 /**
 * 函数接口
