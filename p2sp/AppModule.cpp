@@ -642,4 +642,19 @@ namespace p2sp
 
         return upnp_port_;
     }
+
+    void AppModule::GetDumpBuffer(char * buffer, boost::uint32_t buffer_length, 
+        boost::uint32_t * buffer_written, boost::function<void()> fun)
+    {
+        *buffer_written = udp_server_->backup_length_;
+
+        if (buffer_length < *buffer_written)
+        {
+            *buffer_written = buffer_length;
+        }
+
+        memcpy(buffer, udp_server_->backup_buffer_, *buffer_written);
+
+        fun();
+    }
 }

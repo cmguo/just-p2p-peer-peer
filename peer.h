@@ -483,6 +483,11 @@ typedef
 void (PEER_API * LPQUERYDOWNLOADPROGRESS2)(const char * url, boost::uint32_t url_len,
                                       boost::uint32_t start_pos, boost::uint32_t * last_pos);
 
+
+boost::uint32_t PEER_API GetDumpBuffer(const char * buffer, boost::uint32_t buffer_length);
+typedef
+boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(const char * buffer, boost::uint32_t buffer_length);
+
 /**
 * 函数接口
 */
@@ -563,7 +568,9 @@ typedef struct _NETINTERFACE{
     boost::uint32_t                Reserved5;
     LPQUERYDOWNLOADPROGRESS2 QueryDownloadProgress2;
     LPSETVIPLEVELBYURL SetVipLevelByUrl;
-    boost::uint32_t                Reserved4[35];
+    
+    LPGETDUMPBUFFER GetDumpBuffer;
+    boost::uint32_t                Reserved4[34];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef PEER_PC_CLIENT
 #pragma pack(pop)
