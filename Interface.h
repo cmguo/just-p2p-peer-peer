@@ -594,6 +594,9 @@ typedef
 void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_len,
                                         char * bitmap, boost::uint32_t * bitmap_size);
 
+boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_length);
+typedef
+boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(char * buffer, boost::uint32_t buffer_length);
 /**
 * 函数接口
 */
