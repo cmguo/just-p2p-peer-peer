@@ -14,6 +14,7 @@ namespace network
         typedef boost::shared_ptr<CrossDomainConfig> p;      
         string GetCrossDomainString() const;
         void LoadConfig();
+        void Stop();
     public:
         static CrossDomainConfig::p GetInstance();
 

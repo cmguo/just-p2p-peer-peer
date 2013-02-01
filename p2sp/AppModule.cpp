@@ -44,22 +44,59 @@ using namespace protocol;
 using namespace statistic;
 using namespace storage;
 
+static boost::asio::io_service * io_svc;
+static framework::timer::AsioTimerManager * timer_manager_250_;
+static framework::timer::AsioTimerManager * timer_manager_1000_;
+
 boost::asio::io_service & global_io_svc()
 {
-    static boost::asio::io_service * io_svc = new boost::asio::io_service();
+    if (io_svc == NULL)
+    {
+        io_svc = new boost::asio::io_service();
+    }
     return *io_svc;
+}
+
+void reset_global_object()
+{
+    assert(timer_manager_250_);
+    if (timer_manager_250_)
+    {
+        delete timer_manager_250_;
+        timer_manager_250_ = NULL;
+    }
+    
+    assert(timer_manager_1000_);
+    if (timer_manager_1000_)
+    {
+        delete timer_manager_1000_;
+        timer_manager_1000_ = NULL;
+    }
+
+    assert(io_svc);
+    if (io_svc)
+    {
+        delete io_svc;
+        io_svc = NULL;
+    }
 }
 
 framework::timer::TimerQueue & global_second_timer()
 {
-    static framework::timer::AsioTimerManager timer_manager(global_io_svc(), boost::posix_time::seconds(1));
-    return timer_manager;
+    if (timer_manager_1000_ == NULL)
+    {
+        timer_manager_1000_ = new AsioTimerManager(global_io_svc(), boost::posix_time::seconds(1));
+    }
+    return *timer_manager_1000_;
 }
 
 framework::timer::TimerQueue & global_250ms_timer()
 {
-    static framework::timer::AsioTimerManager timer_manager(global_io_svc(), boost::posix_time::milliseconds(250));
-    return timer_manager;
+    if (timer_manager_250_ == NULL)
+    {
+        timer_manager_250_ = new AsioTimerManager(global_io_svc(), boost::posix_time::milliseconds(250));
+    }
+    return *timer_manager_250_;
 }
 
 namespace p2sp
@@ -390,6 +427,8 @@ namespace p2sp
             udp_server_.reset();
         }
 
+        network::CrossDomainConfig::GetInstance()->Stop();
+
         LOG4CPLUS_INFO_LOG(logger_appmodule, "AppModule has stopped.");
 
         inst_.reset();
@@ -397,6 +436,7 @@ namespace p2sp
 #ifdef NEED_TO_POST_MESSAGE
         WindowsMessage::Inst().PostWindowsMessage(UM_CORE_STOP, (WPARAM)0, (LPARAM)lpCoreStopData);
 #endif
+        global_io_svc().stop();
     }
 
     void AppModule::AddCandidatePeers(RID rid, const std::vector<protocol::CandidatePeerInfo>& peers, bool is_live_udpserver)

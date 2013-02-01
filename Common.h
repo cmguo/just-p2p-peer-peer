@@ -111,5 +111,6 @@ const boost::int32_t MAX_P2P_DOWNLOADER_COUNT = 100;
 
 extern framework::timer::TimerQueue & global_second_timer();
 extern framework::timer::TimerQueue & global_250ms_timer();
+extern void reset_global_object();
 
 #endif

@@ -29,7 +29,7 @@ namespace network
 
     private:
         PingClientWithAPI();
-        friend void AsyncRequestThread(LPVOID param);
+        void AsyncRequestThread();
 
     public:
         unsigned long destination_ip_;
@@ -45,7 +45,6 @@ namespace network
     };
 }
 
-void AsyncRequestThread(LPVOID param);
 #endif
 
 #endif

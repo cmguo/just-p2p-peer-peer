@@ -57,28 +57,26 @@ namespace network
 
         AddHandler(sequence_num_, handler);
 
-        ping_request_thread_.Post(boost::bind(AsyncRequestThread, this));
+        ping_request_thread_.Post(boost::bind(&PingClientWithAPI::AsyncRequestThread, shared_from_this()));
 
         return sequence_num_;
     }
 
-    void AsyncRequestThread(LPVOID param)
+    void PingClientWithAPI::AsyncRequestThread()
     {
-        PingClientWithAPI * ping_client_with_api_ = (PingClientWithAPI *)param;
-
         DWORD dwRetVal = 0;
 
         dwRetVal = IcmpSendEcho2(
-            ping_client_with_api_->hIcmpFile_,
+            hIcmpFile_,
             NULL,
             NULL,
             NULL,
-            ping_client_with_api_->destination_ip_,
-            (LPVOID)(ping_client_with_api_->ping_body_.c_str()),
-            ping_client_with_api_->ping_body_.length(),
-            &(ping_client_with_api_->ip_option_),
-            ping_client_with_api_->reply_buffer_,
-            ping_client_with_api_->reply_buffer_size_,
+            destination_ip_,
+            (LPVOID)(ping_body_.c_str()),
+            ping_body_.length(),
+            &(ip_option_),
+            reply_buffer_,
+            reply_buffer_size_,
             500
             );
 
@@ -86,18 +84,18 @@ namespace network
         {
             assert(dwRetVal == 1);
 
-            PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY) ping_client_with_api_->reply_buffer_;
+            PICMP_ECHO_REPLY pEchoReply = (PICMP_ECHO_REPLY) reply_buffer_;
             struct in_addr ReplyAddr;
             ReplyAddr.S_un.S_addr = pEchoReply->Address;
 
-            if (ping_client_with_api_->ip_option_.Ttl != 255)
+            if (ip_option_.Ttl != 255)
             {
                 assert(pEchoReply->Status == IP_TTL_EXPIRED_TRANSIT);
             }
 
-            global_io_svc().post(boost::bind(&PingClientWithAPI::NotifyHandler, ping_client_with_api_,
-                ping_client_with_api_->sequence_num_,
-                ping_client_with_api_->ip_option_.Ttl == 255 ? IP_SUCCESS : icmp_header::time_exceeded,
+            global_io_svc().post(boost::bind(&PingClientWithAPI::NotifyHandler, shared_from_this(),
+                sequence_num_,
+                ip_option_.Ttl == 255 ? IP_SUCCESS : icmp_header::time_exceeded,
                 string(inet_ntoa(ReplyAddr)),
                 boost::uint32_t(pEchoReply->RoundTripTime))
                 );
@@ -112,8 +110,8 @@ namespace network
                 assert(false);
                 break;
             case IP_REQ_TIMED_OUT:
-                global_io_svc().post(boost::bind(&PingClientWithAPI::Cancel, ping_client_with_api_,
-                    ping_client_with_api_->sequence_num_));
+                global_io_svc().post(boost::bind(&PingClientWithAPI::Cancel, shared_from_this(),
+                    sequence_num_));
                 break;
             default:
                 DebugLog("\tExtended error returned: %ld\n", dwError);

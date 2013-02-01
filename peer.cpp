@@ -215,6 +215,8 @@ void PEER_API Clearup()
 #ifdef NEED_TO_POST_MESSAGE
     WindowsMessage::Inst().PostWindowsMessage(UM_CLEARUP_SUCCED, NULL, NULL);
 #endif
+
+    reset_global_object();
 }
 
 void PEER_API WillCleanup()

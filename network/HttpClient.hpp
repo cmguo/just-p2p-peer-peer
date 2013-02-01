@@ -307,7 +307,6 @@ namespace network
     void HttpClient<ContentType>::HandleResolve(const boost::system::error_code& err,
         boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
     {
-        assert(is_connecting_);
         if (false == is_connecting_)
             return;
 

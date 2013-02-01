@@ -22,6 +22,17 @@ namespace network
         return inst_;
     }
 
+    void CrossDomainConfig::Stop()
+    {
+        if (client_)
+        {
+            client_->Close();
+            client_.reset();
+        }
+
+        inst_.reset();
+    }
+
     void CrossDomainConfig::LoadConfig()
     {
         if (client_)
