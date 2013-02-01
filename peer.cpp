@@ -36,6 +36,9 @@
 #include <boost/thread.hpp>
 #include "MainThread.h"
 
+extern boost::uint32_t backup_length_;
+extern boost::uint8_t backup_buffer_[2048];
+
 using p2sp::ProxyModule;
 
 #ifdef NEED_TO_POST_MESSAGE
@@ -1350,18 +1353,14 @@ void PEER_API QueryDownloadProgress2(const char * url, boost::uint32_t url_len,
 
 boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_length)
 {
-    Event::p event_wait = Event::Create();
-    boost::shared_ptr<SimpleResult> result(new SimpleResult(event_wait));
+    boost::uint32_t buffer_written = backup_length_;
 
-    boost::function<void()> fun = boost::bind(&SimpleResult::result_handler, result);
+    if (buffer_length < buffer_written)
+    {
+        buffer_written = buffer_length;
+    }
 
-    boost::uint32_t buffer_written = 0;
-
-    global_io_svc().post(
-        boost::bind(&p2sp::AppModule::GetDumpBuffer, p2sp::AppModule::Inst(),
-        buffer, buffer_length, &buffer_written, fun));
-
-    event_wait->Wait();
+    memcpy(buffer, backup_buffer_, buffer_written);
 
     return buffer_written;
 }

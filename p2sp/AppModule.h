@@ -261,9 +261,6 @@ public:
         udp_server_->ClearInvalidIpCountMap();
     }
 
-    void GetDumpBuffer(char * buffer, boost::uint32_t buffer_length, 
-        boost::uint32_t * buffer_written, boost::function<void()> fun);
-
 #ifndef PEER_PC_CLIENT
     LPSUBMITSTOPLOG submit_stop_log_;
 #endif
