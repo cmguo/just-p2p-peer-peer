@@ -410,7 +410,7 @@ namespace p2sp
         //TODO:设置到tracker的路由ip。5个就够了。
         std::vector<boost::uint32_t> traceroute_ips;
         boost::uint16_t upnp_tcp_port = 0;
-#ifndef WINRT
+#if (!defined WINRT) && (!defined WIN_PHONE)
         upnp_tcp_port = UpnpModule::Inst()->GetUpnpExternalTcpPort(p2sp::AppModule::Inst()->GetLocalTcpPort());
 #endif
 

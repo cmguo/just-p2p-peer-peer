@@ -53,7 +53,7 @@
 #endif
 
 #if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
-#ifndef WINRT
+#if (!defined WINRT) && (!defined WIN_PHONE)
 #include <log4cplus/logger.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/configurator.h>
@@ -67,11 +67,16 @@ using namespace log4cplus;
 #define  TOSTRING(x) STRINGIFY(x)
 
 #if (defined _DEBUG || defined DEBUG || defined RELEASE_LOG)
-#ifndef WINRT
+#if (!defined WINRT) && (!defined WIN_PHONE)
 #define LOG4CPLUS_DEBUG_LOG(logger,msg) LOG4CPLUS_DEBUG(logger,msg)
 #define LOG4CPLUS_INFO_LOG(logger,msg) LOG4CPLUS_INFO(logger,msg)
 #define LOG4CPLUS_WARN_LOG(logger,msg) LOG4CPLUS_WARN(logger,msg)
 #define LOG4CPLUS_ERROR_LOG(logger,msg) LOG4CPLUS_ERROR(logger,msg)
+#else
+#define LOG4CPLUS_DEBUG_LOG(logger,msg)
+#define LOG4CPLUS_INFO_LOG(logger,msg)
+#define LOG4CPLUS_WARN_LOG(logger,msg)
+#define LOG4CPLUS_ERROR_LOG(logger,msg)
 #endif
 #else
 #define LOG4CPLUS_DEBUG_LOG(logger,msg)

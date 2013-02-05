@@ -278,7 +278,7 @@ namespace p2sp
         tcpport[tcp_server_->GetTcpPort()] = 0;
         tcpport[tcp_server_843_->GetTcpPort()] = tcp_server_843_->GetTcpPort();
         udpport[local_udp_port] = 0;
-#ifndef WINRT
+#if (!defined WINRT) && (!defined WIN_PHONE)
         UpnpModule::Inst()->Start();
 
         UpnpModule::Inst()->AddUpnpPort(tcpport,udpport);
@@ -393,7 +393,7 @@ namespace p2sp
         P2PModule::Inst()->Stop();
 
         StunModule::Inst()->Stop();
-#ifndef WINRT
+#if (!defined WINRT) && (!defined WIN_PHONE)
         UpnpModule::Inst()->Stop();
 #endif
         StatisticModule::Inst()->Stop();
