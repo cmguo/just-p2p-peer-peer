@@ -84,7 +84,9 @@ class AppModuleStartInterface
     bool use_push_;
     bool disk_read_only_;
     bool http_proxy_enabled_;
+#ifndef PEER_PC_CLIENT
     LPSUBMITSTOPLOG submit_stop_log_;
+#endif
     boost::uint8_t memory_pool_size_in_MB_;
 
     private:

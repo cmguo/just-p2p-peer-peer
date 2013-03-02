@@ -315,8 +315,9 @@ namespace p2sp
                 appmodule_start_interface->config_path_));
 
         statistics_collection_controller_->Start();
-
+#ifndef PEER_PC_CLIENT
         submit_stop_log_ = appmodule_start_interface->submit_stop_log_;
+#endif
 
         //读取crossdomain配置文件
         network::CrossDomainConfig::GetInstance()->LoadConfig();
