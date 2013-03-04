@@ -37,7 +37,7 @@
 #include "MainThread.h"
 
 extern boost::uint32_t backup_length_;
-extern boost::uint8_t backup_buffer_[2048];
+extern boost::uint8_t backup_buffer_[];
 
 using p2sp::ProxyModule;
 
@@ -48,6 +48,7 @@ using p2sp::ProxyModule;
 #ifdef LOG_ENABLE
 static log4cplus::Logger logger_peer = log4cplus::Logger::getInstance("[peer]");
 #endif
+
 
 #ifdef PEER_PC_CLIENT
 
@@ -150,8 +151,8 @@ boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
 #if (defined PEER_PC_CLIENT || defined BOOST_WINDOWS_API)
     PropertyConfigurator::doConfigure("C:\\Program Files\\Common Files\\PPLiveNetwork\\peer.config");
 #else
-    boost::filesystem::path peer_log_path = boost::filesystem::current_path() / "PeerLog";
-    SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 200 * 1024 *1024, 20));
+    boost::filesystem::path peer_log_path =  framework::filesystem::temp_path() / "PeerLog";
+    SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 100 * 1024 *1024, 2));
     std::auto_ptr<Layout> pattern_layout(new PatternLayout("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p%c - %m%n"));
     pFileAppender->setLayout(pattern_layout);
     root.addAppender(pFileAppender);
@@ -291,6 +292,9 @@ void PEER_API UploadAction(boost::uint32_t uAction, boost::uint32_t uTimes)
 void PEER_API StartDownload(char const * lpszUrl, boost::uint32_t nUrlLength, char const * lpszReferUrl, boost::uint32_t nReferUrlLength,
     char const * lpszUserAgent, boost::uint32_t nUserAgentLength, wchar_t const * lpszFileName, boost::uint32_t nFileNameLength)
 {
+    char buffer[2048];
+    GetDumpBuffer(buffer, 2048);
+
 #ifdef PEER_PC_CLIENT
     if (NULL == lpszUrl || 0 == nUrlLength)
     {
@@ -703,6 +707,8 @@ void PEER_API SetRestPlayTime(const char * lpszRID, boost::uint32_t nRIDLength, 
 
 void PEER_API SetDownloadMode(const wchar_t * lpwszRID, boost::uint32_t nRIDLength, boost::uint32_t download_mode)
 {
+    char buffer[2048];
+    GetDumpBuffer(buffer, 2048);
 #ifdef PEER_PC_CLIENT
     string rid_str(base::ws2s(std::wstring(lpwszRID, nRIDLength)));
 
@@ -1209,6 +1215,8 @@ void PEER_API QueryDragPeerStateByUrl(const char * url, boost::int32_t * state)
 
 void PEER_API SetDownloadModeByUrl(const char * url, boost::uint32_t download_mode)
 {
+    char buffer[2048];
+    GetDumpBuffer(buffer, 2048);
     DebugLog("SetDownloadModeByUrl url:%s", url);
     LOG4CPLUS_DEBUG_LOG(logger_peer, " url = " << url);
 
