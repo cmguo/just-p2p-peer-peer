@@ -80,8 +80,8 @@ namespace p2sp
 
         if (live_p2p_downloader_)
         {
-            live_p2p_downloader_->Stop();
             P2PModule::Inst()->OnLiveP2PDownloaderDestroyed(live_p2p_downloader_);
+            live_p2p_downloader_->Stop();
             live_p2p_downloader_.reset();
         }
 

@@ -33,6 +33,9 @@ namespace p2sp
     class LiveStream
         : public boost::enable_shared_from_this<LiveStream>
         , public ILiveStream
+#ifdef DUMP_OBJECT
+        , public count_object_allocate<LiveStream>
+#endif
     {
     public:
         static boost::shared_ptr<LiveStream> Create(LiveDownloadDriver__p live_downloaddriver,

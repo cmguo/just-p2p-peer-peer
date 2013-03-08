@@ -282,7 +282,6 @@ namespace p2sp
         PeerConnector__p connector_;
 
         LiveConnectionManger live_connection_manager_;
-        std::map<boost::asio::ip::udp::endpoint, LivePeerConnection__p> peers_;
 
         bool is_p2p_pausing_;
         boost::int32_t p2p_max_connect_count_;

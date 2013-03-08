@@ -19,6 +19,8 @@ namespace p2sp
     {
     public:
         void Start(LiveP2PDownloader__p p2p_downloader);
+        void Stop();
+
         void OnP2PTimer(boost::uint32_t times, bool urgent, bool use_udpserver, bool paused);
 
         void OnBlockTimeout(boost::uint32_t block_id);

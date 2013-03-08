@@ -147,6 +147,10 @@ namespace p2sp
     // 250ms 被调用一次
     void LiveP2PDownloader::OnP2PTimer(boost::uint32_t times)
     {
+        if (!is_running_)
+        {
+            return;
+        }
         // s List / Exchange 一次
         if (times % 4 == 0)
         {
@@ -413,6 +417,13 @@ namespace p2sp
         }
 
         live_connection_manager_.Stop();
+
+        if (live_stream_)
+        {
+            live_stream_.reset();
+        }
+
+        live_assigner_.Stop();
     }
 
     bool LiveP2PDownloader::IsPausing()

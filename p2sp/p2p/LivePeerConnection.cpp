@@ -36,6 +36,7 @@ namespace p2sp
         speed_info_.Stop();
         receive_announce_tick_counter_.stop();
         connect_tick_counter_.stop();
+        p2p_downloader_.reset();
         is_running_ = false;
     }
 
@@ -287,6 +288,11 @@ namespace p2sp
 
     void LivePeerConnection::RequestSubPieces(boost::uint32_t block_count, bool need_check)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         if (block_count == 0 || task_set_.empty())
         {
             return;

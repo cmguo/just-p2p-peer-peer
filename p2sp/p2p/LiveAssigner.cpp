@@ -12,6 +12,14 @@ namespace p2sp
         urgent_ = false;
     }
 
+    void LiveAssigner::Stop()
+    {
+        if (p2p_downloader_)
+        {
+            p2p_downloader_.reset();
+        }
+    }
+
     void LiveAssigner::OnBlockTimeout(boost::uint32_t block_id)
     {
         block_tasks_.erase(block_id);
