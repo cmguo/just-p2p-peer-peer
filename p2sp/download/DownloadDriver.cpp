@@ -2088,12 +2088,14 @@ namespace p2sp
 
     boost::uint32_t DownloadDriver::GetRestPlayableTime()
     {
+#ifdef PEER_PC_CLIENT
         if (rest_play_time_set_counter_.elapsed() >= 5000)
         {
             // 超过5s不设置剩余缓冲时间，一定是预下载，将剩余缓冲设置为无穷大，使得状态机用纯p2p下载
             return 0xFFFFFFFF;
         }
         else
+#endif
         {
             return rest_play_time_;
         }        
@@ -2409,13 +2411,13 @@ namespace p2sp
                 LOG4CPLUS_DEBUG_LOG(logger_download_driver, "smart_speed_limit2 = " << smart_speed_limit);
 
                 SetSpeedLimitInKBps(smart_speed_limit);
-                statistic_->SetSmartPara(rest_play_time_, bandwidth, smart_speed_limit);
+                statistic_->SetSmartPara(GetRestPlayableTime(), bandwidth, smart_speed_limit);
             }
         }
         else if (download_mode_ == IGlobalControlTarget::FAST_MODE)
         {
             SetSpeedLimitInKBps(BootStrapGeneralConfig::Inst()->GetP2PDownloadSpeedLimitInKBps());
-            statistic_->SetSmartPara(rest_play_time_, -1, BootStrapGeneralConfig::Inst()->
+            statistic_->SetSmartPara(GetRestPlayableTime(), -1, BootStrapGeneralConfig::Inst()->
                 GetP2PDownloadSpeedLimitInKBps());
         }
         else if (download_mode_ == IGlobalControlTarget::SLOW_MODE)
@@ -2436,12 +2438,12 @@ namespace p2sp
                 if (rate > 0 && rate < 1)
                 {
                     p2p_downloader_->SetSpeedLimitInKBps(((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30))/rate);
-                    statistic_->SetSmartPara(rest_play_time_, -2, ((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30))/rate);
+                    statistic_->SetSmartPara(GetRestPlayableTime(), -2, ((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30))/rate);
                 }
                 else
                 {
                     p2p_downloader_->SetSpeedLimitInKBps(((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30)));
-                    statistic_->SetSmartPara(rest_play_time_, -2, ((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30)));
+                    statistic_->SetSmartPara(GetRestPlayableTime(), -2, ((std::max)((boost::uint32_t)(data_rate * 1.3/1024), data_rate/1024 + 30)));
                 }
             }
         }
@@ -2545,8 +2547,7 @@ namespace p2sp
             {
                 has_effected_by_other_proxyconnections_ = true;
             }
-          }
-  
+        }
     }
 
     void DownloadDriver::EnableSmartSpeedLimit()
