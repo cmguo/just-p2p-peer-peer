@@ -63,6 +63,9 @@ namespace p2sp
     }
 
     class LiveConnectionManger
+#ifdef DUMP_OBJECT
+        : public count_object_allocate<LiveConnectionManger>
+#endif
     {
     public:
         LiveConnectionManger()
@@ -78,7 +81,7 @@ namespace p2sp
         void Stop();
 
         void AddPeer(LivePeerConnection__p peer_connection);
-        LivePeerConnection__p DelPeer(const boost::asio::ip::udp::endpoint & endpoint);
+        void DelPeer(const boost::asio::ip::udp::endpoint & endpoint);
 
         bool HasPeer(const boost::asio::ip::udp::endpoint & end_point) const;
         bool IsLivePeer(const boost::asio::ip::udp::endpoint & end_point) const;
@@ -137,6 +140,7 @@ namespace p2sp
         bool IsFromUdpServer(const boost::asio::ip::udp::endpoint & end_point);
         void ClearSubPiecesRequestdToUdpServer();
         boost::uint32_t GetSubPieceRequestedToUdpServerCount() const;
+        LivePeerConnection__p GetPeer(const boost::asio::ip::udp::endpoint & endpoint) const;
 
     private:
         void SelectPeers(std::set<protocol::CandidatePeerInfo> & selected_peers,

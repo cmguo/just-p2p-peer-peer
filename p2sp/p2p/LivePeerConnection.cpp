@@ -282,6 +282,11 @@ namespace p2sp
 
     void LivePeerConnection::OnSubPieceTimeout()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         requesting_count_--;
         RequestTillFullWindow();
     }
@@ -549,7 +554,11 @@ namespace p2sp
         peer_connection_info_.AssignedSubPieceCount = task_set_.size();
         peer_connection_info_.ActualAssignedSubPieceCount = temp_task_set_.size();
         peer_connection_info_.RequestSubPieceCount = request_subpiece_count_;
-        peer_connection_info_.SupplySubPieceCount = CalcSupplySubPieceCount();
+
+        // SupplySubPieceCount目前只是写在共享内存中供PeerMonitor查看每个连接有多少个subpiece可供我下载
+        // 这个函数比较耗CPU，暂时先注释掉
+        // peer_connection_info_.SupplySubPieceCount = CalcSupplySubPieceCount();
+        peer_connection_info_.SupplySubPieceCount = 0;
 
         if (block_bitmap_.empty())
         {

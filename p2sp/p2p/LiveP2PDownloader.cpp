@@ -819,11 +819,12 @@ namespace p2sp
 
     void LiveP2PDownloader::DelPeer(const boost::asio::ip::udp::endpoint & endpoint)
     {
-        LivePeerConnection__p removed_peer = live_connection_manager_.DelPeer(endpoint);
+        LivePeerConnection__p removed_peer = live_connection_manager_.GetPeer(endpoint);
         if (removed_peer && removed_peer->GetConnectType() == protocol::CONNECT_LIVE_UDPSERVER)
         {
             live_stream_->GetDownloadDriver()->UpdateUdpServerServiceScore(endpoint, removed_peer->GetServiceScore());
         }
+        live_connection_manager_.DelPeer(endpoint);
     }
 
     void LiveP2PDownloader::OnBlockComplete(const protocol::LiveSubPieceInfo & live_block)
