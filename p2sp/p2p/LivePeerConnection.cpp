@@ -89,6 +89,11 @@ namespace p2sp
 
     void LivePeerConnection::DoAnnounce()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         // 计算上传带宽和能力值的较小值，填到LiveRequestAnnouncePacket中的upload_bandwidth_字段中
         boost::int32_t upload_bandwidth = p2sp::P2PModule::Inst()->GetUploadSpeedLimitInKBps();
         if (upload_bandwidth < (boost::int32_t)p2sp::P2PModule::Inst()->GetUploadBandWidthInKBytes())
@@ -229,6 +234,11 @@ namespace p2sp
 
     void LivePeerConnection::OnSubPiece(boost::uint32_t subpiece_rtt, boost::uint32_t buffer_length)
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
         no_response_time_ = 0;        
 
         requesting_count_--;
@@ -377,6 +387,11 @@ namespace p2sp
 
     int LivePeerConnection::GetServiceScore() const
     {
+        if (!is_running_)
+        {
+            return 0;
+        }
+
         if (announce_requests_ == 0)
         {
             return 0;
@@ -458,6 +473,12 @@ namespace p2sp
 
     void LivePeerConnection::RequestTillFullWindow()
     {
+        if (!is_running_)
+        {
+            return;
+        }
+
+        boost::uint32_t last_requesting_count = requesting_count_;
         while (requesting_count_ < window_size_ && !task_set_.empty())
         {
             if (IsUdpServer())
@@ -468,6 +489,14 @@ namespace p2sp
             {
                 RequestSubPieces(6, false);
             }
+
+            if (last_requesting_count == requesting_count_)
+            {
+                assert(false);
+                return;
+            }
+
+            last_requesting_count = requesting_count_;
         }
     }
 
@@ -580,6 +609,11 @@ namespace p2sp
 
     boost::uint32_t LivePeerConnection::GetTimeoutAdjustment()
     {
+        if (!is_running_)
+        {
+            return 500;
+        }
+
         boost::uint32_t rest_time = p2p_downloader_->GetRestTimeInSeconds();
 
         if (rest_time > 10)
@@ -619,6 +653,11 @@ namespace p2sp
 
     boost::uint32_t LivePeerConnection::CalcSupplySubPieceCount()
     {
+        if (!is_running_)
+        {
+            return 0;
+        }
+
         boost::uint32_t supply_subpiece_count = 0;
         for (std::map<boost::uint32_t, boost::dynamic_bitset<boost::uint8_t> >::const_iterator iter = block_bitmap_.begin();
             iter != block_bitmap_.end(); ++iter)
