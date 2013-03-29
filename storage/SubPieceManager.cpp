@@ -10,7 +10,7 @@
 #include "SubPieceManager.h"
 #include "base/util.h"
 #include "p2sp/bootstrap/BootStrapGeneralConfig.h"
-#include <framework/filesystem/Path.h>
+
 namespace storage
 {
     using base::util::memcpy2;
@@ -21,23 +21,6 @@ namespace storage
 
     SubPieceManager::p SubPieceManager::Create(boost::uint32_t file_length, bool b_full_file)
     {
-
-#ifdef LOG_ENABLE
-        log4cplus::Logger root=log4cplus::Logger::getRoot();
-#if (defined PEER_PC_CLIENT/* || defined BOOST_WINDOWS_API*/)
-        PropertyConfigurator::doConfigure("C:\\Program Files\\Common Files\\PPLiveNetwork\\peer.config");
-#else
-        boost::filesystem::path peer_log_path = framework::filesystem::temp_path() / "PeerLog";
-        SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 200 * 1024 *1024, 2));
-        std::auto_ptr<Layout> pattern_layout(new PatternLayout("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p%c - %m%n"));
-        pFileAppender->setLayout(pattern_layout);
-        logger_subpiecemanager.addAppender(pFileAppender);
-        logger_subpiecemanager.setLogLevel(ALL_LOG_LEVEL);
-
-        //    root.addAppender(pFileAppender);
-        //    root.setLogLevel(ALL_LOG_LEVEL);
-#endif
-#endif
         protocol::RidInfo rid_info;
         rid_info.InitByFileLength(file_length);
         return SubPieceManager::p(new SubPieceManager(rid_info, b_full_file));
@@ -193,65 +176,13 @@ namespace storage
 
         //Note: 在node不完整时不能reset node，因为我们还需要其内部所维护的subpiece bitmap。
 
-//#ifdef DISK_MODE
+#ifdef DISK_MODE
         if (node->NeedWrite() && node->IsFull())
         {
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block " << block_index << " WriteBlockToResource.");
-
-            std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>();
-            node->GetBufferForSave(*buffer_set_p);
-            if (buffer_set_p->empty())
-            {
-                delete buffer_set_p;
-                return;
-            }
-
-            if (buffer_set_p->size() != GetBlockSubPieceCount(block_index))
-            {
-                delete buffer_set_p;
-                return;
-            }
-
-            framework::string::Md5 md5;
-            
-            for (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::const_iterator it = buffer_set_p->begin(); 
-                it != buffer_set_p->end(); ++it)
-            {
-                md5.update(it->second.Data(), it->second.Length());
-            }
-
-            md5.final();
-
-            MD5 hash_val;
-            hash_val.from_bytes(md5.to_bytes());
-            LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block:" << block_index << " Hash:" << hash_val);
-
-            if (GetRidInfo().block_md5_s_[block_index] == hash_val)
-            {
-                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block " << block_index << " verified OK.");
-            }
-            else
-            {
-                LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "Block " << block_index << " verified FAIL.");
-            }
-
-            delete buffer_set_p;
-
-            node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
-
-            // 非磁盘模式ClearBlockMemCache会造成数据丢失
-            if (block_bit_map_->HasBlock(block_index) && !node->IsFull())
-            {
-                block_bit_map_->Reset(block_index);
-            }
-
-            // 如果Block已经为空，删除Block对象
-            if (node->IsEmpty())
-            {
-                node.reset();
-            }
+            WriteBlockToResource(resource_p, block_index);
         }
-        /*
+        
         if (node->IsFull())
         {
             assert(block_bit_map_->HasBlock(block_index));
@@ -271,7 +202,7 @@ namespace storage
         {
             node.reset();
         }
-#endif*/
+#endif
     }
 
     bool SubPieceManager::SetBlockReading(const boost::uint32_t block_index)
