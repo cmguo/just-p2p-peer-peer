@@ -176,6 +176,7 @@ namespace p2sp
         , p2p_download_speed_limit_(1024)
         , max_udp_dolist_times_(5)
         , min_download_speed_to_be_ensured_in_KBps_(100)
+        , block_verify_in_smart_device_pencentage_(5)
     {
     }
 
@@ -385,6 +386,7 @@ namespace p2sp
                 ("config.pdsl", po::value<boost::uint32_t>()->default_value(p2p_download_speed_limit_))
                 ("config.mudt", po::value<boost::uint32_t>()->default_value(max_udp_dolist_times_))
                 ("config.mdse", po::value<boost::uint32_t>()->default_value(min_download_speed_to_be_ensured_in_KBps_))
+                ("config.bvisd", po::value<boost::uint32_t>()->default_value(block_verify_in_smart_device_pencentage_))
                 ;
 
             std::istringstream config_stream(config_string);
@@ -551,6 +553,7 @@ namespace p2sp
             p2p_download_speed_limit_ = vm["config.pdsl"].as<boost::uint32_t>();
             max_udp_dolist_times_ = vm["config.mudt"].as<boost::uint32_t>();
             min_download_speed_to_be_ensured_in_KBps_ = vm["config.mdse"].as<boost::uint32_t>();
+            block_verify_in_smart_device_pencentage_ = vm["config.bvisd"].as<boost::uint32_t>();
 
             if (save_to_disk)
             {

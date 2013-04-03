@@ -63,6 +63,11 @@ namespace storage
         { 
             return (blocks_[block_index] != NULL) ? blocks_[block_index]->IsBlockSavedOnDisk() : HasFullBlock(block_index);
         }
+
+        boost::uint32_t GetBlockHashFailed() const
+        {
+            return md5_hash_failed_;
+        }
 #ifdef DISK_MODE
         void WriteBlockToResource(Resource::p resource_p, boost::uint32_t block_index);
 
@@ -232,6 +237,10 @@ namespace storage
         protocol::BlockMap::p block_bit_map_;
         boost::uint32_t blocks_count_;              // �非空的block
         boost::uint32_t download_bytes_;            // �已下载字节数
+
+        boost::uint32_t md5_hash_failed_;
+
+        bool need_verify_block_;
     };
 }
 

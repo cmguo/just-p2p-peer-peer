@@ -167,6 +167,7 @@ namespace p2sp
         string                vvid;                                 // P2: vvid
         bool                  more_than_one_proxyconnections;       // Q2: 是否某一个时段有多个proxyconnections在请求内容
         string                bak_host_string;                      // R2: bak_host
+        boost::uint32_t       block_hash_failed_count;              // S2: block校验失败次数
     };
 
     class VodDownloader;

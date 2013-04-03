@@ -174,10 +174,9 @@ namespace storage
 
 #ifdef DISK_MODE
         bool GetFileResourceInfo(FileResourceInfo &r_info);
-
+#endif
         // 查询某个rid的校验失败的次数
         boost::int32_t GetBlockHashFailed();
-#endif
 
     protected:
         void GetUrls(std::vector<protocol::UrlInfo>& url_s);

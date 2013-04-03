@@ -1595,13 +1595,17 @@ namespace storage
     }
 #endif
 
-#ifdef DISK_MODE
     // 查询某个rid的校验失败的次数
     boost::int32_t Instance::GetBlockHashFailed()
     {
+#ifndef DISK_MODE
+        if (subpiece_manager_)
+        {
+            md5_hash_failed_ =  subpiece_manager_->GetBlockHashFailed();
+        }
+#endif
         return md5_hash_failed_;
     }
-#endif
 
     void Instance::UpdateBlockHashTime(boost::uint32_t block_index)
     {

@@ -634,6 +634,11 @@ namespace p2sp
             return min_download_speed_to_be_ensured_in_KBps_;
         }
 
+        boost::uint32_t GetBlockVerfiyInSmartDevicePencentage() const
+        {
+            return block_verify_in_smart_device_pencentage_;
+        }
+
     private:
         BootStrapGeneralConfig();
         void LoadLocalConfig();
@@ -1034,6 +1039,9 @@ namespace p2sp
 
         //需保证的多终端最小下载速度
         boost::uint32_t min_download_speed_to_be_ensured_in_KBps_;
+
+        // 多终端是否启动数据校验
+        boost::uint32_t block_verify_in_smart_device_pencentage_;
     };
 }
 #endif

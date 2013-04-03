@@ -33,6 +33,8 @@ namespace storage
 
     SubPieceManager::SubPieceManager(const protocol::RidInfo& rid_info,
         bool b_full_file)
+        : md5_hash_failed_(0)
+        , need_verify_block_(false)
     {
         rid_info_ = rid_info;
         for (boost::uint32_t i = rid_info_.block_md5_s_.size(); i < rid_info_.GetBlockCount(); i++)
@@ -51,6 +53,11 @@ namespace storage
         block_bit_map_->SetAll(b_full_file);
         blocks_count_ = b_full_file ? rid_info_.GetBlockCount() : 0;
         download_bytes_ = b_full_file ? rid_info_.GetFileLength() : 0;
+
+        if (Random::GetGlobal().Next(1000000) < p2sp::BootStrapGeneralConfig::Inst()->GetBlockVerfiyInSmartDevicePencentage())
+        {
+            need_verify_block_ = true;
+        }
     }
 
     SubPieceManager::~SubPieceManager()
@@ -189,18 +196,74 @@ namespace storage
             node.reset();
         }
 #else
-        node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
-
-        // 非磁盘模式ClearBlockMemCache会造成数据丢失
-        if (block_bit_map_->HasBlock(block_index) && !node->IsFull())
+        if (need_verify_block_)
         {
-            block_bit_map_->Reset(block_index);
+            if (node->NeedWrite() && node->IsFull())
+            {
+                std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer> *buffer_set_p = new std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>();
+                node->GetBufferForSave(*buffer_set_p);
+                if (buffer_set_p->empty())
+                {
+                    delete buffer_set_p;
+                    return;
+                }
+
+                if (buffer_set_p->size() != GetBlockSubPieceCount(block_index))
+                {
+                    delete buffer_set_p;
+                    return;
+                }
+
+                framework::string::Md5 md5;
+
+                for (std::map<protocol::SubPieceInfo, protocol::SubPieceBuffer>::const_iterator it = buffer_set_p->begin(); 
+                    it != buffer_set_p->end(); ++it)
+                {
+                    md5.update(it->second.Data(), it->second.Length());
+                }
+
+                md5.final();
+
+                MD5 hash_val;
+                hash_val.from_bytes(md5.to_bytes());
+
+                if (GetRidInfo().block_md5_s_[block_index] != hash_val)
+                {
+                    md5_hash_failed_++;
+                }
+
+                delete buffer_set_p;
+
+                node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
+
+                // 非磁盘模式ClearBlockMemCache会造成数据丢失
+                if (block_bit_map_->HasBlock(block_index) && !node->IsFull())
+                {
+                    block_bit_map_->Reset(block_index);
+                }
+
+                // 如果Block已经为空，删除Block对象
+                if (node->IsEmpty())
+                {
+                    node.reset();
+                }
+            }
         }
-
-        // 如果Block已经为空，删除Block对象
-        if (node->IsEmpty())
+        else
         {
-            node.reset();
+            node->ClearBlockMemCache(GetBlockSize() / bytes_num_per_subpiece_g_);
+
+            // 非磁盘模式ClearBlockMemCache会造成数据丢失
+            if (block_bit_map_->HasBlock(block_index) && !node->IsFull())
+            {
+                block_bit_map_->Reset(block_index);
+            }
+
+            // 如果Block已经为空，删除Block对象
+            if (node->IsEmpty())
+            {
+                node.reset();
+            }
         }
 #endif
     }

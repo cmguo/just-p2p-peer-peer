@@ -1098,6 +1098,17 @@ namespace p2sp
         // R2: bak_host
         info.bak_host_string = GetBakHostString();
 
+        // S2:
+        if (instance_)
+        {
+            info.block_hash_failed_count = instance_->GetBlockHashFailed();
+        }
+        else
+        {
+            info.block_hash_failed_count = 0;
+        }
+        
+
         // herain:2010-12-31:创建提交DAC的日志字符串
         std::ostringstream log_stream;
 
@@ -1174,6 +1185,7 @@ namespace p2sp
         log_stream << "&P2=" << info.vvid;
         log_stream << "&Q2=" << (boost::uint32_t)info.more_than_one_proxyconnections;
         log_stream << "&R2=" << info.bak_host_string;
+        log_stream << "&S2=" << info.block_hash_failed_count;
 
         string log = log_stream.str();
 
