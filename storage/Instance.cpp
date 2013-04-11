@@ -610,7 +610,7 @@ namespace storage
             return;
         }
 
-        if (!subpiece_manager_->IsSubPieceValid(subpiece_info))
+        if (!subpiece_manager_->IsSubPieceValid(subpiece_info, buffer))
         {
             LOG4CPLUS_ERROR_LOG(logger_instance, "subpiece_info " << subpiece_info << " is not valid.");
             return;
@@ -932,7 +932,6 @@ namespace storage
 #ifdef DISK_MODE
             // read from disk @herain
             if (send_count_ < send_speed_limit_ &&
-                subpiece_manager_->IsSubPieceValid(start_s_info) &&
                 subpiece_manager_->HasSubPiece(start_s_info))
             {
                 ReadFromDisk(start_s_info);

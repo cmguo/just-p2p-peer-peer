@@ -176,7 +176,7 @@ namespace p2sp
         , p2p_download_speed_limit_(1024)
         , max_udp_dolist_times_(5)
         , min_download_speed_to_be_ensured_in_KBps_(100)
-        , block_verify_in_smart_device_pencentage_(5)
+        , block_verify_in_smart_device_pencentage_(0)
     {
     }
 

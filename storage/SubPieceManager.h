@@ -47,7 +47,7 @@ namespace storage
         bool HasPiece(const protocol::PieceInfo& piece_info) const;
         protocol::SubPieceBuffer GetSubPiece(const protocol::SubPieceInfo& in) const;
         bool SetBlockReading(const boost::uint32_t block_index);
-        bool IsSubPieceValid(const protocol::SubPieceInfo &in) const { return in <= last_subpiece_info_;}
+        bool IsSubPieceValid(const protocol::SubPieceInfo &in, const protocol::SubPieceBuffer & buffer) const;
         protocol::SubPieceInfo GetMaxSubPieceInfo() {return last_subpiece_info_;}
 
         protocol::BlockMap::p GetBlockMap() const {return block_bit_map_;}

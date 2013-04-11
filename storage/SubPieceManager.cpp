@@ -68,6 +68,21 @@ namespace storage
         }
     }
 
+    bool SubPieceManager::IsSubPieceValid(const protocol::SubPieceInfo &in, const protocol::SubPieceBuffer & buffer) const
+    {
+        if (!(in <= last_subpiece_info_))
+        {
+            return false;
+        }
+
+        if (in == last_subpiece_info_)
+        {
+            return buffer.Length() == last_subpiece_size_;
+        }
+        
+        return buffer.Length() == SUB_PIECE_SIZE;
+    }
+
     bool SubPieceManager::GenerateRid() {
         if (rid_info_.HasRID()) {
             LOG4CPLUS_DEBUG_LOG(logger_subpiecemanager, "false: !rid_info_.GetRID().IsEmpty()" << rid_info_);
