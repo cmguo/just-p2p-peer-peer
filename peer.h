@@ -488,6 +488,9 @@ boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_len
 typedef
 boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(char * buffer, boost::uint32_t buffer_length);
 
+void PEER_API ResumeOrPause(bool need_pause);
+typedef void (PEER_API *LPRESUMEORPAUSE)(bool need_pause);
+
 /**
 * 函数接口
 */
@@ -570,7 +573,8 @@ typedef struct _NETINTERFACE{
     LPSETVIPLEVELBYURL SetVipLevelByUrl;
     
     LPGETDUMPBUFFER GetDumpBuffer;
-    boost::uint32_t                Reserved4[34];
+    LPRESUMEORPAUSE ResumeOrPause;
+    boost::uint32_t                Reserved4[33];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef PEER_PC_CLIENT
 #pragma pack(pop)

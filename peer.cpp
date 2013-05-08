@@ -1365,6 +1365,11 @@ boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_len
     return buffer_written;
 }
 
+void PEER_API ResumeOrPause(bool need_pause)
+{
+
+}
+
 //////////////////////////////////////////////////////////////////////////
 // 接口分配函数
 //////////////////////////////////////////////////////////////////////////
@@ -1448,4 +1453,5 @@ void PEER_DECL PEER_API TS_XXXX(LPNETINTERFACE lpNetInterface)
     lpNetInterface->QueryDownloadProgressByUrlNew = QueryDownloadProgressByUrlNew;
     lpNetInterface->QueryDownloadProgress2 = QueryDownloadProgress2;
     lpNetInterface->SetVipLevelByUrl = SetVipLevelByUrl;
+    lpNetInterface->ResumeOrPause = ResumeOrPause;
 }
