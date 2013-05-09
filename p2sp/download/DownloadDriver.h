@@ -327,6 +327,8 @@ namespace p2sp
 
         boost::uint32_t GetRestTimeNeedLimitSpeed()const {return rest_play_time_need_to_limit_speed_;}
 
+        void ResumeOrPause(bool need_pause);
+
     public:
         //////////////////////////////////////////////////////////////////////////
         // IGlobalControlTarget

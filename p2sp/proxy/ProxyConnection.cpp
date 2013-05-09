@@ -1628,4 +1628,12 @@ namespace p2sp
     {
         return live_download_driver_ ? live_download_driver_->GetTotalRecievedSubPieceCount() : 0;
     }
+
+    void ProxyConnection::ResumeOrPauseDownload(bool need_pause)
+    {
+        if (download_driver_)
+        {
+            download_driver_->ResumeOrPause(need_pause);
+        }
+    }
 }

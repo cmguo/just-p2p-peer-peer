@@ -2965,4 +2965,12 @@ namespace p2sp
 
         return os.str();
     }
+
+    void DownloadDriver::ResumeOrPause(bool need_pause)
+    {
+        if (switch_controller_)
+        {
+            switch_controller_->ResumeOrPauseDownload(need_pause);
+        }
+    }
 }

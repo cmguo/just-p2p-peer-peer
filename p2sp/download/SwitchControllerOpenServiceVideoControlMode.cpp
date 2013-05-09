@@ -415,6 +415,11 @@ namespace p2sp
         if (false == IsRunning())
             return;
 
+        if (is_paused_by_sdk_)
+        {
+            return;
+        }
+
 // Debug模式下用MONITOR状态机的外部控制
 // #if true
 #ifndef NDEBUG

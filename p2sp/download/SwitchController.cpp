@@ -129,6 +129,16 @@ namespace p2sp
         }
     }
 
+    void SwitchController::ResumeOrPauseDownload(bool need_pause)
+    {
+        if(!is_running_)
+        {
+            return;
+        }
+
+        control_mode_->ResumeOrPause(need_pause);
+    }
+
     //////////////////////////////////////////////////////////////////////////
     // State
 
@@ -180,5 +190,32 @@ namespace p2sp
             controller_.reset();
         }
         is_running_ = false;
+    }
+
+    void SwitchController::ControlMode::ResumeOrPause(bool neer_pause)
+    {
+        if (!is_running_)
+        {
+            return;
+        }
+
+        if (neer_pause)
+        {
+            if (GetP2PControlTarget())
+            {
+                GetP2PControlTarget()->Pause();
+                state_.p2p_ = State::P2P_PAUSING;
+            }
+            if (GetHTTPControlTarget())
+            {
+                GetHTTPControlTarget()->Pause();
+                state_.http_ = State::HTTP_PAUSING;
+            }
+            is_paused_by_sdk_ = true;
+        }
+        else
+        {
+            is_paused_by_sdk_ = false;
+        }
     }
 }

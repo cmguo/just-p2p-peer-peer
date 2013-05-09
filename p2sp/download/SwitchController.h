@@ -58,6 +58,8 @@ namespace p2sp
         // framework::timer::ITimerListener
         void OnTimerElapsed(framework::timer::PeriodicTimer * pointer);
 
+        void ResumeOrPauseDownload(bool need_pause);
+
     protected:
 
         IGlobalControlTarget::p GetGlobalDataProvider();
@@ -139,6 +141,7 @@ namespace p2sp
             virtual void OnControlTimer(boost::uint32_t times) = 0;
             bool IsRunning() const { return is_running_; }
             State GetState() const { return state_; }
+            void ResumeOrPause(bool neer_pause);
 
         protected:
             SwitchController::p GetController() { assert(controller_); return controller_; }
@@ -154,11 +157,13 @@ namespace p2sp
             SwitchController::p controller_;
             //
             State state_;
+            bool is_paused_by_sdk_;
 
         protected:
             ControlMode(SwitchController::p controller)
                 : is_running_(false)
                 , controller_(controller)
+                , is_paused_by_sdk_(false)
             {}
         };
     public:

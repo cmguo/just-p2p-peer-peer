@@ -1774,4 +1774,13 @@ namespace p2sp
 
         return false;
     }
+
+    void ProxyModule::ResumeOrPauseAllDownload(bool need_pause)
+    {
+        for(std::set<ProxyConnection__p>::const_iterator iter = proxy_connections_.begin();
+            iter != proxy_connections_.end(); ++iter)
+        {
+            (*iter)->ResumeOrPauseDownload(need_pause);
+        }
+    }
 }

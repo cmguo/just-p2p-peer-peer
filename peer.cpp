@@ -1367,7 +1367,13 @@ boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_len
 
 void PEER_API ResumeOrPause(bool need_pause)
 {
-
+    if (!IsProxyModuleStarted())
+    {
+        return;
+    }
+    global_io_svc().post(
+        boost::bind(
+        &p2sp::ProxyModule::ResumeOrPauseAllDownload, p2sp::ProxyModule::Inst(), need_pause));
 }
 
 //////////////////////////////////////////////////////////////////////////

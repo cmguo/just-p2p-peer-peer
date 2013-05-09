@@ -66,6 +66,11 @@ namespace p2sp
         if (false == IsRunning())
             return;
 
+        if (is_paused_by_sdk_)
+        {
+            return;
+        }
+
         while (true)
         {
             // asserts

@@ -223,6 +223,8 @@ namespace p2sp
             }
         }
 
+        void ResumeOrPauseDownload(bool need_pause);
+
     protected:
         virtual void initialize();
         virtual void clear();

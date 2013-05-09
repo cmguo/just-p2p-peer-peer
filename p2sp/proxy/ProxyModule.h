@@ -153,6 +153,7 @@ namespace p2sp
 
         void UpdateStopTime(const RID & channel_id);
         bool TryGetTimeElapsedSinceStop(const RID & channel_id, boost::uint32_t & time_elapsed) const;
+        void ResumeOrPauseAllDownload(bool need_pause);
 
     private:
         boost::asio::io_service & io_svc_;
