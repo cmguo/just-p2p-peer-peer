@@ -115,11 +115,6 @@ namespace p2sp
 
         string GetFileRateType() const { return file_rate_type_;}
 
-        boost::int32_t GetSendSpeedLimit() const
-        {
-            return send_speed_limit_;
-        }
-
         std::vector<std::string> GetBakHosts() const {return bak_hosts_;}
 
         boost::uint32_t GetVip() const {return vip_;}
@@ -161,8 +156,6 @@ namespace p2sp
 
         static bool ParseIsDrag(const network::Uri& uri, boost::int32_t& is_drag);
 
-        static bool ParseSendSpeedLimit(const network::Uri& uri, boost::int32_t& send_speed_limit);
-
         static bool ParseBakHosts(const network::Uri& uri, std::vector<std::string>& bak_hosts);
 
         static bool ParseUint32Value(const network::Uri& uri, boost::uint32_t &value, string key);
@@ -194,7 +187,6 @@ namespace p2sp
             , has_start_(false)
             , is_drag_(-1)
             , bwtype_(0)
-            , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
             , live_replay_(false)
             , live_pause_(false)
             , is_preroll_(false)
@@ -220,7 +212,6 @@ namespace p2sp
         bool head_only_;
         boost::uint32_t rest_time_in_millisecond_;
         boost::uint32_t bwtype_;
-        boost::int32_t send_speed_limit_;
         std::vector<std::string> bak_hosts_;
         boost::shared_ptr<RangeInfo> range_info_;
         boost::uint32_t vip_;

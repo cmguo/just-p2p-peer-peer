@@ -74,40 +74,9 @@ namespace p2sp
                 boost::asio::ip::tcp::endpoint ep(localhost, port);
                 if (acceptor_->Listen(ep))
                 {
-                    LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
-                        " OK, Try to Listen 0.0.0.0:" << port);
-                    // ok, change to listen all
-                    acceptor_->Close();
-                    if (acceptor_->Listen(port))
-                    {
-                        LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
-                            " OK, Listen port: " << port);
-                        acceptor_->TcpAccept();
-                        // now try to hold "127.0.0.1:port"
-                        acceptor_place_holder_ = network::HttpAcceptor::create(io_svc_, shared_from_this());
-                        if (acceptor_place_holder_->Listen(ep)) {
-                            LOG4CPLUS_DEBUG_LOG(logger_proxy, __FUNCTION__ << ":" << __LINE__ << 
-                                " OK, Hold Address: " << ep);
-                            acceptor_place_holder_->TcpAccept();
-                        }
-                        break;
-                    }
-                    else
-                    {
-                        // 尝试 0.0.0.0 失败, 仅仅监听 127.0.0.1
-                        LOG4CPLUS_INFO_LOG(logger_proxy, "Try 0.0.0.0 Failed");
-                        if (acceptor_->Listen(ep))
-                        {
-                            LOG4CPLUS_INFO_LOG(logger_proxy, "Listen 127.0.0.1 Succeed");
-                            acceptor_->TcpAccept();
-                            break;
-                        }
-                        else
-                        {
-                            // 因为之前127.0.0.1已经监听成功了，所以这里不应该失败
-                            assert(false);
-                        }
-                    }
+                    LOG4CPLUS_INFO_LOG(logger_proxy, "Listen 127.0.0.1 Succeed");
+                    acceptor_->TcpAccept();
+                    break;
                 }
             }
             if (port >= end_port)
@@ -138,10 +107,6 @@ namespace p2sp
         if (acceptor_)
         {
             acceptor_->Close();
-        }
-        if (acceptor_place_holder_)
-        {
-            acceptor_place_holder_->Close();
         }
 
         for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
@@ -1283,26 +1248,6 @@ namespace p2sp
             catch(...)
             {
                 base::filesystem::remove_nothrow(filename);
-            }
-        }
-    }
-
-    // 设置内核推送数据的速度
-    void ProxyModule::SetSendSpeedLimitByUrl(string url, boost::int32_t send_speed_limit)
-    {
-        for (std::set<ProxyConnection::p>::iterator iter = proxy_connections_.begin();
-            iter != proxy_connections_.end(); ++iter)
-        {
-            ProxyConnection::p proxy_conn = *iter;
-            if (!proxy_conn)
-            {
-                LOG4CPLUS_DEBUG_LOG(logger_proxy, "ProxyConnection NULL");
-                continue;
-            }
-
-            if (proxy_conn->GetSourceUrl() == url)
-            {
-                proxy_conn->SetSendSpeedLimit(send_speed_limit);
             }
         }
     }

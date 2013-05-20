@@ -188,8 +188,6 @@ namespace p2sp
 
         bool IsMovieUrl() const { return is_movie_url_; }
 
-        void SetSendSpeedLimit(const boost::int32_t send_speed_limit);
-
         bool IsHeaderResopnsed();
 
         // 直播收到数据
@@ -278,10 +276,6 @@ namespace p2sp
         PlayInfo::p play_info_;
 
         boost::int32_t rest_time;
-
-        boost::int32_t send_count_;
-        boost::int32_t send_speed_limit_;
-        SubPieceBufferDeque buf_deque_;
 
         bool is_live_connection_;
 #ifdef DISK_MODE

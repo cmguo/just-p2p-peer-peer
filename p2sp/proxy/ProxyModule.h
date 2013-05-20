@@ -116,9 +116,6 @@ namespace p2sp
         void LoadHistoricalMaxDownloadSpeed();
         void SaveHistoricalMaxDownloadSpeed();
 
-
-        // 设置内核推送数据的速度
-        void SetSendSpeedLimitByUrl(string url, boost::int32_t send_speed_limit);
         // 全局限速管理
         void GlobalSpeedLimit();
 
@@ -159,7 +156,6 @@ namespace p2sp
         boost::asio::io_service & io_svc_;
 
         network::HttpAcceptor::pointer acceptor_;
-        network::HttpAcceptor::pointer acceptor_place_holder_;
         std::set<ProxyConnection__p> proxy_connections_;
 
         framework::timer::PeriodicTimer proxy_timer_;

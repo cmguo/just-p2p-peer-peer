@@ -1045,18 +1045,6 @@ bool    PEER_API GetCompeletedFilePath(
  */
 void PEER_API SetSendSpeedLimitByUrl(const char * url, boost::int32_t url_len, boost::int32_t send_speed_limit)
 {
-    LOG4CPLUS_DEBUG_LOG(logger_peer, "SetSendSpeedLimitByUrl");
-
-    string url_str(url, url_len);
-
-    if (!IsProxyModuleStarted())
-    {
-        LOG4CPLUS_DEBUG_LOG(logger_peer, "Proxy Module is not running");
-        return;
-    }
-
-    global_io_svc().post(boost::bind(&p2sp::ProxyModule::SetSendSpeedLimitByUrl,
-        p2sp::ProxyModule::Inst(), url_str, send_speed_limit));
 }
 
 // 禁止/恢复内核上传

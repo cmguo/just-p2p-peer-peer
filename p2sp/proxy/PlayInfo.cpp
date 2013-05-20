@@ -192,26 +192,6 @@ namespace p2sp
         return false;
     }
 
-    bool PlayInfo::ParseSendSpeedLimit(const network::Uri& uri, boost::int32_t& send_speed_limit)
-    {
-        string param_send_speed_limit = uri.getparameter("sendspeedlimit");
-        if (param_send_speed_limit.length() > 0)
-        {
-            boost::system::error_code ec = framework::string::parse2(param_send_speed_limit, send_speed_limit);
-
-            if (send_speed_limit < 0)
-            {
-                return false;
-            }
-
-            if (!ec)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool PlayInfo::ParseSourceType(const network::Uri& uri, PlayInfo::SourceType& source_type)
     {
         string source_str = uri.getparameter("source");
@@ -578,12 +558,6 @@ namespace p2sp
             }
 
             return play_info;
-        }
-
-        // sendspeedlimit
-        if (false == ParseSendSpeedLimit(uri, play_info->send_speed_limit_))
-        {
-            play_info->send_speed_limit_ = DEFAULT_SEND_SPEED_LIMIT;
         }
 
         // start position

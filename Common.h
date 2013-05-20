@@ -102,10 +102,6 @@ using std::string;
 using std::map;
 using std::vector;
 
-// herain:2011-1-4:内核向播放器推送数据的默认限速值
-const boost::int32_t DEFAULT_CLIENT_SEND_SPEED_LIMIT = 2048;
-const boost::int32_t DEFAULT_SEND_SPEED_LIMIT = 512;
-
 const boost::int32_t MAX_HTTP_DOWNLOADER_COUNT = 100;
 const boost::int32_t MAX_P2P_DOWNLOADER_COUNT = 100;
 

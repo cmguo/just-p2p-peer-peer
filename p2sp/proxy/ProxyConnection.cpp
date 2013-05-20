@@ -64,8 +64,6 @@ namespace p2sp
         , save_mode_(false)
         , is_movie_url_(false)
         , will_stop_download_(false)
-        , send_count_(0)
-        , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
 #ifdef DISK_MODE
         , play_history_item_handle_(PlayHistoryManager::InvalidHandle())
@@ -83,8 +81,6 @@ namespace p2sp
         , save_mode_(true)
         , is_movie_url_(false)
         , will_stop_download_(false)
-        , send_count_(0)
-        , send_speed_limit_(DEFAULT_SEND_SPEED_LIMIT)
         , is_live_connection_(false)
 #ifdef DISK_MODE
         , play_history_item_handle_(PlayHistoryManager::InvalidHandle())
@@ -227,14 +223,7 @@ namespace p2sp
         {
             return 0;
         }
-        else if (buf_deque_.empty())
-        {
-            return proxy_sender_->GetPlayingPosition();
-        }
-        else
-        {
-            return buf_deque_.GetPlayingPostion(proxy_sender_->GetPlayingPosition());
-        }
+        return proxy_sender_->GetPlayingPosition();
     }
 
     void ProxyConnection::ResetPlayingPostion()
@@ -281,39 +270,7 @@ namespace p2sp
         LOG4CPLUS_WARN_LOG(logger_proxy_connection, "proxy_sender_->OnRecvSubPiece, position = " << start_position
             << ", buffer.size = " << buffers.size());
 
-        int can_send_cout = send_speed_limit_ - send_count_;
-        if (can_send_cout >= buffers.size())
-        {
-            // herain:2010-12-30:发送速度不到限速值，全部可以发送
-            proxy_sender_->OnRecvSubPiece(start_position, buffers);
-            send_count_ += buffers.size();
-        }
-        else
-        {
-            // herain:2010-12-30:发送速度超过限速，只有部分报文可以发送
-
-            // herain:2011-1-4:能发送的报文数不为0，将能发送的报文发送出去
-            if (can_send_cout > 0)
-            {
-                assert(buf_deque_.empty());
-                std::vector<base::AppBuffer> send_buffs;
-                for (int i = 0; i < can_send_cout; ++i)
-                {
-                    send_buffs.push_back(buffers[i]);
-                }
-
-            //    DebugLog("send_buffs: %d",send_buffs.size());
-
-                proxy_sender_->OnRecvSubPiece(start_position, send_buffs);
-                send_count_ += send_buffs.size();
-            }
-
-            // herain:2011-1-4:不能发送的报文存入缓存队列
-            for (int i = can_send_cout; i < buffers.size(); ++i)
-            {
-                buf_deque_.push_back(start_position+i*SUB_PIECE_SIZE, buffers[i]);
-            }
-        }
+        proxy_sender_->OnRecvSubPiece(start_position, buffers);
 
         if (!download_driver_)
         {
@@ -671,12 +628,6 @@ namespace p2sp
             // is_drag
             LOG4CPLUS_DEBUG_LOG(logger_proxy_connection, "play_info->GetIsDrag = " << play_info->GetIsDrag());
 
-            // 客户端的默认发送限速为2MB
-            if (play_info->GetPlayerId() == "")
-            {
-                send_speed_limit_ = DEFAULT_CLIENT_SEND_SPEED_LIMIT;
-            }
-
             // 用于在ikan预下载的时候内核自己估算剩余时间
             rest_time = play_info->GetRestTimeInMillisecond();
             // download driver
@@ -944,11 +895,6 @@ namespace p2sp
                     play_info_ = play_info;
                     // Modified by jeffrey 2010/2/21, play_info有可能为空
                     // to fix Crash(0x5b785) @ Peer 2.0.2.1051
-                    if (play_info)
-                    {
-                        SetSendSpeedLimit(play_info->GetSendSpeedLimit());
-                    }
-
                     if (play_info && (play_info->HasRidInfo() || play_info->HasUrlInfo()))
                     {
                         if (play_info->GetPlayType() == PlayInfo::PLAY_BY_OPEN)
@@ -1130,35 +1076,6 @@ namespace p2sp
             }
 
             download_driver_->SetRestPlayTime(rest_time);
-        }
-
-        // herain:2010-12-30:处理发送限速的逻辑，每1s执行一次
-        if (times % 4 == 0)
-        {
-            send_count_ = 0;
-            std::vector<base::AppBuffer> buffs;
-
-            boost::uint32_t playing_postion = proxy_sender_->GetPlayingPosition();
-
-            while (send_count_ < send_speed_limit_ && false == buf_deque_.empty())
-            {
-                if (playing_postion == buf_deque_.front().first)
-                {
-                    buffs.push_back(buf_deque_.front().second);
-                    playing_postion += buf_deque_.front().second.Length();
-                    buf_deque_.pop_front();
-                    send_count_++;
-                }
-                else
-                {
-                    buf_deque_.pop_front();
-                }
-            }
-
-            if (false == buffs.empty())
-            {
-                proxy_sender_->OnRecvSubPiece(proxy_sender_->GetPlayingPosition(), buffs);
-            }
         }
 
         if (times % 4 == 0)
@@ -1530,11 +1447,6 @@ namespace p2sp
                 << download_driver_);
             StopDownloadDriver();
         }
-    }
-
-    void ProxyConnection::SetSendSpeedLimit(const boost::int32_t send_speed_limit)
-    {
-        send_speed_limit_ = send_speed_limit;
     }
 
     bool ProxyConnection::IsHeaderResopnsed()
