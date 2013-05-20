@@ -427,7 +427,7 @@ namespace statistic
             assert(it->second);
             download_drivers_statistics.push_back(it->second->TakeSnapshot());
         }
-
+#ifndef STATISTIC_OFF
         live_download_drivers_statistics.clear();
         live_download_drivers_statistics.reserve(live_download_driver_statistic_map_.size());
         for (LiveDownloadDriverStatisticMap::iterator it = live_download_driver_statistic_map_.begin(); 
@@ -437,7 +437,7 @@ namespace statistic
             assert(it->second);
             live_download_drivers_statistics.push_back(it->second->TakeSnapshot());
         }
-
+#endif
         p2p_downloaders_statistics.clear();
         p2p_downloaders_statistics.reserve(p2p_downloader_statistic_map_.size());
         for (P2PDownloadDriverStatisticMap::iterator it = p2p_downloader_statistic_map_.begin(); 
@@ -477,7 +477,9 @@ namespace statistic
         boost::uint32_t upload_speed = (boost::uint32_t) (statistic_info_.SpeedInfo.MinuteUploadSpeed / 1024.0 + 0.5);
         DACStatisticModule::Inst()->SubmitP2PUploadSpeedInKBps(upload_speed);
 
+#ifndef STATISTIC_OFF
         UploadStatisticModule::Inst()->OnShareMemoryTimer(times);
+#endif
 
         // 遍历所有的  DownloadDriverStatistic::p->OnShareMemoryTimer(times)
         LOG4CPLUS_DEBUG_LOG(logger_statistic, "Starting to update downloader driver statistic.");

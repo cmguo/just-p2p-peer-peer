@@ -35,9 +35,8 @@ namespace statistic
 
 #ifndef STATISTIC_OFF
         void UpdateShareMemory();
-#endif
-
         const LIVE_DOWNLOADDRIVER_STATISTIC_INFO& TakeSnapshot();
+#endif
 
     private:
         LiveDownloadDriverStatistic(boost::uint32_t id);

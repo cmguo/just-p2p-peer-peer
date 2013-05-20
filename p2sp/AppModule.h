@@ -324,14 +324,19 @@ void AppModule::DoSendPacket(type const & packet,
         statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), 
             sub_piece_pack.sub_piece_length_);
         statistic::StatisticModule::Inst()->SubmitUploadDataBytes(sub_piece_pack.sub_piece_length_);
+
+#ifndef STATISTIC_OFF
         statistic::UploadStatisticModule::Inst()->SubmitUploadOneSubPiece();
+#endif
     }
     else if (type::Action == protocol::LiveSubPiecePacket::Action)
     {
         protocol::LiveSubPiecePacket const & live_sub_piece_pack = (protocol::LiveSubPiecePacket const &)packet;
         statistic::UploadStatisticModule::Inst()->SubmitUploadSpeedInfo(packet.end_point.address(), packet.length());
         statistic::StatisticModule::Inst()->SubmitUploadDataBytes(live_sub_piece_pack.sub_piece_length_);
+#ifndef STATISTIC_OFF
         statistic::UploadStatisticModule::Inst()->SubmitUploadOneSubPiece();
+#endif
     }
 
     udp_server_->send_packet(packet, dest_protocol_version);

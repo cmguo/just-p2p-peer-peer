@@ -25,10 +25,12 @@ namespace statistic
         void Start();
         void Stop();
 
+#ifndef STATISTIC_OFF
         void OnShareMemoryTimer(boost::uint32_t times);
         bool CreateSharedMemory();
         string GetSharedMemoryName();
         boost::uint32_t GetSharedMemorySize();
+#endif
 
         void SubmitUploadInfo(boost::uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_);
         void SubmitUploadSpeedInfo(boost::asio::ip::address address, boost::uint32_t size);
@@ -44,21 +46,27 @@ namespace statistic
         }
 
         boost::uint8_t GetUploadCount() const;
-        boost::uint32_t GetUploadSpeed() const;
+        boost::uint32_t GetUploadSpeed();
         boost::uint32_t GetUploadAvgSpeed();
 
         // 由于调用的SpeedInfoStatistic::GetSpeedInfo不能设置为const，所以这个函数也没有设为const
         boost::uint32_t GetUploadSpeed(const boost::asio::ip::address & address);
-
+#ifndef STATISTIC_OFF
         void SubmitUploadOneSubPiece();
+#endif
 
     private:
         UploadStatisticModule();
 
         bool is_running_;
         static UploadStatisticModule::p inst_;
+
+#ifdef STATISTIC_OFF
+        boost::uint32_t upload_count_;
+#else
         interprocess::SharedMemory shared_memory_;
         UPLOAD_INFO upload_info_;
+#endif
 
         std::map<boost::asio::ip::address, SpeedInfoStatistic> m_upload_map;
 

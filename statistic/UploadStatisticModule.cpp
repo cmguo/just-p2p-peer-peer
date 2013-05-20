@@ -18,6 +18,9 @@ namespace statistic
 
     UploadStatisticModule::UploadStatisticModule()
         : is_running_(false)
+#ifdef STATISTIC_OFF
+        : upload_count_(0)
+#endif
     {
 
     }
@@ -26,10 +29,12 @@ namespace statistic
     {
         is_running_ = true;
 
+#ifndef STATISTIC_OFF
         if (false == CreateSharedMemory())
         {
             // log
         }
+#endif
 
         upload_speed_info_.Start();
     }
@@ -43,8 +48,12 @@ namespace statistic
 
     void UploadStatisticModule::SubmitUploadInfo(boost::uint32_t upload_speed_limit, std::set<boost::asio::ip::address> uploading_peers_)
     {
+#ifdef STATISTIC_OFF
+        upload_count_ = uploading_peers_.size();
+#else
         upload_info_.peer_upload_count = uploading_peers_.size();
         upload_info_.actual_speed_limit = upload_speed_limit;
+#endif
 
         if (m_upload_map.size() == 0)
         {
@@ -97,6 +106,7 @@ namespace statistic
         }
     }
 
+#ifndef STATISTIC_OFF
     bool UploadStatisticModule::CreateSharedMemory()
     {
 #ifdef PEER_PC_CLIENT
@@ -147,15 +157,20 @@ namespace statistic
     {
         return sizeof(upload_info_);
     }
+#endif
 
     boost::uint8_t UploadStatisticModule::GetUploadCount() const
     {
+#ifdef STATISTIC_OFF
+        return upload_count_;
+#else
         return upload_info_.peer_upload_count;
+#endif
     }
 
-    boost::uint32_t UploadStatisticModule::GetUploadSpeed() const
+    boost::uint32_t UploadStatisticModule::GetUploadSpeed()
     {
-        return upload_info_.upload_speed;
+        return upload_speed_info_.GetSpeedInfo().NowUploadSpeed;
     }
 
     boost::uint32_t UploadStatisticModule::GetUploadAvgSpeed()
@@ -180,8 +195,10 @@ namespace statistic
         return iter->second.GetSpeedInfo().NowUploadSpeed;
     }
 
+#ifndef STATISTIC_OFF
     void UploadStatisticModule::SubmitUploadOneSubPiece()
     {
         ++upload_info_.upload_subpiece_count;
     }
+#endif
 }

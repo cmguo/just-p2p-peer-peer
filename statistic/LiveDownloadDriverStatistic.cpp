@@ -47,7 +47,10 @@ namespace statistic
         }
 
         Clear();
+
+#ifndef STATISTIC_OFF
         UpdateShareMemory();
+#endif
 
         is_running_ = false;
 
@@ -60,11 +63,13 @@ namespace statistic
         download_driver_statistic_info_.Clear();
     }
 
+#ifndef STATISTIC_OFF
     const LIVE_DOWNLOADDRIVER_STATISTIC_INFO& LiveDownloadDriverStatistic::TakeSnapshot()
     {
         download_driver_statistic_info_ = live_download_driver_->GetLiveDownloadDirverStatisticInfo();
         return download_driver_statistic_info_;
     }
+#endif
 
 #ifndef STATISTIC_OFF
     void LiveDownloadDriverStatistic::UpdateShareMemory()
