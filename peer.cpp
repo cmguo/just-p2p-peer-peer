@@ -150,8 +150,8 @@ boost::uint32_t PEER_API Startup(LPSTARTPARAM lpParam)
 #if (defined PEER_PC_CLIENT || defined BOOST_WINDOWS_API)
     PropertyConfigurator::doConfigure("C:\\Program Files\\Common Files\\PPLiveNetwork\\peer.config");
 #else
-    boost::filesystem::path peer_log_path = boost::filesystem::current_path() / "PeerLog";
-    SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 200 * 1024 *1024, 20));
+    boost::filesystem::path peer_log_path =  framework::filesystem::temp_path() / "PeerLog";
+    SharedAppenderPtr pFileAppender(new RollingFileAppender(peer_log_path.string(), 100 * 1024 *1024, 2));
     std::auto_ptr<Layout> pattern_layout(new PatternLayout("%D{%m/%d/%y %H:%M:%S,%Q} [%t] %-5p%c - %m%n"));
     pFileAppender->setLayout(pattern_layout);
     root.addAppender(pFileAppender);
