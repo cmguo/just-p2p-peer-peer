@@ -594,6 +594,12 @@ typedef
 void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_len,
                                         char * bitmap, boost::uint32_t * bitmap_size);
 
+void PEER_API QueryDownloadProgress2(const char * url, boost::uint32_t url_len,
+                                     boost::uint32_t start_pos, boost::uint32_t * last_pos);
+typedef
+void (PEER_API * LPQUERYDOWNLOADPROGRESS2)(const char * url, boost::uint32_t url_len,
+                                           boost::uint32_t start_pos, boost::uint32_t * last_pos);
+
 boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_length);
 typedef
 boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(char * buffer, boost::uint32_t buffer_length);
