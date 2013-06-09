@@ -597,6 +597,9 @@ void (PEER_API * LPQUERYPROGRESSBITMAP)(const char * url, boost::uint32_t url_le
 boost::uint32_t PEER_API GetDumpBuffer(char * buffer, boost::uint32_t buffer_length);
 typedef
 boost::uint32_t (PEER_API * LPGETDUMPBUFFER)(char * buffer, boost::uint32_t buffer_length);
+
+void PEER_API ResumeOrPause(bool need_pause);
+typedef void (PEER_API *LPRESUMEORPAUSE)(bool need_pause);
 /**
 * 函数接口
 */
@@ -674,8 +677,13 @@ typedef struct _NETINTERFACE{
     LPSETUPNPPROTFORTCPUPLOAD SetUpnpPortForTcpUpload;
     LPQUERYDOWNLOADPROGRESSBYURLNEW QueryDownloadProgressByUrlNew;
     // version 0, 24
-    LPQUERYPROGRESSBITMAP QueryProgressBitmap;
-    boost::uint32_t                Reserved4[37];
+    boost::uint32_t                Reserved5;
+    LPQUERYDOWNLOADPROGRESS2 QueryDownloadProgress2;
+    LPSETVIPLEVELBYURL SetVipLevelByUrl;
+    
+    LPGETDUMPBUFFER GetDumpBuffer;
+    LPRESUMEORPAUSE ResumeOrPause;
+    boost::uint32_t                Reserved4[33];
 } NETINTERFACE, *LPNETINTERFACE;
 #ifdef PEER_PC_CLIENT
 #pragma pack(pop)
