@@ -58,14 +58,7 @@ PROJECT_LINK_FLAGS		:=
 
 PROJECT_DEPENDS			:= \
 				/base/util \
-				/base/framework \
-				/base/boost/thread \
-				/base/boost/system \
-				/base/boost/filesystem \
-				/base/boost/date_time \
-				/base/boost/regex \
 				/base/boost/program_options \
-				/base/zlib \
 				../tinyxml \
 				../log4cplus \
 				../miniupnpc \
