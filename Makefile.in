@@ -40,7 +40,7 @@ PROJECT_HEADER_DIRECTORY	:=
 
 ## 项目预编译头文件
 
-PROJECT_COMMON_HEADERS  	:=
+PROJECT_COMMON_HEADERS  	:= peer/Common.h
 
 ## 额外包含目录（多个，相对于包含根目录ROOT_INCLUDE_DIRECTORY）
 
@@ -75,4 +75,8 @@ PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS)
 
 PROJECT_VERSION_SCRIPT		:= Peer.map
 
-PROJECT_DEPEND_SHELL        := version.sh
+$(PROJECT_DIRECTORY)/autopeerversion.h: $(PROJECT_DIRECTORY)/autopeerversion.hpp
+	sed 's|\$$WCREV\$$|$(call repo_version,$(PROJECT_DIRECTORY))|g' $< > $@
+
+peer/Common.h.gch: $(PROJECT_DIRECTORY)/autopeerversion.h
+
