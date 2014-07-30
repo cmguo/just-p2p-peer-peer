@@ -75,8 +75,11 @@ PROJECT_DEPEND_LIBRARYS		:= $(PROJECT_DEPEND_LIBRARYS)
 
 PROJECT_VERSION_SCRIPT		:= Peer.map
 
+.PHONY: target
+target:
+
 $(PROJECT_DIRECTORY)/autopeerversion.h: $(PROJECT_DIRECTORY)/autopeerversion.hpp
-	sed 's|\$$WCREV\$$|$(call repo_version,$(PROJECT_DIRECTORY))|g' $< > $@
+	sed 's|\$$WCREV\$$|0x$(call repo_version,$(PROJECT_DIRECTORY))|g' $< > $@
 
 peer/Common.h.gch: $(PROJECT_DIRECTORY)/autopeerversion.h
 
