@@ -423,7 +423,7 @@ namespace p2sp
 
         boost::filesystem::path filepath(config_path);
         filepath /= ("ppvaconfig.ini");
-        string filename = filepath.file_string();
+        string filename = filepath.string();
 
         try
         {
@@ -467,7 +467,7 @@ namespace p2sp
     void NatCheckClient::WriteConfigAfterCheck(protocol::MY_STUN_NAT_TYPE nat_type)
     {
         boost::filesystem::path configpath(m_strConfig);
-        string filename = configpath.file_string();
+        string filename = configpath.string();
         int LastTime = 0;
         boost::uint32_t LastLocalIP = 0;
         protocol::MY_STUN_NAT_TYPE nat_result;

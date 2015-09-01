@@ -37,6 +37,7 @@
 #include "message.h"
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/regex.hpp>
 #include "network/UrlCodec.h"
 
 const int MAX_SEND_LIST_LENGTH = 1024;

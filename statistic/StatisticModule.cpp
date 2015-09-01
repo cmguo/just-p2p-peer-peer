@@ -1259,7 +1259,7 @@ namespace statistic
 #ifdef PEER_PC_CLIENT
             boost::filesystem::path configpath(ppva_config_path_);
             configpath /= ("ppvaconfig.ini");
-            string filename = configpath.file_string();
+            string filename = configpath.string();
 
             try
             {
@@ -1327,7 +1327,7 @@ namespace statistic
 
             boost::filesystem::path configpath(ppva_config_path_);
             configpath /= ("ppvaconfig.ini");
-            string filename = configpath.file_string();
+            string filename = configpath.string();
 
             try
             {

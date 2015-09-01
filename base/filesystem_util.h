@@ -24,7 +24,7 @@ namespace base
             {
                 boost::filesystem::rename(from_path, to_path);
             }
-            catch(boost::filesystem::basic_filesystem_error<path> & e)
+            catch(boost::filesystem::filesystem_error & e)
             {
                 ec = e.code();
             }
@@ -36,7 +36,7 @@ namespace base
             {
                 return boost::filesystem::exists(ph);
             }
-            catch(boost::filesystem::basic_filesystem_error<path>&)
+            catch(boost::filesystem::filesystem_error&)
             {
                 return false;
             }
@@ -49,7 +49,7 @@ namespace base
                 last_write_time = boost::filesystem::last_write_time(file_path);
                 code.clear();
             }
-            catch(boost::filesystem::basic_filesystem_error<path> & e)
+            catch(boost::filesystem::filesystem_error & e)
             {
                 code = e.code();
             }
@@ -61,7 +61,7 @@ namespace base
             {
                 return boost::filesystem::is_regular_file(file_path);
             }
-            catch (boost::filesystem::basic_filesystem_error<path> &)
+            catch (boost::filesystem::filesystem_error &)
             {
                 return false;
             }
@@ -76,7 +76,7 @@ namespace base
             {
                 directory_iter = boost::filesystem::directory_iterator(file_path, ec);
             }
-            catch (boost::filesystem::basic_filesystem_error<path> & e)
+            catch (boost::filesystem::filesystem_error & e)
             {
                 ec = e.code();
             }

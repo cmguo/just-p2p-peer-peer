@@ -19,7 +19,7 @@ namespace statistic
 
         boost::filesystem::path temp_path(local_config_file_path_);
         temp_path /= "pp_statistics_collection_cf";
-        local_config_file_path_ = temp_path.file_string();
+        local_config_file_path_ = temp_path.string();
     }
 
     bool StatisticsCollectionConfigurationFile::TryLoad(string& config_xml, std::time_t& file_modified_time)

@@ -201,7 +201,7 @@ namespace p2sp
         {
             boost::filesystem::path configpath(config_path_);
             configpath /= TEXT("ppvaconfig.ini");
-            string filename = configpath.file_string();
+            string filename = configpath.string();
 
             boost::uint32_t upload_velocity = 64*1024;
 
@@ -237,7 +237,7 @@ namespace p2sp
         {
             boost::filesystem::path configpath(config_path_);
             configpath /= TEXT("ppvaconfig.ini");
-            string filename = configpath.file_string();
+            string filename = configpath.string();
 
             try
             {

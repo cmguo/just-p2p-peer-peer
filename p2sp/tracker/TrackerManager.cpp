@@ -38,7 +38,7 @@ namespace p2sp
             list_path /= ("pptl2");
         }
         
-        tracker_list_save_path_ = list_path.file_string();
+        tracker_list_save_path_ = list_path.string();
 
         LOG4CPLUS_INFO_LOG(logger_tracker, "Tracker Manager has started successfully.");
 

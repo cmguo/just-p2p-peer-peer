@@ -142,8 +142,8 @@ namespace storage
 
         boost::filesystem::path config_path(resource_data_path_);
 
-        resourceinfo_file_ = (config_path / ("ResourceInfo.dat")).file_string();
-        resourceinfo_bak_file_ = (config_path / ("ResourceInfo.dat.bak")).file_string();
+        resourceinfo_file_ = (config_path / ("ResourceInfo.dat")).string();
+        resourceinfo_bak_file_ = (config_path / ("ResourceInfo.dat.bak")).string();
         LOG4CPLUS_INFO_LOG(logger_storage, " ConfigPath = " << (ConfigPath) << ", ResourceFile = " 
             << (resourceinfo_file_));
 
@@ -659,11 +659,11 @@ namespace storage
         {
             if (IsFileNameNeedHide(tmp_check_name))
             {
-                tmp_check_name = (fs::path(space_manager_->GetHiddenSubPath()) / tmp_check_name).file_string();
+                tmp_check_name = (fs::path(space_manager_->GetHiddenSubPath()) / tmp_check_name).string();
             }
             else
             {
-                tmp_check_name = (fs::path(space_manager_->store_path_) / tmp_check_name).file_string();
+                tmp_check_name = (fs::path(space_manager_->store_path_) / tmp_check_name).string();
             }
         }
 
@@ -721,11 +721,11 @@ namespace storage
             {
                 if (IsFileNameNeedHide(tmp_check_name))
                 {
-                    tmp_check_name = (fs::path(space_manager_->GetHiddenSubPath()) / tmp_check_name).file_string();
+                    tmp_check_name = (fs::path(space_manager_->GetHiddenSubPath()) / tmp_check_name).string();
                 }
                 else
                 {
-                    tmp_check_name = (fs::path(space_manager_->store_path_) / tmp_check_name).file_string();
+                    tmp_check_name = (fs::path(space_manager_->store_path_) / tmp_check_name).string();
                 }
             }
 
@@ -960,7 +960,7 @@ namespace storage
                             // 迁移失败
                             continue;
                         }
-                        r_info.file_path_ = new_path.file_string();
+                        r_info.file_path_ = new_path.string();
                     }
                 }
 
@@ -1250,7 +1250,7 @@ namespace storage
             {
                 file_path = boost::filesystem::path(space_manager_->store_path_);
             }
-            q_name = (file_path / file_name).file_string();
+            q_name = (file_path / file_name).string();
         }
 
         url_filename_map_.insert(std::make_pair(url, file_name));
@@ -1326,11 +1326,11 @@ namespace storage
         }
 #endif
         string file_name = filename;
-        string file_ext = fs::path(file_name).extension();
+        string file_ext = fs::path(file_name).extension().string();
         if (file_ext.empty() || file_ext == ".com")
         {
             network::Uri uri(url);
-            string ext = fs::path(uri.getfile()).extension();
+            string ext = fs::path(uri.getfile()).extension().string();
             file_name.append(ext.length() == 0 ? (".flv") : ext);
         }
         // 保存到map中
@@ -1420,11 +1420,11 @@ namespace storage
 
         if (IsFileExtNeedHide(fn_ext))
         {
-            file_name = (fs::path(space_manager_->GetHiddenSubPath()) / file_name).file_string();
+            file_name = (fs::path(space_manager_->GetHiddenSubPath()) / file_name).string();
         }
         else
         {
-            file_name = (fs::path(space_manager_->store_path_) / file_name).file_string();
+            file_name = (fs::path(space_manager_->store_path_) / file_name).string();
         }
 
         if (is_openservice)
@@ -1478,7 +1478,7 @@ namespace storage
         if (file_name.length() > 200)
             file_name = file_name.substr(0, 200);
 
-        file_name = (filepath / file_name).file_string();
+        file_name = (filepath / file_name).string();
         filename = file_name + fn_ext;
 
 
@@ -1487,7 +1487,7 @@ namespace storage
             // 确定目录存在
             if (false == base::filesystem::exists_nothrow(filepath))
             {
-                CreateDirectoryRecursive(filepath.file_string());
+                CreateDirectoryRecursive(filepath.string());
             }
         }
 
@@ -1834,7 +1834,7 @@ namespace storage
         string fileName = fs::path(res_name).filename();
         CreateDirectoryRecursive(resource_data_path_);
         fs::path cfg_file_path = fs::path(resource_data_path_) / (fileName + cfg_extname);
-        return cfg_file_path.file_string();
+        return cfg_file_path.string();
     }
 
     void Storage::RemoveFileAndConfigFile(const FileResourceInfo &r_info)
@@ -1866,7 +1866,7 @@ namespace storage
                             if (fs::is_regular_file(itr->status()))
                             {
                                 fs::path file_path = itr->path();
-                                file_list.insert(file_path.file_string());
+                                file_list.insert(file_path.string());
                             }
                         }
                         catch(fs::filesystem_error &)

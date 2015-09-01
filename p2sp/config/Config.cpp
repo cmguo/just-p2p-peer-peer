@@ -18,7 +18,7 @@ Config::Config()
 
     boost::filesystem::path temp_path(config_file_path_);
     temp_path /= "pph";
-    config_file_path_ = temp_path.file_string();
+    config_file_path_ = temp_path.string();
 }
 
 boost::shared_ptr<Config> Config::Inst()

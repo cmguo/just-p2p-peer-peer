@@ -24,7 +24,7 @@ namespace p2sp
 #if defined(NEED_LOG) || defined(LOG_MONITOR)
         namespace fs = boost::filesystem;
         fs::path config_path("p2sp_config.txt");
-        fs::ifstream fin(config_path.file_string());
+        fs::ifstream fin(config_path.string());
         if (fin)
         {
             string line;

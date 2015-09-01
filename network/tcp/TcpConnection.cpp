@@ -3,6 +3,7 @@
 #include "network/HttpRequest.h"
 #include "network/tcp/CrossDomainConfig.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 namespace network
 {

@@ -43,6 +43,7 @@
 using namespace protocol;
 using namespace statistic;
 using namespace storage;
+using namespace framework::timer;
 
 static boost::asio::io_service * io_svc;
 static framework::timer::AsioTimerManager * timer_manager_250_;

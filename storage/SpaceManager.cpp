@@ -58,8 +58,8 @@ namespace storage
 
         boost::filesystem::path store_p(store_path);
 
-        store_path_ = store_p.file_string();
-        hidden_sub_path_ = (store_p / ("InvisibleFolder")).file_string();
+        store_path_ = store_p.string();
+        hidden_sub_path_ = (store_p / ("InvisibleFolder")).string();
 #ifdef BOOST_WINDOWS_API
         TCHAR old_dir[MAX_PATH];
         boost::uint32_t pathname_len = GetCurrentDirectory(MAX_PATH, old_dir);
@@ -197,7 +197,7 @@ namespace storage
                             if (fs::is_regular_file(itr->status()))
                             {
                                 fs::path file_path = itr->path();
-                                filename_list.insert(file_path.file_string());
+                                filename_list.insert(file_path.string());
                             }
                         }
                         catch(fs::filesystem_error &)
@@ -351,11 +351,11 @@ namespace storage
         string full_file_name;
         if (Storage::Inst_Storage()->IsFileNameNeedHide(filename))
         {
-            full_file_name = (fs::path(GetHiddenSubPath()) / filename).file_string();
+            full_file_name = (fs::path(GetHiddenSubPath()) / filename).string();
         }
         else
         {
-            full_file_name = (fs::path(store_path_) / filename).file_string();
+            full_file_name = (fs::path(store_path_) / filename).string();
         }
 
         if (false == resource_inst->is_have_rename_)
@@ -429,7 +429,7 @@ namespace storage
             // 将openservice影片后缀名统一改为ppplay
             ext = ".pp";
         }
-        string stem = (source_file_name.parent_path()/"/").file_string() + source_file_name.stem();
+        string stem = (source_file_name.parent_path()/"/").string() + source_file_name.stem();
 
         string file_name(stem);
 

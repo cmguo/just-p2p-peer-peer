@@ -119,7 +119,7 @@ namespace p2sp
         boost::filesystem::path path(history_path);
         path /= PLAY_HISTORY_FILE;
 
-        play_history_mgr_ = PlayHistoryManager::create(path.file_string());
+        play_history_mgr_ = PlayHistoryManager::create(path.string());
         play_history_mgr_->LoadFromFile();
 
         timer_.start();

@@ -75,7 +75,7 @@ namespace network
         socket_.open(boost::asio::ip::udp::v4(), ec);
         if (ec)
         {
-            socket_.io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectFailed,
+            socket_.get_io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectFailed,
                 handler_, ec.value()));
         }
 
@@ -87,7 +87,7 @@ namespace network
             socket_.bind(ep, ec);
             if (!ec)
             {
-                socket_.io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectSucced,
+                socket_.get_io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectSucced,
                     handler_));
                 return;
             }
@@ -96,7 +96,7 @@ namespace network
             try_count++;
         }
 
-        socket_.io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectFailed,
+        socket_.get_io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnConnectFailed,
             handler_, ec.value()));
     }
 
@@ -130,7 +130,7 @@ namespace network
         {
             if (handler_)
             {
-                socket_.io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnRecvHttpHeaderFailed,
+                socket_.get_io_service().post(boost::bind(&IHttpClientListener<protocol::SubPieceBuffer>::OnRecvHttpHeaderFailed,
                     handler_, ec.value()));
             }
         }
@@ -219,7 +219,7 @@ namespace network
     void HttpClientOverUdpProxy::HttpRecv(boost::uint32_t length)
     {
         assert(handler_);
-        socket_.io_service().post(boost::bind(
+        socket_.get_io_service().post(boost::bind(
             &IHttpClientListener<protocol::SubPieceBuffer>::OnRecvHttpDataSucced, handler_, content_buffer_, 0, 0, false));
     }
 

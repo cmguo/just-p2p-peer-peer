@@ -188,7 +188,7 @@ namespace p2sp
 
         boost::filesystem::path temp_path(local_config_file_path_);
         temp_path /= "ppbscf";
-        local_config_file_path_ = temp_path.file_string();
+        local_config_file_path_ = temp_path.string();
 
         LoadLocalConfig();
     }
