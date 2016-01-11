@@ -5,6 +5,7 @@
 #include "p2sp/proxy/ProxyModule.h"
 #include "struct/UdpBuffer.h"
 #include "framework/string/Md5.h"
+#include "framework/string/Digest.hpp"
 #include <fstream>
 #include "Config.h"
 

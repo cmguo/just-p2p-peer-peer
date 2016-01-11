@@ -8,6 +8,8 @@
 #include "storage/HmacMd5.h"
 #include "base/util.h"
 
+#include <framework/string/Digest.hpp>
+
 namespace storage
 {
     void CHmacMD5::GetHash(Guid& pHash)
